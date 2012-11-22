@@ -1,0 +1,12 @@
+  \/ T - T A B S E T \/
+
+Sets tab positions for use by ^I.
+
+Format
+ TABSET <tab1>,<tab2>,...
+
+Parameters
+ <tab1>\ position of the tabs. If several given, they must be in ascending
+ <tab2> \ order. Up to 80 tab positions can be specified. All are optional - if
+   &c.  / no parameters are given, one tab is set, at position 1 (effectively,
+    .  / there are no tabs).

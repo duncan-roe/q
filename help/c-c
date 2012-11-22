@@ -1,0 +1,12 @@
+  <> ^ C - K E Y B O A R D  I N T E R R U P T <>
+
+Interrupts lengthy commands that are not otherwise interruptible, currently
+Y-CHANGEALL, command files that have been invoked by U-USE, and macros that call
+one another (the interruption occurs when one macro tries to call another).
+Also, inputting of a file can be interrupted (i.e. Q-QUIT with a filename or
+E-ENTER or when just starting). At other times it has no effect except that if
+typed as the only character in a command it has the same effect as the K
+command.
+
+Q expects the interrupt character to be ^C but tolerates ^P as an alternative.
+Use of any other character may result in some feature being unavailable.

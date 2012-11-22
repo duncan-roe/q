@@ -1,0 +1,5 @@
+  << ^N S - U N C O N D I T I O N A L   S K I P >>
+
+ ^NS unconditionally skips the next 2 characters (which must exist) in the
+macro. This can be used to reverse the sense of a condition pseudo-macro. Type
+'H CN-G' for an example of this use.

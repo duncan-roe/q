@@ -1,0 +1,12 @@
+  \/ A - A P P E N D \/
+
+Screenedit-reads lines to go on the end of the file until ESC is keyed
+
+Parameters: none
+
+File position
+ See under 'special uses'
+
+Special uses
+ The file position is left after the last line of the file when ESC is keyed,
+so A can be used solely to get there by keying the 3 characters A,n/l,ESC.

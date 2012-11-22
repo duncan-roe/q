@@ -1,0 +1,8 @@
+  \/ O - O N / O F F   I N D E N T \/
+
+Leaves or enters indent mode. On entering Q initially, it is 'off'.
+
+Parameter
+ <yes/no arg> one of 'yes', 'no', 'true', 'false', 'on', 'off' with the obvious
+	      meanings. Optional - if not specified the current state is
+	      inverted. For details of what indent mode does, type 'H IM'.

@@ -1,0 +1,16 @@
+  \/ F Y - T O K E N   Y C H A N G E A L L \/
+
+Functions exactly as Y-YCHANGEALL except that the string being searched
+for is searched for as a TOKEN.
+
+Format
+ see YCHANGEALL
+
+Parameters
+ see YCHANGEALL
+
+File Position
+ see YCHANGEALL
+
+Notes
+ See FLOCATE for notes on what constitutes a token.

@@ -1,0 +1,5 @@
+  <> ^ F - F O R W A R D   1   W O R D <>
+
+Moves the cursor forward to the start of the next word of text, where a word of
+text is any string of non-space characters delimited by spaces. Has no effect
+if at end of line already, moves to end of line if on the last word of the line

@@ -1,0 +1,18 @@
+  \/ J - J O I N \/
+
+Joins lines as specified, then acts as a 'MODIFY' on the result.
+
+Format
+ JOIN <line no.>,<1st no. of lines>,<2nd no. of lines>
+
+Parameters
+ <line no.>  # of 1st line to be joined. Must be specified
+ <# lines 1> # of lines to be joined onto the first line. Optional - taken as 1
+             if not specified.
+ <# lines 2> # of lines to be modified (including the joined line).
+             Optional - taken as 1 if not specified. ESCape can be used to
+             terminate editing before this number of lines has been edited,
+             if required.
+
+File position
+ The file is left after the last line modified.

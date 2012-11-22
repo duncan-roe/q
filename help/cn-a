@@ -1,0 +1,7 @@
+  << ^ N A - O B E Y   I F   E . O . L . >>
+
+ One of the simplest conditional pseudo-macros, ^NA obeys the next 2 chars
+(and these must always exist) in the macro if the cursor is positioned at end
+of line. On modifying an empty line, this condition is true immediately.
+ Example
+ Type 'H CN-G' for a sample use of this pseudo.

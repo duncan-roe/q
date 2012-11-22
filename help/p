@@ -1,0 +1,12 @@
+  \/ P - P R I N T \/
+
+Prints the specified # of lines from the current file position. Stops if it
+reaches end-of-file first or if any character is entered on the keyboard.
+
+Parameter
+ <# lines> # of lines to print. Optional - taken as 1 if not specified.
+
+File position
+ The file will be positioned after the last line printed, except in the case
+where printing was terminated by keying a character, where the postion will
+be some inderminate amount further down the file.

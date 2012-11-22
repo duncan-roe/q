@@ -1,0 +1,13 @@
+  >< T - S P A C E S   P E R   T A B ><
+
+Specifies the distance between tab stops in a file in which spaces are
+compressed to tabs.
+ If "fm +l" is asserted, this number will be used to expand leading tabs to
+spaces on reading, and to compress leading spaces to tabs on writing.
+ If "fm +tr" is asserted, this number will be used to expand tabs to spaces.
+ If "fm +tw" is asserted, this number will be used to compress spaces to tabs.
+However, because Q has no idea where tabs were originally, if there is a choice
+between outputting a single space or a tab, Q outputs a single space. You
+should assert "fm -t -l" if you need to preserve tabbing.
+
+The default value of tab stop spacing is 8.

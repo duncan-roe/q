@@ -1,0 +1,9 @@
+  << ^ N [ - O B E Y   I F   F I L E   P O S   B E F O R E   T A B >>
+
+ This pseudo macro is similar to ^NB ('H CN-B') except that the file position
+('H FPOS') rather than cursor position is tested.
+ Note
+ For this and all pseudo macros that test or access file position, tabs that
+are in the range of tabs defined by the T-TABSET command can't be used. Thus if
+you have the default tabs 7&36 then ^N[1 or ^N[2 is illegal (rings bell and
+quits macro).

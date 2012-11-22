@@ -1,0 +1,12 @@
+  <> D E L  [ R U B O U T ]  -  D E L E T E   P R E V I O U S <>
+
+Deletes the character before the cursor (e.g. a char just typed). Illegal if
+cursor at column 1 - rings bell.
+
+Indenting
+ If rubout is issued at the indent point, a space is erased from the indent
+zone and the indent point moves back 1. See also ^L.
+
+To cancel ^N
+ DEL will cancel a preceding ^N, if you change your mind about invoking a
+macro. DEL also cancels ^N^W (invoke extended-character-set macro).

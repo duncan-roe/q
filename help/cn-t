@@ -1,0 +1,6 @@
+  << ^ N T - T R U S T   U S E R >>
+
+ Currently  (JUL '81) the only privilege the user gets from this pseudo is the
+ability to move the file pointer while editing a line. The author has never
+found a use for this. Privilege is lost (has to be renewed) at the end of the
+current line or if macro mode is exited for any reason.

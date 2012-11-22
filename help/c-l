@@ -1,0 +1,9 @@
+  <> ^ L - L E F T   H A N D   K I L L <>
+
+Erases all characters to the left of the cursor, which is then at col 1. Has no
+effect if at col 1 already.
+
+Indenting
+ If the cursor is not at the indent point, for 'col 1' above read 'the indent
+point'. However if the cursor is at the indent point the indent itself is
+killed, leaving the cursor (and the indent point) at col 1.

@@ -1,0 +1,16 @@
+  \/ W - W R I T E F I L E \/
+
+Writes all or part of the editor's workfile to a file.
+
+Format
+ WRITEFILE <treename>,<line #>,<# of lines>
+
+Parameters
+ <treename> File to be written or overwritten. Must be specified.
+ <line #>   Line # of first line to write. Must be specified.
+ <# lines>  # of lines to write. Optional - taken as 1 if not specified. If
+            spec'd > # lines from the current file position to eof, then
+            writing stops at eof with a warning message.
+
+File position
+ The file is left positioned after the last line written.

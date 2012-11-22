@@ -1,0 +1,24 @@
+  ++ N O .   O F   L I N E S   A R G U M E N T ++
+ Many commands take one of these - some take two. They are always optional and
+so can be omitted or specified as null in either of which cases they take their
+default values. Defaults vary from command to command - see individual
+specifications (i.e. do a "HELP" on the individual commands). The most common
+default is 1 i.e. do whatever was specified for the specified line only.
+Greater than 1 means 'do it for that # of lines starting at the specified
+line'. As is the case with PRIME's editor, a larger number than the number of
+lines to the end of the file may be specified in which case a message is output
+when end-of-file is reached, the command then terminating normally. However the
+number must be within the capacity of a 16-bit word i.e. <32K.
+ Another format is available, but will be found to be of use chiefly within
+screenedit macros. Rather than giving a decimal number, give the letter 'T'
+followed by a single character identifying one of the 20 possible tab positions
+(these are listed under the ASCII reference table - H AS for details). Then the
+value in that tab becomes the numeric argument. Thus you could Locate a string
+between the positions defined by tabs 1 & 2 by a command of the form:
+ L <string>,,,T1,T2
+ -TO format
+ It is also usually possible, when a real # of lines is being specified (i.e.
+not a column position) to use the construct "-TO <line #>", where -TO can be
+abbreviated to -T or -. The inclusive # of lines to the specified line from the
+last sensible line # given is how this is interpreted. E.g:-
+ DELETE 537 -TO 600

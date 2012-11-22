@@ -1,0 +1,4 @@
+  <> ^ U - S C R U B <>
+
+Scrubs the line i.e. erases all the characters in it except the indent if there
+is one.

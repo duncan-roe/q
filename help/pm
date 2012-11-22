@@ -1,0 +1,61 @@
+  ++ Q   P S E U D O - M A C R O S ++
+
+Notation: <calling sequence>-<approximate function> **=Macro works from TTY
+See end of this help for "active pseudomacros" which return dynamic information
+^NA-obey next 2 chars if at end of line
+^NB<tab id>-obey next 2 chars if cursor before spec'd tab position
+^NP<tab id>-obey next 2 chars if cursor past spec'd tab position
+^N[<tab id>-obey next 2 chars if file pos'n before value in spec'd tab
+^N]<tab id>-obey next 2 chars if file pos'n after value in spec'd tab
+^NC-obey next 2 chars if in a command
+^ND-push a link to 3rd char following (call s/r if followed by ^N<macro name>)
+^NU-pop a link from the stack (return from s/r). Exits if empty stack.
+^NG<char>-obey next 2 chars if screen cursor at a <char>
+^NE-force insert mode off                                                   **
+^NS-skip next 2 chars (can reverse sense of a conditional)
+^NL-(long skip) skip next 4 characters (e.g. for conditional ^ND^N<macro name>)
+^NJ-(long jump) jump over the # of chars spec'd by the next character. (-ve OK)
+^NI-(UPPLUS next) increment link - ^NU returns 2 chars further on
+^NO<tab id>-remembers cursOr position \ Remember by \ In all these the      **
+^NR<tab id>-sets cursoR position      / last 2 chars \ 1st char of the pair **
+^NF<tab id>-remember File position \ Remember by 1st / remembers, and the   **
+^NN<tab id>-set file positioN      / & last chars   / 2nd sets.             **
+^NM<macro id>-Define macro to be current line or command on screen + ^NU    **
+^N\-Force error exit with BELL (in fact undefined).
+^NY<tab id>-subtract file pos in this tab from nxt & put result in follow'g **
+^NT-Trust user to do things not normally allowed
+^NX-exit macro. (Next char from command source)
+<tab id> is 1-9 plus the next 11 ASCII chars. 1 -> 1st tab &c. (H AS for list)
+
+For help on any of the above pseudo-macros, type 'H CN-<pseudo-id>' eg 'H CN-A'
+for ^NA. Special cases: ^N\ 'H CN-BSLSH'; ^N[ 'H CN-LHB'; ^N] 'H CN-RHB'
+
+Unless specified otherwise, pseudos cannot be called directly from the command
+source because, for instance, you can see if you're at the end of a line or in
+a command. Certain unconditional macros are of use however and are allowed, as
+detailed above.
+
+There is a second group of pseudo-macros, tentatively named "Active Pseudos"
+which returns dynamic (ie changing, dependent on the environment) informaion.
+Because these occupy the second bank (octal 4000 to octal 7777), none may be
+invoked from the keyboard directly. But the standard SCMACS.F macro set gives
+access to N4002 (current edit file) via the ^N^P^P macro.
+
+N4000 expands to the current FMODE setting, in octal. Macros may save this then
+      amend any FMODE setting, or Brief/None/Verbose, Indent, FF, & FC with
+      confidence, being able to restore these afterwards.
+N4001 returns the screen height-1 or the number of lines to EOF, whichever is
+      less. It is really specifically designed for the ^N^V (view next
+      screenful) macro in SCMACS.F, but may prove useful elsewhere.
+N4002 expands to the pathname of the file being edited curently. This may not be
+      the same file as would be accessed by "Q $0". In the event there is no
+      current file (because you typed Q then started editing), N4002 will
+      expand to a null string and *NOT RETURN* to a calling macro. This is to
+      prevent possible interpretation of a following argument to the command
+      invoking N4002 from being interpreted as a file name. As mentioned,
+      SCMACS.F gives keyboard access to N4002 via the ^N^P^P macro.
+N4003 expands to the directory name where HELP files and released macros are.
+      This directoy name does not have a terminating separator (use "%s/%s").
+N4004 returns the screen height-1 or some other number if near EOF or SOF. Like
+      N4001, it is specifically designed for the ^N^Q (view previous screenful)
+      macro in SCMACS.F.

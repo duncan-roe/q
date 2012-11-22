@@ -1,0 +1,29 @@
+-i option to supply initial commands (FI syntax)
+Be able to run in pipe
+ need -i first
+  At start: open temp file; cat stdin to it, q to it
+   except, use file name if supplied (and not pipe o/p(?))
+  At end: s; cat temp file to stdout; rm temp file
+   If o/p is not a pipe do not cat file
+Can test if a macro is defined: n4007 x; ^ND^N^<4007>
+Add reverse Polish calculator
+Can set actual amount for "1 line forward / back" half-page / full-page
+DONE Document T in X
+DONE Update HELP to document environment variables
+update scmacs.info a lot (for pres'n)
+Re-check whether cmd.c needs to put command buffer in quotes
+Some option to display version
+Properly reinstate output optimisation (old hack removed as "quick fix")
+ needs select() /poll()
+ needs nanosleep when outputting chars
+ get per-char delay from stty baud rate
+ reinstate setting per-char delay (useful for testing)
+INTERNALS
+  STARTED Have a bool enum for logicals
+  Fix runindent label squashes
+  More GIVE_UP macros - use error_exit as standard label
+  Use GNU tilde expansion function
+  Drop non-ANSI C support (?)
+  (Eventually) rework asg2 blocks (start with xistcs.c)
+FI to have (small) stack for nested calls
+(maybe) replace terminal ioctls with tc{g,s}etattr

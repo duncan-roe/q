@@ -1,0 +1,4 @@
+  <> ^ K - K I L L <>
+
+Erases all characters on the line logically to the right of the cursor (i.e.
+including the character actually at the cursor if not inserting).

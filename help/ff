@@ -1,0 +1,19 @@
+          \/ F F - F O R T R A N - E Y E - V I E W \/
+
+Tells the editor that only the first part of any multipart line should be
+displayed during Print or View commands. This guarantees that V or P23 will not
+overflow a conventional 24-line screen.
+
+Parameter
+ <yes/no arg> one of 'yes', 'no', 'true', 'false', 'on', 'off' with the obvious
+              meanings. Optional - if not specified the current state is
+              inverted.
+
+Notes
+ Because the display width is 72 characters, FF effectively gives a "FTN eye
+view" of a file in most cases, since the FTN compiler only acts on the contents
+of cc 1 - 72. However, 72-character lines that contain characters which the
+Editor takes more than 1 character position to display will not be shown in
+their entirety. Lines containing such characters (eg ^, displayed as ^*) will
+still not cause screen overflows, but what the user sees under the action of FF
+will not be what the FTN compiler sees.

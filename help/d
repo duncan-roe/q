@@ -1,0 +1,15 @@
+  \/ D - D E L E T E \/
+
+Deletes lines from the file
+
+Format
+ DELETE <line no.>,<no. of lines>
+
+Paramaters
+ <line no.> Line # of 1st line to be deleted. Must be specified
+ <# lines> # of lines to delete. Optional - taken as 1 if omitted. May be
+            specified as a # larger than # lines in the file after <line #> in
+            which case lines are deleted to end of file.
+
+File position
+ Before 1st line not deleted.

@@ -1,0 +1,24 @@
+  \/ X - C H A R A C T E R I S T I C S \/
+
+Sets terminal characteristics, e.g. if the defaults are unsuitable. Screenedit
+mode is disabled (it is, after all, unreliable until the terminal
+characteristics are established) then characteristics commands are read,
+terminated by another "X".
+
+Parameters: none
+
+Notes
+ HELP on individual characteristics commands is available seperately by typing
+"H X-<xistics command>". A list of these follows:
+ A-end of line sequence                  B-backspace availability or value
+ D-set or display per-character delay    W-Assume VT100 / X-Window eol seq
+ R-carriage return sequence              T- set spaces per tab
+ X-exit back to main editor
+ Example
+ The most common use of this command is probably on terminals that don't wrap
+round to col. 80 of the previous line when they get a backspace in col. 1:
+ X
+ A
+ X
+ Tells Q there is no fast get-to-end-of-line sequence - the cursor must just be
+moved forward 1 char at a time.

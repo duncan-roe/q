@@ -1,0 +1,5 @@
+  <> E - I N S E R T <>
+
+Switches on or off character insert mode. At the start of editing a line or
+inputting a command it is off. The first ^E switches it on, the next ^E
+switches it off &c.

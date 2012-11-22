@@ -1,0 +1,10 @@
+  <> ^ B - B A C K   1   W O R D <>
+
+Moves the cursor back to the start of the current word of text or if already
+there, back to the start of the previous one. A word of text is any string of
+non-space characters delimited by spaces. An attempt to ^B from column 1 is
+illegal and rings the bell.
+
+Indenting
+ For 'column 1' above read 'the indent point' i.e. ^B will not move the cursor
+before the indent point.

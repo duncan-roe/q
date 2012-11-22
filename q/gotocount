@@ -1,0 +1,14 @@
+Script started on Sun 26 Aug 2012 08:19:03 PM EST
+20:19:03$ cat $C|grep -w goto|wc -l
+791
+20:19:29$ exit
+exit
+
+Script done on Sun 26 Aug 2012 08:19:34 PM EST
+Script started on Sun 09 Sep 2012 05:05:03 PM EST
+17:05:03$ cat $C|grep -w goto|wc -l
+771
+17:05:10$ exit
+exit
+
+Script done on Sun 09 Sep 2012 05:05:14 PM EST

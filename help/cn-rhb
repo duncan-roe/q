@@ -1,0 +1,4 @@
+  << ^ N ] - O B E Y   I F   F I L E   P O S   P A S T   T A B >>
+
+ This pseudo is the same as ^N[ except the test applied is for "after" line #
+rather than "before". For more details, type 'H NC-LHB'.

@@ -1,0 +1,13 @@
+  << ^ N I - I N C R E M E N T   R E T U R N   L I N K >>
+
+ ^NI can be used to make a macro subroutine into a conditional one or even a
+many-way switch, or simply for a called macro subroutine to skip a section of
+the calling macro. It increases the link that ^ND stacked by 2 characters, i.e.
+after one ^NI the called macro will return 2 characters further on than
+otherwise.
+ A check is made that after ^NI in the called macro there are at least 2
+characters (so macro can do a ^NU). Then, if the macro has not actually been
+called by another macro, ^NI is ignored otherwise a check is made that the
+macro still has somewhere to return to (i.e. the link has not been pushed
+beyond returning just to the end of the macro). Failure of any check results in
+error action: the bell rings, macro mode is quitted, and stack is emptied.

@@ -1,0 +1,15 @@
+  \/ R - R E P O S I T I O N \/
+
+Repositions (moves) lines from 1 part of the file to another
+
+Format
+ REPOSITION <line no. 1>,<line no. 2>,<no. of lines>
+
+Parameters
+ <line # 1> line # of 1st line to be moved. Must be specified.
+ <line # 2> line # before which lines are to be moved to. May be specified as
+            'EOF'. Must be specified
+ <# lines>  # lines to move. Optional - taken as 1 if not specified.
+
+File position
+ The file is left positioned after the last line moved.

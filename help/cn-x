@@ -1,0 +1,6 @@
+  << ^ N X - E X I T   M A C R O   M O D E >>
+
+ This pseudo, which predates the introduction of the macro subroutine stack,
+exits from a macro called at any depth back to the keyboard/command source. The
+introduction of the stack has made this pseudo rather less useful than before.
+Type 'H CN-U' for details of the alternative.

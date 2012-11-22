@@ -1,0 +1,17 @@
+  \/ F V - F V E R B O S E \/
+
+Sets the output level on macros &c. to maximum possible
+
+Parameters: none
+
+ Normally when using screenedit macros, which are in fact purely interpretive,
+you see all the commands and amended lines generated, as if the input had come
+from the keyboard. This is VERBOSE mode, as set by this command, and is the
+default when editing is started. Certain macros which are almost small
+"programs" may cause rather a lot of output so commands are available to reduce
+the amount sent to the screen - these being FBrief and FNone.
+ This mode setting can also affect output from the Ychangeall command which
+normally outputs every amended line.
+
+File Position
+ Unaltered

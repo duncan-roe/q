@@ -1,0 +1,15 @@
+  \/ M - M O D I F Y \/
+
+SCREENEDIT specified lines
+
+Format
+ MODIFY <line no.>,<no. of lines>
+
+Parameters
+ <line #>  # of 1st line to edit. Must be specified.
+ <# lines> # of lines to be edited. Optional - taken as 1 if not specified. ESC
+           key will terminate editing before this number of lines has been
+           edited, if required.
+
+File position
+ The file is left positioned after the last line edited.

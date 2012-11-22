@@ -1,0 +1,6 @@
+  <> ^ O - C O M M E N T   M O D I F Y <>
+
+Moves the cursor forward to the first non-space character following a comment
+mark.
+ Currently only works for C (and Q)-style "/*" comments.
+ Moves to end of line if none found. No effect if at end of line already.

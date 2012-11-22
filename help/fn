@@ -1,0 +1,16 @@
+  \/ F N - F N O N E \/
+
+Sets the output level on macros &c. to a zero.
+
+Parameters: none
+
+ See FV for the default output level. When NONE mode is activated during a long
+macro or the Y command nothing appears at all until the macro or command has
+finished. Certain error messages which scmacros can be (but may not have been!)
+written to detect are suppressed e.g. "string not found" from Locate or "line #
+off end of file" from Modify. These errors could be detected by the ^NC
+pseudomacro because after such an error the editor is left in command mode
+whilst otherwise it would be in edit mode.
+
+File Position
+ Unaltered

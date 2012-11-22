@@ -1,0 +1,43 @@
+  \/ N - N E W M A C R O \/
+ Defines a new screenedit macro, or writes current macro definitions to a file,
+or displays them.
+ Formats
+ NEWMACRO <macro id>,<macro body>
+ NEWMACRO - <treename>
+ Parameters
+ <macro id>   identification of the macro to be defined. The macros that can be
+              defined are the control chars except NULL, the next 32 characters
+              (i.e. 040 ' ' up to 077 '?') and anything from 0200 to 03777.
+              (the gap of 64 allows pseudo-macros to be invoked as upper or
+              lower case). The control characters are identified as their
+              either-case equivalents, e.g. "N A ..." defines the control-A
+              macro, as does "n a ...". "n A ..." follows the suggested macro-
+              writing convention that control characters are shown in upper-
+              case, and Q commands in lower.
+              The next 32 macros may be identified as themselves, except for
+              minus ('-'), which can be identified by '@'. Quotes are required
+              for macros so specified, if they contain comma or space.
+              Macros 01 - 077 may also identified by their 2-digit octal ASCII
+              value, e.g. "n ',' ..." & "n54 ..." both define the comma macro.
+              All other macros must be identified using 3 or more octal digits.
+              Quoting is not required and must not be used in the bodies of
+              macros so identified (but it is required with 2-digit octal ID).
+              This (long octal) format is also available for normal characters,
+              e.g. "n001 ..." also defines the control-A macro,
+              but now "..." must not be quoted.
+ <macro body> The definition. If the <macro-id> was specified as 1 or 2
+              characters, this will need to be quoted if it contains comma or
+              space. Otherwise it is read as raw text and should not be quoted.
+              Control characters can be represented by '^' followed by the
+              upper case equivalent, which is the preferred method although
+              they can be entered directly, following '^P'. '^' is entered as
+              '^*' and rubout as '^?' i.e. exactly the same conventions as on
+              output ('^' only shows as '^*' if "fm +*" is asserted).
+              Also just as on output,
+              characters 0200 onwards are entered as "^<3+ -digit octal>".
+              This format is also available for normal characters,
+              e.g. "n001 ^<054> defines the control-A macro to be a comma.
+ <treename>   Treename to accept macro definitions, which will be written in a
+              format suitable for re-input using USE, and which will have a
+              terminating 'Z'. Optional - if omitted, macro definitions are
+              displayed at the terminal.

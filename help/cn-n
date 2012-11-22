@@ -1,0 +1,20 @@
+  << ^ N N - S E T   F I L E   P O S I T I O N >>
+
+ Position the file at the value in the tab indicated by the following character
+in the macro (which must be there and be a valid tab i.d.). The tab is checked
+as follows: it must have previously been set and must be whithin range (<= # OF
+LINES IN FILE + 1). Failure of any of these checks results in error action: the
+bell rings, macro mode is quitted, and stack is emptied.
+ Type 'H AS' for a list of the valid tab id's.
+ Notes
+ Use this pseudomac in conjunction with ^NF. Read the notes with ^NF ('H CN-F')
+very carefully to use this pair of pseudos successfully.
+ Ordinarily, you must be in command mode when issuing this pseudo-macro. This
+is because the main editor does not expect the file position to move while
+editing a line and does not check if it has. When a modified line comes back it
+just deletes the line before the file position (i.e. the line it has just read)
+and inserts before the file position the modified line it has just got back.
+Thus if the file pointer moves, a competely different line will be overwritten
+by the modified line. If for some perverse reason you actually want to do this
+you can - by issuing ^NT ('H CN-T') first but be warned - you are on your own
+and positioning to line 1 will certainly cause problems.

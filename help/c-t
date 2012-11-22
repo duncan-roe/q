@@ -1,0 +1,21 @@
+  <> ^ T - S P L I T   L I N E <>
+
+ Splits the line at the cursor - all characters before the cursor are written
+to the workfile as a line (which also becomes the 'previous' line for ^A) and
+the user is left editing the rest of the line with the cursor at the start
+(after the indent, if any). If escape is keyed eventually when modifying this
+new line this second half is stored in the workfile as it was immediately after
+the ^T.
+ When in a command,^T has a slightly different effect. The characters to the
+left of the cursor are immediately obeyed as a command, then the characters to
+the right are presented on the screen again, with the cursor at the start. The
+previously obeyed command is available with ^A in the normal way. However, if
+the first command caused an error, the user is presented with the entire
+command line to correct i.e. AS IT WAS BEFORE THE ^T WAS DONE.
+ Special Uses
+ See ^R. Also, ^T at the end of a line allows you to modify that line then
+insert extra line(s) after it. Or you could go to the start of the line, ^E to
+insert, then ^T when finished to insert lines before the line you are
+modifying.
+ When in a command, ^T is most often useful to insert extra commands before the
+current one, e.g. after a failed L-LOCATE you might want to 'G1' and try again.

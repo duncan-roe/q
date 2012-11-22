@@ -1,0 +1,76 @@
+  ++ N E W   U S E R ' S   G U I D E   T O   Q	++
+	    !! DON'T PANIC !!
+ The idea behind Q is that what you see on the screen is what goes in the file.
+Unlike "full screen" editors, you work on a line of a file at a time. While
+working on a line there are no explicit commands but instead characters typed
+go straight into the line, overwriting the old ones or being inserted. There
+are control characters in lieu of commands to do such things as move to the
+part of the line you want to change, tell the editor to insert rather than
+overwrite, and others that we needn't go into just yet. There are
+conventional-style commands to get to the lines you want to change, or print
+out parts of the file.
+ GETTING STARTED
+ Let's assume yor have a file that you want to amend. Get into Q by typing 'Q
+<filename>'. Now by keying 'V', the first 12 lines of the file will be printed.
+(V-VIEW prints lines in a file around the current file position). Suppose line
+five is wrong. Type 'M5' and you are modifying line 5.
+ More HELP topics:
+ H IQ	/* Invoking Q from the command shell - the full works
+ H V	/* More info on V-VIEW
+ H M	/* More info on M-MODIFY
+
+ Changing part of a line but not altering its length
+
+ (Notation: '^<char>' means 'control-key<char>'.) Now you are modifying line 5
+(following on from the example in the first part of the guide), move the cursor
+on the screen to the part you want to change, then type over the old part with
+what you want instead (assuming it's the same length) then the amended line is
+accepted by keying carriage return (C/R, RETURN &c.).
+ To move the cursor: ^X moves it to the right, ^Y to the left. So at the start
+of a line you can just key enough ^X's to get where you want. You'll probably
+find this a little slow and tedious besides: there are much faster ways of
+moving the cursor but they'll be detailed later.
+ Time for some revision: the cursor, in case you hadn't guessed , is the
+underline or rectangle or whatever (possibly flashing) that indicates where on
+the line the next character that you key is going to go. To move it - ^X or ^Y
+(for right or left). To change text - overtype new onto old. Key carriage
+return when finished with line.
+ Relevant help topics			H C-Y
+ H C-X					H CP   /* If you're adventurous
+ H C-M
+
+ Inserting or deleting parts of a line
+
+ Ok, now you can move the cursor to wherever you want - laboriously it's true
+but we'll fix that in the next instalment - and overwrite existing text. You
+may have noticed that you can lengthen a line by typing beyond its current end.
+ To insert text in the middle of a line, move the cursor so it's at the
+character before which you want to insert, then key ^E. Now whatever you key is
+inserted rather than overwriting the existing line, until you key another ^E or
+finish with the line (e.g. with C/R). In a line you can key ^E as often as you
+like: each time it changes the state of inserting:- from overwriting to
+inserting or vice versa. ^X and ^Y (also the other cursor controls we haven't
+covered yet) still work when inserting: give it a try and see for yourself!
+ To delete: if there's a number of consecutive characters in a line that you
+want to delete (e.g. a word of text), move the cursor to the first char you
+don't want, then key a ^D to delete it, and more ^D's for the following chars.
+The RUBOUT key also deletes, but it removes the character preceding the cursor,
+(often the one you've just typed) so it's mainly useful for correcting typing
+errors when inserting, or creating new lines (not covered yet). ^Y is usually
+more useful after errors when overwriting text. H
+C-E				      H C-D H RUB
+
+ Faster ways of moving the cursor
+
+ To get immediately to the next occurrence on the line of any particular
+character, key ^G followed by the character. E.g. to get to the next single
+quote, key ^G'. ^G goes to the end of the line if the character is not found.
+ To get back to the start of the line, key ^H. To get to the end, key ^Z.
+ If you think of the line as text with 'words' seperated by spaces then:-
+ ^F gets you to the next 'word'
+ ^B gets you back to the start of this 'word' or the previous one if you were
+already at the start of this one. Also relevant are the following:
+ H DY		     H C-G		 H C-H		     H C-Z
+ H C-F		     H C-B
+ H SC /* The complete list of control characters
+ The continuation of the Guide is still in preparation

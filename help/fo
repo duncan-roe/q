@@ -1,0 +1,17 @@
+  \/ F O - F O R G E T \/
+
+Forgets a preceding DELETE command.
+
+Parameters: none
+
+ Providing no commands that amend or insert lines have been given, the last
+DELETE command given is forgotten (i.e. undone). A message is output giving the
+line # of the first line reinstated and the # of lines reinstated. If there are
+no lines to reinstate (e.g. because of a MODIFY since the last DELETE) then a
+message is output.
+ It is designed to be used as follows: immediately after a DELETE, do a VIEW to
+ensure that the correct lines have been deleted. If the wrong lines have been
+deleted, do a FORGET.
+
+File position
+ The file is left at the 1st line reinstated

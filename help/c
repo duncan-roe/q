@@ -1,0 +1,21 @@
+ \/ C - C O P Y \/
+
+Copies lines from 1 part of the file to another.
+
+Format
+ COPY <line no.>,<line no.>,<no. of lines>
+
+Parameters
+ 1st <line no.> Line # of 1st line to be copied. must be specified.
+ 2nd <line no.> Line # before which to copy lines to. May be specified as 'EOF'.
+                Must be specified.
+ <no. of lines> # of lines to copy. Optional - taken as 1 if ommitted
+
+Special uses
+ The file addresses are calculated before the copy is done, then lines are read
+and written sequentially. Thus if fields overlap, duplication will occur. eg:
+ 'C 1,2,1000' will make 1000 copies of line 1, starting at line 2 (assuming at
+              least 2 lines in the file).
+
+File position
+ The file is left after the last line created

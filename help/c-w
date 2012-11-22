@@ -1,0 +1,10 @@
+  <> ^ W - C H A R   F O L L O W I N G   N O   P A R I T Y <>
+
+After ^W, the next character typed is entered into the current line
+unconditionally, as is the case with ^P, but with the parity bit high.
+
+Note
+ To distinguish these from normal (parity low) characters in the file,
+characters thus inserted are displayed as '^<<octal value>>'. This display
+format is legal as input to the N-ewmacro and FI-mmediate_macro commands, for
+any character.

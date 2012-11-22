@@ -1,0 +1,5 @@
+  \/ F Q - F O R C E - Q U I T \/
+
+FQ acts similarly to Q-Quit (q.v.) except it has no command massaging.
+
+FQ with no argument in a macro *will* exit the Q Editor.

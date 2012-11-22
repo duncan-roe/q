@@ -1,0 +1,17 @@
+  \/ F B - F B R I E F \/
+
+Sets the output level on macros &c. to a bare minimum.
+
+Parameters: none
+
+ See FV for the default output level. When brief mode is activated during a
+long macro or the Y command, the line number being dealt with is displayed but
+without a newline so the display remains stationary and the line # just turns
+over like a counter. Certain error messages which scmacros can be (but may not
+have been!) written to detect are suppressed e.g. "string not found" from
+Locate or "line # off end of file" from Modify. These errors could be detected
+by the ^NC pseudomacro because after such an error the editor is left in
+command mode whilst otherwise it would be in edit mode.
+
+File Position
+ Unaltered

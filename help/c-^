@@ -1,0 +1,12 @@
+  <> ^ ^ - R E P E A T   L A S T   ^ G  <>
+
+Moves the screen cursor forward to the next occurrence in the line of the last
+character successfully searched for by a ^G. No effect if at end of line. Rings
+bell (error) if no successful ^G on this line yet. Can be used several times in
+succession as the character immediately after (at) the cursor is not included
+in the search.
+
+Special Uses
+ Can be used to get to a PREVIOUS occurrence of the currently nominated
+character by moving the cursor backwards (e.g. with ^H) then reissuing ^^ as
+required.

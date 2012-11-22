@@ -1,0 +1,11 @@
+  << ^ N \ S I G N A L   E R R O R   A N D   E X I T >>
+
+ Forces an error:- rings bell, quits macro, empties subroutine stack. In fact
+this would happen for any undefined macro or pseudomacro, but it is guaranteed
+that ^N\ will not be defined.
+ You might use this in a macro which is only relevant in command mode, but is
+called while modifying a line, or vice versa. Also useful when developing a
+macro if you detect a condition you know about but have not yet coded macros to
+deal with it.
+ Example
+ Type 'H CN-L' to see an example.

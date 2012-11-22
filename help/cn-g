@@ -1,0 +1,24 @@
+  << ^ N G - O B E Y   I F   M A T C H >>
+
+ This conditional pseudo tests the character at the cursor position ('H CP')
+for equality with the next character in the macro and obeys the following 2
+characters (which must be there, i.e. this pseudo must be followed by at least
+3 chars) if equality is true. Mnemonic:- obey if Got next char.
+ Example:
+ A good example is the "DELETE THIS WORD" macro ^N^K in the sample macro set
+/usr/q/scmacs (under Unix). Here it is:
+ N K '^D^NA^NU^NG ^NS^N^K^D^NU ;Word delete
+ There is no special provision for comments in the macro processor by the way,
+but after an unconditional transfer of control (e.g. ^NU above) the rest of the
+macro up to the maximum length (limited only by command line length, curently
+(MAR 94) 2048) can be used for one.
+ Anyway, the macro assumes the cursor is on the first character of a word, and
+that you want to delete the word and the space following (there won't be a
+space following the last word in a line of course).
+ Here's how it works:-
+  Delete the current char				   ^D
+  If now at end of line, exit (no more to do)		   ^NA^NU
+  If we're not now on a space, repeat above  ** EXAMPLE**  ^NG ^NS^N^K
+  Delete this space and exit (finished) 		   ^D^NU
+ Note the use of ^NS to reverse the sense of ^NG to 'obey the jump back if NOT
+equals'.

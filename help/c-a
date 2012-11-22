@@ -1,0 +1,13 @@
+  <> ^ A - A G A I N / A P P E N D <>
+
+Moves the cursor to the end of the current line, then, if the previous line was
+longer than this, the remainder of the previous line is recalled and the cursor
+left after that.
+
+Notes
+ The PREVIOUS line is the last line accepted either by n/l or ^T. There are
+seperate COMMAND and WORKFILE PREVIOUS lines.
+ The previous line can be recalled any number of times while editing a line
+e.g. after a ^U.
+ ^A will not recall a line that was accidentally ESCape'd. Type 'H C-R' for how
+to do this.

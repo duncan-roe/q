@@ -1,0 +1,6 @@
+  <> ^ H - H O M E <>
+
+Returns the cursor to the start of the line.
+
+Indenting
+ Moves the cursor back to the indent point: i.e. the first non-space character.

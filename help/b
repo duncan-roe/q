@@ -1,0 +1,15 @@
+  \/ B - B A C K U P \/
+
+Makes a filestore copy of the editor's workfile, but if a file would be
+overwritten then it is retained by renaming it <pathname>.BU. If <pathname>.BU
+exists already, the user is asked if he wants to delete it: a 'no' answer
+abandons the command. See also S-SAVE for the consequences regarding protection
+and ownership.
+
+Parameter
+ <pathname> optional if there has been a previous B-BACKUP, S-SAVE or Q-QUIT
+	    command with a <pathname> or if Q was invoked with one originally,
+	    in which case the previous parameter applies.
+
+File position
+ This command leaves the file position unaltered.

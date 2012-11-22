@@ -1,0 +1,5 @@
+  <> ^ D - D E L E TE   R / H   C H A R <>
+
+Deletes the character logically to the right of the cursor e.g. on a screen the
+character addressed by the cursor if not inserting. Illegal (rings bell) if at
+end of line.

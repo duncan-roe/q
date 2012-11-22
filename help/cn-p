@@ -1,0 +1,17 @@
+  << ^ N P - O B E Y   I F   C U R S O R   P A S T   T A B >>
+
+ One of the many pseudo-macros that must be immediately followed by a <tab-id>,
+this conditonal pseudo obeys the following 2 chars (which must always be there)
+in the macro if the cursor is past (and not at) the character numbered by the
+tab <tabid>. Type 'H CP' for more details on cursor position. Type 'H AS' for a
+list of the valid tab id's.
+ Example:-
+ If tab # 1 is 7 (as at start-up) and you have defined macro ^A as follows:
+ N A ^NP1^N^B^NU
+ I.e. go to macro ^B if ^NP1 is true otherwise exit, then if the cursor is at
+character 8 or later ^N^B will be invoked otherwise it won't. At position 7,
+both ^NP and its opposite ^NB are false, which can be used to test for
+equality.
+ Note
+ Attempting to test against a tab which has never been set is illegal, and
+rings the bell, also quitting the macro.

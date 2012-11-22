@@ -1,0 +1,13 @@
+# Must run this as . ./makelinks
+
+# This file customises Q for specific platforms
+rm termio5.hl
+
+# Comment-out the next line if not running Linux
+ln -s linux.termio5.h termio5.hl
+
+# Un-comment the next line if running Cygwin
+#ln -s cygwin.termio5.h termio5.hl
+
+# Other termio5 files may work for their respective platforms,
+# but have not been tried for a while.

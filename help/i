@@ -1,0 +1,15 @@
+  \/ I - I N S E R T \/
+
+Screenedit-reads lines to go into the file before the specified line until ESC
+is keyed.
+
+Parameter
+ <line no.> Number of line before which lines are to be inserted. Must be
+            specified
+
+Special note
+ The INSERT command cannot put lines after the last line in the file. Use
+APPEND to do this.
+
+File position
+ The file is left positioned after the last line created by the command.

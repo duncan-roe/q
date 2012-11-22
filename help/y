@@ -1,0 +1,23 @@
+  \/ Y - Y C H A N G E A L L \/
+ Changes all occurrences of one string to another in a range of lines
+ Format
+ YCHANGEALL <string1>,<string2>,<line #>,<# lines>,<1st pos'n>,<last pos'n>
+ Parameters
+ <string1>  the string to be searched for and replaced. See L-LOCATE for full
+            format details. <string1> must be specified.
+ <string2>  the string with which to replace <string1>. Same comments apply
+            except <string2> is optional - if omitted it is taken to be null:-
+            all occurrences of <string1> in the given range (q.v.) are removed.
+ <line #>   First line in which to look for <string1>. Optional - taken as 1
+            (i.e. start of file) if not specified.
+ <# lines>  # of lines to be searched for <string>. Optional - if ommitted the
+            search is done to end of file.
+ <1st pos'n> \Much the same as for L-LOCATE. Note however that these params
+ <last  "  > /apply to the UNMODIFIED line (before any length change).
+ Notes
+ BRIEF or NONE output modes are actioned if in an scmacro without question. If
+command came from the keyboard, they are actioned subject to confirmation.
+ Specifying neither <line #> or <# lines> scans the whole file.
+ The command may be terminated early by a keyboard interrupt (^C usually).
+ File position
+ Unaltered, except left at a line which won't fit if that happens.

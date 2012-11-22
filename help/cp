@@ -1,0 +1,15 @@
+  ++ C U R S O R   P O S I T I O N ++
+
+On a terminal with Q not inserting characters, the cursor will share a screen
+position with a character of data. However Q always regards the cursor as being
+between two characters, namely the character just mentioned and the one before
+it. This can be seen when insert mode is entered, as the character that was
+sharing the cursor position moves one place to the right. Hence the control
+command-characters that operate on chars to the "right" of the cursor also work
+on the character sharing the cursor position on the screen: similarly, controls
+working on characters to the "left" of the cursor do not operate on this
+character.
+ Sometimes the cursor is said to be "at" a character - the character mentioned
+in the last paragraph is intended by this whether it occupies a seperate
+position on the screen (as will be the case when inserting) or not.
+ Note that the 1st character on a line is character # 1.

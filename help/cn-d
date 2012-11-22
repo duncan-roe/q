@@ -1,0 +1,13 @@
+  << ^ N D - I N I T I A T E   S U B R O U T I N E   C A L L >>
+
+ In fact this pseudo simply pushes a return link (to the 3rd character
+following in the macro (which need not exist but the next 2 must)) but it is
+almost always used to call another macro as a subroutine, by following it with
+a branch to another macro. The called macro (or any other macro it branches to)
+can return to the next character in the calling macro by using the ^NU pseudo
+('H CN-U'). The called macro should not simply branch back to the calling one,
+because whereas the stack is large it is finite and if it fills up an error
+condition is signalled (bell rings and macro is quitted out of, also the stack
+is thrown away).
+ Example
+ See ^NL ('H CN-L') for an example.

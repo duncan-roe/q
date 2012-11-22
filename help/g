@@ -1,0 +1,12 @@
+  \/ G - G O T O \/
+
+Sets the file position to the specified value, which must be the number of a
+line already existing in the file.
+
+Parameter
+ <line no.> See above. Must be specified.
+
+Special note
+ The GOTO command cannot be used to position the file after the last line in
+the file. This functionality can be obtained using the APPEND command.
+'H A' for more details.

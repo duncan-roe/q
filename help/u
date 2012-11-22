@@ -1,0 +1,19 @@
+  \/ U - U S E F I L E \/
+
+Instructs Q to make the nominated file its standard input. The current standard
+input is resumed when input from the file finishes. File input finishes on
+error, the "Z" command, or end of file (which generates a warning).
+
+Parameter
+ <pathname> Name of command file. Must be specified.
+
+Notes
+ - If "Z" is missing from the end of the file, the user may experience odd
+behaviour, especially during startup. Therefore Q issues a warning for missing
+"Z" but otherwise continues as if it had been there.
+ - If Q reports an unhandled error while obeying a Used file, the entire file
+stack is unwound and standard input reverts to the original source.
+ - Output suppression (by "fd y") is inherited from an invoking Use file. On
+returning to an outer Use file, the suppression setting is restored to what it
+was when it U-Used this file.
+ - USEFILE is typically used to load Q's macros.

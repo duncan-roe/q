@@ -1,0 +1,10 @@
+  \/ E - E N T E R F I L E \/
+
+ Reads the specified filestore file, inserting it at the current file position,
+which remains unchanged.
+
+Parameter
+ <pathname> Name of file to be entered. Must be specified.
+
+File position
+ Numerically unaltered, i.e. before 1st line created by the command.

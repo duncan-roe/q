@@ -1,0 +1,8 @@
+  ++ F I L E   P O S I T I O N ++
+
+The file position, mentioned in many of the other help files, is a number
+somewhere between 1 and the total number of lines in the editor's workfile +1,
+and is the number of the next line that would be printed by the "P" command, or
+in fact would be accessed by any command that did not have a line number
+parameter (e.g. W-WRITEFILE). E-ENTERFILE will load lines in before this line,
+the first line so loaded being given this line number.

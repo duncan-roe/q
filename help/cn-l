@@ -1,0 +1,10 @@
+  << ^ N L - L O N G   S K I P >>
+
+ Because it takes 4 characters to call a macro as a subroutine
+(^ND^N<macro-id>) it is necessary, to call a subroutine conditionally, to have
+a 4-character skip. like ^NS, this reverses the sense of the conditional, so if
+you didn't want to do that, precede ^NL with ^NS.
+ Example
+ Macro ^A calls macro ^B as a subroutine if in command mode, otherwise signals
+an error:
+ N A '^NC^NS^NL^ND^N^B^N\

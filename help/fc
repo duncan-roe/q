@@ -1,0 +1,14 @@
+            \/ F C - C A S E   I N D E P E N D E N C E \/
+
+Tells the editor that searches for strings should be performed in a case-
+independent manner. This affects the L, Y, FL and FY commands.
+
+Parameter
+ <yes/no arg> one of 'yes', 'no', 'true', 'false', 'on', 'off' with the obvious
+              meanings. Optional - if not specified the current state is
+              inverted.
+
+Notes
+ Although strings to be located / replaced are searched for in a case-
+independent manner, replacement strings are of course still inserted in
+whatever case the user specifies.

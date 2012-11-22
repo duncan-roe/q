@@ -1,0 +1,18 @@
+  <> ^ R - R E S C U E <>
+
+Makes available characters in the current line up to the longest the line has
+ever been since starting on this line. Thus it can undo an accidental ^U for
+instance. If the line is a fresh line that has never had any characters at all
+(apart from posibly the indent) then characters are made available up to the
+maximum possible line length - currently (Oct '80) 80 chars for a command or
+500 chars for a line of data. This provides a means of recovering from an
+accidental ESCape.
+
+Special Uses
+ ^R can be used to generate a copy of a line next to itself (e.g. to eventually
+interchange 2 fields). Just insert spaces at the front of the line until the
+line's length has doubled, ^L then ^R.
+ However, to interchange fields you might well find it easiest to split the
+line (^T) so that the fields are on seperate lines, then amend their order
+using R-REPOSITION then J-JOIN them. To get a copy side by side you could in
+fact use C-COPY & J-JOIN as an alternative to the previous paragraph.

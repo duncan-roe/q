@@ -1,0 +1,22 @@
+  << ^ N J - L O N G   J U M P >>
+
+Jumps by the arbitrary number of chars which is the value of the next
+character. A backwards jump may be effected by specifying 16-bit 2's-complement
+e.g. ^<177777> is -1 (but you would never use -1, read on).
+
+Because this is a 3-character sequence, ^NL will be required to conditionally
+obey it. The 4th character position is therefore lost, since either the ^NL or
+the ^NJ will skip it. Conventionally such positions are coded with an X
+(Capital "X").
+
+The skip is done relative to the character following the macro (i.e. the X
+mentioned previously). Thus a backwards jump of 1, 2 or 3 characters will end
+up in the ^NJ sequence again. For example:-
+
+...^NL^NJ^<06>X^[m-2^j...
+
+conditionally obeys the 5-character sequence  starting with ^[ (assuming ^NL
+was preceded by a conditional like ^NA).
+
+Specify numeric 6 as ^<06>m since ^<6> will probably acquire the meaning of
+"extended-parity 6".

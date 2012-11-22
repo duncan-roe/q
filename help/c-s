@@ -1,0 +1,7 @@
+  <> ^ S - L O W E R   C A S E	 - >   U P P E R <>
+
+While editing or inputting a command, changes all alphabetic characters
+logically to the right of the cursor (i.e. from the cursor on) to upper case if
+they were not in upper case already.
+ At other times (e.g. when printing lines), ^S has its usual 'stop output'
+effect providing XOFF was enabled at the time Q was invoked.

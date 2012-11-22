@@ -1,0 +1,38 @@
+  \/ Q - Q U I T \/
+
+Stops editing the current file, and quits the program if no parameter given.
+The command is queried if the file has been modified since the last SAVE or
+BACKUP. When quitting the program, the terminal is returned to its state before
+Q was entered.
+
+If Q is not given a parameter, it may be "massaged" to have one, if the Q
+editor was initially invoked with multiple file arguments (perhaps with a
+wildcard). In this case, the next argument is massaged in, so Q only actually
+quits after the last nominated file has been edited. In a macro, Q never quits
+unless "FM +Q" has been issued previously, see "H FM"
+
+Parameter
+ <pathname> Optional. If specified or massaged in, Q does not quit the program,
+	    instead it initialises its workfile and reads in the specified file
+	    which becomes the file being edited, in that a subsequent SAVE or
+	    BACKUP without a parameter will use <pathname> as the implied one.
+	    Macro definitions and terminal characteristics (such as the setting
+	    of indent mode) are preserved however. The command 'Q <pathname>'
+	    is therefore always faster than the equivalent sequence 'Q;Q
+	    <pathname>' and is usually considerably faster.
+ $<number> May be given alternatively to <pathname> and is massaged into one of
+	   the original command line arguments. If zero, becomes the current
+	   command-line arg. If signed, reference argument <number> before or
+	   after the current one. Otherwise action the absolute argument number
+	   <number>, with the first argument being 1.
+	   Specifying an argument before the first or after the last command
+	   line argument leaves $<number> un-massaged.
+	   By default, this command leaves the command-line argument pointer
+	   unchanged (so "Q $0" will return you to the file that "Q" last
+	   massaged into). "FM +#" reverses this behaviour so that the file you
+	   nominated in <number> becomes $0. "H FM" for more.
+ File position
+ The new edit starts with the file positioned at line 1.
+
+This command gives the Q Editor its name. Although originally simply there to
+quit the program, it has acquired much additional functionality over the years.

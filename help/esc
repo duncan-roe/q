@@ -1,0 +1,8 @@
+  <> E S C - A B A N D O N <>
+
+Abandons the editing of a data line. If the line was being modified, it reverts
+to its previous state; if it was a new line ("A" or "I") it is discarded.
+ ESC terminates an "A", "I", or "M" command: it is the only way of terminating
+either of the first two. See also ^T.
+ When inputting a command, ESC first acts as ^U, then resets INSERT mode and
+finally enables ^R to reveal the full contents of the command buffer.

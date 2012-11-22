@@ -1,0 +1,23 @@
+  \/ F L - T O K E N   L O C A T E \/
+
+Functions exactly as L-LOCATE except that the string being searched for is
+searched for as a TOKEN.
+
+Format
+ see LOCATE
+
+Parameters
+ see LOCATE
+
+File Position
+ see LOCATE
+
+Notes
+ A string is matched as a token if it is delimited on both sides by either
+end-of-range (e.g. line start/end, 1st/last spec'd column to search) OR a
+non-alphanumeric character that has not been declared to be a non-delimiting
+character by the FT command (qv). Thus in ordinary text "his" would match into
+the word "his" but not into the middle of "this".
+ In a FORTRAN program, I would match into (I), I=J, 'I' but not into II. To
+stop K matching into K$READ, do an FT $. To stop I matching literal I above,
+use FT '''' but I may still match in longer literal strings.

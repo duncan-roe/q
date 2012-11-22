@@ -1,0 +1,12 @@
+  << ^ N F - R E M E M B E R   F I L E   P O S I T I O N >>
+
+ Sets the tab indicated by the following character in the macro (which must be
+there and be a valid tab i.d.) to the current file position. Type 'H AS' for a
+list of the valid tab id's. Type 'H FPOS' for more details on file position.
+ Notes
+ See note with ^N[ ('H CN-LHB') regarding which tabs may be used.
+ When modifying a line, the file position has already moved to be before the
+next line (i.e. after that line). Thus whether you set position while in the
+line or in command mode immediately afterwards makes no difference. To get back
+into the line, you have to reset file position using ^NN then MODIFY -1, not
+MODIFY -.

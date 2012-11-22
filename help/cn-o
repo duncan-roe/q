@@ -1,0 +1,5 @@
+  << ^ N O - R E M E M B E R   C U R S O R   P O S I T I O N >>
+
+ Sets the tab indicated by the following character in the macro (which must be
+there and be a valid tab i.d.) to the current cursor position in the line being
+edited or command being input. Type 'H AS' for a list of the valid tab id's.

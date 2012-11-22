@@ -1,0 +1,19 @@
+  \/ F T - T O K E N   N O N - D E L I M I T E R \/
+
+Tells the editor that the specified character is not to be treated as a token
+delimiter in the token-sensitive commands FL, FY, &c.
+
+Format
+ FT <char>
+
+Parameter
+ A single character to be added to the non-delimiter table.
+
+Notes
+ There is a limit to the size of the non-delimiter table, but it is reasonably
+large. Alphanumerics should not be specified as they are not delimiters in the
+first place. In the intial implementation it is not possible to remove
+characters from the non-delimiter table except by quitting out of Q and
+starting again. Also the current table cannot be listed: FT with no parameters
+will do this once it's implemented. For more notes and some examples of use,
+type "H FL".

@@ -1,0 +1,23 @@
+  ++ L I N E   N O .   A R G U M E N T ++
+ Many commands take one of these - some take two. They are always mandatory
+parameters (sometimes called arguments) and must be numeric with a value
+greater than zero but not greater than the number of lines in the file (except
+that C-COPY and R-REPOSITION can accept 'EOF' - see their help for more
+details). Exception:- the Y-CHANGEALL command has an optional line # parameter
+with the default being 1 (start at beginning of file).
+ The T<tab-id> format as described for # of lines parameters (H #L for details)
+is also available for line numbers, but again will be mainly useful for macro
+writing. For line numbers there is the additional restriction that tabs that
+have or could have been set by the T-TABSET command cannot be used e.g. if you
+have tabs set at 7 & 36 then tab-id's 1 & 2 are not available for line numbers.
+
+Relative numbering
+ An offset from the current file position ('H FP' for clarification) can be
+specified by by giving a signed number. E.g. "-1" => previous line (line just
+modified, for instance). Unary plus or minus is treated as zero offset, i.e.
+operate on current line. Once the offset is added to the current file position,
+the same range checks (0<result<=#lines) is applied.
+
+Examples
+ MOD -1     /* Modify the previous line
+ GO +23     /* Move 23 lines on down file (to do another V-VIEW perhaps).

@@ -1,0 +1,84 @@
+* $Id: scmacs.tcl,v 1.24 2012/10/18 06:07:16 dunc Exp $
+FD Y /* Tcl macros that differ from default FTN ones
+o y
+ft_
+fm-t -s -l
+N061 ^NC^NS^N\n2000 (gdb) ^*NU^J^ND^N^<1270>^NU
+N062 ^NC^NS^N\n2000 \r\n>^*NU^J^ND^N^<1267>^NU
+N063 ^NC^NS^N\n2000 [$#] ^*NU^J^ND^N^<1276>^NU
+N1267 ^NC^NS^N\n2001 "^*NU^Jn2002 "^*NU^J^NU
+N1270 ^NC^NS^N\n2001 {^*NU^Jn2002 }^*NU^J^NU
+N1276 ^NC^NS^N\n2001 -re {^*NU^Jn2002 }^*NU^J^NU
+N A '^NC^N\^Z \  ^T^NU ;Continuations
+N E '^NC^N\^NM^<1201>^Z \^T{^T}^J^[i-^J^ND^N^<1201>^H^L^NM^<1201>^[m-1^J^Z ^NB2^I^@^NB2^I^@;# ^ND^N^<1201>^J^[i-1^J^ND^N^I^NU Tcl new bracket level
+N H '^NC^N\^?^?^NU ; Outdent amount (should match ^N^I)
+N I '  ^NU ; Indent amount
+N L '^NC^N\^NFa^J^[n403 ^*NU^J^NNam-1^J^NG}^NS^N\^F^NG;^NS^NL^ND^N^<477>^Z^Y^NG ^NS^X ^Z\^Telse \^T{^T} ^ND^N^<403>^Ji-1^J^ND^N^I^NU
+N477 ^L^L^Z else^NM^<403>^[m-1^J^G;^B^G ^K^NU
+N N '^N^^
+N O '^NC^N\^NOa^H^ND^N^<407>^S^X^ND^N^U^NRa^NU ; Tcl comment beautify - no n/l
+N Y '^NE^H^NA^NS^N^<405>^L# ^NU Tcl comment
+N202 ^NC^NS^N\q ^ND^N^<4003>/scmacs.tcl^J^NU
+N220 ^NC^NS^N\u ^ND^N^<4003>/scmacs.tcl^J^NU
+N405 ^Z^X^NB2^I^@;# ^NU
+* N 0   "beautify" Tcl source. Currently consists solely of pulling back
+*       comments to cc1. File position is restored afterwards. ^N0
+*       sets up tab b to the current file pos'n and tab c to be cc2...
+N 0 '^NC^NS^N\^ND^N^<4000>^NM^<403>^Ufb^J^NFbo y^Ji1^JX^NOc^[^ND^N^<404>g tb^Jfm ^ND^N^<403>^J^NU
+N403 !! SCRATCH - used by ^N0
+* n404: Main loop on lines. If we have a comment and it doesn't start in cc1
+*       then pull it back.
+N404 ^[m-^J^NC^NU^NG#^NS^N^<404>^NBc^N^<404>^L^J^N^<404>
+* n405: Do a ^O equivalent for Tcl. If line starts '#', look for 1st non-space
+*       following; else look for a ";#" pair then look for non-space
+N407 ^NOx^H^NG#^N^<406>^NRx^G;^NA^NU^X^NA^NU^NG#^N^<406>^N^<405>
+N406 ^X^NA^NU^NG ^N^<406>^NU
+* n341: (^N^Wa) - Remove 1 (one) parenthesised expression from each global statement
+*       (e.g. after a global replacement of a scalar with an array element)
+N341 ^NC^NS^N\^NFag1^J^ND^N^<410>g ta^J^NU
+N410 fl global^J^NC^NU^G(^NA^NS^N^<411>^J^N^<410>
+N411 ^NG)^NL^D^N^<411>X^D^J^N^<410>
+* n205 ^nc^n\^nfa^j^[g ta^jm-1^j^ng}^ns^n\^x^k^jm-2^j^nu ; strip comment from trlg "}"
+N205 ^NC^N\^NFa^J^[g ta^Jm-1^J^NG}^NS^N\^X^K^Jm-2^J^NU ; Strip comment from trlg "}"
+* N207 (^N^W^G) convert current line to exp_send / expect pair
+N207 ^NC^N\^NE^E^Hexp_send {^Z};exp_send \r^Texpect ^ND^N^<2001>^ND^N^<2000>^ND^N^<2002>^J^NU
+N2000 (gdb) ^NU
+N2001 {^NU
+N2002 }^NU
+* n212 - Put a box around the current block of comments. Can invoke from last
+*        line in modify mode or just after in command mode.
+* TABS USED
+*
+* a - line# after last line
+* b - line# of first line
+* c - maximum line length (pos'n of space before #)
+*
+* MACROS DEFINED
+*
+* n212, n677 down to n670
+*
+N212 ^[^NFam-1^J^ND^N^<677>^N\^NOc^J^ND^N^<676>^[^NFb^ND^N^<675>^ND^N^<673>i ta^J^ND^N^<672>^H^L^J^[i tb^J^ND^N^<672>^H^L^J^[g ta^Jg+2^J^NU
+* n677 - Return if non-comment-line else incremented return (all in modify mode)
+* n670   If line doesn't end " #" then make it do so.
+*        Indent mode assumed.
+N677 ^NG#^NS^NU^NI^Z^Y^NG#^NS^N^<670>^Y^NG ^NU^X^E ^Y^E^NU
+N670 ^NG ^NS^Z ^Z#^Y^Y^NU
+* n676 - Modify lines back up the file, advancing tab c to max line length.
+*        Return in edit mode when non-comment line found, positioned in the
+*        non-comment line
+N676 m-2^J^ND^N^<677>^NU^NPc^NS^NL^NOc^@^J^N^<676>
+* n675 - Modify each comment line to push its trailing # out to the maximum
+*        length
+N675 ^N[a^NS^NUm-^J^Z^B^Y^E^ND^N^<674>^J^N^<675>
+* n674 - pad line out for n675
+N674 ^NBc^NS^NU ^N^<674>
+* n673 - Construct a #---# line of the right lenght, put in n672
+N673 i ta^J#  #^B^Y^E^ND^N^<671>^H^L^NM^<672>^[^NU
+* n671 - fill line with minuses
+N671 ^NBc^NS^NU-^N^<671>
+* n231 (^N^W^Y) split a window command to 1 option/line
+N231 ^NC^N\^G-^NE^E\^T^E^ND^N^I^ND^N^<667>^J^NU
+N667 ^G-^NA^NU^NE^E\^T^N^<667>
+* n333 (^N^W[) fix up eval set
+N333 ^[g-1^Jfl eval,1^J^NC^N\^ND^N^K^G\^NA^N\[s^Eet ^G)^X]^Jfl eval^J^NU
+z

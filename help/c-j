@@ -1,0 +1,5 @@
+  <> ^ J - ( N E W L I N E ) <>
+
+^J is used to terminate (accept) a line of input, a modified line, or a command.
+ Q treats ^J & ^M identically, but the convention when writing macros is to use
+^J.

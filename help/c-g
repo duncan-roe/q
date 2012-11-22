@@ -1,0 +1,8 @@
+  <> ^ G - G O T O   N E X T   C H A R A C T E R <>
+
+Moves the screen cursor forward to the next occurrence in the line of the next
+character input. No effect if at end of line. Can be given with the same
+character following several times in succession as the character immediately
+after (at) the cursor is not included in the search. However it will usually be
+found more convenient to use ^^ for this function - 'H C_UP' for more details.
+The cursor moves to the end of the line if the character is not found.

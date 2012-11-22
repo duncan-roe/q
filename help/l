@@ -1,0 +1,27 @@
+  \/ L - L O C A T E \/
+ Locates the specified string, then acts as a 'modify' on the line containing it
+with the screen cursor initially at the start of its first occurrence in that
+line. The search for the string starts at the current file position, and
+proceeds forward through the file unless "fm +r" is in effect, in which case the
+file is searched backwards.
+ Format
+ LOCATE <string>,<1st no. of lines>,<2nd no. of lines>,<1st pos'n>,<last pos'n>
+ Parameters
+ <string>    the string to be searched for. If it contains space, comma, '/*'
+             or quote, it should be enclosed in quotes, and quotes in the
+             string should be doubled-up. <string> must be specified.
+ <# lines 1> # of lines to be searched for <string>. Optional - if ommitted the
+             search is done to end of file, or start of file if "fm +r".
+ <# lines 2> # of lines to modify (including line containing <string>) after
+             a successful search. Optional - taken as 1 if not specified. The
+             ESCape key can be used to terminate editing before this number of
+             lines, if required.
+ <1st pos'n> } Optionally specify the 1st and last positions in the line where
+ <last  "  > } the string may start. Both same value => where string must be.
+             } Rules same as for # of lines arguments. Defaults:-
+             } <string> can start char 1 / can be up to last part of line.
+ File position
+ After a successful search, the file is positioned after the last line modified,
+if searching forwards. If searching backwards, the file is left at the line
+where the match occurred (a backwards search starts at the line before the
+current one). After an unsuccessful search, the file position is unchanged.

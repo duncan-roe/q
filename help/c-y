@@ -1,0 +1,4 @@
+  <> ^ Y - C U R S O R   B A C K <>
+
+Moves the cursor back 1 position. Illegal if at start of line (or the indent
+point if indenting) - rings bell.

@@ -1,0 +1,20 @@
+  \/ F X - F X C H A N G E \/
+
+Exchanges the functions of any two keyboard keys.
+
+Formats
+ FXCHANGE <1st key>,<2nd key>
+ FXCHANGE
+
+Parameters
+ <1st key> \ The 2 keys whose functions
+ <2nd key> / are to be interchanged.
+
+ If one key is specified, the other must be also. Control characters can be
+entered as ^A, &c. ^? stands for RUBOUT, and either ^ or ^* are accepted for ^.
+The command only affects chars typed from the keyboard:- U-Use files and macros
+are not affected. FX may be used to cater better for individual preference.
+Examples include swapping ^H and DEL, although in an xterm you may prefer to
+select "Delete is DEL" from the terminal menu.
+ If the command has no parameters, a dialogue takes place for certain special
+functions, such as resetting all keys to their defaults again.

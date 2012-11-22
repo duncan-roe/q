@@ -1,0 +1,8 @@
+  <> ^ P - P A S S - T H R O U G H   N E X T   C H A R A C T E R <>
+
+The character following ^P is passed through to the current line without special
+interpretation of any kind.
+ Use ^P to place control chars (including ESC, NULL & DEL) into the current
+comand line or file line.
+
+When ^P is the interrupt character, ^C may be used in its place.

@@ -1,0 +1,8 @@
+  << ^ N R - S E T   C U R S O R   P O S I T I O N >>
+
+ Moves the cursor to the value in the tab indicated by the following character
+in the macro (which must be there and be a valid tab i.d.). The tab is checked
+as follows: it must have previously been set and must be whithin range (<=line
+length+1). Failure of any of these checks results in error action: the bell
+rings, macro mode is quitted, and stack is emptied.
+ Type 'H AS' for a list of the valid tab id's.

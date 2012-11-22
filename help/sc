@@ -1,0 +1,14 @@
+  ++ S C R E E N E D I T   C O N T R O L   C H A R A C T E R S ++
+Notation: <control char>-<approximate function>
+
+^A-Again/Append   ^B-Back 1 word    ^C-Interrupt (^P is alternative)
+^D-Delete r/h char^E-Enter/Exit insert mode           ^F-Forward 1 word
+^G-Goto<next char>^H-Home           ^I-Insert tab     ^J-(=N/L-ignored)
+^K-Kill (r/h)     ^L-Left hand kill ^M-(=CR) accept
+^N-expaNd scmacro<next char>        ^O-cOmment modify ^P-Pass next char
+^Q-U/C->L/C (R/H) ^R-Reveal         ^S-L/C->U/C (R/H) ^T-spliT line
+^U-scrUb line     ^V-recoVer        ^W-With parity    ^X-f/wd 1 place
+^Y-back 1 place   ^Z-f/wd to E.O.L. ^@(=NULL)-(ignored except after ^C)
+^[(=ESC)-abandon  RUBOUT-delete l/h char.             ^^-repeat last ^G
+XOFF is always suppressed during actual screenedits but if it was
+enabled at start of session it is re-enabled at other times.

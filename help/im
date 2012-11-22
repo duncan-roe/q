@@ -1,0 +1,21 @@
+  ++ I N D E N T   M O D E ++
+
+Designed primarily with PASCAL in mind, but useful also for COBOL and to an
+extent FORTRAN, indent mode when enabled moves the screen cursor the same
+number of spaces into a newly created line as the previous line in the file had
+before accepting any input. The cursor is then said to be at the 'indent
+point'. When modifying an existing line, the indent point is set at the first
+non-space character in the line. More jargon:- the spaces before the indent
+point are referred to as the 'indent zone'. There are three ways to move the
+indent point: it can be moved further into the line by entering spaces (or
+tabs, which are in fact the same thing) when at the indent point - either
+inserting the spaces or overwriting existing data; the indent point can be
+moved back either one position at a time by using rubout while at the indent
+point or the whole indent zone can be wiped out by a ^L (left-hand kill) given
+at the indent point.
+
+Modified control char action
+ ^B & ^Y will not move the cursor into the indent zone. ^H returns to the
+indent point, as does ^U which does not kill the indent zone. ^L at the indent
+point is special, as mentioned above, from anywhere else it only erases back
+to the indent point.

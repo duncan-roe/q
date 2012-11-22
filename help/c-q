@@ -1,0 +1,7 @@
+ <> ^ Q - U P P E R   C A S E	- >   L O W E R <>
+
+While editing or inputting a command, changes all alphabetic characters
+logically to the right of the cursor (i.e. from the cursor on) to lower case if
+they were not in lower case already.
+ At other times (e.g. when printing lines), ^Q has its usual 'continue output'
+effect providing XOFF was enabled at the time Q was invoked.

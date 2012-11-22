@@ -1,0 +1,37 @@
+  ++ I N V O K I N G   Q ++
+
+Usage: q [-bdemnt] [+<n> file[:<n>]] [file[:<n>]]...
+
+<file> arguments are processed sequentially, by use of q's Q-QUIT command with
+no argument; or may be accessed out of sequence by "Q $<number>". The current
+<file> is the implied parameter when the file is saved (S-SAVE or B-BACKUP) if
+no parameter is given to these commands, while they must be given a <file> if q
+was invoked without one. If S or B is given a file, that becomes the file being
+edited.
+
+If a line number is appended to the <file> arg (file:<n>), then q positions to
+line <n> and does a V-VIEW command before prompting the user for input.
+
+Initial tasks: Unless -n is given, if ./.qrc exists it is obeyed as a U-USE
+file. If not but ~/.qrc does exist, that is U-USE'd.
+
+After loading up the editing workfile with <file> if one was given, q gains
+absolute control over the display by diabling all special characters except
+interrupt.
+
+-b signifies the edit is to be in Binary mode. This cannot be changed for the
+session. Files are read with no tab expansion or other character conversion. The
+division into "lines" is somewhat arbitrary: lines have a maximum initial length
+of 1 internal block (60 characters on most systems) but are split at any ^J or a
+^@ if the line is already half its maximum size. This is done in an attempt to
+reduce splitting of text strings within the file, but the J-JOIN command may be
+used freely to supplement this. By default, binary edits are done in Fixed
+Length mode - "H FM" for more information.
+
+-d, -e, -m & -t reverse the default sense of the corresponding mode in respect
+of reading files ("H FM for more). Thus -d & -t reverse the dr & tr defaults,
+but not dw or tw.
+
++<n> must come after any options and applies only to the first <file>. It has
+the same effect as ":<n>". The command format is expected by and only intended
+for certain pagers e.g. the less command's "v" subcommand.

@@ -1,0 +1,8 @@
+  >< D - D E L A Y ><
+
+Either displays the current value of the per-character delay (for more details
+type "H DY") or sets it to the specified value
+
+Parameter
+ <decno> # of 1/10th millisecs to delay per character. Optional - if omitted,
+         the current setting is displayed

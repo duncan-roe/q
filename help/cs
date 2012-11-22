@@ -1,0 +1,21 @@
+  ++ C O M M A N D   S Y N T A X ++
+
+The syntax of a Q command line is a command verb followed by an argument list
+terminated by end of line or unquoted '/*' comment delimiter.
+ Argument delimiters are space, comma, '/*' or newline but the first three can
+be part of a parameter by enclosing in single quotes.
+ Single quotes intended as part of a parameter must be paired. Commands are
+case-insensitive (but their arguments may not be). Comment lines starting '* '
+are also accepted.
+
+Additionally
+ Command verbs may be abbreviated to any unique abbreviation up to their full
+lengths; currently all have 1-character unique abbreviations except those
+starting 'F' which need 1 following character.
+ A non-alphabetic 1st parameter will be split-off automatically from the command
+verb providing it does not contain quoted parts or quote pairs. Thus, for
+instance, "P23" will be interpreted as "P 23" - in fact , the latter will
+replace the former on the screen after newline is keyed.
+ Numbers can start with a leading plus (+) sign as well as minus (-). This has
+special significance if the number if a line number - key 'H L#' for more
+details.

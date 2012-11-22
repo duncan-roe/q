@@ -1,0 +1,4 @@
+  <> ^ X - C U R S O R   F O R W A R D <>
+
+Moves the cursor 1 position forward. If at end of line, a space is appended to
+the line, so the cursor still moves.

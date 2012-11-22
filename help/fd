@@ -1,0 +1,12 @@
+               \/ F D - D I S A B L E   O U T P U T \/
+
+Suppresses output by redirecting standard output to /dev/null. Only available
+when in a Use file. A nested Use file inherits the FD setting of its caller.
+When a nested Use file finishes, the FD setting reverts to what it was at U
+time.
+
+Parameter
+  <yes/no arg> one of 'yes', 'no', 'true', 'false', 'on', 'off' with the obvious
+               meanings. Optional - if not specified then 'no' is assumed.
+
+See also: 'H U' & 'H Z'

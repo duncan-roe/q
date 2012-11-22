@@ -1,0 +1,92 @@
+                        \/ F M - M O D E \/
+
+Sets various "switches" or "modes". The entire mode word may be given in octal,
+or individual switches may be (un)set mnemonically. Use + to set ,- to unset.
+Not all defaults are - (0) initially.
+
+A single character (after the + or -) is always acceptable. It may affect more
+than one mode: for instance "d" affects dr & dw.
+
+       octal mnemonic function                                             dflt
+       ===== ======== ========                                             ====
+ <NO ARGS>            Reset to default                                       NO
+ (Unary - or +)       Show current modes
+ 00000000001 dr       DOS read (Cr Nl -> Nl)                                  +
+ 00000000002 dw       DOS write (end lines with Cr Nl)                        -
+ 00000000004 tr       Conventionally expand tabs on reading (t 1 9 17 25...)  +
+ 00000000010 tw       Conventionally compress spaces to tabs on writing       -
+ 00000000020 s        Leave trailing spaces when writing                      -
+ 00000000040 *        Show '^' as "^*" (always applies to macros)             +
+ 00000000100 q        Q command in macro can quit (otherwise macro returns)   -
+ 00000000200 #        Q $<number> moves argument pointer to <number>          -
+ 00000000400 f        Fixed length edit (esp. for -Binary)                    *
+ 00000001000 v        Verbose Always (disables FB & FN)                       -
+ 00000002000 m        Use mmap for reading files (q -m inverts default)       +
+ 00000004000 r        Locate searches backwards (to SOF by default)           -
+ 00000010000 e        Try to defer reading mmap'd files                       +
+ 00000020000 n        Use mmap for files read by E-eNter                      -
+ 00000040000 l        Expand/compress Leading tabs                            -
+ 00000100000 h        ^N^[VQ] scrolls half a screen                           -
+ 10000000000 FB cmnd  FBRIEF command asserted                           verbose
+ 30000000000 FN cmnd  FNONE command asserted                            verbose
+ 00000000000 FV cmnd  FVERBOSE command asserted                         verbose
+ 04000000000 O  cmnd  ONOFFINDENY command set to ON                   no indent
+ 02000000000 FC cmnd  FCASEINDEPENT command set to ON            case dependent
+ 01000000000 FF cmnd  FFORTRAN command set to ON                         FF OFF
+
+* Default is + for Q -B(inary), - otherwise.
+
+DOS mode: Text files in DOS have lines ending Cr Lf but in Unix they only end
+Lf. "c", "make", "less" &c seem to tolerate files with the DOS Cr at the end
+MOST of the time, see *** below.  The default is not to write such files, but
+to expect them on reading. When reading a file in DOS mode, Cr is discarded if
+it is IMMEDIATELY followed by Lf: other Cr characters are read in.
+
+*** BE AWARE, a line ending "\" will likely not have the desired effect if
+saved in DOS mode on a Unix system, since Nl does not follow \ (as is usually
+the case), rather, Cr follows.
+
+TAB compression: DOS and Unix both use tabs to reduce the size of text files
+containing many spaces. The tabs are assumed to be every 8th character, i.e.
+(if first character position is 1) they are set at 9, 17, 25 &c. (If first
+position is 0, they are at 8, 16, 24 &c.: i.e. multiples of 8). The tab mode on
+reading expands these to spaces. The tab mode on writing compresses multiple
+spaces to tabs assuming the above tab settings. On writing, if an actual tab
+character is found in a line, compression stops for the rest of that line.
+The assumed tab spacing can be varied (currently by x;t <n>;x).
+Mode l expands and compresses *leading* tabs only
+(conversion stops as soon as any non-tab is found).
++t forces -l and vice versa.
+
+Trailing SPACE retention: by default, trailing spaces are removed when a file
+is written or saved. This option allows them to be retained.
+
+^* representation of ^ is always enforced when displaying macros, since it is
+always required when inputting them. For commands and lines being edited
+however, it is optional.
+
+Q in macros does not by default quit Q when the command args run out, so that
+macros may freely use it to move on to the next filename arg. By specifying +q,
+an unmassaged q in a macro *will* quit. A macro can always quit by using fq.
+
+# mode specifies that commands of the form "Q $<number>" move the editor's
+argument pointer to the nominated file. This applies whether <number> is
+relative or absolute, so long as it is within range. "H Q" for more details on
+this format of the command.
+
+F (fixed length) mode provides a "safety catch" against altering the length of
+a file, usually a Binary file. (Actually, its operation can only be guaranteed
+for binary edits, because of possible space truncation if a line is split, tab
+compression &c). F mode excludes the following commands: D(elete), I(nsert),
+C(opy), A(ppend), E(nter). The first and second arguments to Y(changeall) and
+FY must be of the same length. When a line is edited, the length may not be
+changed. A split (^T) is allowed, provided the line length has not been
+altered.
+
+V (Always Verbose) is intended for when debugging macros (possibly in
+combination with the source level debugger). It inhibits any FB or FN command
+the macro may contain. FD Y commands are also ignored.
+
+The top 5 bits can not be mnemonically set by FM, they are set by their own
+commands. They *can* however be set using the octal argument. This is intended
+for restoring a previously set mode setting, retrieved by ^N^<4000>.

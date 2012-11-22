@@ -1,0 +1,6 @@
+# gdb fragment.
+# Do ps on an idle xterm to get its pty,
+# then enter "sleep 10000" in that xterm
+# then specify that pty below.
+b q.c:1686
+run </dev/pts/2 >/dev/pts/2 2>&1

@@ -1,0 +1,4 @@
+  <> ^ Z - C U R S O R   TO   END - OF - L I N E <>
+
+Moves the cursor to after the last character in the current line (i.e. ^A but
+ignoring the previous line).

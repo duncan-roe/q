@@ -1,0 +1,16 @@
+  \/ V - V I E W \/
+
+Displays an area of the file around the current file position at the terminal.
+The current line is always displayed, plus the specified number of lines before
+and after it.
+
+Parameter
+ <# lines> As above. May be specified as zero, in which case only the current
+	   line is displayed. Optional - if not specified then V always prints
+	   enough lines to fill the screen if the file is big enough (with the
+	   same number before and after the current line, if this is not close
+	   to the start or end of the file). Use Control-P or key any character
+	   to stop printing early, if required.
+
+File position
+ Unaltered.

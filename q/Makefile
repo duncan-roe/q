@@ -1,0 +1,18 @@
+.PHONY: clean
+SRCS = $(wildcard *.c)
+OBJ = $(SRCS:.c=.o)
+CPPFLAGS = -DANSI5 $(shell getconf LFS_CFLAGS)
+CFLAGS = -g3 -ggdb \
+  -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wstrict-prototypes \
+  -Wmissing-prototypes
+q : $(OBJ)
+	$(CC) $^ -o $@
+clean :
+	rm -f *.o *.d q
+
+# Auto dependency stuff (from info make)
+%.d: %.c
+	$(CC) -MM -MT $(@:.d=.o) -MT $@ $(CPPFLAGS) $< > $@
+ifneq ($(MAKECMDGOALS),clean)
+-include $(SRCS:.c=.d)
+endif

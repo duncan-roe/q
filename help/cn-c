@@ -1,0 +1,18 @@
+  << ^ N C - O B E Y   I F   I N   A   C O M M A N D >>
+
+ This is another simple conditional pseudo-macro like ^NA, but the condition
+tested is different. The next 2 characters (there must be at least 2 more) in
+the macro are obeyed if the macro is invoked when Q is reading a command,
+otherwise they are skipped.
+ Some typical uses
+ ^NC can be used to detect a failed L-LOCATE e.g.
+ N A 'L FRED^J^NC^N^BJIM^D^J^N^D
+ This looks for 'FRED'. If it's not found, we'll still be in command mode after
+the LOCATE command so we'll branch to macro ^B. Otherwise, replace 'FRE' with
+'JIM' & delete the 'D' then go to macro ^D.
+ Another use - this macro inserts a string at the front of as many lines as we
+specify, and should be used after say an 'M x y' command where x is the 1st
+line to have the string inserted and we want to do it for y lines.
+ N A '^NC^NU^EA STRING^J^N^A
+ Operation: if in command mode, then exit. Otherwise turn on inserting, put in
+'A STRING', accept the line, and do it all again.

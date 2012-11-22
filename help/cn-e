@@ -1,0 +1,4 @@
+  << ^ N E - F O R C E   I N S E R T   M O D E   O F F >>
+
+ Because ^E is only a toggle (i.e. reverse present state), ^NE is provided as a
+reset, to get inserting to a known state (off).

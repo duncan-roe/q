@@ -1,0 +1,8 @@
+  <> ^ M - ( C A R R I A G E   R E T U R N )
+
+^M is used to terminate (accept) a line of input, a modified line, or a command.
+ If entered at the keyboard, the termios settings may convert ^M (carriage
+return) to ^J (newline). Q treats ^J & ^M identically, so this doesn't usually
+matter. The Foundation macro ^N_ (control-N underscore) is available to give you
+a literal ^M should you want one.
+ The convention when writing macros is to use ^J.

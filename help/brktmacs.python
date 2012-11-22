@@ -1,0 +1,18 @@
+* $Id: brktmacs.python,v 1.4 2012/10/16 23:56:37 dunc Exp $
+fd y
+N202 ^NC^NS^N\q ^ND^N^<4003>/brktmacs.python^J^NU
+N220 ^NC^NS^N\u ^ND^N^<4003>/brktmacs.python^J^NU
+N I '    ^NU ; indent 4 spaces
+N H '^NC^N\^?^?^?^?^NU
+N E '^NC^N\^Z:^J^[i-^J^ND^N^I^NU
+N L '^N\   ; no fancy else
+N Y '^NC^N\^NE^H^NA^NS^NL# ^NU^Z^NB2^I^Y^NG ^N^<422>^Z # ^NU
+N422 ^Z# ^NU
+N N '^N^^
+N040 !umake 2>&1|tee hee|grep --line-buffered error|egrep --line-buffered -v 'No errors|cdc_fatal_error_handler|rec_remvol_error_states|scm_[bo]sc_error|javadoc';umake do_install 2>&1|tee heeinst^J^NU
+x
+t 8
+x
+fm -l /* Python doesn't like tabs
+fm +s /* Minimise diffs
+z

@@ -1,0 +1,22 @@
+  \/ S - S A V E \/
+ Makes a filestore copy of the editor's workfile. If there is no parameter to
+the command (see below), the original file is first renamed <pathname>.TM, and
+this .TM file is deleted once the save of the workfile is completed. Thus if
+for any reason Q is interrupted during a SAVE, the original file is preserved
+intact.
+ Two consequences arise from this: <pathname> whether supplied or implied must
+give OWNER access to the SAVE file (so that it can be CNAMEd), and also a file
+to which the owner only has read access can be replaced by a new version, but
+if DELETE access is not given then the delete of the .TM file will fail, which
+will be reported. If this latter happens, another SAVE to the same file cannot
+be done during the current Q session (except perhaps after a K & the
+appropriate shell commands), but the first SAVE will have been successful.
+
+Parameter
+ <pathname> optional if there has been a previous B-BACKUP, S-SAVE or Q-QUIT
+	       command with a <pathname> or if Q was invoked with one
+	       originally, in which case the previous parameter applies if
+	       <pathname> is omitted.
+
+File position
+ This command leaves the file position unaltered.
