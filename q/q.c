@@ -488,9 +488,9 @@ p1201:
         printf("Unexpected error");
         goto p1025;
       }
-      // LATER Decide which macro this will be.
-      // LATER Some nesting of FI macros is allowed,
-      // LATER just in cae anyone ever wants it.
+/* LATER Decide which macro this will be. */
+/* LATER Some nesting of FI macros is allowed, */
+/* LATER just in cae anyone ever wants it. */
       verb = FIRST_INLINE_MACRO;
       if (newmac2(strlen(buf)) <= 0)
         goto p1025;

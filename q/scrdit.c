@@ -850,7 +850,7 @@ p1905:nseen = false;
         if (i > --j)
           i = j;
 
-        // Look for half-screen requested
+/* Look for half-screen requested */
         if ((fmode & 00000100000) && i > row5 / 2)
         {
           if (i > row5)
@@ -886,23 +886,23 @@ p1905:nseen = false;
         {
           j += j / 2 - lintot + ptrpos;
 
-          // Need to go back 1 less because "E-O-F" is displaying
+/* Need to go back 1 less because "E-O-F" is displaying */
           j--;
 
-          // Need to go back 1 less again if even # lines on screen
+/* Need to go back 1 less again if even # lines on screen */
           j -= !(row5 & 1);
         }
         j--;
-        // Sanity check - don't try to move before start of file
+/* Sanity check - don't try to move before start of file */
         if (j >= ptrpos)
           j = ptrpos - 1;
 
-        // Look for half-screen requested
+/* Look for half-screen requested */
         if ((fmode & 00000100000) && j > row5 / 2)
         {
 
-          // Reduce j by an extra 1 because empirically that moves the
-          // current line to the top of the screen.
+/* Reduce j by an extra 1 because empirically that moves the */
+/* current line to the top of the screen. */
           if (j > row5)
             j -= row5 / 2 + 1;
           else

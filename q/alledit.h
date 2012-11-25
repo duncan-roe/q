@@ -1,11 +1,11 @@
 /* A L L E D I T
  */
  
-// Headers required by prototypes &c.
+/* Headers required by prototypes &c. */
 #include <sys/types.h>
 #include "ckalloc.h"
 
-// Macros
+/* Macros */
 #define CARAT '^'
 #define SPACE ' '
 #define LT '<'
