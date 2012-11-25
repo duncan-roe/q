@@ -8,8 +8,6 @@ Be able to run in pipe
 Can test if a macro is defined: n4007 x; ^ND^N^<4007>
 Add reverse Polish calculator
 Can set actual amount for "1 line forward / back" half-page / full-page
-DONE Document T in X
-DONE Update HELP to document environment variables
 update scmacs.info a lot (for pres'n)
 Re-check whether cmd.c needs to put command buffer in quotes
 Some option to display version

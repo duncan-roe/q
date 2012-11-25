@@ -1,0 +1,11 @@
+This is Q, a line-orientated mostly WYSIWYG editor with a powerful macro
+facility.
+
+Editor source is in q; macros and help files are in help.
+
+Both these directories have .qrc files. You will probably want to copy one of
+them to your home directory so Q always has a fall-back macro set.
+
+For most programming tasks, q/.qrc is a good starting point. It loads the
+Foundation plus C macro sets. help/.qrc loads Foundation plus Word macro sets,
+suitable for documents like this one.

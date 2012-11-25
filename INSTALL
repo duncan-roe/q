@@ -1,0 +1,26 @@
+Q comes configured for Linux. Type "make" in the source directory below, then
+install the q executable where you will.
+
+Absent environment variable settings, Q expects to load its macros from
+/usr/local/lib/q/. You can mv the help directory below there, or you can place a
+symbolic link in /usr/local/lib to point to it here (or wherever else you want
+to have it).
+
+Alternatively, you can export Q_HELP_DIR to nominate any directory location.
+(See the file help/ev).
+
+ OTHER PLATFORMS
+
+The only other platform for which Q is currently known to work is Cygwin.
+Configuration consists of changing the termio5.hl symbolic link:-
+> rm termio5.hl
+> ln -s cygwin.termio5.h termio5.hl
+You can make Q available to CMD.EXE (i.e. outside ofthe Cygwin environment) by
+copying q.exe to C:\WINDOWS. You also need to copy a Cygwin library - you'll get
+told which one the first time you try to use Q.
+
+The author hasn't had access to other formerly-supported platforms for a while.
+The Makefile needs GNU make (may be available as gmake especially on Solaris
+(sun.termio5.h)). Vendors' compilers should be OK absent gcc: the code tries
+very hard not to use gcc extensions. Non-ANSI compiler support is missing from
+some of the newer code however.
