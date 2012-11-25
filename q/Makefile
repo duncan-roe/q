@@ -1,7 +1,7 @@
 .PHONY: clean
 SRCS = $(wildcard *.c)
 OBJ = $(SRCS:.c=.o)
-CPPFLAGS = -DANSI5 $(shell getconf LFS_CFLAGS)
+CPPFLAGS = -DANSI5 $(shell getconf LFS_CFLAGS 2>/dev/null)
 CFLAGS = -g3 -ggdb \
   -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wstrict-prototypes \
   -Wmissing-prototypes
