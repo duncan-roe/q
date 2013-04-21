@@ -25,3 +25,5 @@ INTERNALS
   (Eventually) rework asg2 blocks (start with xistcs.c)
 FI to have (small) stack for nested calls
 (maybe) replace terminal ioctls with tc{g,s}etattr
+Show what arguments Q started with
+CATALOGUE OF USEFUL MACROS
