@@ -34,6 +34,10 @@
 #include "macros.h"
 #include "termio5.hl"
 #include "c1in.h"
+
+/* Macros */
+
+#define ERR1025(x) do {printf("%s", (x)); goto p1025;} while (0)
 /*  */
 typedef enum q_yesno
 {
@@ -145,7 +149,10 @@ main(int xargc, char **xargv)
   long wrtnum = 0;                 /* # of lines to write */
   long xcount = 0;                 /* For V-View */
 /* */
-  int tmode = 0644;                /* For MODE to build up value */
+  int tmode;                       /* Mode of file */
+  int towner;                      /* Owner of file */
+  int tgroup;                      /* Group of file */
+  int tmask = 0;                   /* Current umask */
 /* */
   char oldstr[Q_BUFSIZ], newstr[Q_BUFSIZ]; /* YCHANGEALL. !!AMENDED USAGE!! */
   unsigned char *p, *q;            /* Scratch */
@@ -734,7 +741,21 @@ p1075:
   colontrunc:                     /* Jump to here after truncating buf at ":" */
     errno = 0;                     /* Ensure valid */
     if (!stat(buf, &statbuf))
+    {
       tmode = statbuf.st_mode;
+      tgroup = statbuf.st_gid;
+      towner = statbuf.st_uid;
+    }                              /* if (!stat(buf, &statbuf)) */
+    else
+    {
+      if (!tmask)
+      {
+        tmask = umask(0);          /* Get current umask */
+        umask(tmask);              /* Reinstate umask */
+      }                            /* if (!tmask) */
+      tmode = ~tmask & 0666;       /* Assume no execute on new file */
+      tgroup = towner = 0;
+    }                              /* if (!stat(buf, &statbuf)) else */
     if (!lstat(buf, &statbuf) && S_ISLNK(statbuf.st_mode) && errno != ELOOP)
       for (;;)
       {
@@ -785,7 +806,7 @@ p1044:
     goto p10445;                   /* Join S&B with no params */
   lgtmp3 = false;                  /* Q-QUIT into existing file */
 p1708:
-  if (-1 == (funit = open(buf, rdwr, tmode)))
+  if ((funit = open(buf, rdwr, tmode)) == -1)
   {
 /*
  * If Q-QUIT, file may not exist as user wishes to create a new one. Or file may
@@ -815,7 +836,7 @@ p1708:
     }                              /* if(errno==ENOENT&&verb=='Q'&&!lgtmp3) */
     printf("%s. %s (open)", strerror(errno), buf);
     goto p1025;                    /* Bad open */
-  }                                /* if(-1==(funit=open(buf,rdwr,tmode))) */
+  }                                /* if((funit=open(buf,rdwr,tmode))==-1) */
   if (lgtmp3)                      /* Have just created file for Q-QUIT */
   {
     mods = false;                  /* No mods to new file yet */
@@ -843,14 +864,43 @@ p1708:
 p10403:mods = false;               /* OK to Q-QUIT now */
   setptr(savpos);                  /* Repos'n file as before */
   if (bspar)
-    (void)strcpy(pcnta, buf);      /* We had a param. Set as dflt */
-  if (!(verb == 'B' || bspar))
+    strcpy(pcnta, buf);            /* We had a param. Set as dflt */
+  else if (verb != 'B')
   {
-    puts(pcnta);                   /* Remind user what file he's editing */
-    putchar('\r');
+    printf("%s\r\n", pcnta);       /* Remind user what file he's editing */
     if (unlink(tmfile) == -1)
       printf("%s. %s (unlink)\r\n", strerror(errno), tmfile);
   }
+
+/* ---------------------------------------------------------------------- */
+/* Attempt to restore as many attributes of the original file as possible */
+/* current file attributes are in statbuf                                 */
+/* ---------------------------------------------------------------------- */
+
+  if (towner)                      /* If there *was* an original file */
+  {
+    code = 0;
+    if (tgroup != statbuf.st_gid)
+    {
+      if (chown(pcnta, -1, tgroup) == -1)
+      {
+        code = 1;
+        printf("Warning - original group not restored\r\n");
+      }                            /* if (chown(pcnta, -1, tgroup) == -1) */
+    }                              /* if (tgroup != statbuf.st_gid) */
+    if (towner != statbuf.st_uid)
+    {
+/* Don't try to change user if group failed, but do warn */
+      if (code || chown(pcnta, towner, -1) == -1)
+      {
+        code = 1;
+        printf("Warning - original owner not restored\r\n");
+      }                        /* if (code || chown(pcnta, towner, -1) == -1) */
+    }                              /* if (towner != statbuf.st_gid) */
+/* If there were no problems above, set any extra original mode bits */
+    if (tmode != statbuf.st_mode && (code || chmod(pcnta, tmode) == -1))
+      printf("Warning - original mode not restored\r\n");
+  }                                /* if (towner) */
   goto p1004;                      /* Next command */
 /*
  * Deal with the case where S or B had no param. Get joined by
@@ -859,8 +909,7 @@ p10403:mods = false;               /* OK to Q-QUIT now */
 p10407:
   if (!pcnta[0])                   /* We have no default f/n */
   {
-  p1069:
-    (void)write(1, "filename must be specified", 26); /* Used by W/E */
+    printf("%s", "filename must be specified");
     goto p1025;                    /* Correct command */
   }
   bspar = false;                   /* Don't have a param */
@@ -881,30 +930,27 @@ p10445:;
     strcat(tmfile, ".bu");         /* \add approp. */
   else
     strcat(tmfile, ".tm");         /* /postfix */
-p1063:
+
 /* ---------------------------------------------------- */
 /* We used to rely on link failing if the file existed. */
 /* But then, link() always fails in a DOS file system.  */
 /* So now we stat() the file to see if it exists,       */
-/* the use rename() if it doesn't.                      */
+/* then use rename() if it doesn't.                     */
 /* (rename() would overwrite an old file)               */
 /* ---------------------------------------------------- */
-  if (!stat(tmfile, &statbuf))
+
+  while (!stat(tmfile, &statbuf))
   {
     if (verb == 'B' &&
       !ysno5a("Do you want to delete the old backup file", A5NDEF))
-    {
-      (void)write(1, "Need another filename to take backup", 36);
-      goto p1025;                  /* Reread command */
-    }                      /* if(verb=='B'&&!ysno5a("Do you want to delete... */
+      ERR1025("Need another filename to take backup");
     if (unlink(tmfile))
     {
       printf("%s. %s (unlink)", strerror(errno), tmfile);
       goto p1062;
     }                              /* if(unlink(tmfile)) */
     if (verb == 'B')
-      write(1, "Previous backup file deleted:- ", 31);
-    goto p1063;                    /* Re-do link now old file unlink'd */
+      printf("Previous backup file deleted:- ");
   }                                /* if(!stat(tmfile,&statbuf)) */
   if (rename(buf, tmfile))         /* If rename fails */
   {
@@ -916,12 +962,11 @@ p1063:
     }                              /* if(bspar&&(errno==ENOENT)) */
     printf("%s. %s to %s (rename)", strerror(errno), buf, tmfile);
   p1062:
-    (void)close(funit);            /* In case anything left open */
+    close(funit);                  /* In case anything left open */
     goto p1025;                    /* Get corrected command */
   }                                /* if (rename(buf, tmfile)) */
 /*
  * File renamed - now open new file of same type as original
- * also set attributes same as original
  */
   rdwr = O_WRONLY + O_CREAT + O_EXCL; /* Must be new file */
 /* */
@@ -2199,7 +2244,7 @@ asg2nofil:switch (nofil)
     case 1132:
       goto p1132;
     case 1069:
-      goto p1069;
+      ERR1025("filename must be specified");
     case 10407:
       goto p10407;
     default:

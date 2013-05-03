@@ -67,3 +67,6 @@ shell prompt again:
 > > q
 > ^C
 > 13:43:30$
+Handy template (set i first):
+
+ggo q -a "</dev/pts/$i >/dev/pts/$i 2>&1" c
