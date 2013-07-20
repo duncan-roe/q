@@ -810,7 +810,10 @@ p1905:nseen = false;
     goto p1026;                    /* High parity rubout */
 /* Recognise ESC  if not in a macro */
   if (thisch == ESC && curmac < 0)
-    goto p1505;
+  {
+    verb = '[';                    /* For benefit of mainline */
+    goto p7733;                    /* Join normal ESC */
+  }                                /* if (thisch == ESC && curmac < 0) */
 /* ESC legal from another macro */
   if (thisch <= LAST_PSEUDO && thisch >= FIRST_PSEUDO)
     goto p1503;                    /* J a pseudo probably */
@@ -826,6 +829,7 @@ p1905:nseen = false;
 /* Check for out of range or active pseudo macro */
   if (thisch > TOPMAC)
   {
+    bool found = true;
     switch (thisch)
     {
       case 04000:                  /* Return mode */
@@ -912,16 +916,19 @@ p1905:nseen = false;
         snprintf(tbuf, sizeof tbuf, "%d", j);
         macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), 1);
         break;
-
+      
       default:
-        goto p2102;
+        found = false;
+        break;
     }                              /* switch (thisch) */
-    curmac = 64;
-    mcposn = 0;
-    goto p7700;
+    if (found)
+    {
+      curmac = 64;
+      mcposn = 0;
+      goto p7700;
+    }                              /* if (found) */
   }                                /* if (thisch > TOPMAC) */
-/* Signal error if null macro */
-p2102:
+/* Signal error if null or bad macro */
   if (thisch > TOPMAC || !scmacs[thisch])
   {
     if (curmac >= 0)
@@ -932,11 +939,6 @@ p2102:
     goto p10232;
   }
   mcposn = 0;                      /* Got the macro */
-  goto p1613;
-p1505:
-  verb = '[';                      /* For benefit of mainline */
-  goto p7733;                      /* Join normal ESC */
-p1613:
   curmac = thisch;
   goto p1026;
 p1503:
@@ -948,15 +950,16 @@ p1503:
   verb = thisch;
   if (verb >= 'a' && verb <= 'z')
     verb &= 0337;                  /* Upper case letter */
-  if (curmac >= 0)
-    goto p1907;                    /* J in a macro */
+  if (curmac < 0)
+  {
 /* We are not in a macro. Check whether this pseudo is allowed from the
  * keyboard... */
-  for (c = "EORFNMY"; *c; c++)
-    if (*c == verb)
-      goto p1907;
-  goto p10232;                     /* Definitely not in macro */
-p1907:
+    for (c = "EORFNMY"; *c; c++)
+      if (*c == verb)
+        break;
+    if (*c == 0)
+      goto p10232;                 /* This pseudo not allowed */
+  }                                /* if (curmac < 0) */
   switch (thisch & 037)
   {                                /* Try for a pseudo u/c or l/c */
     case 1:

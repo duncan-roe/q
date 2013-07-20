@@ -12,3 +12,10 @@ Script started on Sun 09 Sep 2012 05:05:03 PM EST
 exit
 
 Script done on Sun 09 Sep 2012 05:05:14 PM EST
+Script started on Sat 20 Jul 2013 08:34:40 PM EST
+]0;dunc@dimstar.local.net:~/q/q20:34:40$ cat $C|grep -w goto|wc -l
+754
+]0;dunc@dimstar.local.net:~/q/q20:34:48$ exit
+exit
+
+Script done on Sat 20 Jul 2013 08:34:51 PM EST
