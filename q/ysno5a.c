@@ -1,7 +1,7 @@
 /* Y S N O 5 A
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2013 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -12,16 +12,9 @@
 #include <string.h>
 #include <sys/types.h>
 #include "alledit.h"
-/* */
-#ifdef ANSI5
+
 int
 ysno5a(char *mess, int key)
-#else
-int
-ysno5a(mess, key)
-char *mess;
-int key;
-#endif
 {
 /*
  * This function is the same as the old Primos YSNO$A
@@ -33,8 +26,7 @@ int key;
 /* */
 p10:
   printf("%s? ", mess);
-/* We continue to get chars from c1in5, so that none are lost.
- * Build a command line, forcing to upper case. BEL if it fills up */
+/* Build a command line, forcing to upper case. BEL if it fills up */
   cl5get(comlin, 3);               /* YES is longest string */
 /* Force upper case */
   for (p = comlin - 1;;)

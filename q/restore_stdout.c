@@ -20,8 +20,8 @@ restore_stdout()
 /* Only switch if the original stdout is preserved */
   if (orig_stdout != -1)
   {
-    if (stdinstkptr >= 0)
-      devnullstack[stdinstkptr] = false;
+    if (stdidx >= 0)
+      stdinfo[stdidx].nullstdout = false;
     do
       i = dup2(orig_stdout, 1);
     while (i == -1 && errno == EINTR);

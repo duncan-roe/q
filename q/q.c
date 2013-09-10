@@ -2,7 +2,7 @@
  *
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2002,2007 Duncan Roe
+ * Copyright (C) 2002,2007,2012,2013 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -24,11 +24,9 @@
 #include <sys/times.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
-#ifdef ANSI5
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
-#endif
 #include "alledit.h"
 #include "edmast.h"
 #include "macros.h"
@@ -54,6 +52,19 @@ int tbstat;
 static char *help_dir;
 static char *help_cmd;
 /* */
+/* ********************************* pushmac ******************************** */
+
+static bool
+pushmac(void)
+{
+  if (mcnxfr == MCLMIT)
+    return false;
+  mcstck[mcnxfr].mcprev = curmac;
+  mcstck[mcnxfr].mcposn = mcposn;
+  mcstck[mcnxfr].u_use = true;
+  mcnxfr++;
+  return true;
+}                                  /* if (curmac >= 0) */
 /* ********************************** eolok ********************************* */
 
 /* Check no extra params */
@@ -264,7 +275,7 @@ main(int xargc, char **xargv)
  */
   ndntch = 0;                      /* For when it's first switched on */
   tbstat = -1;                     /* Xlation table not set up */
-  stdinstkptr = -1;                /* No U-use file */
+  stdidx = -1;                     /* No U-use file */
 /*
  * Must be last initial task: Use .qrc if it exists here or in $HOME
  */
@@ -272,19 +283,19 @@ main(int xargc, char **xargv)
     goto p1004;                    /* Skip initial tasks if requested */
 
 /* Forge a u-use: push current stdin */
-  stdinstkptr = 0;
+  stdidx = 0;
   do
   {
-    stdinstack[stdinstkptr] = dup(0);
+    stdinfo[stdidx].funit = dup(0);
   }
-  while (stdinstack[stdinstkptr] == -1 && errno == EINTR);
-  if (stdinstack[stdinstkptr] == -1)
+  while (stdinfo[stdidx].funit == -1 && errno == EINTR);
+  if (stdinfo[stdidx].funit == -1)
   {
     fprintf(stderr, "\r\n%s. (dup(0))\r\n", strerror(errno));
     refrsh(NULL);
-    stdinstkptr--;
+    stdidx--;
     goto p1004;                    /* Don't try to open .qrc */
-  }                                /* if (stdinstack[stdinstkptr] == -1) */
+  }                                /* if (stdinfo[stdidx].funit == -1) */
 
   do
     i = close(0);
@@ -488,6 +499,13 @@ p1201:
 /* Get Yes / No (no default) */
       goto p1025;
     case 'i':                      /* "FI'mmediate macro */
+/* FI is only allowed from command line or a U-use file */
+      if (curmac >= 0)
+      {
+        printf("%s", "Not allowed from within a macro");
+        goto p1025;
+      }                            /* if (curmac >= 0) */
+
       if (scrdtk(4, (unsigned char *)buf, BUFMAX, oldcom))
       {
         perror("SCRDTK of macro text");
@@ -495,12 +513,22 @@ p1201:
         printf("Unexpected error");
         goto p1025;
       }
-/* LATER Decide which macro this will be. */
-/* LATER Some nesting of FI macros is allowed, */
-/* LATER just in cae anyone ever wants it. */
-      verb = FIRST_INLINE_MACRO;
-      if (newmac2(strlen(buf)) <= 0)
+/* Decide which macro this will be. */
+/* Some nesting of FI macros is allowed, */
+/* to support e.g. nested U-use files which contain FI cmds */
+      if (immnxfr > LAST_IMMEDIATE_MACRO)
+      {
+        printf("%s", "Too many nested FI commands");
         goto p1025;
+      }                            /* if (immnxfr > LAST_IMMEDIATE_MACRO) */
+      verb = immnxfr++;
+      if (!newmac2(strlen(buf), true))
+        goto p1025;
+
+/* FI does an implied ^ND */
+      if (curmac >= 0 && !pushmac())
+        goto p1025;
+
       curmac = verb;
       mcposn = 0;
       goto p1004;
@@ -683,7 +711,7 @@ p1036:
  * Start file handlers
  * ******************************************************************
  *
- * B - Save file with a .BU backup copy
+ * B - Save file with a .bu backup copy
  * S - Save file
  */
 p1006:
@@ -1061,7 +1089,7 @@ p1017:
 p1132:
   if (curmac >= 0 && !(fmode & 0100) && verb == 'Q')
   {
-    macdef(64, (unsigned char *)"", 0, 1); /* Macro is ^NU only */
+    macdef(64, (unsigned char *)"", 0, true); /* Macro is ^NU only */
     curmac = 64;
     mcposn = 0;
     goto p1004;
@@ -1125,14 +1153,10 @@ p1079:
  * G - GOTO
  */
 p1010:
-  if (getlin(1, 1))                /* Good line # */
+  if (getlin(1, 1) && eolok())
   {
-    k4 = oldcom->decval;   /* LATER - see if eolok() preserves oldcom->decval */
-    if (eolok())
-    {
-      setptr(k4);
-      goto p1004;                  /* Finished GOTO */
-    }                              /* if(eolok()) */
+    setptr(oldcom->decval);
+    goto p1004;                    /* Finished GOTO */
   }                                /* if(getlin(1,1)) */
   goto p1025;
 /*
@@ -1145,21 +1169,21 @@ p1510:
   duplx5(true);                    /* Assert XOFF recognition */
   tildexpn(buf);                   /* Do tilde expansion */
 
-/* DEVNULL setting is same as parent */
-  devnullstack[stdinstkptr + 1] =
-    stdinstkptr < 0 ? 0 : devnullstack[stdinstkptr];
+/* NULLSTDOUT setting is same as parent */
+  stdinfo[stdidx + 1].nullstdout =
+    stdidx < 0 ? false : stdinfo[stdidx].nullstdout;
 
 /* Save current stdin */
-  stdinstkptr++;
+  stdidx++;
   do
-    stdinstack[stdinstkptr] = dup(0);
-  while (stdinstack[stdinstkptr] == -1 && errno == EINTR);
-  if (stdinstack[stdinstkptr] == -1)
+    stdinfo[stdidx].funit = dup(0);
+  while (stdinfo[stdidx].funit == -1 && errno == EINTR);
+  if (stdinfo[stdidx].funit == -1)
   {
-    stdinstkptr--;
+    stdidx--;
     printf("%s. (dup(0))", strerror(errno));
     goto p1025;
-  }                                /* if (stdinstack[stdinstkptr] == -1) */
+  }                                /* if (stdinfo[stdidx].funit == -1) */
 
 /* Close funit 0 */
   do
@@ -1196,6 +1220,17 @@ p1510:
       j = close(i);
     while (j == -1 && errno == EINTR);
   }                                /* if (i) */
+
+/* If invoked from a macro, suspend that macro */
+  if (curmac >= 0)
+  {
+    if (!pushmac())
+      goto p1025;
+    curmac = -1;
+    stdinfo[stdidx].frommac = true;
+  }                                /* if (curmac >= 0) */
+  else
+    stdinfo[stdidx].frommac = false;
 
   buf5len = 0;                     /* Flush any input left over */
   goto p1004;
@@ -1657,6 +1692,14 @@ p1101:if (tabset(oldcom))
 p1102:
   if (!eolok() || !pop_stdin())
     goto p1025;
+
+/* If U-use was in a macro, resume that macro */
+  if (stdinfo[stdidx + 1].frommac)
+  {
+    mcnxfr--;
+    curmac = mcstck[mcnxfr].mcprev;
+    mcposn = mcstck[mcnxfr].mcposn;
+  }                                /* if (stdinfo[stdidx + 1].frommac) */
   goto p1004;
 /*
  * O - Switch On INDENT
@@ -2097,11 +2140,7 @@ p1703:
     goto p1025;
   if (fmode & 01000)
     goto q1704;
-#ifdef ANSI5
   fmode |= 030000000000u;
-#else
-  fmode |= 030000000000;
-#endif
   goto p1004;                      /* Finished */
 /*
  * FO - FORGET

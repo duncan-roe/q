@@ -69,6 +69,6 @@ devnull_stdout()
         }                          /* if (j == -1) */
       }                            /* if (i != 1) */
     }                              /* if (orig_stdout == -1) */
-    devnullstack[stdinstkptr] = true;
+    stdinfo[stdidx].nullstdout = true;
   }                                /* if (fmode & 01000) else */
 }                                  /* devnull_stdout() */

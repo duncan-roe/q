@@ -1,7 +1,7 @@
 /* S I N I T L */
 /*
- * Copyright (C) 1981, 2011 D. C. Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 1981,2011 D. C. Roe
+ * Copyright (C) 2012,2013 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -38,5 +38,6 @@ sinitl()
   mctrst = false;
   curmac = -1;
   mcnxfr = MCDTUM;                 /* Empty stack so far */
+  immnxfr = FIRST_IMMEDIATE_MACRO;
   cmsplt = false;                  /* No split command yet */
 }

@@ -138,5 +138,5 @@ newmac()
  */
   if (scmacs[verb] && (curmac < 0 || !BRIEF))
     printf("Warning - overwriting old macro\r\n");
-  return newmac2(mcchrs);
+  return newmac2(mcchrs, false) ? 1 : 0;
 }

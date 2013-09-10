@@ -1,7 +1,7 @@
 /* C 1 I N 5 . C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2013 Duncan Roe
  *
  * This routine gets the next character from standard input. If we
  * hit EOF on a file, revert to the TTY
@@ -11,17 +11,18 @@
 #include "termio5.hl"
 #include "alledit.h"
 #include <errno.h>
-#ifdef ANSI5
 #include <sys/types.h>
 #include <unistd.h>
-#endif
 #include "c1in.h"
 
 char
-c1in5()
+c1in5(bool *eof_encountered)
 {
   int s;
   unsigned char c;
+
+  if (eof_encountered != NULL)
+    *eof_encountered = false;
 
 /* If we have no characters to return, then get some */
 
@@ -43,6 +44,8 @@ c1in5()
         {
           perror("Blocked read");
           putchar('\r');
+/* LATER Get out (atexit() will reset terminal) */
+/* LATER exit(1); */
         }                          /* if(errno!=EINTR) */
         continue;                  /* for(;;) */
       }                            /* if(s<0) */
@@ -50,6 +53,11 @@ c1in5()
       {
         if (USING_FILE)
         {
+          if (eof_encountered != NULL)
+          {
+            *eof_encountered = true;
+            return '\n';
+          }                        /* if (eof_encountered != NULL) */
           restore_stdout();
           printf("EOF reached on U-use file (it didn't end w/a \"Z\")\r\n> ");
           pop_stdin();
@@ -72,4 +80,4 @@ c1in5()
   if (buf5idx == buf5len)
     buf5len = 0;
   return c;
-}                                  /* char c1in5() */
+}                                  /* c1in5() */

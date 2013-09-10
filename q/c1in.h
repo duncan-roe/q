@@ -13,13 +13,18 @@
 #ifndef OPEN_MAX
 #  define OPEN_MAX 2048            /* Surely more than anyone would want */
 #endif
-#define USING_FILE (stdinstkptr >= 0)
+#define USING_FILE (stdidx >= 0)
 int buf5len, buf5idx, ff5save, off5save;
 void init5(void), final5(void);
 struct TIO55 tio5save, tio5;
 char buf5[BUF5MAX];
 bool size5;                        /* Screen was sized */
 int ttyfd;                         /* fd to do iocltls on */
-int stdinstack[OPEN_MAX];
-int stdinstkptr;
-bool devnullstack[OPEN_MAX];
+int stdidx;
+struct
+{
+  int funit;
+  bool nullstdout;
+  bool frommac;
+}
+stdinfo[OPEN_MAX];

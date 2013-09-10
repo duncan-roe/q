@@ -25,23 +25,23 @@ pop_stdin()
     return false;
   }                                /* if (!USING_FILE) */
 
-  devnull_currently = devnullstack[stdinstkptr];
+  devnull_currently = stdinfo[stdidx].nullstdout;
 
   do
-    retcod = dup2(stdinstack[stdinstkptr], 0);
+    retcod = dup2(stdinfo[stdidx].funit, 0);
   while (retcod == -1 && errno == EINTR);
   if (retcod == -1)
   {
     fprintf(stderr, "\r\n%s. (dup2(%d, 0))\r\n", strerror(errno),
-      stdinstack[stdinstkptr]);
+      stdinfo[stdidx].funit);
     refrsh(NULL);
   }                                /* if (retcod == -1) */
   else
   {
     do
-      retcod = close(stdinstack[stdinstkptr]);
+      retcod = close(stdinfo[stdidx].funit);
     while (retcod == -1 && errno == EINTR);
-    stdinstkptr--;
+    stdidx--;
   }                                /* if (retcod == -1) else */
   if (!USING_FILE)
     duplx5(false);                 /* don't want XOFF */
@@ -49,13 +49,13 @@ pop_stdin()
 /* Change DEVNULL setting if needed */
   if (USING_FILE)
   {
-    if (devnull_currently != devnullstack[stdinstkptr])
+    if (devnull_currently != stdinfo[stdidx].nullstdout)
     {
-      if (devnullstack[stdinstkptr])
+      if (stdinfo[stdidx].nullstdout)
         devnull_stdout();
       else
         restore_stdout();
-    }                  /* if (devnull_currently != devnullstack[stdinstkptr]) */
+    }                 /* if (devnull_currently != stdinfo[stdidx].nullstdout) */
   }                                /* if(USING_FILE) */
   else if (devnull_currently)
     restore_stdout();

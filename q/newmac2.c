@@ -9,10 +9,10 @@
 #include "edmast.h"
 #include "macros.h"
 
-#define GIVE_UP return 0
+#define GIVE_UP return false
 
-int
-newmac2(int mcchrs)
+bool
+newmac2(int mcchrs, bool appnu)
 {
   unsigned short xpnsion[Q_BUFSIZ];
   int i, k, m, l;
@@ -78,7 +78,7 @@ newmac2(int mcchrs)
   p1003:xpnsion[m++] = thisch;
   }                                /* end of for() */
 /* Now try to store macro */
-  if (!macdefw(verb, xpnsion, m, 0))
+  if (!macdefw(verb, xpnsion, m, appnu))
     GIVE_UP;
 /*
  * If the current macro has just redefined itself, get out of it now
@@ -87,5 +87,5 @@ newmac2(int mcchrs)
  */
   if (curmac == verb)
     notmac(0);
-  return 1;                        /* Successful end */
+  return true;                     /* Successful end */
 }

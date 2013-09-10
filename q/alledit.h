@@ -1,6 +1,6 @@
 /* A L L E D I T
  */
- 
+
 /* Headers required by prototypes &c. */
 #include <sys/types.h>
 #include "ckalloc.h"
@@ -10,6 +10,8 @@
 #define SPACE ' '
 #define LT '<'
 #define ESC '\33'
+#define DEL 0177
+#define CTL_U 025
 #define GT '>'
 #define SLASH '/'
 #define QM '?'
@@ -83,8 +85,8 @@ int lsub5a(unsigned char *, int, unsigned char *, int, int, int *, int *);
 int ltok5a(unsigned char *, int, unsigned char *, int, int, int *, int *,
   unsigned char *);
 int do_cmd(void);
-int macdef(unsigned int, unsigned char *, int, int);
-int macdefw(unsigned int, unsigned short *, int, int);
+int macdef(unsigned int, unsigned char *, int, bool);
+int macdefw(unsigned int, unsigned short *, int, bool);
 void duplx5(bool enable_IXON);
 void lstmac(void), typmac(void), showmac(int), sccmnd(void), scmnrd(void);
 void restore_stdout(void), notmac(int), sinitl(void);
@@ -96,7 +98,7 @@ void sdsply(void), cl5get(char *, int), readfl(void), writfl(long);
 void xlateset(void), showchar(unsigned char), tildexpn(char *), semifinl(void);
 void winchhan(int), setwinsz(int), newlin(void), rerdcm(void), xistcs(void);
 void sindnt(void);
-char c1in5(void);
+char c1in5(bool *eof_encountered);
 int cmd(char *buf);
 bool pop_stdin(void);
 void devnull_stdout(void);

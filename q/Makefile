@@ -12,7 +12,7 @@ clean :
 
 # Auto dependency stuff (from info make)
 %.d: %.c
-	$(CC) -MM -MT $(@:.d=.o) -MT $@ $(CPPFLAGS) $< > $@
+	$(CC) -MM -MT $(@:.d=.o) -MT $@ $(CPPFLAGS) $< -o $@
 ifneq ($(MAKECMDGOALS),clean)
 -include $(SRCS:.c=.d)
 endif

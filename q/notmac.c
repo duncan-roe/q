@@ -1,7 +1,7 @@
 /* N O T M A C
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2013 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -17,8 +17,7 @@
 #include "termio5.hl"
 #include "c1in.h"
 void
-notmac(err)
-int err;
+notmac(int err)
 {
   int i;
 /* */
@@ -44,4 +43,7 @@ int err;
     for (i = WCHRS - 1; i >= 0; i--)
       screen[i] = '\0';            /* Force refresh */
   mcnxfr = MCDTUM;                 /* No stack */
+  immnxfr = FIRST_IMMEDIATE_MACRO;
+  for (i = 0; i <= stdidx; i++)
+    stdinfo[i].frommac = false;
 }

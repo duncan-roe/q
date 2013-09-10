@@ -1,6 +1,9 @@
 -i option to supply initial commands (FI syntax)
+-o (offline) option to treat return to reading from stdin as q-quit
+   (only available with -i)
 Be able to run in pipe
  need -i first
+ need -o functionality first
   At start: open temp file; cat stdin to it, q to it
    except, use file name if supplied (and not pipe o/p(?))
   At end: s; cat temp file to stdout; rm temp file
@@ -18,11 +21,13 @@ Properly reinstate output optimisation (old hack removed as "quick fix")
  reinstate setting per-char delay (useful for testing)
 INTERNALS
   STARTED Have a bool enum for logicals
+  Use atexit() so can exit on fatal errors
   Fix runindent label squashes
   More GIVE_UP macros - use error_exit as standard label
   Use GNU tilde expansion function
   Drop non-ANSI C support (?)
   (Eventually) rework asg2 blocks (start with xistcs.c)
+  alledit.h prototypes to have variable names
 FI to have (small) stack for nested calls
 (maybe) replace terminal ioctls with tc{g,s}etattr
 Show what arguments Q started with (?)

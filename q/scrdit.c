@@ -1,7 +1,7 @@
 /* S C R D I T */
 /*
- * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 1981 D. C. Roe
+ * Copyright (C) 2012,2013 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -45,7 +45,6 @@ int pchrs;
     , tbuf[20]                     /* Scratch */
     ;
   int i, j, k, l = 0, m = 0,       /* Scratch variables */
-    rtn,                           /* Used by local subroutines */
     gotoch                         /* Char of last ^G */
     ;
   long i4                          /* Scratch */
@@ -93,7 +92,7 @@ int pchrs;
   p1001:
     puts(err);
     verb = 'J';                    /* Let user... */
-    goto p1522;                    /* ... salvage his edit. */
+    return;                        /* ... salvage his edit. */
   }
 /* J bad char cnt this line */
   if (curr->bcurs < 0)             /* Bad cursor this line */
@@ -177,23 +176,25 @@ p1005:contc = false;
     {
       if (!lstvld)
         sindnt();                  /* Get the indent */
-      if (ndntch == 0)
-        goto p1027;                /* No indenting anyway */
-      for (i = ndntch; i > 0; i--)
-        ordch(SPACE, curr);        /* Pad out with spaces */
-      modlin = true;               /* Line has been changed */
-      goto p1027;                  /* Finish new line */
+      if (ndntch > 0)
+      {
+        for (i = ndntch; i > 0; i--)
+          ordch(SPACE, curr);      /* Pad out with spaces */
+        modlin = true;             /* Line has been changed */
+      }                            /* if (ndntch > 0) */
     }                              /* if !(curr->bchars) */
-    ndntch = 0;
-    for (j = curr->bchars; j > 0; j--)
+    else
     {
-      if (curr->bdata[ndntch] != SPACE)
-        break;
-      ndntch = ndntch + 1;
-    }
-/* Don't alter cursor if positioned by LOCATE */
-    if (curr->bcurs < ndntch)
-      curr->bcurs = ndntch;
+      ndntch = 0;
+      for (j = curr->bchars; j > 0; j--)
+      {
+        if (curr->bdata[ndntch] != SPACE)
+          break;
+        ndntch = ndntch + 1;
+      }
+      if (curr->bcurs < ndntch)
+        curr->bcurs = ndntch;
+    }                              /* if !(curr->bchars) else */
   }                                /* if (INDENT) */
   else
     ndntch = 0;                    /* Not indenting, so no indent chars */
@@ -213,7 +214,19 @@ p1026:
   }                                /* if (curmac >= 0) */
   else
   {
-    thisch = c1in5();              /* Read 1 char */
+    bool eof_encountered;
+
+    thisch = c1in5(&eof_encountered);          /* Read 1 char */
+    if (eof_encountered)
+    {
+      if (cmmand && curr->bchars == 0 && USING_FILE)
+      {
+        curr->bdata[0] = 'z';
+        curr->bchars = 1;
+      }                            /* if (cmmand && ...) */
+      else
+        thisch = c1in5(NULL);
+    }                              /* if (eof_encountered) */
 /*
  * FX command implementation - replace char read by one from the
  * table unless we think we are cominputting or by some strange
@@ -834,7 +847,7 @@ p1905:nseen = false;
     {
       case 04000:                  /* Return mode */
         sprintf(tbuf, "%lo", zmode);
-        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), 1);
+        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
 
       case 04001:                  /* Return screen height - 1 */
@@ -864,7 +877,7 @@ p1905:nseen = false;
         }
 
         sprintf(tbuf, "%d", i);
-        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), 1);
+        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
 
       case 04002:                  /* Return curent edit file */
@@ -879,7 +892,7 @@ p1905:nseen = false;
         break;
 
       case 04003:                  /* HELP dir (for macros usually) */
-        macdef(64, (unsigned char *)macro_dir, strlen(macro_dir), 1);
+        macdef(64, (unsigned char *)macro_dir, strlen(macro_dir), true);
         break;
 
       case 04004:                  /* Like 4001 but for going backwards */
@@ -914,9 +927,9 @@ p1905:nseen = false;
         }
 
         snprintf(tbuf, sizeof tbuf, "%d", j);
-        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), 1);
+        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
-      
+
       default:
         found = false;
         break;
@@ -1033,7 +1046,6 @@ p7611:
   }
   if (mcnxfr == MCDTUM)
     goto p1026;                    /* No-op if stack empty */
-  rtn = 7604;                      /* Force the UP code to do a DOWN */
   l = curmac;                      /* Save current macro */
   m = mcposn;                      /* Save current macro position */
   goto p1706;                      /* Do a dummy UP */
@@ -1258,13 +1270,13 @@ p7605:insert = false;
 /*
  * ^NU - Up from a macro s/r
  */
-p7625:if (mcnxfr == MCDTUM)
-    goto p7630;
+p7625:
 /* Treat as exit if stack empty */
+  if (mcnxfr == MCDTUM)
+    goto p7630;
 /*
  * Look for stack corruption
  */
-  rtn = 1026;
 /*
  * P1706 - I joins here
  */
@@ -1287,9 +1299,33 @@ p1706:
     goto p17061;                   /* J pos'n now off end of macro */
   if (j < 0)
     goto p17061;                   /* J -ve pos'n */
+
+/* If leaving an immediate macro, this entry is now free */
+  if (curmac >= FIRST_IMMEDIATE_MACRO && curmac <= LAST_IMMEDIATE_MACRO)
+    immnxfr = curmac;
+
   curmac = i;
   mcposn = j;                      /* Accept the popped values */
-  goto asg2rtn;
+
+/* If the frame we just freed was created by U-use, we must reinstate it. */
+/* Only z-enduse can free this frame. */
+/* Arrange that ^NI becomes a no-op, otherwise revert to the command source */
+/* (which can't be a macro). */
+  if (mcstck[mcnxfr].u_use)
+  {
+    mcnxfr++;
+    if (verb == 'I')
+    {
+/* Restore macro that issued ^NI */
+      curmac = l;
+      mcposn = m;
+    }
+    else
+      curmac = -1;
+  }                                /* if (mcstck[mcnxfr+1].u_use) */
+  else if (verb == 'I')
+    goto p7604;
+  goto p1026;
 /*
  * ^ND - go Down a level ( a macro as a subroutine)
  */
@@ -1305,11 +1341,14 @@ p7604:
   mcstck[mcnxfr].mcprev = curmac;
 /* Return addr after following macro */
   mcstck[mcnxfr].mcposn = mcposn + 2;
+  mcstck[mcnxfr].u_use = false;
   mcnxfr++;                        /* Up stack pointer */
-  if (verb != 'I')
-    goto p1026;                    /* Return now unless incrementing */
-  curmac = l;
-  mcposn = m;
+  if (verb == 'I')
+  {
+/* Restore next macro in stack */
+    curmac = l;
+    mcposn = m;
+  }
   goto p1026;
 /*
  * ^NJ long (signed) jump
@@ -1382,7 +1421,7 @@ p1903:
   if (curr->bchars == 0)
     goto p1023;                    /* Trying to define null macro */
 /* Define the macro. Report if some problem... */
-  if (macdef((int)thisch, curr->bdata, (int)curr->bchars, 1))
+  if (macdef((int)thisch, curr->bdata, (int)curr->bchars, true))
     goto p1026;
   if (curmac >= 0)
     notmac(1);
@@ -1396,12 +1435,9 @@ p7727:cntrlw = true;
 /*
  * P1201 - Exit sequence. Reinstate XON if req'd...
  */
-p1201:if (USING_FILE)
-    goto p1522;
-  if (nodup)
-    goto p1522;                    /* J we didn't do one on the way in */
-  duplx5(true);                    /* enable XOFF */
-p1522:
+p1201:
+  if (!(USING_FILE || nodup))
+    duplx5(true);                  /* enable XOFF */
   return;
 asg2l:switch (l)
   {
@@ -1412,17 +1448,6 @@ asg2l:switch (l)
     default:
       printf("Assigned Goto failure, l = %d\r\n", l);
       verb = 'J';                  /* Let user... */
-      goto p1522;                  /* ... salvage his edit. */
-  }
-asg2rtn:switch (rtn)
-  {
-    case 1026:
-      goto p1026;
-    case 7604:
-      goto p7604;
-    default:
-      printf("Assigned Goto failure, rtn = %d\r\n", rtn);
-      verb = 'J';                  /* Let user... */
-      goto p1522;                  /* ... salvage his edit. */
+      return;                      /* ... salvage his edit. */
   }
 }
