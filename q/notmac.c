@@ -16,6 +16,12 @@
 #include "scrnedit.h"
 #include "termio5.hl"
 #include "c1in.h"
+
+/* Instantiate externals */
+
+bool simulate_q = false;
+int simulate_q_idx = 0;
+
 void
 notmac(int err)
 {
@@ -25,6 +31,8 @@ notmac(int err)
   {
     duplx5(false);                 /* Disable XOFF recognition */
     nodup = false;
+    if (offline)
+      simulate_q = true;
   }
   if (err && curmac >= 0)
   {

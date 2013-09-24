@@ -36,6 +36,7 @@
 /* Macros */
 
 #define ERR1025(x) do {printf("%s", (x)); goto p1025;} while (0)
+#define READ_NEXT_COMMAND goto p1004
 /*  */
 typedef enum q_yesno
 {
@@ -44,10 +45,24 @@ typedef enum q_yesno
   Q_MAYBE,
   Q_UNREC
 } q_yesno;                         /* typedef enum q_yesno */
+
+typedef enum command_state
+{
+  RUNNING,
+  Q_ARG1,
+  LINE_NUMBER_SAVED,
+  DO_V_NEXT,
+  HAVE_LINE_NUMBER,
+  TRY_INITIAL_COMMAND,
+} command_state;
 /* */
 long timlst;
 unsigned char fxtabl[128];
 int tbstat;
+
+/* Instantiate externals */
+
+bool offline = false;
 
 static char *help_dir;
 static char *help_cmd;
@@ -175,60 +190,83 @@ main(int xargc, char **xargv)
   bool repos = false;              /* We are R-REPOSITION (not C-COPY) */
   bool linmod;                     /* This line modified (Y) */
   bool tokens = false;             /* Token search yes/no */
-  bool dontrc = false;             /* Don't do .qrc */
+  bool do_rc = true;
   bool errflg = false;             /* Illegal switch seen */
-  short bootq = 0;                 /* Bootstrap q into 1st file */
+  command_state cmd_state = TRY_INITIAL_COMMAND;
   bool fullv = false;              /* Fulll VIEW wanted */
   scrbuf5 b1, b2, b3, b4;          /* 2 line & 2 command buffers */
   q_yesno answer;
+  char *initial_command = NULL;
 /*
  * Initial Tasks
  */
   argc = xargc;                    /* Xfer invocation arg to common */
   argv = xargv;                    /* Xfer invocation arg to common */
   dfltmode = 012045;               /* +e +m +* +tr +dr */
-/* Pick up any option arguments and set bootq if more args follow */
-  while ((i = getopt(argc, argv, "bdemnt")) != -1)
+/* Pick up any option arguments and set cmd_state if more args follow */
+  while ((i = getopt(argc, argv, "bdei:mnot")) != -1)
     switch (i)
     {
-      case 'n':
-        dontrc = true;
-        break;
       case 'b':
         binary = true;
         dfltmode |= 0400;          /* +f */
         break;
-      case 'm':
-        dfltmode ^= 02000;         /* m */
-        break;
-      case 'e':
-        dfltmode ^= 010000;        /* e */
-        break;
+
       case 'd':
         dfltmode ^= 1;             /* dr */
         break;
+
+      case 'e':
+        dfltmode ^= 010000;        /* e */
+        break;
+
+      case 'i':
+        initial_command = optarg;
+        break;
+
+      case 'm':
+        dfltmode ^= 02000;         /* m */
+        break;
+
+      case 'n':
+        do_rc = false;
+        break;
+
+      case 'o':
+        offline = true;
+        break;
+
       case 't':
         dfltmode ^= 4;             /* tr */
         break;
+
       case '?':
         errflg = true;
+        break;
     }                              /* switch(i) */
   if (errflg)
   {
-    (void)fprintf(stderr, "Usage: q [-bdemnt] [+<n> file] [files]\n");
+    fprintf(stderr, "%s",
+      "Usage: q [-bdemnto] [-i <macro definition>] [+<n> file]"
+      " [file[:<n>]]...\n");
     return 1;
   }
+  if (offline && initial_command == NULL)
+  {
+    fprintf(stderr, "%s", "Can only use -o with -i\n");
+    return 1;
+  }                                /* if (offline && initial_command == NULL) */
   if (!(sh = getenv("SHELL")))
     sh = "/bin/sh";
   if (!(help_dir = getenv("Q_HELP_DIR")))
     help_dir = "/usr/local/lib/q";
   if (!(macro_dir = getenv("Q_MACRO_DIR")))
     macro_dir = help_dir;
-  if (!(help_cmd = getenv("Q_HELP_CMD")))
+  if (!(help_cmd = getenv("Q_HELP_CMD")) && !(help_cmd = getenv("PAGER")))
     help_cmd = "more";
   fmode = dfltmode;                /* Assert defaults */
   if (optind < argc)
-    bootq = 1;
+    cmd_state = Q_ARG1;
   else
     argno = -1;                    /* No filenames */
   signal(SIGINT, quthan);
@@ -277,134 +315,156 @@ main(int xargc, char **xargv)
   tbstat = -1;                     /* Xlation table not set up */
   stdidx = -1;                     /* No U-use file */
 /*
- * Must be last initial task: Use .qrc if it exists here or in $HOME
+ * Use .qrc if it exists here or in $HOME
  */
-  if (dontrc)
-    goto p1004;                    /* Skip initial tasks if requested */
-
+  if (do_rc)
+  {
 /* Forge a u-use: push current stdin */
-  stdidx = 0;
-  do
-  {
-    stdinfo[stdidx].funit = dup(0);
-  }
-  while (stdinfo[stdidx].funit == -1 && errno == EINTR);
-  if (stdinfo[stdidx].funit == -1)
-  {
-    fprintf(stderr, "\r\n%s. (dup(0))\r\n", strerror(errno));
-    refrsh(NULL);
-    stdidx--;
-    goto p1004;                    /* Don't try to open .qrc */
-  }                                /* if (stdinfo[stdidx].funit == -1) */
+    stdidx = 0;
+    do
+    {
+      stdinfo[stdidx].funit = dup(0);
+    }
+    while (stdinfo[stdidx].funit == -1 && errno == EINTR);
+    if (stdinfo[stdidx].funit == -1)
+    {
+      fprintf(stderr, "\r\n%s. (dup(0))\r\n", strerror(errno));
+      refrsh(NULL);
+      stdidx--;
+      READ_NEXT_COMMAND;           /* Don't try to open .qrc */
+    }                              /* if (stdinfo[stdidx].funit == -1) */
 
-  do
-    i = close(0);
-  while (i == -1 && errno == EINTR);
+    do
+      i = close(0);
+    while (i == -1 && errno == EINTR);
 
 /* Try for .qrc or ~/.qrc */
-  logtmp = true;                   /* retry on failure */
-  strcpy(buf, ".qrc");
-retry_qrc:do
-    i = open(buf, O_RDONLY);
-  while (i == -1 && errno == EINTR);
-  if (i == -1)
-  {
-    if (logtmp)
+    logtmp = true;                 /* retry on failure */
+    strcpy(buf, ".qrc");
+  retry_qrc:
+    do
+      i = open(buf, O_RDONLY);
+    while (i == -1 && errno == EINTR);
+    if (i == -1)
     {
-      logtmp = false;
-      strcpy(buf, "~/.qrc");
-      tildexpn(buf);
-      goto retry_qrc;
-    }                              /* if (logtmp) */
-    pop_stdin();
-  }                                /* if (i == -1) */
-  else
-  {
-    if (i)
-    {
-      do
-        j = dup2(i, 0);
-      while (j == -1 && errno == EINTR);
-      if (j == -1)
+      if (logtmp)
       {
-        fprintf(stderr, "\r\n%s. (dup2(%d, 0))\r\n", strerror(errno), i);
-        fprintf(stderr, "Serious problem - new stdin opened on funit %d\r\n",
-          i);
-        refrsh(NULL);
-        pop_stdin();
-        goto p1004;
-      }                            /* if (j == -1) */
-      else
+        logtmp = false;
+        strcpy(buf, "~/.qrc");
+        tildexpn(buf);
+        goto retry_qrc;
+      }                            /* if (logtmp) */
+      pop_stdin();
+    }                              /* if (i == -1) */
+    else
+    {
+      if (i)
       {
         do
-          j = close(i);
+          j = dup2(i, 0);
         while (j == -1 && errno == EINTR);
-      }                            /* if (j == -1) else */
-    }                              /* if (i) */
-    duplx5(true);                  /* Assert XOFF recognition */
-    printf("> u %s\r\n", buf);     /* Simulate a command */
-  }                                /* if (i == -1) else */
+        if (j == -1)
+        {
+          fprintf(stderr, "\r\n%s. (dup2(%d, 0))\r\n", strerror(errno), i);
+          fprintf(stderr, "Serious problem - new stdin opened on funit %d\r\n",
+            i);
+          refrsh(NULL);
+          pop_stdin();
+          READ_NEXT_COMMAND;
+        }                          /* if (j == -1) */
+        else
+        {
+          do
+            j = close(i);
+          while (j == -1 && errno == EINTR);
+        }                          /* if (j == -1) else */
+      }                            /* if (i) */
+      duplx5(true);                /* Assert XOFF recognition */
+      printf("> u %s\r\n", buf);   /* Simulate a command */
+    }                              /* if (i == -1) else */
+  }                                /* if (do_rc) */
 /*
- * End initial tasks, except possible bootstrap to 1st file arg
- *
- *
  * Main command reading loop
  */
 p1004:
-  if (bootq && !USING_FILE && curmac < 0)
+  if (!USING_FILE && curmac < 0)
   {
+    switch (cmd_state)
+    {
+      case TRY_INITIAL_COMMAND:
+        cmd_state = RUNNING;
+      if (initial_command != NULL)
+      {
+        oldcom->bchars = snprintf((char *)oldcom->bdata, sizeof oldcom->bdata,
+          "fi %s", initial_command);
+        initial_command = NULL;
+        verb = 'i';
+        oldcom->bcurs= 3;
+        break;
+      }                            /* if (initial_command != NULL) */
+/* Drop through */
+      case RUNNING:
+        goto read_command_normally;
 
 /* Q-quit into the first file on the command line. Pagers (e.g. less) may
  * precede this with +<line#> so deal with this too. Cause command to be
- * actioned & disoplayed by setting up oldcom, also set up "verb" since sccmd is
+ * actioned & displayed by setting up oldcom, also set up "verb" since sccmd is
  * not being called */
 
-    switch (bootq)                 /* 1;initial, 2:goto, 3:view */
-    {
+      case Q_ARG1:
 
 /* assume if the first arg starts "+" and there is at least 1 more arg then the
  * first arg is a line number */
-
-      case 1:
         if (**(argv + optind) == '+' && strlen(*(argv + optind)) > 1 &&
           argc - optind >= 2)
         {
           optind++;                /* "hide" +# arg */
-          bootq = 2;               /* Have a +# arg */
+          cmd_state = LINE_NUMBER_SAVED; /* Have a +# arg */
         }                          /* if(**(argv+optind)=='+'&&... */
         else
-          bootq = 0;
-        oldcom->bchars = strlen(*(argv + optind)) + 2;
-        strncpy((char *)&oldcom->bdata[2], *(argv + optind),
-          (size_t)oldcom->bchars);
-        oldcom->bdata[0] = 'q';
+          cmd_state = TRY_INITIAL_COMMAND;
+
+/* Open the file whether line number supplied or not */
+        oldcom->bchars =
+          snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "q %s",
+          *(argv + optind));
         verb = 'Q';
+        oldcom->bcurs = 2;
         break;
-      case 2:
-        oldcom->bchars = strlen(*(argv + optind - 1)) + 1;
-        strncpy((char *)&oldcom->bdata[2], *(argv + optind - 1) + 1,
-          (size_t)oldcom->bchars);
-        oldcom->bdata[0] = 'g';
-      case2part2:
-        bootq = 3;
+
+/* The line number states are used on "q file:line",
+ * either initially or any time subsequently.
+ * They are also used on an initial "q +line file". */
+
+      case LINE_NUMBER_SAVED:
+        oldcom->bchars =
+          snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "g %s",
+          *(argv + optind - 1) + 1);
+        goto setup_goto_cmd;
+
+      case HAVE_LINE_NUMBER:
+        oldcom->bchars =
+          snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "g %d",
+          colonline);
+      setup_goto_cmd:
+        cmd_state = DO_V_NEXT;
         verb = 'G';
+        oldcom->bcurs = 2;
         break;
-      case 4:
-/* Don't rely on integer return from sprintf: BSD returns buf addr */
-        sprintf((char *)oldcom->bdata, "g %d", colonline);
-        oldcom->bchars = strlen((char *)oldcom->bdata);
-        goto case2part2;
-      case 3:
-        bootq = 0;
+
+      case DO_V_NEXT:
+        cmd_state = TRY_INITIAL_COMMAND;
         oldcom->bchars = 1;
         oldcom->bdata[0] = 'v';
+        oldcom->bdata[1] = 0;
         verb = 'V';
-    }                              /* switch(bootq) */
-    oldcom->bcurs = verb != 'V' ? 2 : 1;
-    oldcom->bdata[1] = verb != 'V' ? SPACE : 0;
+        oldcom->bcurs = 1;
+        break;
+    }                              /* switch(cmd_state) */
     printf("> %s\r\n", oldcom->bdata);
   }
   else
+  read_command_normally:
     sccmnd();                      /* Read a command; set VERB */
 p1201:
   if (cntrlc)                      /* There has been a ^C or BRK */
@@ -495,17 +555,10 @@ p1201:
       goto p2016;
     case 'm':                      /* "FM"ode */
       if (setmode())
-        goto p1004;
+        READ_NEXT_COMMAND;
 /* Get Yes / No (no default) */
       goto p1025;
     case 'i':                      /* "FI'mmediate macro */
-/* FI is only allowed from command line or a U-use file */
-      if (curmac >= 0)
-      {
-        printf("%s", "Not allowed from within a macro");
-        goto p1025;
-      }                            /* if (curmac >= 0) */
-
       if (scrdtk(4, (unsigned char *)buf, BUFMAX, oldcom))
       {
         perror("SCRDTK of macro text");
@@ -531,7 +584,7 @@ p1201:
 
       curmac = verb;
       mcposn = 0;
-      goto p1004;
+      READ_NEXT_COMMAND;
     case 'd':                      /* "FD"evnull */
       switch (get_answer())
       {
@@ -553,15 +606,15 @@ p1201:
             goto p1025;
           }                        /* if (USING_FILE) else */
       }                            /* switch (get_answer()) */
-      goto p1004;
+      READ_NEXT_COMMAND;
   }
-  (void)write(1, "unknown command", 15); /* Dropped out of switch */
+  printf("%s", "unknown command"); /* Dropped out of switch */
 p1025:
-  if (bootq > 1)                   /* Bad cmd line arg after "+ something" */
+  if (cmd_state == LINE_NUMBER_SAVED) /* Deal with early errors specially */
   {
-    bootq = 0;
+    cmd_state = TRY_INITIAL_COMMAND;
     optind--;
-  }                                /* if(bootq>1) */
+  }                                /* if (cmd_state == LINE_NUMBER_SAVED) */
   rerdcm();
   goto p1201;
 /* ******************************************************************
@@ -608,7 +661,7 @@ p1027:if (cntrlc)
   }
   (void)write(1, "Internal error - EOL char not recognised", 40);
   newlin();
-  goto p1004;
+  READ_NEXT_COMMAND;
 p1029:rtn = newl;
 p1033:lgtmp4 = (modify || splt);   /* We are not inserting */
   if (lgtmp4 && modlin)
@@ -642,7 +695,7 @@ p1301:
   }                                /* if(modify||splt) */
   if (revrse)                      /* "L"ocate backwards */
     setptr(revpos);
-  goto p1004;
+  READ_NEXT_COMMAND;
 /*
  * I - Insert
  */
@@ -684,7 +737,7 @@ p1036:
     if (!rdlin(curr, 0))           /* Get lin to mod / EOF */
     {
       printf("E - O - F\r\n");
-      goto p1004;
+      READ_NEXT_COMMAND;
     }                              /* if(!rdlin(curr,0)) */
     curr->bcurs = locpos;          /* In case just come from LOCATE */
     locpos = 0;                    /* In case just come from LOCATE */
@@ -699,7 +752,7 @@ p1036:
   if (revrse)
     setptr(revpos);
 
-  goto p1004;                      /* Finished this MODIFY */
+  READ_NEXT_COMMAND;               /* Finished this MODIFY */
 /* ******************************************************************
  * End line modifiers
  * ******************************************************************
@@ -842,19 +895,19 @@ p1708:
  */
     if (errno == ENOENT && verb == 'Q' && !lgtmp3)
     {
-      if (!bootq)
+      if (cmd_state == RUNNING || cmd_state == TRY_INITIAL_COMMAND)
       {
         if ((colonpos = strchr(buf, ':')) &&
           sscanf(colonpos + 1, "%d", &colonline) == 1)
         {
-          bootq = 4;               /* line # in colonline */
+          cmd_state = HAVE_LINE_NUMBER; /* line # in colonline */
           *colonpos = '\0';        /* Truncate filename */
           goto colontrunc;         /* Try with truncated buf */
         }                          /* if((colonpos=strchr(buf,':'))&&... */
-      }                            /* if(!bootq) */
-      else if (bootq == 4)         /* Just tried truncating at ":" */
+      }                            /* if (cmd_state == RUNNING) */
+      else if (cmd_state == HAVE_LINE_NUMBER) /* Just tried truncating at ":" */
         *colonpos = ':';           /* Undo truncation */
-      bootq = 0;
+      cmd_state = TRY_INITIAL_COMMAND;
       if (ysno5a("Do you want to create a new file (y,n,Cr [n])", A5DNO))
       {
         lgtmp3 = true;             /* Q-QUIT into new file */
@@ -929,7 +982,7 @@ p10403:mods = false;               /* OK to Q-QUIT now */
     if (tmode != statbuf.st_mode && (code || chmod(pcnta, tmode) == -1))
       printf("Warning - original mode not restored\r\n");
   }                                /* if (towner) */
-  goto p1004;                      /* Next command */
+  READ_NEXT_COMMAND;               /* Next command */
 /*
  * Deal with the case where S or B had no param. Get joined by
  * B-BACKUP later anyway
@@ -1066,7 +1119,7 @@ p10755:                            /* Q <filename> joins here */
   if (verb == 'Q')
     mods = false;                  /* No mods yet if that was Q-QUIT */
   setptr(savpos);                  /*  ...retaining old file pos'n... */
-  goto p1004;                      /* ... and finish (!) */
+  READ_NEXT_COMMAND;               /* ... and finish (!) */
 /*
  * Q - Quit
  *
@@ -1076,7 +1129,7 @@ p1017:
   if (mods &&
     !ysno5a("file modified since last b-backup/s-save, ok to quit (y,n,Cr [n])",
     A5DNO))
-    goto p1004;                    /* J user changed his mind */
+    READ_NEXT_COMMAND;             /* J user changed his mind */
   Tcl_DumpActiveMemory("t5mem");
   nofil = 1132;                    /* Old-style Q - no f/n */
   rdwr = O_RDONLY;
@@ -1092,7 +1145,7 @@ p1132:
     macdef(64, (unsigned char *)"", 0, true); /* Macro is ^NU only */
     curmac = 64;
     mcposn = 0;
-    goto p1004;
+    READ_NEXT_COMMAND;
   }
   final5();                        /* Reset terminal */
   return 0;
@@ -1107,7 +1160,7 @@ p1521:
  */
   (void)strcpy(pcnta, buf);        /* Filename & length now remembered */
   if (lgtmp3)                      /* Q-QUIT into new file */
-    goto p1004;                    /* Read next command */
+    READ_NEXT_COMMAND;             /* Read next command */
   goto p10755;                     /* Get the file... and off we go! */
 /*
  * ******************************************************************
@@ -1136,7 +1189,7 @@ p1076:
     setptr(k4);                    /* Pos 1 past 1st line to go */
     delete(0);                     /* Knock off line. Use normal ptr */
   }
-  goto p1004;                      /* Finished if get here */
+  READ_NEXT_COMMAND;               /* Finished if get here */
 p1078:
   rtn = 1079;
 p1112:
@@ -1148,7 +1201,7 @@ p1120:
   goto asg2rtn;
 p1079:
   puts("deleted\r");
-  goto p1004;                      /* End DELETE */
+  READ_NEXT_COMMAND;               /* End DELETE */
 /*
  * G - GOTO
  */
@@ -1156,7 +1209,7 @@ p1010:
   if (getlin(1, 1) && eolok())
   {
     setptr(oldcom->decval);
-    goto p1004;                    /* Finished GOTO */
+    READ_NEXT_COMMAND;             /* Finished GOTO */
   }                                /* if(getlin(1,1)) */
   goto p1025;
 /*
@@ -1233,7 +1286,7 @@ p1510:
     stdinfo[stdidx].frommac = false;
 
   buf5len = 0;                     /* Flush any input left over */
-  goto p1004;
+  READ_NEXT_COMMAND;
 /*
  * H - HELP
  */
@@ -1273,7 +1326,7 @@ p1011:
       printf("If you have them installed somewhere,\r\n"
         "please put that path in your shell environment"
         " with the name Q_HELP_DIR.\r\n\n");
-      goto p1004;
+      READ_NEXT_COMMAND;
     }
     printf("%s. %s (HELP)", strerror(errno), tmtree);
     goto p1025;
@@ -1287,7 +1340,7 @@ p1011:
     goto p1025;
   }
   init5();
-  goto p1004;                      /* Finished */
+  READ_NEXT_COMMAND;               /* Finished */
 /*
  * X - Set terminal characteristics
  */
@@ -1297,7 +1350,7 @@ p1023:
   puts("Switching off screenedit mode\r");
   xistcs();                        /* So set them */
   puts("Re-enabling screenedit\r");
-  goto p1004;                      /* Finished X */
+  READ_NEXT_COMMAND;               /* Finished X */
 /*
  * P - Print
  */
@@ -1326,7 +1379,8 @@ p1104:
     }
   }
   goto asg2rtn;                    /* All req'd lines printed */
-p1093:goto p1004;                  /* Finished P */
+p1093:
+  READ_NEXT_COMMAND;               /* Finished P */
 /*
  * V - View
  *
@@ -1373,7 +1427,7 @@ p10965:
   if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
   {
     puts("THE FILE IS EMPTY\r");
-    goto p1004;                    /* End V */
+    READ_NEXT_COMMAND;             /* End V */
   }
   k4 = ptrpos;                     /* Remember pos'n */
   j4 = k4 - count;
@@ -1410,7 +1464,7 @@ p10965:
   goto p1104;                      /* Print them */
 p1103:
   setptr(k4);                      /* Reposition */
-  goto p1004;                      /* Finished */
+  READ_NEXT_COMMAND;               /* Finished */
 /*
  * L - Locate
  */
@@ -1425,7 +1479,7 @@ p1014:
     if (lgtmp2)
       printf("At %s of file already - no lines to search\r\n",
         revrse ? "start" : "end");
-    goto p1004;                    /* Next command */
+    READ_NEXT_COMMAND;             /* Next command */
   }                                /* if(revrse?ptrpos<=1:ptrpos>lintot&&... */
 
 /* Get the string to locate. The string is read to the ermess array, as buf will
@@ -1581,7 +1635,7 @@ p1515:
   {
     if (curmac < 0 || !BRIEF)      /* Message wanted */
       puts("Can't join anything - no lines follow\r");
-    goto p1004;                    /* Next command */
+    READ_NEXT_COMMAND;             /* Next command */
   }                                /* if(ptrpos>=lintot&&... */
   rdlin(prev, 0);                  /* 1st line */
   delete(0);                       /* Del lin before normal ptr */
@@ -1663,10 +1717,10 @@ p1126:setptr(j4);                  /* Set main ptr at dest'n */
       delete(1);                   /* For reposition only, delete line read */
     inslin(prev);
   }
-  goto p1004;                      /* Finished C or R */
+  READ_NEXT_COMMAND;               /* Finished C or R */
 p1125:
   puts("repositioned\r");          /* Eof on repos. most of mess done */
-  goto p1004;                      /* End R */
+  READ_NEXT_COMMAND;               /* End R */
 /*
  * C-COPY
  */
@@ -1678,13 +1732,13 @@ p1128:
   goto p1131;                      /* Get 3rd param & do copy */
 p1130:
   puts("copied\r");                /* Eof. Most of message o/p */
-  goto p1004;                      /* End C */
+  READ_NEXT_COMMAND;               /* End C */
 /*
  * T - Tabset
  */
 /* Enter SCREENEDIT subsystem to complete command */
 p1101:if (tabset(oldcom))
-    goto p1004;
+    READ_NEXT_COMMAND;
   goto p1025;                      /* Allow user to correct any errors */
 /*
  * Z - Return from a Use file
@@ -1700,7 +1754,7 @@ p1102:
     curmac = mcstck[mcnxfr].mcprev;
     mcposn = mcstck[mcnxfr].mcposn;
   }                                /* if (stdinfo[stdidx + 1].frommac) */
-  goto p1004;
+  READ_NEXT_COMMAND;
 /*
  * O - Switch On INDENT
  */
@@ -1729,7 +1783,7 @@ p1407:
     fmode |= 04000000000;
   else
     fmode &= ~04000000000;
-  goto p1004;
+  READ_NEXT_COMMAND;
 /*
  * P2013 - FFortran. Use the O-indent code...
  */
@@ -1742,7 +1796,7 @@ p2014:
     fmode |= 01000000000;
   else
     fmode &= ~01000000000;
-  goto p1004;
+  READ_NEXT_COMMAND;
 /*
  * P2016 - FCaseind. Use the O-indent code...
  */
@@ -1755,7 +1809,7 @@ p2017:
     fmode |= 02000000000;
   else
     fmode &= ~02000000000;
-  goto p1004;
+  READ_NEXT_COMMAND;
 /*
  * N - NEWMACRO
  */
@@ -1806,7 +1860,7 @@ p1501:
     }                              /* if (oldcom->toktyp == eoltok) else */
   }                                /* if (i < 0) */
   if (i)
-    goto p1004;                    /* No error */
+    READ_NEXT_COMMAND;             /* No error */
   goto p1025;
 /*
  * K - pop a shell prompt
@@ -1823,7 +1877,7 @@ p1525:
     printf("%s. (system(\"%s\"))", strerror(errno), sh);
   if (!USING_FILE)
     puts("Re-entering Q\r");
-  goto p1004;
+  READ_NEXT_COMMAND;
 /*
  * FX - Exchange the functions of 2 keyboard keys
  */
@@ -1837,10 +1891,10 @@ p1904:
  *                     confirmation
  */
   if (!ysno5a("Re-initialise keyboard table to default - ok", A5NDEF))
-    goto p1004;                    /* Finish if changed his mind */
+    READ_NEXT_COMMAND;             /* Finish if changed his mind */
   for (i = 127; i >= 0; i--)
     fxtabl[i] = i;                 /* No FX commands yet */
-  goto p1004;                      /* Finished after reset */
+  READ_NEXT_COMMAND;               /* Finished after reset */
 /*
  * Validate parameter just read ...
  */
@@ -1903,7 +1957,7 @@ p1914:
   i = fxtabl[(int)oldkey[0]];
   fxtabl[(int)oldkey[0]] = fxtabl[(int)newkey[0]];
   fxtabl[(int)newkey[0]] = i;
-  goto p1004;
+  READ_NEXT_COMMAND;
 /*
  * Y - Change all occurrences of 1 string to another
  *
@@ -1973,7 +2027,7 @@ p1616:
   (void)write(1, "scanned", 7);
   newlin();
 p1712:setptr(savpos);              /* Restore file pos'n */
-  goto p1004;                      /* Leave Y */
+  READ_NEXT_COMMAND;               /* Leave Y */
 p16175:
   savpos = ptrpos - 1;             /* Point to too big line */
   printf("Next line would exceed max size:-");
@@ -2119,11 +2173,11 @@ p1701:
   {
   q1704:
     printf("f%c ignored (mode +v)\r\n", verb);
-    goto p1004;
+    READ_NEXT_COMMAND;
   }
   fmode |= 010000000000;
   fmode &= 017777777777;
-  goto p1004;                      /* Finished */
+  READ_NEXT_COMMAND;               /* Finished */
 /*
  * FV - VERBOSE
  */
@@ -2131,7 +2185,7 @@ p1702:
   if (!eolok())
     goto p1025;
   fmode &= 07777777777;
-  goto p1004;                      /* Finished */
+  READ_NEXT_COMMAND;               /* Finished */
 /*
  * FN - NONE
  */
@@ -2141,7 +2195,7 @@ p1703:
   if (fmode & 01000)
     goto q1704;
   fmode |= 030000000000u;
-  goto p1004;                      /* Finished */
+  READ_NEXT_COMMAND;               /* Finished */
 /*
  * FO - FORGET
  */
@@ -2149,7 +2203,7 @@ p1707:
   if (!eolok())
     goto p1025;
   forget();                        /* In fact implemented by workfile */
-  goto p1004;
+  READ_NEXT_COMMAND;
 /*
  * FT - TOKENCHAR
  */
@@ -2175,7 +2229,7 @@ p2009:
   if (!eolok())
     goto p1025;
   strcat(ndel, buf);
-  goto p1004;
+  READ_NEXT_COMMAND;
 /*
  * FP or ! - DO SHELL COMMAND
  */
@@ -2187,13 +2241,13 @@ p1801:
     goto p1811;                    /* Error has been reported */
   }
   if (!cntrlc)
-    goto p1004;                    /* J no ^C in command */
+    READ_NEXT_COMMAND;             /* J no ^C in command */
   newlin();
 p1901:
   puts("Quit,\r");
   if (!USING_FILE && curmac < 0)
     cntrlc = false;                /* Forget ^C now unless macro */
-  goto p1004;
+  READ_NEXT_COMMAND;
 asg2rtn:switch (rtn)
   {
     case 1037:
@@ -2239,7 +2293,7 @@ asg2rtn:switch (rtn)
     case 10755:
       goto p10755;
     case 1004:
-      goto p1004;
+      READ_NEXT_COMMAND;
     case 10403:
       goto p10403;
     case 1032:

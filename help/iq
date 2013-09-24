@@ -1,6 +1,6 @@
   ++ I N V O K I N G   Q ++
 
-Usage: q [-bdemnt] [+<n> file[:<n>]] [file[:<n>]]...
+Usage: q [-bdemnto] [-i <macro definition>] [+<n> file] [file[:<n>]]...
 
 <file> arguments are processed sequentially, by use of q's Q-QUIT command with
 no argument; or may be accessed out of sequence by "Q $<number>". The current
@@ -18,6 +18,14 @@ file. If not but ~/.qrc does exist, that is U-USE'd.
 After loading up the editing workfile with <file> if one was given, q gains
 absolute control over the display by diabling all special characters except
 interrupt.
+
+-i <macro definition> tells Q to obey the definition as an FI command before
+taking input from the user (which will never happen if -o is also given). <macro
+definition> will usually need to be quoted for the shell, but Q itself should
+not see it quoted.
+
+-o forces Q to terminate rather than ask the user for input. It may only be
+given when -i is also given - so Q just performs some work and exits.
 
 -b signifies the edit is to be in Binary mode. This cannot be changed for the
 session. Files are read with no tab expansion or other character conversion. The

@@ -28,3 +28,6 @@ struct
   bool frommac;
 }
 stdinfo[OPEN_MAX];
+extern bool offline;
+extern bool simulate_q;
+extern int simulate_q_idx;

@@ -9,4 +9,5 @@ Q acts on the following environment variables:-
 3. Q_MACRO_DIR says where the standard Q macros are.
    Default if absent: same as help dir. Q is distributed that way
 4. Q_HELP_CMD is the command to use to display help files.
-   Default if absent: "more"
+   Default if absent: use PAGER environment variable.
+   Default if neither PAGER nor Q_HELP_CMD in environment: "more"
