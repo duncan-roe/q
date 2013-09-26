@@ -2,3 +2,5 @@ t?
 RCS
 go
 hee
+*.d
+*.o
