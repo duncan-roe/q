@@ -1,3 +1,5 @@
+#ifndef ALLEDIT_H
+#define ALLEDIT_H
 /* A L L E D I T
  */
 
@@ -123,3 +125,4 @@ bool cntrlc, seenwinch;
 unsigned long fmode;
 char *macro_dir;                   /* Where macros are */
 int orig_stdout;                   /* stdout funit at start */
+#endif

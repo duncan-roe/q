@@ -1,7 +1,7 @@
 /* P O P _ S T D I N . C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2013 Duncan Roe
  *
  * This function pops stdin 1 level
  */
@@ -9,7 +9,6 @@
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
-#include "termio5.hl"
 #include "alledit.h"
 #include "c1in.h"
 

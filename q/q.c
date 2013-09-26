@@ -30,7 +30,6 @@
 #include "alledit.h"
 #include "edmast.h"
 #include "macros.h"
-#include "termio5.hl"
 #include "c1in.h"
 
 /* Macros */

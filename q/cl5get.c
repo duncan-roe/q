@@ -13,7 +13,6 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "termio5.hl"
 #include "alledit.h"
 #include "c1in.h"
 /* */

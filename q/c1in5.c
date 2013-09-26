@@ -8,7 +8,6 @@
  *
  */
 #include <stdio.h>
-#include "termio5.hl"
 #include "alledit.h"
 #include <errno.h>
 #include <string.h>

@@ -1,6 +1,6 @@
 /* R D F I L E
  * Copyright (C) 1993,1998 Duncan Roe & Associates P/L
- * Copyright (C) 2005, 2012 Duncan Roe
+ * Copyright (C) 2005,2012,2013 Duncan Roe
  *
  * This routine reads in a file, inserting it in the Workfile.
  *
@@ -13,14 +13,11 @@
 #include <errno.h>
 #include <limits.h>
 #include <stdint.h>
-#ifdef ANSI5
 #include <sys/types.h>
 #include <unistd.h>
-#endif
 #include "alledit.h"
 #include "edmast.h"
 #include "macros.h"
-#include "termio5.hl"
 #include "c1in.h"
 int tabsiz = 8;                    /* How often tabstops are */
 
@@ -60,11 +57,7 @@ static short state;                /* Cr &c state */
 /* ******************************* endLin ****************************** */
 
 static void
-endLin(
-#ifdef ANSI5
-  void
-#endif
-  )
+endLin(void)
 {
   count++;                         /* Up # of lines read */
   xxprev->bchars = pbchars;        /* Set = local copy */
@@ -80,11 +73,7 @@ endLin(
 /* ******************************* getblk ****************************** */
 
 static int
-getblk(                            /* eof=getblk() */
-#ifdef ANSI5
-  void
-#endif
-  )
+getblk(void)                       /* eof=getblk() */
 {
   for (;;)                         /* Loop until good read */
   {
@@ -114,11 +103,7 @@ getblk(                            /* eof=getblk() */
 
 /* ******************************* prclin ****************************** */
 
-static int prclin(                 /* Build up line; return 1 for eof */
-#ifdef ANSI5
-  void
-#endif
-  )
+static int prclin(void)            /* Build up line; return 1 for eof */
 {
   unsigned char *pbptr;            /* -> xxprev->bdata[bchars] for speed */
   int inindent = 040000;           /* Inside indenting w/s, mask matches mode */
@@ -240,11 +225,7 @@ static int prclin(                 /* Build up line; return 1 for eof */
  * abandon w/out asking a question, and do not clear the ^C flag. Else ask */
 
 static bool
-ctlcak(
-#ifdef ANSI5
-  void
-#endif
-  )
+ctlcak(void)
 {
   bool doctlc = curmac >= 0 || USING_FILE; /* Don't query after ^C seen */
 /*  */

@@ -1,7 +1,7 @@
 /* R E S T O R E _ S T D O U T . C
  *
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2013 Duncan Roe
  *
  * This routine switches output back to the original stdout
  */
@@ -10,7 +10,6 @@
 #include <unistd.h>
 #include <string.h>
 #include "alledit.h"
-#include "termio5.hl"
 #include "c1in.h"
 void
 restore_stdout()

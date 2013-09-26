@@ -1,3 +1,5 @@
+#ifndef C1IN_H
+#define C1IN_H
 /* c 1 i n . h */
 /*
  * Copyright (C) 1995, Duncan Roe & Associates P/L
@@ -6,6 +8,7 @@
  * This header file contains items of interest to the character input
  * subsystem
  */
+#include "termio5.hl"
 #define BUF5MAX 40
 #define STDIN5FD 0
 #define STDOUT5FD 1
@@ -31,3 +34,4 @@ stdinfo[OPEN_MAX];
 extern bool offline;
 extern bool simulate_q;
 extern int simulate_q_idx;
+#endif

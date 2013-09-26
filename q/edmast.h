@@ -1,3 +1,5 @@
+#ifndef EDMAST_H
+#define EDMAST_H
 /* E D M A S T
  *
  * Copyright (C) 1981; D. C. Roe
@@ -22,3 +24,4 @@ int argc;                          /* Copy of invocation arg */
 char **argv;                       /* Copy of invocation arg */
 int argno;                         /* File # from cmd line (0-based) */
 char *sh;                          /* The shell we should use */
+#endif

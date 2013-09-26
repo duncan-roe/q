@@ -1,6 +1,6 @@
 /* D E V N U L L _ S T D O U T . C */
 /*
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2013 Duncan Roe
  *
  * This function switches stdout to /dev/null
  */
@@ -11,7 +11,6 @@
 #include <string.h>
 #include <unistd.h>
 #include "alledit.h"
-#include "termio5.hl"
 #include "c1in.h"
 
 void

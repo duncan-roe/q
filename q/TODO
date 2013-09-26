@@ -1,3 +1,4 @@
+x command does not work in a macro
 DONE: Use PAGER if no Q_HELP_CMD
 DONE: Fix doco for FI
 DONE: Allow FI in a macro
@@ -24,6 +25,7 @@ Properly reinstate output optimisation (old hack removed as "quick fix")
  get per-char delay from stty baud rate
  reinstate setting per-char delay (useful for testing)
 INTERNALS
+DONE: Header files to have conventional #ifnde / #define / #endif
   STARTED Have a bool enum for logicals
   Use atexit() so can exit on fatal errors
   STARTED: Fix runindent label squashes

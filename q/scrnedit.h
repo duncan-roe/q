@@ -1,3 +1,5 @@
+#ifndef SCRNEDIT_H
+#define SCRNEDIT_H
 /* S C R N E D I T
  *
  * Copyright (C) 1981, 2011 D. C. Roe
@@ -55,3 +57,4 @@ double delay;
  * BACKSP - Value of 2 backspaces. Variable for terminals that use ^Y
  * CNTRLW - true if ^W seen
  */
+ #endif

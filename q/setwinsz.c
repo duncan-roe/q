@@ -1,7 +1,7 @@
 /* S E T W I N S Z . C
  *
  * Copyright (C) 1994, Duncan Roe & Associates P/L
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2013 Duncan Roe
  *
  * This routine sets up the line width and # lines currently prevailing
  *
@@ -10,10 +10,7 @@
  */
 #include <stdio.h>
 #include <unistd.h>
-#ifdef ANSI5
 #include <sys/ioctl.h>
-#endif
-#include "termio5.hl"
 #include "alledit.h"
 #include "c1in.h"
 void

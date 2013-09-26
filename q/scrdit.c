@@ -25,7 +25,6 @@
 #include "macros.h"
 #include "cmndcmmn.h"
 #include "scrnedit.h"
-#include "termio5.hl"
 #include "c1in.h"
 /* */
 unsigned char fxtabl[128];

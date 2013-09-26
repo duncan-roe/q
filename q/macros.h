@@ -1,3 +1,5 @@
+#ifndef MACROS_H
+#define MACROS_H
 /* M A C R O S
  *
  * Copyright (C) 1981, D. C. Roe
@@ -49,3 +51,4 @@ struct macinfo
 /* Prototypes */
 
 bool newmac2(int mcchrs, bool appnu);
+#endif

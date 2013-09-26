@@ -12,6 +12,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include "alledit.h"
+#include "c1in.h"
 
 int
 ysno5a(char *mess, int key)
@@ -26,6 +27,11 @@ ysno5a(char *mess, int key)
 /* */
 p10:
   printf("%s? ", mess);
+  if (offline)
+  {
+    printf("%s", "y\r\n");
+    return 1;
+  }                                /* if (offline) */
 /* Build a command line, forcing to upper case. BEL if it fills up */
   cl5get(comlin, 3);               /* YES is longest string */
 /* Force upper case */

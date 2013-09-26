@@ -1,20 +1,17 @@
 /* I N I T 5 . C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2011, 2012, Duncan Roe
+ * Copyright (C) 2011,2012,2013 Duncan Roe
  *
  * This routine initialises the terminal i/o system.
  */
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include "termio5.hl"
 #include <memory.h>
 #include "alledit.h"
 #include "c1in.h"
-#ifdef ANSI5
 #include <sys/ioctl.h>
-#endif
 /* */
 void
 init5()

@@ -14,7 +14,6 @@
 #include "alledit.h"
 #include "macros.h"
 #include "scrnedit.h"
-#include "termio5.hl"
 #include "c1in.h"
 
 /* Instantiate externals */

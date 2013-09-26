@@ -1,7 +1,7 @@
 /* F I N A L 5 . C
  *
  * Copyright (C) 1995, Duncan Roe & Associates P/L
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2013 Duncan Roe
  *
  * This routine restores initial settings, prior to exiting
  */
@@ -12,16 +12,10 @@
 #ifdef ANSI5
 #include <sys/ioctl.h>
 #endif
-#include "termio5.hl"
 #include "c1in.h"
 
-#ifdef ANSI5
-void
-final5(void)
-#else
 void
 final5()
-#endif
 {
   if (ttyfd > 0)
   {
