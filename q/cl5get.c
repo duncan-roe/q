@@ -14,10 +14,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "alledit.h"
+#include "macros.h"
 #include "c1in.h"
 /* */
-void
-cl5get(char *buf, int bufcap)
+bool
+cl5get(char *buf, int bufcap, bool action_eof, bool read_macros)
 {
   unsigned char thisch;            /* Character read */
   int nchars = 0;                  /* Total chars read */
@@ -26,7 +27,26 @@ cl5get(char *buf, int bufcap)
  */
   for (;;)
   {
-    thisch = c1in5(NULL);
+    if (read_macros && curmac >= 0)
+    {
+      if (mcposn >= scmacs[curmac]->mcsize)
+      {
+        notmac(0);
+        continue;
+      }                            /* if (mcposn >= scmacs[curmac]->mcsize) */
+      thisch = scmacs[curmac]->data[mcposn];
+      mcposn++;
+    }                              /* if (read_macros && curmac >= 0) */
+    else if (action_eof)
+    {
+      bool eof_encountered;
+
+      thisch = c1in5(&eof_encountered); /* Read 1 char */
+      if (eof_encountered)
+        return false;
+    }                              /* if (action_eof) */
+    else
+      thisch = c1in5(NULL);
     if (thisch == '\n')
       break;                       /* J EOL */
     if (thisch == '\r')
@@ -65,4 +85,5 @@ cl5get(char *buf, int bufcap)
   buf[nchars] = '\0';              /* Zero-byte terminate */
   if (!USING_FILE)
     puts("\r");
+  return true;
 }

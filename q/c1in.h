@@ -34,4 +34,7 @@ stdinfo[OPEN_MAX];
 extern bool offline;
 extern bool simulate_q;
 extern int simulate_q_idx;
+extern char *end_seq;
+extern char *normal_end_sequence;
+extern char *xistics_end_sequence;
 #endif

@@ -19,7 +19,7 @@
 /* Instantiate externals */
 
 bool simulate_q = false;
-int simulate_q_idx = 0;
+int simulate_q_idx;
 
 void
 notmac(int err)
@@ -32,6 +32,7 @@ notmac(int err)
     nodup = false;
     if (offline)
       simulate_q = true;
+      simulate_q_idx = 0;
   }
   if (err && curmac >= 0)
   {

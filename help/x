@@ -15,10 +15,16 @@ Notes
  R-carriage return sequence              T- set spaces per tab
  X-exit back to main editor
  Example
- The most common use of this command is probably on terminals that don't wrap
-round to col. 80 of the previous line when they get a backspace in col. 1:
+ The most common use of this command is probably to set the "spaces per tab"
+value in conjunction with asserting FM +L. This gives you a file with 1 tab per
+indent level where you see your choice of tab width when editing.
  X
- A
+ T 4
  X
- Tells Q there is no fast get-to-end-of-line sequence - the cursor must just be
-moved forward 1 char at a time.
+ Sets tab width 4.
+ The X command may be invoked from within a macro, but when it is in effect,
+macro expansion is not active. Therefore the leading and trailing X must both be
+in the same macro if the macro is a subroutine, because X will not action ^NU.
+ Similarly if an X command starts in a U-USE file it must also finish there,
+because X will not action Z. (Q actually forces an X and then forces a Z in this
+case).

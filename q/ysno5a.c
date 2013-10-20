@@ -33,7 +33,7 @@ p10:
     return 1;
   }                                /* if (offline) */
 /* Build a command line, forcing to upper case. BEL if it fills up */
-  cl5get(comlin, 3);               /* YES is longest string */
+  cl5get(comlin, 3, false, false); /* YES is longest string */
 /* Force upper case */
   for (p = comlin - 1;;)
   {

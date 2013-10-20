@@ -15,7 +15,8 @@
 #include <unistd.h>
 #include "c1in.h"
 
-static char *end_seq = "\033\033fq\n";
+char *normal_end_sequence = "\033\033fq\n";
+char *end_seq;
 
 char
 c1in5(bool *eof_encountered)
@@ -40,14 +41,14 @@ c1in5(bool *eof_encountered)
         refrsh(NULL);
       }                            /* if(seenwinch) */
 
-/* If simulating q command for -o cmd line option, do it. */
+/* If simulating fq command for -o cmd line option, do it. */
       if (simulate_q)
       {
 /* Send enough characters to quit out of anything. */
 /* But in case it's not enough, send it repeatedly. */
         if (simulate_q_idx >= strlen(end_seq))
           simulate_q_idx = 0;
-          return end_seq[simulate_q_idx++];
+        return end_seq[simulate_q_idx++];
       }                            /* if (simulate_q) */
 
       s = read(STDIN5FD, buf5, 1);

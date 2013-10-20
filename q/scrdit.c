@@ -26,16 +26,14 @@
 #include "cmndcmmn.h"
 #include "scrnedit.h"
 #include "c1in.h"
-/* */
+
+#define GETNEXTCHR goto p7700
+
 unsigned char fxtabl[128];
 long timlst;
-/* */
+
 void
-scrdit(curr, prev, prmpt, pchrs, cmmand)
-int cmmand;
-scrbuf5 *curr, *prev;
-char *prmpt;
-int pchrs;
+scrdit(scrbuf5 *curr, scrbuf5 *prev, char *prmpt, int pchrs, int cmmand)
 {
   unsigned char *p, *q             /* Scratch */
    ;
@@ -207,7 +205,10 @@ p1026:
   {
 /* Clear expanding if that was last char from macro */
     if (mcposn >= scmacs[curmac]->mcsize)
-      goto p1515;
+    {
+      notmac(0);
+      GETNEXTCHR;
+    }                              /* if (mcposn >= scmacs[curmac]->mcsize) */
     thisch = scmacs[curmac]->data[mcposn];
     mcposn = mcposn + 1;
   }                                /* if (curmac >= 0) */
@@ -250,7 +251,7 @@ p1026:
   switch (thisch)
   {
     case 0:
-      goto p7700;
+      GETNEXTCHR;
     case 1:
       goto p7701;
     case 2:
@@ -354,7 +355,7 @@ p10231:
 p10232:
   putchar('\a');                   /* O/p BEL since error */
   mctrst = false;                  /* User no longer trusted */
-  goto p7700;                      /* End rubout */
+  GETNEXTCHR;                      /* End rubout */
 w1023:
   if (curmac >= 0)
   {
@@ -368,7 +369,7 @@ w1023:
 p1007:ordch(thisch, curr);         /* Insert or replace as appropriate */
   modlin = true;                   /* Line has been changed */
   contc = false;
-  goto p7700;                      /* Finish */
+  GETNEXTCHR;                      /* Finish */
 /*
  * ^A - Again/Append
  * If more info in previous line than current, append previous excess
@@ -393,7 +394,7 @@ p7701:i = ndntch;                  /* In case we  SINDNT */
 /* For ^R */
 p1029:
   curr->bcurs = curr->bchars;      /* Put cursor at end */
-  goto p7700;                      /* Finish ^A */
+  GETNEXTCHR;                      /* Finish ^A */
 /*
  * ^B - Go back to the start of this word or back to the start of the
  * previous word if at the start of this one. Words are delimited by
@@ -423,17 +424,17 @@ p7702:i = 0;                       /* S.O.L. if no indenting */
       if (*--p == SPACE || !--k)
         break;
   curr->bcurs = i + k;             /* Start of line + room */
-  goto p7700;                      /* Finish ^B */
+  GETNEXTCHR;                      /* Finish ^B */
 /*
  * ^C - nextch not special
  */
 p7703:contc = true;
-  goto p7700;                      /* Finish ^C */
+  GETNEXTCHR;                      /* Finish ^C */
 /*
  * ^E - Enter/Leave insert mode
  */
 p7705:insert = !insert;
-  goto p7700;                      /* End insert */
+  GETNEXTCHR;                      /* End insert */
 /*
  * ^F - Forward to start next word. If at e.o.l., no-op;
  * if on last word, stop at e.o.l.
@@ -460,7 +461,7 @@ p7706:
       if (*p++ != SPACE || !--k)
         break;
   curr->bcurs = curr->bchars - k;
-  goto p7700;                      /* Refresh or read */
+  GETNEXTCHR;                      /* Refresh or read */
 /*
  * ^H - Home
  */
@@ -468,7 +469,7 @@ p7710:
   curr->bcurs = 0;                 /* Reset cursor */
   if (INDENT)
     curr->bcurs = ndntch;          /* Set to S.O.Data if indenting */
-  goto p7700;                      /* Finish ^H */
+  GETNEXTCHR;                      /* Finish ^H */
 /*
  * ^I - Insert a tab. We insert enough spaces to get to next tab
  * posn. if there is one, otherwise insert 1 space. once inserted,
@@ -530,14 +531,14 @@ p2001:
     mxchrs = i;
   if (j != l)
     goto q1023;                    /* Bell if wasn't room for whole tab */
-  goto p7700;                      /* Refresh or read */
+  GETNEXTCHR;                      /* Refresh or read */
 /*
  * ^K - Kill
  */
 p7713:
   curr->bchars = curr->bcurs;
   modlin = true;                   /* Line has been changed */
-  goto p7700;                      /* Finished ^K */
+  GETNEXTCHR;                      /* Finished ^K */
 /*
  * ^L - Left hand kill
  * If indenting and at the indent point kill the indent, otherwise
@@ -573,7 +574,7 @@ p7714:
   }                                /* if (k) */
   if (verb == 'T')
     goto p1201;                    /* Return if end of ^T */
-  goto p7700;                      /* Finish ^L */
+  GETNEXTCHR;                      /* Finish ^L */
 /*
  * ^T - Split line. Return 1st part of line in previous buffer then
  * move down the rest, then return. Calling routine must check
@@ -610,7 +611,7 @@ p7725:
     modlin = true;                 /* Cancel empty line not a mod */
   curr->bchars = i;
   curr->bcurs = i;
-  goto p7700;                      /* Finish ^U */
+  GETNEXTCHR;                      /* Finish ^U */
 /*
  * ^X - Move cursor 1 forward. If at end, force a space
  */
@@ -619,11 +620,11 @@ p7730:
   if (k != curr->bchars)
   {
     curr->bcurs++;                 /* Move cursor fwd */
-    goto p7700;                    /* Refresh etc */
+    GETNEXTCHR;                    /* Refresh etc */
   }                                /* if (k != curr->bchars) */
   ordch(SPACE, curr);
   modlin = true;                   /* Line has been changed */
-  goto p7700;                      /* Finish ^X */
+  GETNEXTCHR;                      /* Finish ^X */
 /*
  * ^Y - Cursor back 1
  * Not allowed into indent area however
@@ -636,7 +637,7 @@ p7731:
   if (k == i)
     goto p1023;                    /* J strt alrdy */
   curr->bcurs--;
-  goto p7700;                      /* Finish ^Y */
+  GETNEXTCHR;                      /* Finish ^Y */
 /*
  * ESC - Abandon
  */
@@ -652,7 +653,7 @@ p7712:
   p2101:
     printf("\007\r\nLine length must not change in FIXED LENGTH mode");
     newlin();
-    goto p7700;
+    GETNEXTCHR;
   }
   goto p1048;                      /* Move chars to prev */
 /*
@@ -660,7 +661,7 @@ p7712:
  */
 p7732:
   curr->bcurs = curr->bchars;
-  goto p7700;                      /* Finish ^Z */
+  GETNEXTCHR;                      /* Finish ^Z */
 /*
  * ^Q - Rest of line upper -> lower
  */
@@ -672,7 +673,7 @@ p1207:
   p = &curr->bdata[j];
   k = k - j;                       /* # to do */
   if (k == 0)
-    goto p7700;                    /* J out at end of line */
+    GETNEXTCHR;                    /* J out at end of line */
   modlin = true;                   /* Line has been changed */
   goto asg2l;                      /* Do the conversion */
 p1204:
@@ -682,7 +683,7 @@ p1204:
       *p += 040;
     p++;
   }
-  goto p7700;                      /* Finished ^Q */
+  GETNEXTCHR;                      /* Finished ^Q */
 /*
  * ^S - Lower -> upper
  */
@@ -696,7 +697,7 @@ p1206:                             /* Convert lower -> upper */
       *p -= 040;
     p++;
   }
-  goto p7700;                      /* Finished ^S */
+  GETNEXTCHR;                      /* Finished ^S */
 /*
  * ^D - Right hand rubout
  */
@@ -729,7 +730,7 @@ p7722:
     modlin = true;                 /* If characters rescued */
   curr->bchars = mxchrs;
   curr->bcurs = mxchrs;
-  goto p7700;                      /* Finish ^R */
+  GETNEXTCHR;                      /* Finish ^R */
 /*
  * ^O - cOmment modify
  */
@@ -737,7 +738,7 @@ p7717:
   k = curr->bcurs;                 /* Cursor pos'n */
   j = curr->bchars;                /* Saves array accesses */
   if (k == j)
-    goto p7700;                    /* J if at E.O.L. already */
+    GETNEXTCHR;                    /* J if at E.O.L. already */
   p = &curr->bdata[k];             /* 1st char to check */
   i = j - k - 1;                   /* Chars to check for "/" */
   for (; i > 0; i--)
@@ -749,7 +750,7 @@ p7717:
   }
 p1407:
   curr->bcurs = j;                 /* Set cursor to E.O.L. */
-  goto p7700;                      /* End ^O here */
+  GETNEXTCHR;                      /* End ^O here */
 p1409:k = k + 1;
 p14091:
   k++;
@@ -758,19 +759,19 @@ p14091:
   if (curr->bdata[k] == SPACE)
     goto p14091;                   /* J not 1st sig char */
   curr->bcurs = k;                 /* Cursor to 1st comment char */
-  goto p7700;                      /* Finish ^O */
+  GETNEXTCHR;                      /* Finish ^O */
 /*
  * ^V - recoVer from a broadcast etc.
  */
 p7726:
   newlin();
-  goto p7700;                      /* Finish ^V */
+  GETNEXTCHR;                      /* Finish ^V */
 /*
  * ^G - Goto next character
  */
 p7707:glast = true;
   gpseu = false;                   /* Not in pseudo macro */
-  goto p7700;                      /* Will be back shortly */
+  GETNEXTCHR;                      /* Will be back shortly */
 /*
  * P1518 - We are back continuing ^G but now we have the char to look
  * for.
@@ -788,7 +789,7 @@ p1804:
   if (i >= 0)
     curr->bcurs = curr->bchars - i; /* Guard against -ve i */
   gotoch = thisch;                 /* Remember char for ^^ */
-  goto p7700;                      /* Finish ^G */
+  GETNEXTCHR;                      /* Finish ^G */
 /*
  * ^^ - repeat ^G
  */
@@ -937,7 +938,7 @@ p1905:nseen = false;
     {
       curmac = 64;
       mcposn = 0;
-      goto p7700;
+      GETNEXTCHR;
     }                              /* if (found) */
   }                                /* if (thisch > TOPMAC) */
 /* Signal error if null or bad macro */
@@ -1098,7 +1099,7 @@ p1708:
   if (i > curr->bchars)
     goto w1023;                    /* J trying to pos'n off end of line */
   curr->bcurs = i;                 /* Set cursor position */
-  goto p7700;                      /* End ^NR - may want to REFRSH */
+  GETNEXTCHR;                      /* End ^NR - may want to REFRSH */
 /*
  * ^NB - Obey if Before spec'd tab
  */
@@ -1247,9 +1248,8 @@ p7603:
  * ^NX - eXit from macro
  */
 p7630:
-p1515:
   notmac(0);
-  goto p7700;
+  GETNEXTCHR;
 /*
  * ^NT - Trust user if he wants to change file pointer during modify
  */
@@ -1430,7 +1430,7 @@ p1903:
  */
 p7727:cntrlw = true;
   contc = true;
-  goto p7700;
+  GETNEXTCHR;
 /*
  * P1201 - Exit sequence. Reinstate XON if req'd...
  */

@@ -24,8 +24,10 @@
 #include <string.h>
 #include "alledit.h"
 #include "scrnedit.h"
-#include "termio5.hl"
+#include "c1in.h"
 extern int tabsiz;
+
+char *xistics_end_sequence = "\025x\n";
 void
 xistcs()
 {
@@ -36,6 +38,8 @@ xistcs()
   int octnum = 0;                  /* Returned value */
   int j, k = 0;                    /* Scratch */
   char *msg;
+
+  end_seq = xistics_end_sequence;
 /*
  * On entry, we are back to normal duplex. Don't read commands via
  * Screenedit system, as this is suspect until characteristics sorted
@@ -46,7 +50,12 @@ ok_command:
 msg_read_command:
   printf("%s", msg);
   printf("%s", "> ");
-  cl5get((char *)cmdbuf.bdata, BUFMAX);
+  if (!cl5get((char *)cmdbuf.bdata, BUFMAX, true, true))
+  {
+    cmdbuf.bdata[0] = 'x';
+    cmdbuf.bdata[1] = 0;
+    puts("x");
+  }                                /* if (!cl5get(...)) */
   cmdbuf.bchars = strlen((char *)cmdbuf.bdata);
   (void)scrdtk(5, 0, 0, &cmdbuf);
   (void)scrdtk(1, buf, 2, &cmdbuf);
@@ -289,7 +298,11 @@ p1035:
 p1006:
   rtn = 1037;
   goto p10216;                     /* Check no params */
-p1037:return;
+p1037:
+  end_seq = normal_end_sequence;
+  if (simulate_q)
+    simulate_q_idx = 0;
+  return;
 asg2rtn:switch (rtn)
   {
     case 1037:

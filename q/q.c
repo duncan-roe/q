@@ -202,6 +202,7 @@ main(int xargc, char **xargv)
   argc = xargc;                    /* Xfer invocation arg to common */
   argv = xargv;                    /* Xfer invocation arg to common */
   dfltmode = 012045;               /* +e +m +* +tr +dr */
+  end_seq = normal_end_sequence;
 /* Pick up any option arguments and set cmd_state if more args follow */
   while ((i = getopt(argc, argv, "bdei:mnot")) != -1)
     switch (i)
@@ -392,15 +393,15 @@ p1004:
     {
       case TRY_INITIAL_COMMAND:
         cmd_state = RUNNING;
-      if (initial_command != NULL)
-      {
-        oldcom->bchars = snprintf((char *)oldcom->bdata, sizeof oldcom->bdata,
-          "fi %s", initial_command);
-        initial_command = NULL;
-        verb = 'i';
-        oldcom->bcurs= 3;
-        break;
-      }                            /* if (initial_command != NULL) */
+        if (initial_command != NULL)
+        {
+          oldcom->bchars = snprintf((char *)oldcom->bdata, sizeof oldcom->bdata,
+            "fi %s", initial_command);
+          initial_command = NULL;
+          verb = 'i';
+          oldcom->bcurs = 3;
+          break;
+        }                          /* if (initial_command != NULL) */
 /* Drop through */
       case RUNNING:
         goto read_command_normally;
@@ -1703,7 +1704,8 @@ p1121:
 p1131:                             /* C joins us here */
   numok = 1126;
   goto p1074;                      /* Get opt # of lines & check eof */
-p1126:setptr(j4);                  /* Set main ptr at dest'n */
+p1126:
+  setptr(j4);                      /* Set main ptr at dest'n */
 /*
  * Note:- When setting both pointers, always set AUX second
  */
@@ -1723,7 +1725,8 @@ p1125:
 /*
  * C-COPY
  */
-p1007:repos = false;               /* C-COPY, not R-REPOS */
+p1007:
+  repos = false;                   /* C-COPY, not R-REPOS */
   rtn = 1128;
   goto p1129;                      /* Phase 1 - get source & dest'n #'s */
 p1128:
@@ -1736,7 +1739,8 @@ p1130:
  * T - Tabset
  */
 /* Enter SCREENEDIT subsystem to complete command */
-p1101:if (tabset(oldcom))
+p1101:
+  if (tabset(oldcom))
     READ_NEXT_COMMAND;
   goto p1025;                      /* Allow user to correct any errors */
 /*

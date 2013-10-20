@@ -2,4 +2,4 @@ fd y /* ************************ C + git + fm -s ************************
 fi u ^ND^N^<4003>/cmacs^J
 fi u ^ND^N^<4003>/gitmacs^J
 fm -s
-z
+n ' ' '!make -j3^J^NU
