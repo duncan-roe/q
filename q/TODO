@@ -1,10 +1,4 @@
-x command does not work in a macro
-DONE: Use PAGER if no Q_HELP_CMD
-DONE: Fix doco for FI
-DONE: Allow FI in a macro
-DONE: -i option to supply initial commands (FI syntax)
-DONE: -o (offline) option to treat return to reading from stdin as q-quit
-DONE:    (only available with -i)
+DONE x command does not work in a macro
 -h option to give invocation help and display version
 Be able to run in pipe
  need -i first
@@ -25,7 +19,6 @@ Properly reinstate output optimisation (old hack removed as "quick fix")
  get per-char delay from stty baud rate
  reinstate setting per-char delay (useful for testing)
 INTERNALS
-DONE: Header files to have conventional #ifnde / #define / #endif
   STARTED Have a bool enum for logicals
   Use atexit() so can exit on fatal errors
   STARTED: Fix runindent label squashes
@@ -34,8 +27,6 @@ DONE: Header files to have conventional #ifnde / #define / #endif
   STARTED: Drop non-ANSI C support
   (Eventually) rework asg2 blocks (start with xistcs.c)
   alledit.h prototypes to have variable names
-DONE: FI to have (small) stack for nested calls
-DONE: U-use in a macro takes effect immediately
 (maybe) replace terminal ioctls with tc{g,s}etattr
 Show what arguments Q started with (?)
 CATALOGUE OF USEFUL MACROS
