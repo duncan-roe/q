@@ -26,7 +26,7 @@ INTERNALS
   Use GNU tilde expansion function
   STARTED: Drop non-ANSI C support
   (Eventually) rework asg2 blocks (start with xistcs.c)
-  alledit.h prototypes to have variable names
+  STARTED: alledit.h prototypes to have variable names
 (maybe) replace terminal ioctls with tc{g,s}etattr
 Show what arguments Q started with (?)
 CATALOGUE OF USEFUL MACROS
