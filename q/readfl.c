@@ -1,6 +1,6 @@
 /* R D F I L E
  * Copyright (C) 1993,1998 Duncan Roe & Associates P/L
- * Copyright (C) 2005,2012,2013 Duncan Roe
+ * Copyright (C) 2005,2012-2014 Duncan Roe
  *
  * This routine reads in a file, inserting it in the Workfile.
  *
@@ -103,7 +103,8 @@ getblk(void)                       /* eof=getblk() */
 
 /* ******************************* prclin ****************************** */
 
-static int prclin(void)            /* Build up line; return 1 for eof */
+static int
+prclin(void)                       /* Build up line; return 1 for eof */
 {
   unsigned char *pbptr;            /* -> xxprev->bdata[bchars] for speed */
   int inindent = 040000;           /* Inside indenting w/s, mask matches mode */
@@ -282,7 +283,7 @@ unsigned char *addr
     defend = addr + size;          /* Remember file size */
     defpos = dfaddr = addr;        /* Remember file start & current addresses */
     deferd = true;                 /* Tell the world */
-    printf("%lld bytes mapped.\r\n", (int64_t) size); /* Tell the user */
+    printf("%lld bytes mapped.\r\n", (long long int)size); /* Tell the user */
     return;
   }                                /* if(ptrpos==lintot+1&&fmode&010000&&... */
 

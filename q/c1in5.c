@@ -8,11 +8,11 @@
  *
  */
 #include <stdio.h>
-#include "alledit.h"
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "alledit.h"
 #include "c1in.h"
 
 char *normal_end_sequence = "\033\033fq\n";
