@@ -1147,7 +1147,6 @@ p1132:
     mcposn = 0;
     READ_NEXT_COMMAND;
   }
-  final5();                        /* Reset terminal */
   return 0;
 /*
  * P1521 - Q with a filename continuing
@@ -1332,7 +1331,7 @@ p1011:
     goto p1025;
   }
   sprintf(buf, "%s %s", help_cmd, tmtree);
-  semifinl();                      /* For some pagers */
+  final5();                      /* For some pagers */
   if (system(buf) < 0)
   {
     printf("%s. %s (system)", strerror(errno), buf);
@@ -1873,7 +1872,7 @@ p1525:
     goto p1025;
   if (!USING_FILE)
     puts("Exit from shell to restart\r");
-  semifinl();
+  final5();
   i = system(sh);
   init5();
   if (i < 0)

@@ -4,7 +4,7 @@
  *
  * Copyright (C) 1995, Duncan Roe & Associates P/L
  * Copyright (C) 2002, Duncan Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2014 Duncan Roe
  */
 #include <stdio.h>
 #include <errno.h>
@@ -12,6 +12,7 @@
 #include <string.h>
 #include "alledit.h"
 #include "edmast.h"
+#include "c1in.h"
 int
 do_cmd()
 {
@@ -40,7 +41,7 @@ do_cmd()
   (void)scrdtk(3, (unsigned char *)NULL, 0, oldcom); /* Reset to line start */
   (void)scrdtk(1, (unsigned char *)NULL, 0, oldcom); /* Skip over '!' */
   (void)scrdtk(4, (unsigned char *)buf, BUFMAX, oldcom); /* Get shell command */
-  semifinl();
+  final5();
   result = cmd(buf);
   init5();
   return result;

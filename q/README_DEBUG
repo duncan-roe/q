@@ -67,6 +67,6 @@ shell prompt again:
 > > q
 > ^C
 > 13:43:30$
-Handy template (set i first):
+Handy template (export my_pty first):
 
-ggo q -a "</dev/pts/$i >/dev/pts/$i 2>&1" c
+ggo q -a "</dev/pts/$my_pty >/dev/pts/$my_pty 2>&1" c

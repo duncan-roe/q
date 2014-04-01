@@ -12,6 +12,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include "alledit.h"
 #include "c1in.h"
 
@@ -58,8 +59,8 @@ c1in5(bool *eof_encountered)
         {
           perror("Blocked read");
           putchar('\r');
-/* LATER Get out (atexit() will reset terminal) */
-/* LATER exit(1); */
+/* Get out (atexit() will reset terminal) */
+          exit(1);
         }                          /* if(errno!=EINTR) */
         continue;                  /* for(;;) */
       }                            /* if(s<0) */

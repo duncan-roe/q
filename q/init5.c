@@ -1,7 +1,7 @@
 /* I N I T 5 . C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2011,2012,2013 Duncan Roe
+ * Copyright (C) 2011-2014 Duncan Roe
  *
  * This routine initialises the terminal i/o system.
  */
@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <memory.h>
+#include <stdlib.h>
 #include "alledit.h"
 #include "c1in.h"
 #include <sys/ioctl.h>
@@ -52,44 +53,48 @@ init5()
 /* Get the termio structure and save it */
       if (ioctl(ttyfd, TCGET5, &tio5save) == -1)
       {
-        perror("ioctl#1");
+        perror("ioctl TCGET");
         putchar('\r');
+        ttyfd = -1;
       }
-      memcpy((char *)&tio5, (char *)&tio5save, sizeof(struct TIO55));
+      else
+      {
+        memcpy((char *)&tio5, (char *)&tio5save, sizeof(struct TIO55));
+/* Ensure terminal will be reset on exit */
+        atexit(final5);
 /* Enable the ISTRIP flag */
-      tio5.c_iflag = (tio5.c_iflag & ~(unsigned)IXON) | ISTRIP;
+        tio5.c_iflag = (tio5.c_iflag & ~(unsigned)IXON) | ISTRIP;
 /* Disable the ICANON and ECHO flags */
-      tio5.c_lflag = tio5.c_lflag & ~(unsigned)(ICANON | ECHO
+        tio5.c_lflag = tio5.c_lflag & ~(unsigned)(ICANON | ECHO
 #ifdef IEXTEN
-        | IEXTEN
+          | IEXTEN
 #endif
-        );
+          );
 /* Disable output of CR on NL */
-      tio5.c_oflag &= ~ONLCR;
+        tio5.c_oflag &= ~ONLCR;
 
 /* Disable most special characters except interrupt */
 #ifdef VQUIT
-      tio5.c_cc[VQUIT] = '\0';
+        tio5.c_cc[VQUIT] = '\0';
 #else
-      tio5.c_cc[1] = '\0';
+        tio5.c_cc[1] = '\0';
 #endif
 #ifdef VSUSP
-      tio5.c_cc[VSUSP] = '\0';
+        tio5.c_cc[VSUSP] = '\0';
 #ifdef VREPRINT
-      tio5.c_cc[VREPRINT] = '\0';
+        tio5.c_cc[VREPRINT] = '\0';
 #ifdef VDISCARD
-      tio5.c_cc[VDISCARD] = '\0';
-      tio5.c_cc[VWERASE] = '\0';
+        tio5.c_cc[VDISCARD] = '\0';
+        tio5.c_cc[VWERASE] = '\0';
 #endif
-      tio5.c_cc[VLNEXT] = '\0';
+        tio5.c_cc[VLNEXT] = '\0';
 #endif
 #endif
 /* Read(2) returns if any characters ready */
-      tio5.c_cc[VMIN] = 1;
+        tio5.c_cc[VMIN] = 1;
 /* No wait for characters */
-      tio5.c_cc[VTIME] = 0;
-      ff5save = fcntl(STDIN5FD, F_GETFL, 0);
-      off5save = fcntl(STDOUT5FD, F_GETFL, 0);
+        tio5.c_cc[VTIME] = 0;
+      }                            /* TCGET5 OK */
     }                              /* if (ttyfd > 0) */
   }                                /* if (first) */
 

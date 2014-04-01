@@ -6,6 +6,7 @@
 /* Headers required by prototypes &c. */
 #include <sys/types.h>
 #include "ckalloc.h"
+#include "bool.h"
 
 /* Macros */
 #define CARAT '^'
@@ -38,12 +39,6 @@
 /*
  * Typedefs
  */
-typedef enum bool
-{
-  false,
-  true
-} bool;
-
 typedef struct scrbuf5             /* Screenedit buffer */
 {
   int bmxch;                       /* Buffer capacity (chars) */
@@ -95,11 +90,11 @@ void restore_stdout(void), notmac(int), sinitl(void);
 void disply(scrbuf5 *, int), refrsh(scrbuf5 *);
 void scrset(scrbuf5 *), setcrs(int), setptr(long);
 void delete(long), clrfgt(void), inslin(scrbuf5 *), forget(void), setaux(long);
-void finitl(void), sprmpt(long), init5(void), final5(void), quthan(int);
+void finitl(void), sprmpt(long), quthan(int);
 void sdsply(void);
 bool cl5get(char *buf, int bufcap, bool action_eof, bool read_macros);
 void readfl(void), writfl(long);
-void xlateset(void), showchar(unsigned char), tildexpn(char *), semifinl(void);
+void xlateset(void), showchar(unsigned char), tildexpn(char *);
 void winchhan(int), setwinsz(int), newlin(void), rerdcm(void), xistcs(void);
 void sindnt(void);
 char c1in5(bool *eof_encountered);

@@ -20,7 +20,7 @@ Properly reinstate output optimisation (old hack removed as "quick fix")
  reinstate setting per-char delay (useful for testing)
 INTERNALS
   STARTED Have a bool enum for logicals
-  Use atexit() so can exit on fatal errors
+  DONE Use atexit() so can exit on fatal errors
   STARTED: Fix runindent label squashes
   More GIVE_UP macros - use error_exit as standard label
   Use GNU tilde expansion function
