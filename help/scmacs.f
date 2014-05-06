@@ -49,8 +49,8 @@ N201 ^A^J^NC^NU^[^N^<201> ;Repeat last LOCATE till no more found
 * n206 - (Ctrl-NWF) search current file for all occurrences of command line.
 *        grep options in n1074
 N1074 -wn^NU ; grep options for ctrl-NWF
-N206 ^NC^NS^N\^NM^<1202>^U!grep ^ND^N^<1074> '^ND^N^<1202>' "^ND^N^<4002>"^J^NU
-N207 ^NC^NS^N\^NFas^J!runindent.sh "^ND^N^<4002>"^Jq '^ND^N^<4002>'^Jg ta^J^ND^N1s^J^NU
+N206 ^NC^NS^N\^NM^<1202>^U!grep ^ND^N^<1074> -- '^ND^N^<1202>' "^ND^N^<4002>"^J^NU
+N207 ^NC^NS^N\^ND^N^<1001>fm-dw^Js^J!runindent.sh "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^ND^N^<1011>^ND^N1s^J^NU
 N210 ^E^ND^N^<1201>^J^NC^NU^N^<210> ;Insert ^*N^<1201> at Home posn
 N222 ^NC^NS^N\^NM^<1201>^UM ^NU ;Define string to be appended/inserted
 N224 ^NC^NS^N\!ci -l "^ND^N^<4002>"</dev/null^Js^J!ci -l "^ND^N^<4002>"<~/spaces^JQ^J^N^<224> ;Check in all args
