@@ -27,6 +27,6 @@ INTERNALS
   STARTED: Drop non-ANSI C support
   (Eventually) rework asg2 blocks (start with xistcs.c)
   STARTED: alledit.h prototypes to have variable names
-(maybe) replace terminal ioctls with tc{g,s}etattr
+DONE replace terminal ioctls with tc{g,s}etattr
 Show what arguments Q started with (?)
 CATALOGUE OF USEFUL MACROS

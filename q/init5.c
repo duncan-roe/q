@@ -10,10 +10,13 @@
 #include <fcntl.h>
 #include <memory.h>
 #include <stdlib.h>
+#include <termios.h>
 #include "alledit.h"
 #include "c1in.h"
-#include <sys/ioctl.h>
 /* */
+struct termios tio5save = { 0 }, tio5 =
+{
+0};
 void
 init5()
 {
@@ -51,15 +54,15 @@ init5()
 /* Get the screen size */
       setwinsz(0);                 /* No o/p this time */
 /* Get the termio structure and save it */
-      if (ioctl(ttyfd, TCGET5, &tio5save) == -1)
+      if (tcgetattr(ttyfd, &tio5save) == -1)
       {
-        perror("ioctl TCGET");
+        perror("tcgetattr");
         putchar('\r');
         ttyfd = -1;
       }
       else
       {
-        memcpy((char *)&tio5, (char *)&tio5save, sizeof(struct TIO55));
+        memcpy((char *)&tio5, (char *)&tio5save, sizeof(struct termios));
 /* Ensure terminal will be reset on exit */
         atexit(final5);
 /* Enable the ISTRIP flag */
@@ -94,17 +97,11 @@ init5()
         tio5.c_cc[VMIN] = 1;
 /* No wait for characters */
         tio5.c_cc[VTIME] = 0;
-      }                            /* TCGET5 OK */
+      }                            /* tcgetattr OK */
     }                              /* if (ttyfd > 0) */
   }                                /* if (first) */
 
 /* Change the termio structure for stdin */
   if (ttyfd > 0)
-  {
-    if (ioctl(ttyfd, TCSET5, &tio5) == -1)
-    {
-      perror("ioctl#2");
-      putchar('\r');
-    }
-  }
+    change_attr(ttyfd, &tio5);
 }

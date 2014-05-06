@@ -8,7 +8,6 @@
  * This header file contains items of interest to the character input
  * subsystem
  */
-#include "termio5.hl"
 #include "bool.h"
 #define BUF5MAX 40
 #define STDIN5FD 0
@@ -20,7 +19,7 @@
 #define USING_FILE (stdidx >= 0)
 int buf5len, buf5idx;
 void init5(void), final5(void);
-struct TIO55 tio5save, tio5;
+extern struct termios tio5save, tio5;
 char buf5[BUF5MAX];
 bool size5;                        /* Screen was sized */
 int ttyfd;                         /* fd to do iocltls on */
@@ -38,4 +37,5 @@ extern int simulate_q_idx;
 extern char *end_seq;
 extern char *normal_end_sequence;
 extern char *xistics_end_sequence;
+void change_attr(int fd, struct termios *wanted);
 #endif
