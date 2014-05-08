@@ -1,4 +1,3 @@
-* $Id: scmacs.tcl,v 1.24 2012/10/18 06:07:16 dunc Exp $
 FD Y /* Tcl macros that differ from default FTN ones
 o y
 ft_

@@ -1,4 +1,3 @@
-* $Id: scmacs.f,v 1.39 2012/10/17 00:47:02 dunc Exp $
 fd y /* H SCMACS.INFO for extra info on these...
 fm-t +s -* +#
 t7 36 81

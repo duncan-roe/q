@@ -1,4 +1,3 @@
-* $Id: scmacs.w,v 1.8 2012/10/11 09:40:24 dunc Exp $
 fd y
 fb
 fm-s -l

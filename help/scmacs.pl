@@ -1,4 +1,3 @@
-* $Id: scmacs.pl,v 1.5 2012/10/11 10:01:49 dunc Exp $
 fd y /* Perl macros that differ from default FTN ones
 t 2 36
 o y

@@ -1,4 +1,3 @@
-* $Id: brktmacs.ada,v 1.3 2012/10/16 23:49:35 dunc Exp $
 fd y
 N I '  ^NU ; indent 2 spaces
 N H '^NC^N\^?^?^NU

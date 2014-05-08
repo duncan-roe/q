@@ -1,4 +1,3 @@
-* $Id: scmacs.c,v 1.16 2012/10/10 09:59:49 dunc Exp $
 fd y /* C macros that differ from default FTN ones
 N202 ^NC^NS^N\q ^ND^N^<4003>/scmacs.c^J^NU
 N203 ^NC^NS^N\u ^ND^N^<4003>/scmacs.c^J^NU
