@@ -1,26 +1,39 @@
 /* Q U T H A N . C
  *
  * Copyright (C) 1994, Duncan Roe & Associates P/L
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2014 Duncan Roe
  *
- * This routine handles the SIGINT condition.
- *
- * Action: re-establish condition handler and set flag for rest of
- * program
+ * This function handles the SIGINT, SIGTERM & SIGWINCH conditions.
  */
 #include <stdio.h>
+#include <errno.h>
 #include <signal.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
 #include "alledit.h"
-#ifdef ANSI5
+#include "q_pipe.h"
 void
-quthan(int i)
-#else
-void
-quthan(i)
-int i;
-#endif
+quthan(int signum, siginfo_t *siginfo, void *ucontext)
 {
-  signal(SIGINT, quthan);
-  cntrlc = true;
-  return;
+  switch (signum)
+  {
+    case SIGINT:
+      if (!piping)
+      {
+        cntrlc = true;
+        return;
+      }                            /* if (!piping) */
+      break;
+    case SIGWINCH:
+      seenwinch = true;
+      if (kill(getppid(), SIGWINCH))
+        fprintf(stderr, "%s. (kill)\r\n", strerror(errno));
+      return;
+  }                                /* switch (signum) */
+
+/* If drop through the switch, need to exit in order to clean up. */
+/* (Includes signals not in the switch, e.g. SIGTERM) */
+  exit(1);
 }

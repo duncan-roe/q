@@ -35,8 +35,8 @@ static int linpos;         /* Notional 0-based line pos'n (for tab expansion) */
 static unsigned char thisch, prevch;
 static unsigned long bytes;        /* Unprocessed file bytes in memory */
 static int pbchars;                /* local copy of xxprev->bchars for speed */
-static int fileio;                 /* Whether i/o from file */
-static int lngwrn;         /* Whether to store xxprev, warn of long lines &c. */
+static bool fileio;                /* Whether i/o from file */
+static bool lngwrn;        /* Whether to store xxprev, warn of long lines &c. */
 static scrbuf5 *xxprev;            /* Buffer where line is built up */
 static unsigned long xxmode;       /* Copy of fmode, as is or was */
 static short state;                /* Cr &c state */
@@ -240,8 +240,8 @@ ctlcak(void)
 void
 readfl()
 {
-  lngwrn = 1;                      /* Not memrec */
-  fileio = 1;                      /* Read from file */
+  lngwrn = true;                   /* Not memrec */
+  fileio = true;                   /* Read from file */
   count = 0;                       /* No lines read yet */
   state = 0;                       /* Normal state initially */
   xxmode = fmode;                  /* Use current mode */
@@ -287,8 +287,8 @@ unsigned char *addr
     return;
   }                                /* if(ptrpos==lintot+1&&fmode&010000&&... */
 
-  lngwrn = 1;                      /* Not memrec */
-  fileio = 0;                      /* File already mmap'd */
+  lngwrn = true;                   /* Not memrec */
+  fileio = false;                  /* File already mmap'd */
   count = 0;                       /* No lines read yet */
   state = 0;                       /* Normal state initially */
   xxmode = fmode;                  /* Use current mode */
@@ -322,8 +322,8 @@ unsigned long mode;
 scrbuf5 *s;
 #endif
 {
-  lngwrn = 0;                      /* This *is* memrec */
-  fileio = 0;                      /* File already mmap'd */
+  lngwrn = false;                  /* This *is* memrec */
+  fileio = false;                  /* File already mmap'd */
   state = 0;                       /* Normal state initially */
   bytes = end - start;             /* Remaining length of file in memory */
   bufend = end;                    /* Where data ends */
@@ -362,8 +362,8 @@ scrbuf5 *s;
   scrbuf5 s5;                      /* For when a2 is NULL */
 /*  */
   setptr(lintot + 1);              /* Move to eof */
-  lngwrn = 1;                      /* Not memrec */
-  fileio = 0;                      /* File already mmap'd */
+  lngwrn = true;                   /* Not memrec */
+  fileio = false;                  /* File already mmap'd */
   count = dcount;                  /* Lines read in from file */
   state = 0;                       /* Normal state initially */
   xxmode = dfmode;                 /* Set mode at map time */

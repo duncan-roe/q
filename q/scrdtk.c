@@ -1,25 +1,17 @@
 /*  S C R D T K
  * Retrieve tokens from screenedit buffers
  * Copyright (C) 1998, Duncan Roe & Associates P/L
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2014 Duncan Roe
  */
 #include <stdio.h>
 #include <errno.h>
 #include <limits.h>
 #include "alledit.h"
-#ifdef ANSI5
 int scrdtk                         /* errno is int, so we are */
   (int key,                        /* What to do */
   unsigned char *buf,              /* Receives token */
   int bufcap,                      /* Capacity of buf */
   scrbuf5 *scline)                 /* Screenedit buffer */
-#else
-int
-scrdtk(key, buf, bufcap, scline)   /* errno is int, so we are */
-int key, bufcap;
-unsigned char *buf;
-scrbuf5 *scline;
-#endif
 {
 
 /* Possible key values

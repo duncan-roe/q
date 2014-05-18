@@ -4,6 +4,7 @@
  */
 
 /* Headers required by prototypes &c. */
+#include <signal.h>
 #include <sys/types.h>
 #include "ckalloc.h"
 #include "bool.h"
@@ -90,7 +91,8 @@ void restore_stdout(void), notmac(int), sinitl(void);
 void disply(scrbuf5 *, int), refrsh(scrbuf5 *);
 void scrset(scrbuf5 *), setcrs(int), setptr(long);
 void delete(long), clrfgt(void), inslin(scrbuf5 *), forget(void), setaux(long);
-void finitl(void), sprmpt(long), quthan(int);
+void finitl(void), sprmpt(long);
+void quthan(int signum, siginfo_t *siginfo, void *ucontext);
 void sdsply(void);
 bool cl5get(char *buf, int bufcap, bool action_eof, bool read_macros);
 void readfl(void), writfl(long);

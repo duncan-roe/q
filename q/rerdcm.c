@@ -1,7 +1,7 @@
 /* R E R D C M
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012,2013 Duncan Roe
+ * Copyright (C) 2012-2014 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -64,7 +64,7 @@ rerdcm()
     return;                        /* Finished */
   }                                /* if(noRereadIfMacro==2) */
   noRereadIfMacro = false;
-  puts(", correct the command:\r");
+  fprintf(stderr, "%s\r\n", ", correct the command:");
 /*
  * If we had a split line, rejoin the 2 halves and leave the cursor
  * on 1st char from 2nd half

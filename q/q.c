@@ -31,12 +31,17 @@
 #include "edmast.h"
 #include "macros.h"
 #include "c1in.h"
+#include "q_pipe.h"
 
 /* Macros */
 
-#define ERR1025(x) do {printf("%s", (x)); goto p1025;} while (0)
+#define REREAD_CMD goto p1025
+#define ERR1025(x) do {fprintf(stderr, "%s", (x)); REREAD_CMD;} while (0)
 #define READ_NEXT_COMMAND goto p1004
-/*  */
+#define ERRRTN(x) do {fprintf(stderr, "%s", (x)); return false;} while (0)
+
+/* Typedefs */
+
 typedef enum q_yesno
 {
   Q_YES,
@@ -54,18 +59,35 @@ typedef enum command_state
   HAVE_LINE_NUMBER,
   TRY_INITIAL_COMMAND,
 } command_state;
-/* */
-long timlst;
-unsigned char fxtabl[128];
-int tbstat;
 
 /* Instantiate externals */
 
+long timlst;
+unsigned char fxtabl[128];
+int tbstat;
 bool offline = false;
+bool piping = false;
 
+/* Static Variables */
+
+static long count = 0;             /* Returned by GETNUM seq */
 static char *help_dir;
 static char *help_cmd;
-/* */
+static bool nofile;
+static int tmode;                  /* Mode of file */
+static int towner;                 /* Owner of file */
+static int tgroup;                 /* Group of file */
+static int tmask = 0;              /* Current umask */
+static char tmtree[PTHSIZ];        /* Name of HELP file */
+static struct stat statbuf;
+static char tmfile[PTHSIZ];        /* Name of .TM file */
+static bool q_new_file;
+static long wrtnum = 0;            /* # of lines to write */
+static int rdwr = 0;               /* Mode for file opens */
+static long savpos = 0;            /* Remembered pointer during S, B & Y */
+
+/* Static functions */
+
 /* ********************************* pushmac ******************************** */
 
 static bool
@@ -93,7 +115,7 @@ eolok(void)
   return false;
 }                                  /* static bool eolok(void) */
 
-/* ******************************** yes_or_no ******************************* */
+/* ******************************* get_answer ******************************* */
 
 /* Parse rest of line for yes / no indication */
 
@@ -102,7 +124,7 @@ get_answer(void)
 {
   if (scrdtk(1, (unsigned char *)buf, 6, oldcom))
   {
-    printf("%s. (scrdtk)", strerror(errno));
+    fprintf(stderr, "%s. (scrdtk)", strerror(errno));
     return Q_UNREC;
   }                        /* if (scrdtk(1, (unsigned char *)buf, 6, oldcom)) */
   if (oldcom->toktyp == eoltok)
@@ -133,15 +155,286 @@ get_answer(void)
   return Q_UNREC;
 }                                  /* get_answer(void) */
 
+/* ****************************** get_file_arg ****************************** */
+static bool
+get_file_arg(void)
+{
+  if (scrdtk(2, (unsigned char *)buf, PTHMAX, oldcom)) /* Read a f/n */
+  {
+    perror("scrdtk");
+    putchar('\r');
+    return false;
+  }
+  nofile = oldcom->toktyp == eoltok;
+  if (!nofile && oldcom->toktyp != nortok)
+    return false;
+  tildexpn(buf);                   /* Do tilde expansion */
+  return true;
+}                                  /* get_file_arg() */
+
+/* &************************** get_opt_lines2count ************************** */
+
+static bool
+get_opt_lines2count(void)
+{
+  if (getnum(0))                   /* Format of optional # of lines OK */
+  {
+    count = oldcom->decval;
+    if (oldcom->toktyp == eoltok || eolok()) /* EOL already or next */
+      return true;
+  }                                /* if(getnum(0)) */
+  return false;
+}                                  /* get_opt_lines2count() */
+
+/* ***************************** do_stat_symlink **************************** */
+
+static bool
+do_stat_symlink(void)
+{
+  int i;
+  unsigned char *p;
+
+/* For S B & Q, if the file exists then use its mode from now on. Don't complain
+ * here if it doesn't exist. To check whether the file is a symlink, we need to
+ * call readlink to find its real name. The only real error here is a symlink
+ * loop */
+
+  errno = 0;                       /* Ensure valid */
+  if (!stat(buf, &statbuf))
+  {
+    tmode = statbuf.st_mode;
+    tgroup = statbuf.st_gid;
+    towner = statbuf.st_uid;
+  }                                /* if (!stat(buf, &statbuf)) */
+  else
+  {
+    if (!tmask)
+    {
+      tmask = umask(0);            /* Get current umask */
+      umask(tmask);                /* Reinstate umask */
+    }                              /* if (!tmask) */
+    tmode = ~tmask & 0666;         /* Assume no execute on new file */
+    tgroup = towner = 0;
+  }                                /* if (!stat(buf, &statbuf)) else */
+  if (!lstat(buf, &statbuf) && S_ISLNK(statbuf.st_mode) && errno != ELOOP)
+    for (;;)
+    {
+      if (0 < (i = readlink(buf, tmfile, (size_t)PTHSIZ)))
+      {                            /* S, B or Q on a symlink */
+        tmfile[i] = 0;             /* No trlg NUL from readlink */
+        if (tmfile[0] == '/' || tmfile[0] == '~')
+          strcpy(buf, tmfile);
+        else
+        {
+          p = (unsigned char *)strrchr(buf, '/'); /* Find last '/' if any */
+          if (!p)
+            p = (unsigned char *)buf - 1; /* Filename at buf start */
+          *(p + 1) = '\0';         /* Throw away filename */
+          strcat(buf, tmfile);     /* Append linked name */
+        }                          /* if(tmfile[0]=='/'||tmfile[0]=='~') else */
+        printf("Symbolic link resolves to %s", buf);
+        newlin();
+/* See if symlink points to another symlink... */
+        if (lstat(buf, &statbuf))
+          break;                   /* B link to a new file */
+        if (!S_ISLNK(statbuf.st_mode))
+          break;                   /* B now not on a symlink */
+      }                            /* if(0<(i=readlink(buf,tmfile,... */
+      else
+      {
+        fprintf(stderr, "%s. %s (readlink)", strerror(errno), buf);
+        return false;              /* Bad readlink */
+      }                            /* if(0<(i=readlink(buf,tmfile,... else */
+    }                              /* if(!lstat(buf,&statbuf)&&S_ISLNK(... */
+  if (!(errno || S_ISREG(statbuf.st_mode)))
+  {
+    fprintf(stderr, "Not a regular file. %s", buf);
+    return false;
+  }                                /* if(!S_ISREG(statbuf.st_mode)) */
+  return true;
+}                                  /* do_stat_symlink() */
+
+/* ******************************** open_buf ******************************** */
+
+static int
+open_buf(int flags, mode_t mode)
+{
+  int retcod;
+
+  do
+    retcod = open(buf, flags, mode);
+  while (retcod == -1 && errno == EINTR);
+  return retcod;
+}                                  /* open_buf() */
+
+/* ******************************** my_close ******************************** */
+
+static int
+my_close(int fd)
+{
+  int retcod;
+
+  do
+    retcod = close(fd);
+  while (retcod == -1 && errno == EINTR);
+  return retcod;
+}                                  /* my_close() */
+
+/* *************************** s_b_w_common_write *************************** */
+
+static bool
+s_b_w_common_write(void)
+{
+  if ((funit = open_buf(rdwr, tmode)) == -1)
+  {
+    fprintf(stderr, "%s. %s (open)", strerror(errno), buf);
+    return false;                  /* Bad open */
+  }                             /* if ((funit = open_buf(rdwr, tmode)) == -1) */
+  fscode = 1;                      /* Set to 0 on good writfl */
+  if (fstat(funit, &statbuf))
+    fprintf(stderr, "%s. funit %d (fstat)", strerror(errno), funit);
+  else if (ismapd(statbuf.st_ino))
+    fprintf(stderr, "%s is mmap'd", buf);
+  else if (ftruncate(funit, 0))
+    fprintf(stderr, "%s. funit %d (ftruncate)", strerror(errno), funit);
+  else
+    writfl(wrtnum);                /* Write lines to o/p file */
+  if (fscode != 0)                 /* Some kind of failure above */
+    my_close(funit);
+  return fscode == 0;
+}                                  /* s_b_w_common_write() */
+
+/* ****************************** do_b_or_s ********************************* */
+static bool
+do_b_or_s(bool is_b)
+{
+  bool bspar;                      /* BACKUP/SAVE had a param */
+
+  savpos = ptrpos;                 /* So we can leave pos'n same at end */
+  setptr((long)1);                 /* Pos'n 1st line */
+  if (deferd)
+    dfread(LONG_MAX, NULL);        /* Ensure all file in */
+  wrtnum = lintot;                 /* Write all lines */
+  rdwr = O_WRONLY + O_CREAT;       /* Don't truncate yet in case mmap'd */
+  if (!get_file_arg())
+    ERRRTN("Error in filename");
+  if (nofile)                      /* B or S no filename arg */
+  {
+    if (!pcnta[0])                 /* We have no default f/n */
+      ERRRTN("filename must be specified");
+    bspar = false;                 /* Don't have a param */
+    strcpy(buf, pcnta);      /* Duplicate f/n in buf so B-BACKUP can merge in */
+  bkup_with_fn_arg:               /*  B-Backup with a filename arg joins here */
+/*
+ * Use TMFILE for name of backup file
+ */
+    snprintf(tmfile, sizeof tmfile, "%s.%s", buf, is_b ? "bu" : "tm");
+
+/* ---------------------------------------------------- */
+/* We used to rely on link failing if the file existed. */
+/* But then, link() always fails in a DOS file system.  */
+/* So now we stat() the file to see if it exists,       */
+/* then use rename() if it doesn't.                     */
+/* (rename() would overwrite an old file)               */
+/* ---------------------------------------------------- */
+
+    while (!stat(tmfile, &statbuf))
+    {
+      if (is_b && !ysno5a("Do you want to delete the old backup file", A5NDEF))
+        ERRRTN("Need another filename to take backup");
+      if (unlink(tmfile))
+      {
+        fprintf(stderr, "%s. %s (unlink)", strerror(errno), tmfile);
+        my_close(funit);
+        return false;
+      }                            /* if(unlink(tmfile)) */
+      if (is_b)
+        printf("Previous backup file deleted:- ");
+    }                              /* if(!stat(tmfile,&statbuf)) */
+    if (rename(buf, tmfile))       /* If rename fails */
+    {
+/* OK nofile if B with param */
+      if (bspar && errno == ENOENT)
+      {
+        puts("New file - no backup taken\r");
+        goto new_bkup_file;
+      }                            /* if(bspar&&(errno==ENOENT)) */
+      fprintf(stderr, "%s. %s to %s (rename)", strerror(errno), buf, tmfile);
+      my_close(funit);             /* In case anything left open */
+      return false;                /* Get corrected command */
+    }                              /* if (rename(buf, tmfile)) */
+/*
+ * File renamed - now open new file of same type as original
+ */
+    rdwr = O_WRONLY + O_CREAT + O_EXCL; /* Must be new file */
+    if (is_b)
+      printf("Backup file is %s\r\n", tmfile); /* Report backup f/n */
+  new_bkup_file:
+    if (!s_b_w_common_write())
+      return false;
+  }
+  else
+  {
+    if (!do_stat_symlink() || !eolok())
+      return false;
+    bspar = true;                  /* B or S has a parameter */
+/*
+ * If B-BACKUP, back up supplied param anyway
+ */
+    if (is_b)
+      goto bkup_with_fn_arg;       /* Join S&B with no params */
+    if (!s_b_w_common_write())
+      return false;
+  }
+  setptr(savpos);                  /* Repos'n file as before */
+  if (bspar)
+    strcpy(pcnta, buf);            /* We had a param. Set as dflt */
+  else if (!is_b)
+  {
+    printf("%s\r\n", pcnta);       /* Remind user what file he's editing */
+    if (unlink(tmfile) == -1)
+      fprintf(stderr, "%s. %s (unlink)\r\n", strerror(errno), tmfile);
+  }
+
+/* ---------------------------------------------------------------------- */
+/* Attempt to restore as many attributes of the original file as possible */
+/* current file attributes are in statbuf                                 */
+/* ---------------------------------------------------------------------- */
+
+  if (towner)                      /* If there *was* an original file */
+  {
+    fscode = 0;
+    if (tgroup != statbuf.st_gid)
+    {
+      if (chown(pcnta, -1, tgroup) == -1)
+      {
+        fscode = 1;
+        fprintf(stderr, "Warning - original group not restored\r\n");
+      }                            /* if (chown(pcnta, -1, tgroup) == -1) */
+    }                              /* if (tgroup != statbuf.st_gid) */
+    if (towner != statbuf.st_uid)
+    {
+/* Don't try to change user if group failed, but do warn */
+      if (fscode || chown(pcnta, towner, -1) == -1)
+      {
+        fscode = 1;
+        fprintf(stderr, "Warning - original owner not restored\r\n");
+      }                      /* if (fscode || chown(pcnta, towner, -1) == -1) */
+    }                              /* if (towner != statbuf.st_gid) */
+/* If there were no problems above, set any extra original mode bits */
+    if (tmode != statbuf.st_mode && (fscode || chmod(pcnta, tmode) == -1))
+      printf("Warning - original mode not restored\r\n");
+  }                                /* if (towner) */
+  mods = false;                    /* S or B succeeded */
+  return true;
+}                                  /* do_b_or_s() */
+
 /* ********************************** main ********************************** */
 int
 main(int xargc, char **xargv)
 {
-  struct stat statbuf;
   long timnow;
   struct tms tloc;
-  char tmfile[PTHSIZ];             /* Name of .TM file */
-  char tmtree[PTHSIZ];             /* Name of HELP file */
   char oldkey[3];                  /* 1st param to FX command */
   char xkey[2], newkey[3];         /* 2nd param to FX command */
   char *r;                         /* Scratch */
@@ -149,10 +442,8 @@ main(int xargc, char **xargv)
   int newl = 0;                    /* Label to go if Nl (MOD, INS, AP) */
   int numok;                     /* Label to go if # of lines OK & last param */
   int rtn = 0;                     /* Return from INS/MOD/APPE common code */
-  int nofil;                       /* Label for no filename (BSEW) */
   int i, j, k = 0, l, m, n, dummy; /* Scratch - I most so */
   int nonum;                       /* Label if no # of lines */
-  int rdwr = 0;                    /* Mode for file opens */
   int oldlen = 0;                  /* Length of OLDSTR */
   int newlen = 0;                  /* Length of NEWSTR */
   int ydiff = 0;                   /* OLDLEN-NEWLEN */
@@ -165,26 +456,17 @@ main(int xargc, char **xargv)
   int savtok;                      /* Saved token type */
   int colonline;                   /* Line number from <file>:<line> */
 /* */
-  long count = 0;                  /* Returned by GETNUM seq */
 /* For those commands that take 2 #'s of lines */
   long count2 = 0;
   long i4, j4 = 0, k4 = 0;         /* Scratch */
-  long savpos = 0;                 /* Remembered pointer during SlongB & Y */
   long revpos;                     /* Remembered pointer during backwards L */
-  long wrtnum = 0;                 /* # of lines to write */
   long xcount = 0;                 /* For V-View */
-/* */
-  int tmode;                       /* Mode of file */
-  int towner;                      /* Owner of file */
-  int tgroup;                      /* Group of file */
-  int tmask = 0;                   /* Current umask */
 /* */
   char oldstr[Q_BUFSIZ], newstr[Q_BUFSIZ]; /* YCHANGEALL. !!AMENDED USAGE!! */
   unsigned char *p, *q;            /* Scratch */
   char *colonpos;                  /* Pos'n of ":" in q filename */
 /* */
   bool splt;                       /* Last line ended ^T (for MODIFY) */
-  bool bspar = false;              /* BACKUP/SAVE had a param */
   bool logtmp = false, lgtmp2 = false, lgtmp3 = false, lgtmp4; /* Scratch */
   bool repos = false;              /* We are R-REPOSITION (not C-COPY) */
   bool linmod;                     /* This line modified (Y) */
@@ -196,6 +478,7 @@ main(int xargc, char **xargv)
   scrbuf5 b1, b2, b3, b4;          /* 2 line & 2 command buffers */
   q_yesno answer;
   char *initial_command = NULL;
+  struct sigaction act;
 /*
  * Initial Tasks
  */
@@ -269,9 +552,17 @@ main(int xargc, char **xargv)
     cmd_state = Q_ARG1;
   else
     argno = -1;                    /* No filenames */
-  signal(SIGINT, quthan);
+  memset(&act, 0, sizeof act);
+  act.sa_sigaction = quthan;
+  act.sa_flags = SA_SIGINFO;
+  sigemptyset(&act.sa_mask);
+  sigaddset(&act.sa_mask, SIGINT);
+  sigaddset(&act.sa_mask, SIGTERM);
+  sigaddset(&act.sa_mask, SIGWINCH);
+  sigaction(SIGINT, &act, NULL);
+  sigaction(SIGTERM, &act, NULL);
 #ifdef SIGWINCH
-  signal(SIGWINCH, winchhan);
+  sigaction(SIGWINCH, &act, NULL);
 #endif
   cntrlc = false;                  /* Not yet seen ^C */
   ndel[0] = '\0';                  /* No FT commands yet */
@@ -322,9 +613,7 @@ main(int xargc, char **xargv)
 /* Forge a u-use: push current stdin */
     stdidx = 0;
     do
-    {
       stdinfo[stdidx].funit = dup(0);
-    }
     while (stdinfo[stdidx].funit == -1 && errno == EINTR);
     if (stdinfo[stdidx].funit == -1)
     {
@@ -333,17 +622,14 @@ main(int xargc, char **xargv)
       stdidx--;
       READ_NEXT_COMMAND;           /* Don't try to open .qrc */
     }                              /* if (stdinfo[stdidx].funit == -1) */
-
-    do
-      i = close(0);
-    while (i == -1 && errno == EINTR);
+    my_close(0);
 
 /* Try for .qrc or ~/.qrc */
     logtmp = true;                 /* retry on failure */
     strcpy(buf, ".qrc");
   retry_qrc:
     do
-      i = open(buf, O_RDONLY);
+      i = open_buf(O_RDONLY, 0);
     while (i == -1 && errno == EINTR);
     if (i == -1)
     {
@@ -373,11 +659,7 @@ main(int xargc, char **xargv)
           READ_NEXT_COMMAND;
         }                          /* if (j == -1) */
         else
-        {
-          do
-            j = close(i);
-          while (j == -1 && errno == EINTR);
-        }                          /* if (j == -1) else */
+          my_close(i);
       }                            /* if (i) */
       duplx5(true);                /* Assert XOFF recognition */
       printf("> u %s\r\n", buf);   /* Simulate a command */
@@ -473,7 +755,7 @@ p1201:
     if (USING_FILE || curmac >= 0) /* If in macro, force an error */
     {
       (void)write(1, "Keyboard interrupt", 18);
-      goto p1025;
+      REREAD_CMD;
     }
   }                                /* Else ignore the quit */
   revrse = false;                  /* Guarantee validity if true */
@@ -482,7 +764,9 @@ p1201:
     case 'A':
       goto p1005;
     case 'B':
-      goto p1006;
+      if (do_b_or_s(true))
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
     case 'C':
       goto p1007;
     case 'D':
@@ -510,7 +794,9 @@ p1201:
     case 'R':
       goto p1018;
     case 'S':
-      goto p1006;                  /* Same as 'B' */
+      if (do_b_or_s(false))
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
     case 'U':
       goto p1020;
     case 'V':
@@ -557,14 +843,14 @@ p1201:
       if (setmode())
         READ_NEXT_COMMAND;
 /* Get Yes / No (no default) */
-      goto p1025;
+      REREAD_CMD;
     case 'i':                      /* "FI'mmediate macro */
       if (scrdtk(4, (unsigned char *)buf, BUFMAX, oldcom))
       {
         perror("SCRDTK of macro text");
         putchar('\r');
         printf("Unexpected error");
-        goto p1025;
+        REREAD_CMD;
       }
 /* Decide which macro this will be. */
 /* Some nesting of FI macros is allowed, */
@@ -572,15 +858,15 @@ p1201:
       if (immnxfr > LAST_IMMEDIATE_MACRO)
       {
         printf("%s", "Too many nested FI commands");
-        goto p1025;
+        REREAD_CMD;
       }                            /* if (immnxfr > LAST_IMMEDIATE_MACRO) */
       verb = immnxfr++;
       if (!newmac2(strlen(buf), true))
-        goto p1025;
+        REREAD_CMD;
 
 /* FI does an implied ^ND */
       if (curmac >= 0 && !pushmac())
-        goto p1025;
+        REREAD_CMD;
 
       curmac = verb;
       mcposn = 0;
@@ -589,7 +875,7 @@ p1201:
       switch (get_answer())
       {
         case Q_UNREC:
-          goto p1025;
+          REREAD_CMD;
         case Q_MAYBE:
         case Q_NO:
           restore_stdout();
@@ -603,7 +889,7 @@ p1201:
           else
           {
             printf("%s", "fd y is not available from the keyboard");
-            goto p1025;
+            REREAD_CMD;
           }                        /* if (USING_FILE) else */
       }                            /* switch (get_answer()) */
       READ_NEXT_COMMAND;
@@ -625,7 +911,7 @@ p1025:
  */
 p1005:
   if (!eolok())
-    goto p1025;                    /* Reread command */
+    REREAD_CMD;                    /* Reread command */
   if (deferd)                      /* File not all read in yet */
     dfread(LONG_MAX, NULL);
   setptr(lintot + 1);              /* Ptr after last line in file */
@@ -662,8 +948,10 @@ p1027:if (cntrlc)
   (void)write(1, "Internal error - EOL char not recognised", 40);
   newlin();
   READ_NEXT_COMMAND;
-p1029:rtn = newl;
-p1033:lgtmp4 = (modify || splt);   /* We are not inserting */
+p1029:
+  rtn = newl;
+p1033:
+  lgtmp4 = (modify || splt);       /* We are not inserting */
   if (lgtmp4 && modlin)
     delete(0);                     /* Delete CHANGED existing line */
   splt = false;                    /* Not a split this time */
@@ -675,7 +963,8 @@ p1033:lgtmp4 = (modify || splt);   /* We are not inserting */
 p1030:
   rtn = 1032;
   goto p1033;                      /* Display & update file */
-p1032:splt = true;                 /* Force a delete next time */
+p1032:
+  splt = true;                     /* Force a delete next time */
   inslin(curr);                    /* In case ESC next time */
   sprmpt(ptrpos - 1);
   goto p1027;                      /* New line for all 3 (A,I,M) */
@@ -701,33 +990,30 @@ p1301:
  */
 p1012:
   if (!getlin(1, 1))
-    goto p1025;                    /* J line # u/s */
+    REREAD_CMD;                    /* J line # u/s */
   setptr(oldcom->decval);          /* Get ready to insert */
   if (eolok())                     /* No extra params */
     goto p1034;
-  goto p1025;                      /* Re-read command */
+  REREAD_CMD;
 /*
  * M - MODIFY
  */
-p1015:modify = true;
-  if (!getlin(0, 0))
-    goto p1713;                    /* J bad line # */
-  j4 = (oldcom->decval);           /* 1st line to be altered */
-  lstvld = false;                  /* Previous line not valid */
-  numok = 1036;
-p1074:                             /* Get opt # of lines & check eof */
-  if (getnum(0))                   /* Format of optional # of lines OK */
+p1015:
+  modify = true;
+  if (getlin(0, 0))
   {
-    count = oldcom->decval;
-    if (oldcom->toktyp == eoltok || eolok()) /* EOL already or next */
-      goto asg2numok;
-  }                                /* if(getnum(0)) */
-  goto p1025;                      /* Re-read command */
-p1713:locerr = true;               /* An scmac can detect this error */
-/* Report err unless brief macro */
-  if (curmac < 0 || !BRIEF)
-    (void)write(1, ermess, errlen);
-  goto p1025;                      /* Reread command */
+    j4 = oldcom->decval;           /* 1st line to be altered */
+    lstvld = false;                /* Previous line not valid */
+    if (!get_opt_lines2count())
+      REREAD_CMD;
+  }
+  else
+  {
+    locerr = true;                 /* An scmac can detect this error */
+    if (curmac < 0 || !BRIEF)      /* Report err unless brief macro */
+      (void)write(1, ermess, errlen);
+    REREAD_CMD;                    /* Reread command */
+  }
 p1036:
   newl = 1037;                  /* Eventually come back here after any splits */
   if (verb == 'M')                 /* Was M-modify */
@@ -764,318 +1050,35 @@ p1036:
  * Start file handlers
  * ******************************************************************
  *
- * B - Save file with a .bu backup copy
- * S - Save file
- */
-p1006:
-  nofil = 10407;
-  rtn = 10403;
-  savpos = ptrpos;                 /* So we can leave pos'n same at end */
-  setptr((long)1);                 /* Pos'n 1st line */
-  if (deferd)
-    dfread(LONG_MAX, NULL);        /* Ensure all file in */
-  wrtnum = lintot;                 /* Write all lines */
-/*
- * This line for S-SAVE, B-BACKUP, and W-WRITE
- */
-p1072:
-  rdwr = O_WRONLY + O_CREAT;       /* Don't truncate yet in case mmap'd */
-/*
- * Code used by all commands
- */
-p1075:
-  if (scrdtk(2, (unsigned char *)buf, PTHMAX, oldcom)) /* Read a f/n */
-  {
-    perror("backup/save - scrdtk");
-    putchar('\r');
-  p1043:
-    (void)write(1, "Error in filename", 17);
-    goto p1025;
-  }
-  if (oldcom->toktyp == eoltok)
-    goto asg2nofil;                /* J that was EOL */
-  if (oldcom->toktyp != nortok)
-    goto p1043;                    /* J not normal token */
-  tildexpn(buf);                   /* Do tilde expansion */
-  if (verb == 'W')
-  {
-    if (!getlin(1, 0))
-      goto p1025;                  /* J line # u/s */
-    setptr(oldcom->decval);        /* Get ready to write */
-    numok = 1073;
-    goto p1074;
-  }
-  if (verb == 'U')
-  {
-    if (eolok())
-      goto p1510;
-    goto p1025;
-  }
-
-/* For S B & Q, if the file exists then use its mode from now on. Don't complain
- * here if it doesn't exist. To check whether the file is a symlink, we need to
- * call readlink to find its real name. The only real error here is a symlink
- * loop */
-
-  if (verb != 'E')
-  {
-  colontrunc:                     /* Jump to here after truncating buf at ":" */
-    errno = 0;                     /* Ensure valid */
-    if (!stat(buf, &statbuf))
-    {
-      tmode = statbuf.st_mode;
-      tgroup = statbuf.st_gid;
-      towner = statbuf.st_uid;
-    }                              /* if (!stat(buf, &statbuf)) */
-    else
-    {
-      if (!tmask)
-      {
-        tmask = umask(0);          /* Get current umask */
-        umask(tmask);              /* Reinstate umask */
-      }                            /* if (!tmask) */
-      tmode = ~tmask & 0666;       /* Assume no execute on new file */
-      tgroup = towner = 0;
-    }                              /* if (!stat(buf, &statbuf)) else */
-    if (!lstat(buf, &statbuf) && S_ISLNK(statbuf.st_mode) && errno != ELOOP)
-      for (;;)
-      {
-        if (0 < (i = readlink(buf, tmfile, (size_t)PTHSIZ)))
-        {                          /* S, B or Q on a symlink */
-          tmfile[i] = 0;           /* No trlg NUL from readlink */
-          if (tmfile[0] == '/' || tmfile[0] == '~')
-            strcpy(buf, tmfile);
-          else
-          {
-            p = (unsigned char *)strrchr(buf, '/'); /* Find last '/' if any */
-            if (!p)
-              p = (unsigned char *)buf - 1; /* Filename at buf start */
-            *(p + 1) = '\0';       /* Throw away filename */
-            strcat(buf, tmfile);   /* Append linked name */
-          }                        /* if(tmfile[0]=='/'||tmfile[0]=='~') else */
-          printf("Symbolic link resolves to %s", buf);
-          newlin();
-/* See if symlink points to another symlink... */
-          if (lstat(buf, &statbuf))
-            break;                 /* B link to a new file */
-          if (!S_ISLNK(statbuf.st_mode))
-            break;                 /* B now not on a symlink */
-        }                          /* if(0<(i=readlink(buf,tmfile,... */
-        else
-        {
-          printf("%s. %s (readlink)", strerror(errno), buf);
-          goto p1025;              /* Bad readlink */
-        }                          /* if(0<(i=readlink(buf,tmfile,... else */
-      }                            /* if(!lstat(buf,&statbuf)&&S_ISLNK(... */
-    if (!(errno || S_ISREG(statbuf.st_mode)))
-    {
-      printf("Not a regular file. %s", buf);
-      goto p1025;
-    }                              /* if(!S_ISREG(statbuf.st_mode)) */
-  }                                /* if(verb!='E' */
-  if (eolok())
-    goto p1044;
-  goto p1025;                      /* Re-read command */
-p1073:                             /* W-write continuing */
-  wrtnum = count;                  /* Get back here if ok # of lines */
-p1044:
-  bspar = true;                    /* We have a parameter (if B or S) */
-/*
- * If B-BACKUP, back up supplied param anyway
- */
-  if (verb == 'B')
-    goto p10445;                   /* Join S&B with no params */
-  lgtmp3 = false;                  /* Q-QUIT into existing file */
-p1708:
-  if ((funit = open(buf, rdwr, tmode)) == -1)
-  {
-/*
- * If Q-QUIT, file may not exist as user wishes to create a new one. Or file may
- * not exist because it's of the form <filename>:<line number>
- */
-    if (errno == ENOENT && verb == 'Q' && !lgtmp3)
-    {
-      if (cmd_state == RUNNING || cmd_state == TRY_INITIAL_COMMAND)
-      {
-        if ((colonpos = strchr(buf, ':')) &&
-          sscanf(colonpos + 1, "%d", &colonline) == 1)
-        {
-          cmd_state = HAVE_LINE_NUMBER; /* line # in colonline */
-          *colonpos = '\0';        /* Truncate filename */
-          goto colontrunc;         /* Try with truncated buf */
-        }                          /* if((colonpos=strchr(buf,':'))&&... */
-      }                            /* if (cmd_state == RUNNING) */
-      else if (cmd_state == HAVE_LINE_NUMBER) /* Just tried truncating at ":" */
-        *colonpos = ':';           /* Undo truncation */
-      cmd_state = TRY_INITIAL_COMMAND;
-      if (ysno5a("Do you want to create a new file (y,n,Cr [n])", A5DNO))
-      {
-        lgtmp3 = true;             /* Q-QUIT into new file */
-        rdwr = O_WRONLY + O_CREAT + O_EXCL; /* File should *not* exist */
-        goto p1708;                /* So create file */
-      }  /* if(ysno5a("Do you want to create a new file (y,n,Cr [n])",A5DNO)) */
-    }                              /* if(errno==ENOENT&&verb=='Q'&&!lgtmp3) */
-    printf("%s. %s (open)", strerror(errno), buf);
-    goto p1025;                    /* Bad open */
-  }                                /* if((funit=open(buf,rdwr,tmode))==-1) */
-  if (lgtmp3)                      /* Have just created file for Q-QUIT */
-  {
-    mods = false;                  /* No mods to new file yet */
-    (void)close(funit);
-  }                                /* if(lgtmp3) */
-  else if (rdwr != O_RDONLY)       /* Need to write lines */
-  {
-  p1066:
-    code = 1;                      /* Set to 0 on good writfl */
-    if (fstat(funit, &statbuf))
-      printf("%s. funit %d (fstat)", strerror(errno), funit);
-    else if (ismapd(statbuf.st_ino))
-      printf("%s is mmap'd", buf);
-    else if (ftruncate(funit, 0))
-      printf("%s. funit %d (ftruncate)", strerror(errno), funit);
-    else
-      writfl(wrtnum);              /* Write lines to o/p file */
-    if (code != 0)                 /* Some kind of failure above */
-      goto p1062;
-  }                                /* else if(rdwr!=O_RDONLY) */
-  goto asg2rtn;                    /* Finished, except S & B */
-/*
- * B-BACKUP & S-SAVE only once again
- */
-p10403:mods = false;               /* OK to Q-QUIT now */
-  setptr(savpos);                  /* Repos'n file as before */
-  if (bspar)
-    strcpy(pcnta, buf);            /* We had a param. Set as dflt */
-  else if (verb != 'B')
-  {
-    printf("%s\r\n", pcnta);       /* Remind user what file he's editing */
-    if (unlink(tmfile) == -1)
-      printf("%s. %s (unlink)\r\n", strerror(errno), tmfile);
-  }
-
-/* ---------------------------------------------------------------------- */
-/* Attempt to restore as many attributes of the original file as possible */
-/* current file attributes are in statbuf                                 */
-/* ---------------------------------------------------------------------- */
-
-  if (towner)                      /* If there *was* an original file */
-  {
-    code = 0;
-    if (tgroup != statbuf.st_gid)
-    {
-      if (chown(pcnta, -1, tgroup) == -1)
-      {
-        code = 1;
-        printf("Warning - original group not restored\r\n");
-      }                            /* if (chown(pcnta, -1, tgroup) == -1) */
-    }                              /* if (tgroup != statbuf.st_gid) */
-    if (towner != statbuf.st_uid)
-    {
-/* Don't try to change user if group failed, but do warn */
-      if (code || chown(pcnta, towner, -1) == -1)
-      {
-        code = 1;
-        printf("Warning - original owner not restored\r\n");
-      }                        /* if (code || chown(pcnta, towner, -1) == -1) */
-    }                              /* if (towner != statbuf.st_gid) */
-/* If there were no problems above, set any extra original mode bits */
-    if (tmode != statbuf.st_mode && (code || chmod(pcnta, tmode) == -1))
-      printf("Warning - original mode not restored\r\n");
-  }                                /* if (towner) */
-  READ_NEXT_COMMAND;               /* Next command */
-/*
- * Deal with the case where S or B had no param. Get joined by
- * B-BACKUP later anyway
- */
-p10407:
-  if (!pcnta[0])                   /* We have no default f/n */
-  {
-    printf("%s", "filename must be specified");
-    goto p1025;                    /* Correct command */
-  }
-  bspar = false;                   /* Don't have a param */
-/*
- * Duplicate f/n in buf so B-BACKUP can merge in
- */
-  strcpy(buf, pcnta);
-/*
- * P10445 - B-Backup joins here
- */
-p10445:;
-/*
- * S-SAVE with no f/n / B-BACKUP continuing. Use TMFILE for name of
- * backup file
- */
-  strcpy(tmfile, buf);
-  if (verb == 'B')
-    strcat(tmfile, ".bu");         /* \add approp. */
-  else
-    strcat(tmfile, ".tm");         /* /postfix */
-
-/* ---------------------------------------------------- */
-/* We used to rely on link failing if the file existed. */
-/* But then, link() always fails in a DOS file system.  */
-/* So now we stat() the file to see if it exists,       */
-/* then use rename() if it doesn't.                     */
-/* (rename() would overwrite an old file)               */
-/* ---------------------------------------------------- */
-
-  while (!stat(tmfile, &statbuf))
-  {
-    if (verb == 'B' &&
-      !ysno5a("Do you want to delete the old backup file", A5NDEF))
-      ERR1025("Need another filename to take backup");
-    if (unlink(tmfile))
-    {
-      printf("%s. %s (unlink)", strerror(errno), tmfile);
-      goto p1062;
-    }                              /* if(unlink(tmfile)) */
-    if (verb == 'B')
-      printf("Previous backup file deleted:- ");
-  }                                /* if(!stat(tmfile,&statbuf)) */
-  if (rename(buf, tmfile))         /* If rename fails */
-  {
-/* OK nofile if B with param */
-    if (bspar && (errno == ENOENT))
-    {
-      puts("New file - no backup taken\r");
-      goto p1065;
-    }                              /* if(bspar&&(errno==ENOENT)) */
-    printf("%s. %s to %s (rename)", strerror(errno), buf, tmfile);
-  p1062:
-    close(funit);                  /* In case anything left open */
-    goto p1025;                    /* Get corrected command */
-  }                                /* if (rename(buf, tmfile)) */
-/*
- * File renamed - now open new file of same type as original
- */
-  rdwr = O_WRONLY + O_CREAT + O_EXCL; /* Must be new file */
-/* */
-  if (verb == 'B')
-    printf("Backup file is %s\r\n", tmfile); /* Report backup f/n */
-p1065:
-  if ((funit = open(buf, rdwr, tmode)) == -1)
-  {
-    printf("%s. %s (open)", strerror(errno), buf);
-    goto p1025;                    /* No need to close since open failed */
-  }
-  goto p1066;                      /* Now write file */
-/*
  * W - WRITEFILE
  */
 p1022:
-  nofil = 1069;
-  rtn = 1004;                      /* Next command when finished */
-  goto p1072;
+  if (!get_file_arg() || nofile)
+    ERR1025("Error in filename");
+  if (!getlin(1, 0))
+    REREAD_CMD;                    /* J line # u/s */
+  setptr(oldcom->decval);          /* Get ready to write */
+  if (!get_opt_lines2count() || !eolok())
+    REREAD_CMD;
+  wrtnum = count;
+  rdwr = O_WRONLY + O_CREAT;
+  if (!s_b_w_common_write())
+    REREAD_CMD;
+  READ_NEXT_COMMAND;
 /*
  * E - Enter
  */
 p1009:
-  rtn = 10755;
-  nofil = 1069;                    /* Must have a filename */
-  rdwr = O_RDONLY;                 /* Open file for reading */
-  goto p1075;                      /* Off we go */
-p10755:                            /* Q <filename> joins here */
+  if (!get_file_arg() || nofile)
+    ERR1025("Error in filename");
+  if (!eolok())
+    REREAD_CMD;
+  if ((funit = open_buf(O_RDONLY, 0)) == -1)
+  {
+    fprintf(stderr, "%s. %s (open)", strerror(errno), buf);
+    REREAD_CMD;                    /* Bad open */
+  }                         /* if ((funit = open_buf(O_RDONLY, tmode)) == -1) */
+e_q_common:                        /* Q <filename> joins here */
   savpos = ptrpos;                 /* Return here with file open. read it... */
 
 /* Use mmap if requested */
@@ -1084,8 +1087,9 @@ p10755:                            /* Q <filename> joins here */
   {
     if (fstat(funit, &statbuf))
     {
-      printf("%s. funit %d (fstat)", strerror(errno), funit);
-      goto p1062;                  /* Bad fstat */
+      fprintf(stderr, "%s. funit %d (fstat)", strerror(errno), funit);
+      my_close(funit);             /* Bad fstat */
+      REREAD_CMD;
     }                              /* if(fstat(funit,&statbuf)) */
     if (statbuf.st_size)
     {
@@ -1095,27 +1099,19 @@ p10755:                            /* Q <filename> joins here */
 #endif
         , funit, (off_t) 0)) == (void *)-1)
       {
-        printf("%s. funit %d (mmap)", strerror(errno), funit);
-        goto p1062;
+        fprintf(stderr, "%s. funit %d (mmap)", strerror(errno), funit);
+        my_close(funit);
+        REREAD_CMD;
       }                            /* if(!(p=mmap(NULL,statbuf.st_size... */
       mapfil(statbuf.st_ino, statbuf.st_size, p);
     }                              /* if(statbuf.st_size) */
     else
       printf("0 lines read.\r\n");
   }                                /* if(fmode&02000&&... */
-
   else
     readfl();
-  for (;;)
-  {
-    if (!(close(funit)))           /* Success */
-      break;
-    if (errno == EINTR)            /* Interrupted system call */
-      continue;
-    perror("close");
-    putchar('\r');
-    break;
-  }                                /* for(;;) */
+  if (my_close(funit))             /* Failure */
+    fprintf(stderr, "%s. funit %d (close)", strerror(errno), funit);
   if (verb == 'Q')
     mods = false;                  /* No mods yet if that was Q-QUIT */
   setptr(savpos);                  /*  ...retaining old file pos'n... */
@@ -1131,36 +1127,77 @@ p1017:
     A5DNO))
     READ_NEXT_COMMAND;             /* J user changed his mind */
   Tcl_DumpActiveMemory("t5mem");
-  nofil = 1132;                    /* Old-style Q - no f/n */
-  rdwr = O_RDONLY;
-  rtn = 1521;
-  goto p1075;                      /* Open next file if one given */
+  if (!get_file_arg())
+    ERR1025("Error in filename");
+  if (nofile)
+  {
 /*
  * If in a macro, only action solitary Q if mode says so.
  * Otherwise, convert to ^NU...
  */
-p1132:
-  if (curmac >= 0 && !(fmode & 0100) && verb == 'Q')
-  {
-    macdef(64, (unsigned char *)"", 0, true); /* Macro is ^NU only */
-    curmac = 64;
-    mcposn = 0;
-    READ_NEXT_COMMAND;
+    if (curmac >= 0 && !(fmode & 0100) && verb == 'Q')
+    {
+      macdef(64, (unsigned char *)"", 0, true); /* Macro is ^NU only */
+      curmac = 64;
+      mcposn = 0;
+      READ_NEXT_COMMAND;
+    }
+    return 0;                      /* ACTUALLY EXIT Q */
   }
-  return 0;
+  rdwr = O_RDONLY;
+  q_new_file = false;              /* Q-QUIT into existing file */
+colontrunc:
+  if (!do_stat_symlink() || !eolok())
+    REREAD_CMD;
+try_open:
+  if ((funit = open_buf(rdwr, tmode)) == -1)
+  {
 /*
- * P1521 - Q with a filename continuing
+ * The file may not exist as user wishes to create a new one.
+ * Or the file may not exist because it's of the form <filename>:<line number>
  */
-p1521:
+    if (errno == ENOENT && !q_new_file)
+    {
+      if (cmd_state == RUNNING || cmd_state == TRY_INITIAL_COMMAND)
+      {
+        if ((colonpos = strchr(buf, ':')) &&
+          sscanf(colonpos + 1, "%d", &colonline) == 1)
+        {
+          cmd_state = HAVE_LINE_NUMBER; /* line # in colonline */
+          *colonpos = '\0';        /* Truncate filename */
+          if (!do_stat_symlink() || !eolok())
+            REREAD_CMD;
+          goto colontrunc;         /* Try with truncated buf */
+        }                          /* if((colonpos=strchr(buf,':'))&&... */
+      }                            /* if (cmd_state == RUNNING) */
+      else if (cmd_state == HAVE_LINE_NUMBER) /* Just tried truncating at ":" */
+        *colonpos = ':';           /* Undo truncation */
+      cmd_state = TRY_INITIAL_COMMAND;
+      if (ysno5a("Do you want to create a new file (y,n,Cr [n])", A5DNO))
+      {
+        q_new_file = true;         /* Q-QUIT into new file */
+        rdwr = O_WRONLY + O_CREAT + O_EXCL; /* File should *not* exist */
+        goto try_open;             /* So create file */
+      }  /* if(ysno5a("Do you want to create a new file (y,n,Cr [n])",A5DNO)) */
+    }                              /* if (errno == ENOENT && !q_new_file) */
+    fprintf(stderr, "%s. %s (open)", strerror(errno), buf);
+    REREAD_CMD;                    /* Bad open */
+  }                             /* if ((funit = open_buf(rdwr, tmode)) == -1) */
+
+  if (q_new_file)                  /* Have just created file for Q-QUIT */
+  {
+    mods = false;                  /* No mods to new file yet */
+    my_close(funit);               /* New empty file open in wrong mode */
+  }                                /* if(q_new_file) */
   finitl();                        /* Erases old file but keeps segments */
   verb = 'Q';                      /* In case was 'q' */
 /*
  * Set up new default for S&B
  */
   (void)strcpy(pcnta, buf);        /* Filename & length now remembered */
-  if (lgtmp3)                      /* Q-QUIT into new file */
+  if (q_new_file)                  /* Q-QUIT into new file */
     READ_NEXT_COMMAND;             /* Read next command */
-  goto p10755;                     /* Get the file... and off we go! */
+  goto e_q_common;                 /* Join E-ENTER */
 /*
  * ******************************************************************
  * End file handlers (except HELP & USE)
@@ -1170,11 +1207,10 @@ p1521:
  */
 p1008:
   if (!getlin(1, 0))
-    goto p1025;                    /* J bad line # */
+    REREAD_CMD;                    /* J bad line # */
   k4 = oldcom->decval + 1;         /* Pos here for each delete */
-  numok = 1076;
-  goto p1074;                      /* Get optional # of lines in COUNT */
-p1076:
+  if (!get_opt_lines2count())
+    REREAD_CMD;
   clrfgt();                        /* In case lines from last D */
   for (i4 = count; i4 > 0; i4--)
   {
@@ -1210,16 +1246,16 @@ p1010:
     setptr(oldcom->decval);
     READ_NEXT_COMMAND;             /* Finished GOTO */
   }                                /* if(getlin(1,1)) */
-  goto p1025;
+  REREAD_CMD;
 /*
  * U - USE
  */
 p1020:
-  nofil = 1069;
-  goto p1075;                      /* Get the file name */
-p1510:
+  if (!get_file_arg() || nofile)
+    ERR1025("Error in filename");
+  if (!eolok())
+    REREAD_CMD;
   duplx5(true);                    /* Assert XOFF recognition */
-  tildexpn(buf);                   /* Do tilde expansion */
 
 /* NULLSTDOUT setting is same as parent */
   stdinfo[stdidx + 1].nullstdout =
@@ -1233,8 +1269,8 @@ p1510:
   if (stdinfo[stdidx].funit == -1)
   {
     stdidx--;
-    printf("%s. (dup(0))", strerror(errno));
-    goto p1025;
+    fprintf(stderr, "%s. (dup(0))", strerror(errno));
+    REREAD_CMD;
   }                                /* if (stdinfo[stdidx].funit == -1) */
 
 /* Close funit 0 */
@@ -1244,13 +1280,13 @@ p1510:
 
 /* Open new input source */
   do
-    i = open(buf, O_RDONLY);
+    i = open_buf(O_RDONLY, 0);
   while (i == -1 && errno == EINTR);
   if (i == -1)
   {
     pop_stdin();
-    printf("%s. %s (open)", strerror(errno), buf);
-    goto p1025;
+    fprintf(stderr, "%s. %s (open)", strerror(errno), buf);
+    REREAD_CMD;
   }                                /* if (i == -1) */
 
 /* Verify new input opened on funit 0. Try to rectify if not */
@@ -1261,12 +1297,12 @@ p1510:
     while (j == -1 && errno == EINTR);
     if (j == -1)
     {
-      printf("%s.(dup2(%d, 0))", strerror(errno), i);
+      fprintf(stderr, "%s.(dup2(%d, 0))", strerror(errno), i);
       do
         j = close(i);
       while (j == -1 && errno == EINTR);
       pop_stdin();
-      goto p1025;
+      REREAD_CMD;
     }                              /* if (j == -1) */
     do
       j = close(i);
@@ -1277,7 +1313,7 @@ p1510:
   if (curmac >= 0)
   {
     if (!pushmac())
-      goto p1025;
+      REREAD_CMD;
     curmac = -1;
     stdinfo[stdidx].frommac = true;
   }                                /* if (curmac >= 0) */
@@ -1297,8 +1333,8 @@ p1011:
   if (scrdtk(2, (unsigned char *)tmfile, 17, oldcom))
   {
   p11042:
-    printf("%s. (scrdtk)", strerror(errno));
-    goto p1025;
+    fprintf(stderr, "%s. (scrdtk)", strerror(errno));
+    REREAD_CMD;
   }
   k = oldcom->toklen;              /* Get length of HELP topic */
   if (k == 0)
@@ -1308,7 +1344,7 @@ p1011:
     tmfile[1] = '\0';
   }
   if (!eolok())
-    goto p1025;
+    REREAD_CMD;
   for (i = k - 1; i >= 0; i--)
   {
     if (tmfile[i] >= 'A' && tmfile[i] <= 'Z')
@@ -1327,16 +1363,16 @@ p1011:
         " with the name Q_HELP_DIR.\r\n\n");
       READ_NEXT_COMMAND;
     }
-    printf("%s. %s (HELP)", strerror(errno), tmtree);
-    goto p1025;
+    fprintf(stderr, "%s. %s (HELP)", strerror(errno), tmtree);
+    REREAD_CMD;
   }
   sprintf(buf, "%s %s", help_cmd, tmtree);
-  final5();                      /* For some pagers */
+  final5();                        /* For some pagers */
   if (system(buf) < 0)
   {
-    printf("%s. %s (system)", strerror(errno), buf);
+    fprintf(stderr, "%s. %s (system)", strerror(errno), buf);
     init5();
-    goto p1025;
+    REREAD_CMD;
   }
   init5();
   READ_NEXT_COMMAND;               /* Finished */
@@ -1345,7 +1381,7 @@ p1011:
  */
 p1023:
   if (!eolok())
-    goto p1025;
+    REREAD_CMD;
   puts("Switching off screenedit mode\r");
   xistcs();                        /* So set them */
   puts("Re-enabling screenedit\r");
@@ -1354,10 +1390,9 @@ p1023:
  * P - Print
  */
 p1016:
-  numok = 1092;
   lstlin = ptrpos;                 /* -TO strt curr lin */
-  goto p1074;                      /* Get optional # of lines to COUNT */
-p1092:
+  if (!get_opt_lines2count())
+    REREAD_CMD;
   rtn = 1093;
 p1104:
   for (i = count; i > 0; i--)
@@ -1398,7 +1433,7 @@ p1021:
   fullv = false;                   /* Assume not just "V" */
 p1107:
   if (!getnum(logtmp))
-    goto p1025;                    /* J format err on # of lines */
+    REREAD_CMD;                    /* J format err on # of lines */
   count = oldcom->decval;
   if (oldcom->toktyp == eoltok)
     goto asg2nonum;                /* J no # given */
@@ -1416,7 +1451,7 @@ p1107:
     else
       goto asg2numok;
   }                                /* if(!logtmp||eolok()) */
-  goto p1025;
+  REREAD_CMD;
 /* Print enough lines to fill the screen... */
 p1097:
   fullv = true;                    /* Try very hard to fill screen */
@@ -1492,7 +1527,7 @@ p1014:
   {
   p11043:
     write(1, "Null string to locate", 21);
-    goto p1025;                    /* Reread command */
+    REREAD_CMD;                    /* Reread command */
   }                                /* if(!(l=oldcom->toklen)) */
   numok = 1105;
   nonum = 1106;
@@ -1530,14 +1565,14 @@ p1717:
   if (last < first)                /* Impossible combination of columns */
   {
     printf("Last pos'n < first\r\n");
-    goto p1025;
+    REREAD_CMD;
   }                                /* if(last<first) */
   last = last + l;                 /* Add search length to get wanted length */
 p1719:
   minlen = first + l;              /* Get minimum line length to search */
   if (eolok())
     goto asg2rtn;
-  goto p1025;
+  REREAD_CMD;
 p1715:
   savpos = ptrpos;                 /* Remember pos in case no match */
 
@@ -1603,13 +1638,13 @@ p1811:
 /* Move past command & 1st param */
   (void)scrdtk(1, (unsigned char *)NULL, 0, oldcom);
   (void)scrdtk(1, (unsigned char *)NULL, 0, oldcom);
-  goto p1025;
+  REREAD_CMD;
 /*
  * P17165 - Get 1st & last posn's for L & Y
  */
 p17165:
   if (!getnum(0))
-    goto p1025;
+    REREAD_CMD;
   if (oldcom->toktyp != nortok)
     goto asg2nonum;                /* J no number given */
   goto asg2numok;
@@ -1618,7 +1653,7 @@ p17165:
  */
 p1013:
   if (!getlin(1, 0))
-    goto p1025;                    /* J bad line # */
+    REREAD_CMD;                    /* J bad line # */
   setptr(oldcom->decval);          /* Pos'n on line to be joined onto */
   numok = 1114;
   nonum = 1114;
@@ -1626,9 +1661,8 @@ p1013:
   goto p1107;                      /* Get opt. # lines to join in COUNT */
 p1114:count2 = count;              /* Another # to get */
   lstlin = -1;                     /* Not allowed -TO */
-  numok = 1515;
-  goto p1074;                      /* Get # lines to mod after */
-p1515:
+  if (!get_opt_lines2count())
+    REREAD_CMD;
 /* At eof */
   if (ptrpos >= lintot && !(deferd && (dfread(1, NULL), ptrpos < lintot)))
   {
@@ -1677,33 +1711,32 @@ p1129:
   if (!getlin(1, 0))               /* Bad source. C joins here */
   {
     (void)write(1, " in source line", 15);
-    goto p1025;
+    REREAD_CMD;
   }
   k4 = oldcom->decval;             /* Remember source */
   if (!getlin(1, 1))               /* Bad dest'n */
   {
     (void)write(1, " in dest'n line", 15);
-    goto p1025;
+    REREAD_CMD;
   }
   j4 = oldcom->decval;             /* Remember dest'n */
   lstlin = k4;                     /* -TO refers from source line */
   if (j4 == k4)                    /* Error if equal */
   {
     (void)write(1, "Source and destination line #'s must be different", 49);
-    goto p1025;
+    REREAD_CMD;
   }
   goto asg2rtn;                    /* End 1st common part */
 p1121:
   if (k4 == j4 - 1)
   {
     (void)write(1, "moving a line to before the next line is a no-op", 48);
-    goto p1025;
+    REREAD_CMD;
   }
   rtn = 1125;                      /* Only used if hit eof */
 p1131:                             /* C joins us here */
-  numok = 1126;
-  goto p1074;                      /* Get opt # of lines & check eof */
-p1126:
+  if (!get_opt_lines2count())
+    REREAD_CMD;
   setptr(j4);                      /* Set main ptr at dest'n */
 /*
  * Note:- When setting both pointers, always set AUX second
@@ -1741,13 +1774,13 @@ p1130:
 p1101:
   if (tabset(oldcom))
     READ_NEXT_COMMAND;
-  goto p1025;                      /* Allow user to correct any errors */
+  REREAD_CMD;                      /* Allow user to correct any errors */
 /*
  * Z - Return from a Use file
  */
 p1102:
   if (!eolok() || !pop_stdin())
-    goto p1025;
+    REREAD_CMD;
 
 /* If U-use was in a macro, resume that macro */
   if (stdinfo[stdidx + 1].frommac)
@@ -1777,7 +1810,7 @@ p2015:
       logtmp = !logtmp;
       break;
     case Q_UNREC:
-      goto p1025;
+      REREAD_CMD;
   }                                /* switch (answer) */
   goto asg2rtn;
 p1407:
@@ -1825,7 +1858,7 @@ p1501:
     else
     {
       if (!eolok())
-        goto p1025;
+        REREAD_CMD;
 /* Need to preserve stdout for this */
       if (orig_stdout == -1)
       {
@@ -1837,7 +1870,7 @@ p1501:
       {
         fprintf(stderr, "\r\n%s. (dup(1))\r\n", strerror(errno));
         refrsh(NULL);
-        goto p1025;
+        REREAD_CMD;
       }                            /* if (orig_stdout == -1) */
       else
       {
@@ -1845,7 +1878,7 @@ p1501:
           i = close(1);
         while (i == -1 && errno == EINTR);
         do
-          i = open(buf, O_WRONLY + O_CREAT, 0666);
+          i = open_buf(O_WRONLY + O_CREAT, 0666);
         while (i == -1 && errno == EINTR);
         if (i == 1)
         {
@@ -1856,27 +1889,27 @@ p1501:
           i = errno;
         restore_stdout();
         if (i)
-          printf("%s. %s (freopen)", strerror(i), buf);
+          fprintf(stderr, "%s. %s (freopen)", strerror(i), buf);
         i = !i;                    /* Required below */
       }                            /* if (orig_stdout == -1) else */
     }                              /* if (oldcom->toktyp == eoltok) else */
   }                                /* if (i < 0) */
   if (i)
     READ_NEXT_COMMAND;             /* No error */
-  goto p1025;
+  REREAD_CMD;
 /*
  * K - pop a shell prompt
  */
 p1525:
   if (!eolok())
-    goto p1025;
+    REREAD_CMD;
   if (!USING_FILE)
     puts("Exit from shell to restart\r");
   final5();
   i = system(sh);
   init5();
   if (i < 0)
-    printf("%s. (system(\"%s\"))", strerror(errno), sh);
+    fprintf(stderr, "%s. (system(\"%s\"))", strerror(errno), sh);
   if (!USING_FILE)
     puts("Re-entering Q\r");
   READ_NEXT_COMMAND;
@@ -1914,12 +1947,12 @@ p1915:
   if (k < 128)
     goto p1916;                    /* Continue */
   (void)write(1, "parity-high \"keys\" not allowed", 30);
-  goto p1025;
+  REREAD_CMD;
 p1908:
   if (xkey[0] == CARAT)
     goto p1910;                    /* J starts "^" (legal) */
   (void)write(1, "may only have single char or ^ char", 35);
-  goto p1025;
+  REREAD_CMD;
 p1910:
   k = xkey[1];                     /* Isolate putative control */
   if (k >= 0100 && k <= 0137)
@@ -1929,7 +1962,7 @@ p1910:
   if (k == QM)
     goto p1913;                    /* ^? (=rubout) */
   (void)write(1, "Illegal control character representation", 40);
-  goto p1025;
+  REREAD_CMD;
 p1911:
   k = k - 0100;                    /* Control char to subscript */
   goto p1916;
@@ -1955,7 +1988,7 @@ p1909:
 p1914:
   newkey[0] = k;                   /* Now a subscript */
   if (!eolok())
-    goto p1025;
+    REREAD_CMD;
   i = fxtabl[(int)oldkey[0]];
   fxtabl[(int)oldkey[0]] = fxtabl[(int)newkey[0]];
   fxtabl[(int)newkey[0]] = i;
@@ -1990,7 +2023,7 @@ p2005:
   if (ydiff && fmode & 0400)
   {
     printf("Replace string must be same length in FIXED LENGTH mode");
-    goto p1025;                    /* Report error */
+    REREAD_CMD;                    /* Report error */
   }
   if (oldcom->toktyp == eoltok)
     goto p1608;                    /* J no more params */
@@ -2000,7 +2033,7 @@ p2005:
   if (oldcom->toktyp != nortok)
     goto p1608;                    /* J ok after all */
   (void)write(1, ermess, errlen);
-  goto p1025;
+  REREAD_CMD;
 p1608:j4 = 1;                      /* Start looking at line 1 */
   if (oldcom->toktyp == eoltok)
     goto p1610;                    /* Join no # lines code if eol now */
@@ -2008,7 +2041,7 @@ p1608:j4 = 1;                      /* Start looking at line 1 */
 p1609:
   j4 = oldcom->decval;
 p16105:if (!getnum(0))
-    goto p1025;                    /* Get # lines, 0 not allowed */
+    REREAD_CMD;                    /* Get # lines, 0 not allowed */
   count = oldcom->decval;
   if (oldcom->toktyp != nortok)    /* No number given */
   p1610:
@@ -2044,7 +2077,7 @@ p1612:
   if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
   {
     (void)write(1, "Empty file - can't changeall any lines", 38);
-    goto p1025;
+    REREAD_CMD;
   }                                /* if(!lintot&&... */
 
 /* We act on BRIEF or NONE if in a macro without question. Otherwise, BRIEF or
@@ -2148,7 +2181,7 @@ p1710:savpos = ptrpos;             /* Remember so we can get back */
         {
           perror("times");
           putchar('\r');
-          goto p1025;
+          REREAD_CMD;
         }
         if (timnow - timlst < 20)
           goto p1711;              /* J not yet time to display */
@@ -2170,7 +2203,7 @@ p1710:savpos = ptrpos;             /* Remember so we can get back */
  */
 p1701:
   if (!eolok())
-    goto p1025;
+    REREAD_CMD;
   if (fmode & 01000)
   {
   q1704:
@@ -2185,7 +2218,7 @@ p1701:
  */
 p1702:
   if (!eolok())
-    goto p1025;
+    REREAD_CMD;
   fmode &= 07777777777;
   READ_NEXT_COMMAND;               /* Finished */
 /*
@@ -2193,7 +2226,7 @@ p1702:
  */
 p1703:
   if (!eolok())
-    goto p1025;
+    REREAD_CMD;
   if (fmode & 01000)
     goto q1704;
   fmode |= 030000000000u;
@@ -2203,7 +2236,7 @@ p1703:
  */
 p1707:
   if (!eolok())
-    goto p1025;
+    REREAD_CMD;
   forget();                        /* In fact implemented by workfile */
   READ_NEXT_COMMAND;
 /*
@@ -2213,7 +2246,7 @@ p2003:
   if (strlen(ndel) < 32)
     goto p2007;                    /* J table not full */
   (void)write(1, "no room for further entries", 27);
-  goto p1025;
+  REREAD_CMD;
 p2007:
 /* Get character to add */
   if (scrdtk(1, (unsigned char *)buf, 40, oldcom))
@@ -2221,15 +2254,15 @@ p2007:
   if (oldcom->toktyp != eoltok)
     goto p2008;                    /* J not EOL */
   (void)write(1, "command requires a parameter", 28);
-  goto p1025;
+  REREAD_CMD;
 p2008:
   if (oldcom->toklen == 1)
     goto p2009;                    /* J 1-char param (good) */
   (void)write(1, "parameter must be single character", 34);
-  goto p1025;
+  REREAD_CMD;
 p2009:
   if (!eolok())
-    goto p1025;
+    REREAD_CMD;
   strcat(ndel, buf);
   READ_NEXT_COMMAND;
 /*
@@ -2272,8 +2305,6 @@ asg2rtn:switch (rtn)
       goto p2014;
     case 1407:
       goto p1407;
-    case 1521:
-      goto p1521;
     case 1130:
       goto p1130;
     case 1128:
@@ -2292,12 +2323,6 @@ asg2rtn:switch (rtn)
       goto p1093;
     case 1079:
       goto p1079;
-    case 10755:
-      goto p10755;
-    case 1004:
-      READ_NEXT_COMMAND;
-    case 10403:
-      goto p10403;
     case 1032:
       goto p1032;
     default:
@@ -2306,13 +2331,9 @@ asg2rtn:switch (rtn)
   }
 asg2numok:switch (numok)
   {
-    case 1126:
-      goto p1126;
     case 1717:
       goto p1717;
     case 1515:
-      goto p1515;
-    case 1114:
       goto p1114;
     case 1716:
       goto p1716;
@@ -2322,28 +2343,8 @@ asg2numok:switch (numok)
       goto p1105;
     case 10965:
       goto p10965;
-    case 1092:
-      goto p1092;
-    case 1076:
-      goto p1076;
-    case 1073:
-      goto p1073;
-    case 1036:
-      goto p1036;
     default:
       printf("Assigned Goto failure, numok = %d\r\n", numok);
-      return 1;
-  }
-asg2nofil:switch (nofil)
-  {
-    case 1132:
-      goto p1132;
-    case 1069:
-      ERR1025("filename must be specified");
-    case 10407:
-      goto p10407;
-    default:
-      printf("Assigned Goto failure, nofil = %d\r\n", nofil);
       return 1;
   }
 asg2nonum:switch (nonum)

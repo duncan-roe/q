@@ -25,8 +25,11 @@ INTERNALS
   More GIVE_UP macros - use error_exit as standard label
   Use GNU tilde expansion function
   STARTED: Drop non-ANSI C support
-  (Eventually) rework asg2 blocks (start with xistcs.c)
+  STARTED: rework asg2 blocks (including xistcs.c)
   STARTED: alledit.h prototypes to have variable names
+  STARTED: Use meaningful names instead of logtemp &c.
+  Tidy scmnrd.c - it's horrible
+  STARTED: Be more careful what goes to stderr / stdin
 DONE replace terminal ioctls with tc{g,s}etattr
 Show what arguments Q started with (?)
 CATALOGUE OF USEFUL MACROS

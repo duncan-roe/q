@@ -1,7 +1,7 @@
 /* W R I T F L
  *
  * Copyright (C) 1993, 1995, 1998, 1999 Duncan Roe & Associates P/L
- * Copyright (C) 2003, 2012, Duncan Roe
+ * Copyright (C) 2003,2012,2014 Duncan Roe
  *
  * This routine writes out the spec'd # of lines to the file open on
  * FUNIT. If EOF is reached, it reports how many lines were written...
@@ -16,10 +16,8 @@
  */
 #include <stdio.h>
 #include <errno.h>
-#ifdef ANSI5
 #include <sys/types.h>
 #include <unistd.h>
-#endif
 #include "alledit.h"
 #include "edmast.h"
 /* */
@@ -30,14 +28,9 @@ extern int tabsiz;                 /* How many spaces per tab */
 
 static unsigned char fbuf[Q_BUFSIZ]; /* I/o buffer */
 static int i;                      /* Bytes in f/s buffer */
-static int p1(
-#ifdef ANSI5
-  void
-#endif
-  );                               /* File writing routine */
+static int p1(void);               /* File writing routine */
 void
-writfl(wrtnum)
-long wrtnum;
+writfl(long wrtnum)
 {
   int bytes;
   long todo, count;
@@ -51,7 +44,7 @@ long wrtnum;
   todo = wrtnum;                   /* Max # to write */
   q = fbuf;                        /* 1st char goes here */
   i = Q_BUFSIZ;                    /* Room for this many in file buf */
-  code = 0;
+  fscode = 0;
 /*
  * Main loop on lines
  */
@@ -146,7 +139,7 @@ long wrtnum;
   if (i != Q_BUFSIZ)               /* If any chars in buffer */
     if (p1() < 0)
     errlbl:
-      code = errno;
+      fscode = errno;
   for (;;)                         /* Loop past interrupts */
   {
     if (!close(funit))

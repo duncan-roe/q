@@ -6,10 +6,12 @@
  * This routine initialises the terminal i/o system.
  */
 #include <stdio.h>
-#include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
+#include <unistd.h>
 #include <memory.h>
 #include <stdlib.h>
+#include <string.h>
 #include <termios.h>
 #include "alledit.h"
 #include "c1in.h"
@@ -27,12 +29,13 @@ init5()
   {
     first = false;
     buf5len = 0;
+
 /* Set output to be non-buffered so we can mix write() and printf() */
+/* to either stdout or stderr. */
     if (setvbuf(stdout, NULL, _IONBF, 0))
-    {
-      perror("setvbuf");
-      putchar('\r');
-    }
+      fprintf(stderr, "%s. stdout (setvbuf)\r\n", strerror(errno));
+    if (setvbuf(stderr, NULL, _IONBF, 0))
+      fprintf(stderr, "%s. stderr (setvbuf)\r\n", strerror(errno));
 /* See if we have access to a tty */
     ttyfd = 0;
     for (i = STDIN5FD; i < STDERR5FD; i++)

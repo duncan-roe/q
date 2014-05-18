@@ -3,7 +3,7 @@
 /* E D M A S T
  *
  * Copyright (C) 1981; D. C. Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2014 Duncan Roe
  *
  * Universal Statements for all Master Subsystem Segments
  */
@@ -16,7 +16,7 @@ scrbuf5 *prev;                     /* Previous (& returned) line */
 int pchrs;                         /* # of chrs in the prompt */
 long lstlin;                       /* Last parsed line # (for -TO) */
 unsigned errlen;                   /* Length of message from GETLIN */
-int code;                          /* File system &c code */
+int fscode;                        /* File system &c code */
 char ermess[Q_BUFSIZ];             /* Text of message from GETLIN */
 char buf[Q_BUFSIZ];                /* Utility buffer for general use */
 unsigned long dfltmode;
