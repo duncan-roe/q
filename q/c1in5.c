@@ -81,6 +81,10 @@ c1in5(bool *eof_encountered)
 /* read(2) seems to drop thru every 1/2 sec in X, so... */
 
         else
+        {
+          fprintf(stderr, "%s\r\n", "!! EOF encountered unexpectedly!!");
+          exit(1);
+        }                          /* else */
           puts("!! EOF encountered unexpectedly!!\r");
         continue;                  /* for(;;) */
       }                            /* if(!s) */
