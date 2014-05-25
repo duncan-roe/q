@@ -66,7 +66,7 @@ long timlst;
 unsigned char fxtabl[128];
 int tbstat;
 bool offline = false;
-bool piping = false;
+bool piping = true;                /* Needs to start off true for quthan() */
 
 /* Static Variables */
 
@@ -85,6 +85,10 @@ static bool q_new_file;
 static long wrtnum = 0;            /* # of lines to write */
 static int rdwr = 0;               /* Mode for file opens */
 static long savpos = 0;            /* Remembered pointer during S, B & Y */
+static int saved_pipe_stdout;
+static int pipe_temp_fd;
+static char *pipe_temp_name = NULL;
+static struct sigaction act;
 
 /* Static functions */
 
@@ -290,7 +294,6 @@ s_b_w_common_write(void)
     fprintf(stderr, "%s. %s (open)", strerror(errno), buf);
     return false;                  /* Bad open */
   }                             /* if ((funit = open_buf(rdwr, tmode)) == -1) */
-  fscode = 1;                      /* Set to 0 on good writfl */
   if (fstat(funit, &statbuf))
     fprintf(stderr, "%s. funit %d (fstat)", strerror(errno), funit);
   else if (ismapd(statbuf.st_ino))
@@ -429,6 +432,82 @@ do_b_or_s(bool is_b)
   return true;
 }                                  /* do_b_or_s() */
 
+/* ****************************** rm_pipe_temp ****************************** */
+
+static void
+rm_pipe_temp(void)
+{
+  int retcod;
+
+  if (pipe_temp_name && *pipe_temp_name)
+  {
+    retcod = unlink(pipe_temp_name);
+    if (retcod == -1 && errno != ENOENT)
+      fprintf(stderr, "%s. %s (unlink)\r\n", strerror(errno), pipe_temp_name);
+  }                                /* if (pipe_temp_name && *pipe_temp_name) */
+}                                  /* rm_pipe_temp() */
+
+/* ************************ write_workfile_to_stdout ************************ */
+
+static void
+write_workfile_to_stdout(void)
+{
+/*
+ * Because this is potentially lengthy, re -enable signals
+ */
+  sigset_t omask = act.sa_mask;    /* Will have wanted bits 1st time thru */
+
+/* Before changing signal handlers ,delete the temp file */
+/* (it's mmpap'd) */
+  rm_pipe_temp();
+
+/* Reset TERM & INT to default actions */
+  act.sa_flags = 0;
+  act.sa_handler = SIG_DFL;
+  sigemptyset(&act.sa_mask);
+  sigaction(SIGINT, &act, NULL);
+  sigaction(SIGTERM, &act, NULL);
+
+/* Enable signals that will be blocked if we came here via a handler */
+  sigprocmask(SIG_UNBLOCK, &omask, NULL);
+/*
+ * Do a subset of a regular save, to the original stdout
+ */
+  setptr((long)1);                 /* Pos'n 1st line */
+  if (deferd)
+    dfread(LONG_MAX, NULL);        /* Ensure all file in */
+  funit = saved_pipe_stdout;
+  writfl(lintot);
+}                                  /* write_workfile_to_stdout() */
+
+/* ***************************** dev_null_stdout **************************** */
+
+static void
+dev_null_stdout(void)
+{
+  int retcod;
+
+  if (my_close(STDOUT5FD))
+  {
+    fprintf(stderr, "%s. fd %d (close)\n", strerror(errno), STDOUT5FD);
+    exit(1);
+  }                                /* if (my_close (STDOUT5FD)) */
+  do
+    retcod = open("/dev/null", O_WRONLY);
+  while (retcod == -1 && errno == EINTR);
+  if (retcod == -1)
+  {
+    fprintf(stderr, "%s. /dev/null (open)\n", strerror(errno));
+    exit(1);
+  }                                /* if (retcod == -1) */
+  if (retcod != STDOUT5FD)
+  {
+    fprintf(stderr, "/dev/null was opened on fd %d when it needed to be"
+      " opened on fd%d\n", retcod, STDOUT5FD);
+    exit(1);
+  }                                /* if (retcod != STDOUT5FD) */
+}                                  /* dev_null_stdout() */
+
 /* ********************************** main ********************************** */
 int
 main(int xargc, char **xargv)
@@ -473,12 +552,14 @@ main(int xargc, char **xargv)
   bool tokens = false;             /* Token search yes/no */
   bool do_rc = true;
   bool errflg = false;             /* Illegal switch seen */
+  bool vrsflg = false;             /* -V seen */
+  bool quiet_flag = false;         /* -q seen */
+  bool verbose_flag = false;       /* -v seen */
   command_state cmd_state = TRY_INITIAL_COMMAND;
   bool fullv = false;              /* Fulll VIEW wanted */
   scrbuf5 b1, b2, b3, b4;          /* 2 line & 2 command buffers */
   q_yesno answer;
   char *initial_command = NULL;
-  struct sigaction act;
 /*
  * Initial Tasks
  */
@@ -487,9 +568,13 @@ main(int xargc, char **xargv)
   dfltmode = 012045;               /* +e +m +* +tr +dr */
   end_seq = normal_end_sequence;
 /* Pick up any option arguments and set cmd_state if more args follow */
-  while ((i = getopt(argc, argv, "bdei:mnot")) != -1)
+  while ((i = getopt(argc, argv, "Vbdei:mnoqtv")) != -1)
     switch (i)
     {
+      case 'V':
+        vrsflg = true;
+        break;
+
       case 'b':
         binary = true;
         dfltmode |= 0400;          /* +f */
@@ -519,8 +604,16 @@ main(int xargc, char **xargv)
         offline = true;
         break;
 
+      case 'q':
+        quiet_flag = true;
+        break;
+
       case 't':
         dfltmode ^= 4;             /* tr */
+        break;
+
+      case 'v':
+        verbose_flag = true;
         break;
 
       case '?':
@@ -534,11 +627,22 @@ main(int xargc, char **xargv)
       " [file[:<n>]]...\n");
     return 1;
   }
+  if (vrsflg)
+  {
+    q_version();
+    if (argc == 2)
+      return 0;
+  }                                /* if (vrsflg) */
   if (offline && initial_command == NULL)
   {
     fprintf(stderr, "%s", "Can only use -o with -i\n");
     return 1;
   }                                /* if (offline && initial_command == NULL) */
+  if (verbose_flag && quiet_flag)
+  {
+    fprintf(stderr, "%s\n", "-q[uiet] and -v[erbose] are mutually exclusive");
+    return 1;
+  }                                /* if (verbose_flag && quiet_flag) */
   if (!(sh = getenv("SHELL")))
     sh = "/bin/sh";
   if (!(help_dir = getenv("Q_HELP_DIR")))
@@ -558,12 +662,151 @@ main(int xargc, char **xargv)
   sigemptyset(&act.sa_mask);
   sigaddset(&act.sa_mask, SIGINT);
   sigaddset(&act.sa_mask, SIGTERM);
+#ifdef SIGWINCH
   sigaddset(&act.sa_mask, SIGWINCH);
+#endif
   sigaction(SIGINT, &act, NULL);
   sigaction(SIGTERM, &act, NULL);
 #ifdef SIGWINCH
   sigaction(SIGWINCH, &act, NULL);
 #endif
+
+/* Check for running in a pipe (or with redirection) */
+  if (!isatty(STDIN5FD) && !isatty(STDOUT5FD))
+  {
+    if (initial_command == NULL)
+    {
+      fprintf(stderr, "%s\n",
+        "You must supply an initial command to run Q in a pipe");
+      return 1;
+    }                              /* if (initial_command == NULL) */
+    if (argno != -1)
+    {
+      fprintf(stderr, "%s\n",
+        "You may not give Q a file name when running in a pipe");
+      return 1;
+    }                              /* if (argno != -1) */
+/*
+ * Deal with stdout
+ */
+    do
+      saved_pipe_stdout = dup(STDOUT5FD);
+    while (saved_pipe_stdout == -1 && errno == EINTR);
+    if (saved_pipe_stdout == -1)
+    {
+      fprintf(stderr, "%s. fd %d (dup)\n", strerror(errno), STDOUT5FD);
+      return 1;
+    }                              /* if (saved_pipe_stdout == -1) */
+
+/* If verbose, dup stderr to stdout. Otherwise, stdout is /dev/null */
+    if (verbose_flag)
+    {
+      do
+        i = dup2(STDERR5FD, STDOUT5FD);
+      while (i == -1 && errno == EINTR);
+      if (i == -1)
+      {
+        fprintf(stderr, "%s. fd %d to fd %d (dup2)\n", strerror(errno),
+          STDERR5FD, STDOUT5FD);
+        return 1;
+      }                            /* if (i == -1) */
+    }                              /* if (verbose_flag) */
+    else
+      dev_null_stdout();
+/*
+ * Deal with stdin
+ */
+
+/* Create & open a temporary file to buffer the entire pipe */
+    pipe_temp_name = tempnam("/tmp", "qpipe");
+    if (!pipe_temp_name)
+    {
+      fprintf(stderr, "%s. (tempnam)\r\n", strerror(errno));
+      return 1;
+    }                              /* if (!pipe_temp_name) */
+    atexit(rm_pipe_temp);
+    do
+      pipe_temp_fd = open(pipe_temp_name, O_RDWR | O_CREAT | O_EXCL,
+        S_IRUSR | S_IWUSR);
+    while (pipe_temp_fd == -1 && errno == EINTR);
+    if (pipe_temp_fd == -1)
+    {
+      fprintf(stderr, "%s. %s (open)\n", strerror(errno), pipe_temp_name);
+      return 1;
+    }                              /* if (pipe_temp_fd == -1) */
+
+/* Populate the temporary file */
+    while (true)
+    {
+      ssize_t nc, todo;
+      char *write_from;
+
+      do
+        todo = read(STDIN5FD, buf, sizeof buf);
+      while (todo == -1 && errno == EINTR);
+      if (todo == -1)
+      {
+        fprintf(stderr, "%s. stdin (read)", strerror(errno));
+        return 1;
+      }                            /* if (todo == -1) */
+      if (!todo)
+        break;                     /* Reached EOF */
+      write_from = buf;
+      while (todo)
+      {
+        do
+          nc = write(pipe_temp_fd, write_from, todo);
+        while (nc == -1 && errno == EINTR);
+        if (nc == -1)
+        {
+          fprintf(stderr, "%s. %s (write)\n", strerror(errno), pipe_temp_name);
+          return 1;
+        }                          /* if (nc == -1) */
+        if (nc == 0)               /* Is this possible? */
+        {
+          fprintf(stderr, "Zero characters written. %s (write)\n",
+            pipe_temp_name);
+          return 1;
+        }                          /* if (nc == 0) */
+        write_from += nc;
+        todo -= nc;
+      }                            /* while(todo) */
+    }                              /* while (true) */
+    my_close(pipe_temp_fd);
+    cmd_state = Q_ARG1;
+
+/* Never ask for input from stdin */
+    offline = true;
+  }                           /* if (!isatty(STDIN5FD) && !isatty(STDOUT5FD)) */
+  else
+/*
+ * Not in a pipe
+ */
+  {
+    if (!(isatty(STDIN5FD) && isatty(STDOUT5FD)))
+    {
+      fprintf(stderr, "%s\n",
+        "stdin & stdout must either both be a tty or both not");
+      return 1;
+    }                        /* if (!(isatty(STDIN5FD) && isatty(STDOUT5FD))) */
+
+/* Implement quiet operation if requested */
+    if (quiet_flag)
+    {
+      if (!offline)
+      {
+        fprintf(stderr, "%s\n", "-q[uiet] is only available with -o[ffline]");
+        return 1;
+      }                            /* if (!offline) */
+      dev_null_stdout();
+    }                              /* if (quiet_flag) */
+
+/* Ctrl-C just sets a flag (rather than exitting) */
+    piping = false;
+  }                      /* if (!isatty(STDIN5FD) && !isatty(STDOUT5FD)) else */
+/*
+ * Common initialisation
+ */
   cntrlc = false;                  /* Not yet seen ^C */
   ndel[0] = '\0';                  /* No FT commands yet */
   for (i = 127; i >= 0; i--)
@@ -595,7 +838,11 @@ main(int xargc, char **xargv)
   locerr = false;                  /* 1st error might not be LOCATE */
   noRereadIfMacro = false;
   forych = false;                  /* Start off VERBOSE */
-  puts("Type H for help\r");
+
+/* Invite to type H, but only if taking input */
+  if (!offline)
+    puts("Type H for help\r");
+
   if (size5)
     printf("Noted screen dimensions %hd x %hd\r\n", col5, row5);
   orig_stdout = -1;                /* Haven't dup'd stdout */
@@ -688,30 +935,37 @@ p1004:
       case RUNNING:
         goto read_command_normally;
 
+      case Q_ARG1:
+
 /* Q-quit into the first file on the command line. Pagers (e.g. less) may
  * precede this with +<line#> so deal with this too. Cause command to be
  * actioned & displayed by setting up oldcom, also set up "verb" since sccmd is
  * not being called */
 
-      case Q_ARG1:
-
+        if (piping)
+          cmd_state = TRY_INITIAL_COMMAND;
+        else
 /* assume if the first arg starts "+" and there is at least 1 more arg then the
  * first arg is a line number */
-        if (**(argv + optind) == '+' && strlen(*(argv + optind)) > 1 &&
-          argc - optind >= 2)
         {
-          optind++;                /* "hide" +# arg */
-          cmd_state = LINE_NUMBER_SAVED; /* Have a +# arg */
-        }                          /* if(**(argv+optind)=='+'&&... */
-        else
-          cmd_state = TRY_INITIAL_COMMAND;
+          if (**(argv + optind) == '+' && strlen(*(argv + optind)) > 1 &&
+            argc - optind >= 2)
+          {
+            optind++;              /* "hide" +# arg */
+            cmd_state = LINE_NUMBER_SAVED; /* Have a +# arg */
+          }                        /* if(**(argv+optind)=='+'&&... */
+          else
+            cmd_state = TRY_INITIAL_COMMAND;
+        }                          /* if (!piping) */
 
 /* Open the file whether line number supplied or not */
         oldcom->bchars =
           snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "q %s",
-          *(argv + optind));
+          piping ? pipe_temp_name : *(argv + optind));
         verb = 'Q';
         oldcom->bcurs = 2;
+        if (piping)
+          atexit(write_workfile_to_stdout);
         break;
 
 /* The line number states are used on "q file:line",
@@ -2331,6 +2585,8 @@ asg2rtn:switch (rtn)
   }
 asg2numok:switch (numok)
   {
+    case 1114:
+      goto p1114;
     case 1717:
       goto p1717;
     case 1515:

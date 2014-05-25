@@ -47,20 +47,14 @@ init5()
     if (ttyfd == 0)
       ttyfd = -1;                  /* No tty found */
     else if (ttyfd == -1)
-    {
-      perror("dup");
-      putchar('\r');
-    }
+      fprintf(stderr, "%s. fd %d (dup)\r\n", strerror(errno), i);
     else
     {
       fcntl(ttyfd, F_SETFD, fcntl(ttyfd, F_GETFD) | FD_CLOEXEC);
-/* Get the screen size */
-      setwinsz(0);                 /* No o/p this time */
 /* Get the termio structure and save it */
       if (tcgetattr(ttyfd, &tio5save) == -1)
       {
-        perror("tcgetattr");
-        putchar('\r');
+        fprintf(stderr, "%s. fd %d (tcgetattr)\r\n", strerror(errno), ttyfd);
         ttyfd = -1;
       }
       else
@@ -103,6 +97,9 @@ init5()
       }                            /* tcgetattr OK */
     }                              /* if (ttyfd > 0) */
   }                                /* if (first) */
+
+/* Get the screen size, whether or not we have a tty */
+      setwinsz(0);                 /* No o/p this time */
 
 /* Change the termio structure for stdin */
   if (ttyfd > 0)

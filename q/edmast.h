@@ -7,6 +7,14 @@
  *
  * Universal Statements for all Master Subsystem Segments
  */
+
+/* Headers required by prototypes &c. */
+#include "typedefs.h"
+
+/* Prototypes */
+void q_version(void);
+
+/* Variables */
 bool modify;                       /* Modifying rather than inserting */
 unsigned char prmpt[10];           /* Prompt etc. */
 scrbuf5 *newcom;                   /* Accepts latest command */

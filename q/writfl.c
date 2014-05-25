@@ -16,19 +16,22 @@
  */
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include "alledit.h"
 #include "edmast.h"
 /* */
 #define STC(c) do {*q++ = c;\
-  if (!--i) {if (p1() <0) goto errlbl; q = fbuf; i = Q_BUFSIZ;}} while (0)
+  if (!--unused) \
+  {if (do_write() <0) goto errlbl; q = fbuf; unused = Q_BUFSIZ;}} while (0)
 
 extern int tabsiz;                 /* How many spaces per tab */
 
 static unsigned char fbuf[Q_BUFSIZ]; /* I/o buffer */
-static int i;                      /* Bytes in f/s buffer */
-static int p1(void);               /* File writing routine */
+static int unused;                 /* Bytes in f/s buffer */
+static int do_write(void);         /* File writing routine */
+
 void
 writfl(long wrtnum)
 {
@@ -43,7 +46,7 @@ writfl(long wrtnum)
   count = 0;                       /* No lines written yet */
   todo = wrtnum;                   /* Max # to write */
   q = fbuf;                        /* 1st char goes here */
-  i = Q_BUFSIZ;                    /* Room for this many in file buf */
+  unused = Q_BUFSIZ;               /* Room for this many in file fbuf */
   fscode = 0;
 /*
  * Main loop on lines
@@ -52,7 +55,7 @@ writfl(long wrtnum)
   {
     if (!rdlin(curr, 0))
     {
-      printf("End of file reached:- %ld lines written\r\n", count);
+      fprintf(stderr, "End of file reached:- %ld lines written\r\n", count);
       break;
     }
     count++;
@@ -80,7 +83,7 @@ writfl(long wrtnum)
     {
       thisch = *p++;               /* Get editor char */
 /*
- * Compress spaces to tabs (usually)...
+ * Compress spaces to tabs if requested
  */
       if (!binary && (fmode & 010 || fmode & inindent) && !tabfnd)
       {
@@ -106,9 +109,9 @@ writfl(long wrtnum)
           inindent = 0;
         for (; spacnt > 0; spacnt--)
           STC(SPACE);              /* Flush any spaces */
-      }                            /* if(!binary&&fmode&010&&!tabfnd) */
+      }                            /* if (!binary && ... */
       STC(thisch);                 /* O/p the char */
-    }                              /* for(;bytes>0;bytes--) */
+    }                              /* for(; bytes > 0; bytes--) */
 /*
  * Finish off line
  */
@@ -136,44 +139,50 @@ writfl(long wrtnum)
  * All requested lines read from Workfile. Write out any partial file
  * buffer and close the file. Then we are finished...
  */
-  if (i != Q_BUFSIZ)               /* If any chars in buffer */
-    if (p1() < 0)
+  if (unused != Q_BUFSIZ)          /* If any chars in buffer */
+    if (do_write() < 0)
     errlbl:
       fscode = errno;
-  for (;;)                         /* Loop past interrupts */
-  {
-    if (!close(funit))
-      break;
-    if (errno == EINTR)
-      continue;
-    perror("Closing file");
-    putchar('\r');
-    break;
-  }
+    if (fscode)
+      fprintf(stderr, "%s. fd %d (write)\r\n", strerror(fscode), funit);
+  do
+    bytes = close(funit);
+  while (bytes == -1 && errno == EINTR);
+  if (bytes == -1)
+    fprintf(stderr, "%s. fd %d (close)\r\n", strerror(errno), funit);
   return;
 }
+
+/* ******************************** do_write ******************************** */
+
 /*
- * P1 - File writing subroutine. Usually writes a full block, but
- *      caters for a partial block at end.
+ * File writing subroutine. Usually writes a full block,
+ * but caters for a partial block at end.
+ *
+ * Because output may be to a pipe,
+ * we cater for a write only being partially satisfied.
  */
 static int
-p1()
+do_write()
 {
-  int k;                           /* Scratch */
-  int todo = Q_BUFSIZ - i;         /* Chars in buffer. Usually Q_BUFSIZ */
-  k = write(funit, fbuf,
-#ifdef ANSI5
-    (size_t)
-#endif
-    todo);
-  if (k < 0)
-    return k;                      /* Error */
-  if (k != todo)
+  int nc;
+  int todo = Q_BUFSIZ - unused;    /* Chars in buffer. Usually Q_BUFSIZ */
+  unsigned char *write_from = fbuf;
+
+  while (todo)
   {
-    printf("\aFile writing problem\r\nRequested: %d\r\n    Wrote: %d\r\n",
-      todo, k);
-    errno = EDOM;                  /* Impossible from f/s normally */
-    return -1;
-  }
+    do
+      nc = write(funit, write_from, todo);
+    while (nc == -1 && errno == EINTR);
+    if (nc < 0)
+      return nc;                   /* Error */
+    if (!nc)
+    {
+      errno = EDOM;                /* Impossible from f/s normally */
+      return -1;
+    }                              /* if (!nc) */
+    todo -= nc;
+    write_from += nc;
+  }                                /* while (todo) */
   return 0;                        /* Ok */
 }

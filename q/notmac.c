@@ -1,7 +1,7 @@
 /* N O T M A C
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012,2013 Duncan Roe
+ * Copyright (C) 2012-2014 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -37,7 +37,8 @@ notmac(int err)
   if (err && curmac >= 0)
   {
     mctrst = false;
-    printf("\r\n\aStopped in macro 0%o, character %d\r\n", curmac, mcposn);
+    fprintf(stderr,
+      "\r\n\aStopped in macro 0%o, character %d\r\n", curmac, mcposn);
     if (scmacs[curmac])
     {
       showmac(curmac);

@@ -1,0 +1,32 @@
+  ++ R u n n i n g   i n  a   p i p e ++
+
+When run in a pipe, Q must have a -i[nitial FI command] argument to tell it what
+to do, since it cannot take any input from the terminal (if there is one).
+
+The -i need not contain a S[ave] or Q[uit], because these are done automatically
+on reaching the end of the -i_defined macro.
+
+Q buffers the entire pipe contents in a temporary file before starting, and only
+sends the contents of that file onward through the pipe when it has finished.
+
+By default, only errors are sent to stderr. The -v[erbose] argument causes
+normal Q output to go to stderr also
+
+Examples:-
+
+>20:54:18$  echo aaa|q -i'y a b^J'|cat
+> bbb
+
+> 20:54:18$ echo aaa|q -v -i'y a b^J'|cat
+
+> Noted screen dimensions 88 x 99
+> > u .qrc
+> > fd y /* ************************ C + git + fm -s ************************
+> > q /tmp/qpiperZMFMY
+> 4 bytes mapped.
+> > fi y a b^J
+> > y a b
+>      1 bbb
+> > fq
+> file modified since last b-backup/s-save, ok to quit (y,n,Cr [n])? y
+> bbb

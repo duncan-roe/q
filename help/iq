@@ -1,6 +1,6 @@
   ++ I N V O K I N G   Q ++
 
-Usage: q [-bdemnto] [-i <macro definition>] [+<n> file] [file[:<n>]]...
+Usage: q [-Vbdemnoqtv] [-i <macro definition>] [+<n> file] [file[:<n>]]...
 
 <file> arguments are processed sequentially, by use of q's Q-QUIT command with
 no argument; or may be accessed out of sequence by "Q $<number>". The current
@@ -19,13 +19,14 @@ After loading up the editing workfile with <file> if one was given, q gains
 absolute control over the display by diabling all special characters except
 interrupt.
 
--i <macro definition> tells Q to obey the definition as an FI command before
-taking input from the user (which will never happen if -o is also given). <macro
-definition> will usually need to be quoted for the shell, but Q itself should
-not see it quoted.
+-i <macro definition> tells Q to obey the definition as an FI-FIMMEDIATE_MACRO
+command before taking input from the user (which will never happen if -o is also
+given). <macro definition> will usually need to be quoted for the shell, but Q
+itself should not see it quoted.
 
 -o forces Q to terminate rather than ask the user for input. It may only be
-given when -i is also given - so Q just performs some work and exits.
+given when -i is also given - so Q just performs some work and exits. -o is
+forced on when Q runs in a pipe.
 
 -b signifies the edit is to be in Binary mode. This cannot be changed for the
 session. Files are read with no tab expansion or other character conversion. The
@@ -39,6 +40,16 @@ Length mode - "H FM" for more information.
 -d, -e, -m & -t reverse the default sense of the corresponding mode in respect
 of reading files ("H FM for more). Thus -d & -t reverse the dr & tr defaults,
 but not dw or tw.
+
+-q (quiet) tells Q not to output anything to standard output. There must be a -i
+argument to tell Q what to do. -q is forced on when Q runs in a pipe.
+
+-v (verbose) is only actioned if Q is run in a pipe (i.e. with standard input &
+output redirected to files). -v then causes everything that would otherwise have
+gone to stdout to be sent to stderr.
+
+-V (version) causes Q to output its version number. If -V is the only command-
+line argument, Q then exits.
 
 +<n> must come after any options and applies only to the first <file>. It has
 the same effect as ":<n>". The command format is expected by and only intended

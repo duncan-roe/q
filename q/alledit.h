@@ -7,7 +7,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include "ckalloc.h"
-#include "bool.h"
+#include "typedefs.h"
 
 /* Macros */
 #define CARAT '^'
@@ -24,8 +24,6 @@
 #define A5DYES 1
 #define A5DNO -1
 /* */
-#define Q_BUFSIZ 8192
-#define BUFMAX Q_BUFSIZ-1
 #define PTHSIZ 256
 #define PTHMAX PTHSIZ-4            /* Allow for .tm */
 #define FTNMOD (fmode&01000000000)
@@ -37,28 +35,6 @@
 #define QUOTE '\''
 #define ASTRSK '*'
 #define BLKCAP (64-sizeof(void*))  /* Capacity of a data block */
-/*
- * Typedefs
- */
-typedef struct scrbuf5             /* Screenedit buffer */
-{
-  int bmxch;                       /* Buffer capacity (chars) */
-  int bchars;                      /* No. of chars of data */
-  int bcurs;                       /* Cursor posn (0-based) */
-  int tokbeg;                      /* Where last token from scrdtk started */
-  long decval;                     /* Decimal value from scrdtk */
-  unsigned long octval;            /* Octal value from scrdtk */
-  enum
-  { nortok, nultok, eoltok } toktyp; /* Token type from scrdtk */
-  int toklen;                      /* Token length from scrdtk */
-  bool decok;                      /* decval is valid */
-  bool octok;                      /* octval is valid */
-  bool plusf;                      /* Token started with unquoted leading '+' */
-  bool minusf;                     /* Token started with unquoted leading '-' */
-  bool nulcma;                     /* If scrdtk sees a COMMA then null token */
-  unsigned char bdata[Q_BUFSIZ];   /* Data for the line */
-}
-scrbuf5;
 /*
  * Prototypes
  */

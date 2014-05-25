@@ -18,4 +18,4 @@ Command syntax: CS	File position: FPOS	Cursor position: CP
 Q COMMANDS: QC		SCREENEDIT CONTROL CHARACTERS: SC
 Line no. argument: L#	# of lines argument: #L Pseudo macros: PM
 Indent mode: IM 	Screenedit macros: SM	Invoking Q IQ
-ASCII chars: AS
+ASCII chars: AS 	Running in a pipe: QP

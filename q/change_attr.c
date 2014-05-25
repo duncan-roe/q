@@ -11,7 +11,7 @@
  * 2. A good return but nothing got done.
  *
  * We do all this because of observed erratic behaviour under Cygwin.
- * Opertaion under Linux has always been flawless.
+ * Operation under Linux has always been flawless.
  */
 #include <stdio.h>
 #include <errno.h>

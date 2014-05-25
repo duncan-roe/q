@@ -8,7 +8,7 @@
  * This header file contains items of interest to the character input
  * subsystem
  */
-#include "bool.h"
+#include "typedefs.h"
 #define BUF5MAX 40
 #define STDIN5FD 0
 #define STDOUT5FD 1
