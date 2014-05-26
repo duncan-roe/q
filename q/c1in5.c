@@ -1,7 +1,7 @@
 /* C 1 I N 5 . C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2012,2013 Duncan Roe
+ * Copyright (C) 2012-2014 Duncan Roe
  *
  * This routine gets the next character from standard input. If we
  * hit EOF on a file, revert to the TTY
@@ -52,18 +52,15 @@ c1in5(bool *eof_encountered)
         return end_seq[simulate_q_idx++];
       }                            /* if (simulate_q) */
 
-      s = read(STDIN5FD, buf5, 1);
-      if (s < 0)                   /* Some kind of error */
+      do
+        s = read(STDIN5FD, buf5, 1);
+      while (s == -1 && errno == EINTR);
+      if (s == -1)                 /* Some kind of error */
       {
-        if (errno != EINTR)
-        {
-          perror("Blocked read");
-          putchar('\r');
+          fprintf(stderr, "%s. fd %d (read)\r\n", strerror(errno), STDIN5FD);
 /* Get out (atexit() will reset terminal) */
           exit(1);
-        }                          /* if(errno!=EINTR) */
-        continue;                  /* for(;;) */
-      }                            /* if(s<0) */
+      }                            /* if (s == -1) */
       if (!s)                      /* EOF from a file (we hope!) */
       {
         if (USING_FILE)
@@ -73,20 +70,14 @@ c1in5(bool *eof_encountered)
             *eof_encountered = true;
             return '\n';
           }                        /* if (eof_encountered != NULL) */
-          restore_stdout();
-          printf("EOF reached on U-use file (it didn't end w/a \"Z\")\r\n> ");
-          pop_stdin();
+          fprintf(stderr, "Internal Q error at %s:%d\r\n", __FILE__, __LINE__);
+          exit(1);
         }                          /* if (USING_FILE) */
-
-/* read(2) seems to drop thru every 1/2 sec in X, so... */
-
         else
         {
           fprintf(stderr, "%s\r\n", "!! EOF encountered unexpectedly!!");
           exit(1);
-        }                          /* else */
-          puts("!! EOF encountered unexpectedly!!\r");
-        continue;                  /* for(;;) */
+        }                          /* if (USING_FILE) else */
       }                            /* if(!s) */
       buf5len = s;
       buf5idx = 0;
