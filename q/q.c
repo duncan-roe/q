@@ -551,7 +551,7 @@ add_op(alu_dict_ent * root, char *opcode)
 {
   static int next_fn_idx = 0;
   alu_dict_ent *ptr, *old_alt;
-  char thisch = toupper(*opcode);
+  char thisch = toupper(*(unsigned char *)opcode);
 
 /* Return condition for the recursive function */
   if (!thisch)
@@ -660,7 +660,7 @@ display_opcodes(void)
     {
       strcpy(tbuf, opcode_defs[i].name);
       for (p = tbuf; *p; p++)
-        *p = toupper(*p);
+        *p = toupper(*(unsigned char *)p);
       printf("%s\t %s\r\n", tbuf, opcode_defs[i].description);
     }                              /* if (opcode_defs[i].func) */
     else

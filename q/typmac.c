@@ -71,13 +71,13 @@ typmac(void)
     printf("%o 0%0*lo % *ld 0x%0*lX\r\n", i, /* Macro number */
       sizeof(long) - 4 ? 22 : 11, ALU_memory[j], /* Octal */
       sizeof(long) - 4 ? 20 : 11, ALU_memory[j], /* Decimal */
-      sizeof(long) * 2, ALU_memory[j]); /* Hex */
+      (int)(sizeof(long) * 2), ALU_memory[j]); /* Hex */
   }                           /* for (i = 07000, j = 0; i <= 07777; i++, j++) */
   if (!gotone && !cntrlc)
   {
-  if (alu_macros_only)
-    printf("No nonzero memory locations\r\n");
-  else
+    if (alu_macros_only)
+      printf("No nonzero memory locations\r\n");
+    else
       printf("No macros currently defined\r\n");
   }                                /* if (!gotone && !cntrlc) */
   duplx5(false);

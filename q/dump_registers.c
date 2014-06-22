@@ -18,7 +18,8 @@ dump_registers(bool append_newline)
     fprintf(stderr, "R is empty\r\n");
   else
   {
-    fprintf(stderr, "R has %d entries (top first):-\r\n", rsidx + 1);
+    fprintf(stderr, "R has %d entr%s:-\r\n", rsidx + 1,
+      rsidx ? "ies (top first)" : "y");
     for (i = rsidx; i >= 0; i--)
       fprintf(stderr, "%ld\r\n", rs[i]);
   }                                /* if (rsidx < 0) else */

@@ -57,7 +57,7 @@ print_failed_opcode(short thisch)
 
   fprintf(stderr, "\r\nFailing opcode: ");
   while (*opcd)
-    putc(toupper(*opcd++), stdout);
+    putc(toupper(*(unsigned char *)opcd++), stdout);
 }                                  /* print_failed_opcode) */
 
 /* ************************** get_effective_address ************************* */
@@ -88,7 +88,8 @@ push_register(long val)
 {
   if (++rsidx >= stack_size)
   {
-    fprintf(stderr, "\r\nRegister stack overflow.");
+    rsidx--;
+    fprintf(stderr, "\r\nRegister stack overflow.\r\nFailing opcode: PSH\r\n");
     dump_registers(true);
     notmac(true);
     return false;
@@ -104,7 +105,7 @@ pop_register(long *val)
 {
   if (rsidx < 0)
   {
-    fprintf(stderr, "\r\nRegister stack underflow.");
+    fprintf(stderr, "\r\nRegister stack underflow.\r\nFailing opcode: POP\r\n");
     dump_registers(true);
     notmac(true);
     return false;
