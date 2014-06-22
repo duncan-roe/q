@@ -23,10 +23,11 @@ than one mode: for instance "d" affects dr & dw.
  00000001000 v        Verbose Always (disables FB & FN)                       -
  00000002000 m        Use mmap for reading files (q -m inverts default)       +
  00000004000 r        Locate searches backwards (to SOF by default)           -
- 00000010000 e        Try to dEfer reading mmap'd files                       +
+ 00000010000 e        Try to defEr reading mmap'd files                       +
  00000020000 n        Use mmap for files read by E-eNter                      -
  00000040000 l        Expand/compress Leading tabs                            -
  00000100000 h        ^N^[VQ] scrolls half a screen                           -
+ 00000200000 i        n- shows Interpreted ALU opcodes                        +
  10000000000 FB cmnd  FBRIEF command asserted                           verbose
  30000000000 FN cmnd  FNONE command asserted                            verbose
  00000000000 FV cmnd  FVERBOSE command asserted                         verbose

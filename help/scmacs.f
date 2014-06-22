@@ -41,6 +41,8 @@ N 0 '^NC^NS^N\T,7,36^J^N^<1271> FORTRAN Comment cc36 + beautify
 N 6 '^NC^N^<1277>^N\ FORTRAN C-comment beautify
 N 7 '^NC^NS^N\^H^NA*^@^NM^<1201>^U*             1         2         3         4         5         6         7^J*    123456789012345678901234567890123456789012345678901234567890123456789012^J^ND^N^<1201>^J
 N 8 '^NC^NS^N\^H^NA*^@^NM^<1201>^U*             1         2         3         4         5         6         7         8         9        10        11        12        13        14        15        16        17        18        19^J*    12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890^J^ND^N^<1201>^J
+N 9 'fi fl ^ND^N2^*J^*NC^*NU^*[fb^*Jg-1^*Jv^*Jv0^*Jg+1^*Jfv^*J^*NU^J^NU
+N 2 '!!Put token to match here!!^N\ ; e.g. n2 ioctl^NU or ioctl^NM2
 N ; '^NC^NS^N\^H^NE^NM ^N^<514>
 N < '^NC^NS^N\g-1^Jv^J^NU
 N > '^NC^NS^N\g+1^Jv^J^NU
@@ -54,7 +56,7 @@ N210 ^E^ND^N^<1201>^J^NC^NU^N^<210> ;Insert ^*N^<1201> at Home posn
 N222 ^NC^NS^N\^NM^<1201>^UM ^NU ;Define string to be appended/inserted
 N224 ^NC^NS^N\!ci -l "^ND^N^<4002>"</dev/null^Js^J!ci -l "^ND^N^<4002>"<~/spaces^JQ^J^N^<224> ;Check in all args
 N225 ^NC^NS^N\!ci -d -t- "^ND^N^<4002>"^J!rcs -U "^ND^N^<4002>"^J!co -M "^ND^N^<4002>"^J^NU ;Make known to RCS - non-strict locking
-N230 ^NC^NS^N\!echo "^C^[]0;"^ND^N^<4002>"^C^G"^J^NU ; Set xterm title to file
+N230 ^NC^NS^N\^ND^N^<4002>^[!echo "^P^[]0;"^ND^N^<4002>"^P^G"^J^NU ; Set xterm title to file (stuff at front guards against sending bad Ec seq when no file)
 N232 ^Z^ND^N^<1201>^J^NC^NU^N^<232> ;Append ^*N^<1201> to lines
 N241 ^NC^NS^N\^NM^<1201>^U^ND^N^<506>^NU ; NW! delete lines found by L
 N255 ^NC^N\^H^ND^N^<515>^NU

@@ -1,7 +1,7 @@
 /* G E T N U M */
 /*
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2014 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -14,21 +14,13 @@
  * returns true unless actual bad decno.
  */
 #include <stdio.h>
-#ifdef ANSI5
 #include <sys/types.h>
 #include <unistd.h>
-#endif
 #include "alledit.h"
 #include "edmast.h"
 /* */
-#ifdef ANSI5
 short
 getnum(int okzero)
-#else
-short
-getnum(okzero)
-int okzero;
-#endif
 {
   unsigned char zbuf[14];
 /* */
@@ -49,7 +41,7 @@ int okzero;
       if (!oldcom->decok)
       {
       tryfortaborto:
-        if (trytab(1, zbuf, oldcom)) /* Was a 'Tx' or -TO <something> (OK) */
+        if (trytab(zbuf, oldcom)) /* Was a 'Tx' or -TO <something> (OK) */
           break;                   /* switch(oldcom->toktyp) */
         (void)write(1, "bad decimal", 11);
         goto badnumlines;

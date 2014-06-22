@@ -3,7 +3,7 @@
 /* M A C R O S
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012, 2013, Duncan Roe
+ * Copyright (C) 2012- 2014, Duncan Roe
  *
  * Universal statements for segments accessing SCREENEDIT macros
  * */
@@ -31,6 +31,14 @@ typedef struct
 }
 macro5;
 
+/* Macro return stack */
+struct macinfo
+{
+  int mcprev;
+  int mcposn;
+  bool u_use;
+} mcstck[STKSIZ];
+
 /* COMMON variables */
 
 macro5 *scmacs[TOPMAC + 1];        /* Pointers to macros */
@@ -40,15 +48,11 @@ int curmac;                        /* Macro being expanded */
 int mcposn;                        /* Pos'n in macro */
 int mcnxfr;                        /* Index of next free entry in stack */
 int immnxfr;                       /* Next free slot for an immediate macro */
-/* Macro return stack */
-struct macinfo
-{
-  int mcprev;
-  int mcposn;
-  bool u_use;
-} mcstck[STKSIZ];
 
 /* Prototypes */
 
-bool newmac2(int mcchrs, bool appnu);
+bool newmac2(bool appnu);
+bool macdef(unsigned int mcnum, unsigned char *buff, int buflen, bool appnu);
+bool macdefw(unsigned int mcnum, unsigned short *buff, int buflen, bool appnu);
+void showmac(int i);
 #endif

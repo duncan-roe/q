@@ -14,7 +14,9 @@
 #include "alledit.h"
 #include "macros.h"
 #include "scrnedit.h"
+#include "fmode.h"
 #include "c1in.h"
+#include "alu.h"
 
 /* Instantiate externals */
 
@@ -22,31 +24,49 @@ bool simulate_q = false;
 int simulate_q_idx;
 
 void
-notmac(int err)
+notmac(bool err)
 {
   int i;
-/* */
-  if (!USING_FILE)                     /* Not in command file */
+
+/* If error, must also get out of U-use file(s) */
+  if (err && USING_FILE)
+  {
+    while (USING_FILE)
+      pop_stdin();
+    if (!offline)
+      printf("(input from terminal)");
+  }                                /* if (err && USING_FILE) */
+
+  if (!USING_FILE)                 /* Not in command file */
   {
     duplx5(false);                 /* Disable XOFF recognition */
     nodup = false;
     if (offline)
       simulate_q = true;
-      simulate_q_idx = 0;
+    simulate_q_idx = 0;
   }
-  if (err && curmac >= 0)
+  if (err)
   {
-    mctrst = false;
-    fprintf(stderr,
-      "\r\n\aStopped in macro 0%o, character %d\r\n", curmac, mcposn);
-    if (scmacs[curmac])
+/* Minimally reset the ALU */
+    xreg = 0;
+    rsidx = -1;
+    index_next = false;
+    alu_skip = false;
+
+    if (curmac >= 0)
     {
-      showmac(curmac);
-      putchar('\r');
-    }
-    else
-      puts("** Macro not defined **\r");
-  }
+      mctrst = false;
+      fprintf(stderr,
+        "\r\n\aStopped in macro 0%o, character %d\r\n", curmac, mcposn);
+      if (scmacs[curmac])
+      {
+        showmac(curmac);
+        putchar('\r');
+      }
+      else
+        puts("** Macro not defined **\r");
+    }                              /* if (curmac >= 0) */
+  }                                /* if (err) */
   curmac = -1;                     /* Not in a macro */
   if (err || BRIEF || NONE)
     for (i = WCHRS - 1; i >= 0; i--)

@@ -1,7 +1,7 @@
 /* T A B S E T
  *
- * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 1981 D. C. Roe
+ * Copyright (C) 2012,2014 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -15,78 +15,70 @@
  * Tabs and columns are zero-based, but appear 1-based to the user
  */
 #include <stdio.h>
-#ifdef ANSI5
 #include <sys/types.h>
 #include <unistd.h>
-#endif
 #include "alledit.h"
 #include "scrnedit.h"
-short
-tabset(scbuf)
-scrbuf5 *scbuf;
+#include "tabs.h"
+
+/* Macros */
+
+#define GIVE_UP return false
+
+bool
+tabset(scrbuf5 *scbuf)
 {
-  int i,                           /* Scratch */
-    count;                         /* # of tabs accepted */
+  int i;                           /* Scratch */
 /* Temporary storage for tab values as they are being read */
-  long temp[80];
+  long temp[NUM_TABS];
 /* */
-  for (i = 0; i < 80; i++)         /* 80 tabs max */
+  for (i = 0; i < NUM_TABS; i++)
   {
     scrdtk(1, 0, 0, scbuf);
     if (scbuf->toktyp == eoltok)
-      goto p1002;
-    if (scbuf->toktyp != nultok)
-      goto p1003;                  /* J not null(ok) */
-    (void)write(1, "null tabs not allowed", 21);
-    goto p1005;
-  p1003:
-    if ((scbuf->decok) != 0)
-      goto p1004;                  /*J ok decimal */
-    (void)write(1, "bad decimal number", 18);
-    goto p1005;
-  p1004:
+      break;
+    if (scbuf->toktyp == nultok)
+    {
+      (void)write(1, "null tabs not allowed", 21);
+      GIVE_UP;
+    }                              /* if (scbuf->toktyp == nultok) */
+    if ((scbuf->decok) == 0)
+    {
+      (void)write(1, "bad decimal number", 18);
+      GIVE_UP;
+    }                              /* if ((scbuf->decok) == 0) */
 /* LATER - insert a check for -ve tab values or zero */
-    if (i == 0)
-      goto p1006;                  /* Skip seq. chk. 1st time */
-    if (scbuf->decval > temp[i - 1])
-      goto p1006;                  /*J ascending order ok */
-    (void)write(1, "tabs not in ascending order", 27);
-    goto p1005;
-  p1006:
+    if (i > 0 && scbuf->decval <= temp[i - 1])
+    {
+      (void)write(1, "tabs not in ascending order", 27);
+      GIVE_UP;
+    }                              /* if (scbuf->decval <= temp[i - 1]) */
     temp[i] = scbuf->decval;       /* Remember this tab */
   }
 /*
- * Drop thro' ok if no more params
+ * Drop thru ok if no more params
  */
-  scrdtk(1, 0, 0, scbuf);
-  if (scbuf->toktyp == eoltok)
-    goto p10065;
-  (void)write(1, "80 tabs maximum", 15);
-  goto p1005;
-p10065:
-  count = 80;
-  goto p1007;
-p1002:
-  count = i;
-  if (count == 0)
-    goto p1008;                    /*J no tabs */
-p1007:
-  for (i = count - 1; i >= 0; i--)
+  if (i == NUM_TABS)
   {
-    tabs[i].value = temp[i] - 1;   /* Zero-based cols internally */
-    tabs[i].tabtyp = chrpos;
-  }                                /* Sets up the common TABS array */
-p1010:
-  tabcnt = count;
-  return 1;
-/*
- * P1008 - No tabs so set # of tabs = 1 and posn that tab at 1
- */
-p1008:
-  count = 1;
-  tabs[0].value = 0;
-  tabs[0].tabtyp = chrpos;
-  goto p1010;
-p1005:
-  return 0;
+    scrdtk(1, 0, 0, scbuf);
+    if (scbuf->toktyp != eoltok)
+    {
+      fprintf(stderr, "%d tabs maximum", NUM_TABS);
+      GIVE_UP;
+    }                              /* if (scbuf->toktyp == eoltok) */
+  }                                /* if (i == NUM_TABS) */
+  tabcnt = i;
+  if (!tabcnt)
+  {
+    tabcnt = 1;
+    tabs[0].value = 0;
+    tabs[0].tabtyp = CHRPOS;
+  }                                /* if (!tabcnt) */
+  else
+    for (i = tabcnt - 1; i >= 0; i--)
+    {
+      tabs[i].value = temp[i] - 1; /* Zero-based cols internally */
+      tabs[i].tabtyp = CHRPOS;
+    }                              /* Sets up the common TABS array */
+  return true;
 }

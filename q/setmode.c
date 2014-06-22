@@ -1,17 +1,16 @@
 /* S E T M O D E
  *
  * Copyright (C) 1994,1995 Duncan Roe & Associates P/L
- * Copyright (C) 2003, 2012 Duncan Roe
+ * Copyright (C) 2003,2012,2014 Duncan Roe
  *
  * This routine manipulates the fmode bit settings
  */
 #include <stdio.h>
-#ifdef ANSI5
 #include <sys/types.h>
 #include <unistd.h>
-#endif
 #include "alledit.h"
 #include "edmast.h"
+#include "fmode.h"
 short
 setmode()
 {
@@ -143,6 +142,10 @@ setmode()
         c = result & 0100000 ? '+' : '-';
         putchar(c);
         putchar('h');
+        (void)write(1, ", ", 2);
+        c = result & 0200000 ? '+' : '-';
+        putchar(c);
+        putchar('i');
         (void)write(1, "\r\n", 2);
         switch ((int)(result >> 30 & 3))
         {
@@ -259,6 +262,11 @@ setmode()
         case 'H':                  /* Half-screen scroll */
           u = 0100000;
           break;
+
+        case 'I':                  /* Show Interpreted ALU opcodes */
+          u = 0200000;
+          break;
+
         default:
           printf("Warning - unrecognised %s ignored\r\n", buf);
           continue;

@@ -1,7 +1,7 @@
 /* L T O K 5 A
  *
- * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 1993 Duncan Roe & Associates P/L
+ * Copyright (C) 2012,2014 Duncan Roe
  *
  * This routine searches for a string as a token. The search is case
  * independent iff CASDEP is 1.
@@ -22,6 +22,7 @@
  */
 #include <stdio.h>
 #include "alledit.h"
+#include "fmode.h"
 /* */
 unsigned char xlatable[256];
 int tbstat;

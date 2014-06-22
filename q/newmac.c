@@ -1,7 +1,7 @@
 /* N E W M A C
  *
  * Copyright (C) 1981,1999,2011, D. C. Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2014 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -12,12 +12,23 @@
  * the mainline
  */
 #include <stdio.h>
+#include <errno.h>
+#include <ctype.h>
+#include <string.h>
 #include <malloc.h>
+#include <stdlib.h>
 #include "alledit.h"
 #include "edmast.h"
 #include "macros.h"
+#include "fmode.h"
+#include "tabs.h"
+#include "alu.h"
 
+/* Macros */
 #define GIVE_UP return 0
+
+/* Instantiate externals */
+long ALU_memory[01000] = { 0 };
 
 int
 newmac()
@@ -35,8 +46,7 @@ newmac()
 /* Get macro name or minus */
   if (scrdtk(1, p, 13, oldcom))
   {
-    perror("SCRDTK of macro name");
-    putchar('\r');
+    fprintf(stderr, "%s. reading macro name (scrdtk)", strerror(errno));
     GIVE_UP;
   }
 /* A single-character macro name stands for itself (B defines the ^B
@@ -56,7 +66,7 @@ newmac()
         verb -= 0100;              /* Convert to a control */
       else
       {
-        printf("illegal macro name \"%c\"", (char)verb);
+        fprintf(stderr, "illegal macro name \"%c\"", (char)verb);
         GIVE_UP;
       }                            /* verb <= '_' else */
     }                              /* if (verb >= 'A') */
@@ -74,16 +84,23 @@ newmac()
         verb = '-';                /* Fudge to define "-" macro */
       if (verb < SPACE)
       {                            /* An actual control - illegal */
-        printf("illegal macro name \"^%c\"", (char)(verb + 0100));
+        fprintf(stderr, "illegal macro name \"^%c\"", (char)(verb + 0100));
         GIVE_UP;
       }
     }                              /* if (verb >= 'A') else */
   }                                /* if (oldcom->toklen == 1) */
   else
   {
+/* Look for N--. This is a request to type / list only the alu memory locns */
+    if (oldcom->toklen == 2 && !strcmp((char *)p, "--"))
+    {
+      alu_macros_only = true;
+      return -1;
+    }                 /* if (oldcom->toklen == 2 && !strcmp((char *)p, "--")) */
+
     if (!(oldcom->octok))          /* Will pick up zero-length name */
     {
-      printf("macro name \"%s\" neither octal nor single-char", p);
+      fprintf(stderr, "macro name \"%s\" neither octal nor single-char", p);
       GIVE_UP;
     }                              /* J not octal after all */
     verb = oldcom->octval;
@@ -94,33 +111,35 @@ newmac()
  */
   if (oldcom->toklen <= 2)
   {
+
+/* Old-style macro def'n - macro text is quoted */
     if (scrdtk(2, (unsigned char *)buf, BUFMAX, oldcom))
     {
-      perror("SCRDTK of macro text");
-      putchar('\r');
+      fprintf(stderr, "%s. reading macro text (scrdtk)", strerror(errno));
       GIVE_UP;
     }                              /* Get text of macro expansion */
     mcchrs = oldcom->toklen;       /* Remember length of expansion */
+
 /* Check no more tokens */
     scrdtk(1, 0, 0, oldcom);
     if (oldcom->toktyp != eoltok)
     {
-      printf("Too many arguments for this command");
+      fprintf(stderr, "Too many arguments for this command");
       GIVE_UP;
     }
   }                                /* if (oldcom->toklen <= 2) */
   else
   {
 /* Check for being in pseudomacro region or out of range */
-    if (verb > TOPMAC || (verb >= FIRST_PSEUDO && verb <= LAST_PSEUDO))
+    if ((verb > TOPMAC || (verb >= FIRST_PSEUDO && verb <= LAST_PSEUDO)) &&
+      (verb & 07000) != 07000)
     {
-      printf("Macro %o is reserved or out of range", (int)verb);
+      fprintf(stderr, "Macro %o is reserved or out of range", (int)verb);
       GIVE_UP;
     }
     if (scrdtk(4, (unsigned char *)buf, BUFMAX, oldcom))
     {
-      perror("SCRDTK of macro text");
-      putchar('\r');
+      fprintf(stderr, "%s. reading macro text (scrdtk)", strerror(errno));
       GIVE_UP;
     }                              /* R bad token */
     mcchrs = oldcom->toklen;       /* Remember length of expansion */
@@ -130,13 +149,59 @@ newmac()
  */
   if (!mcchrs)
   {
-    printf("null macro specified");
+    fprintf(stderr, "null macro specified");
     GIVE_UP;
   }
+
+/* Setting an ALU memory location? */
+  if ((verb & 07000) == 07000)
+  {
+    char *endptr;
+    int idx = verb & 0777;
+    long oldval = ALU_memory[idx];
+
+    errno = 0;
+    ALU_memory[idx] = strtol(buf, &endptr, 0);
+    if (errno)
+    {
+      if (errno == ERANGE)
+      {
+/* Attempt unsigned Hex or Octal entry */
+        char *q = buf;
+
+        while (*q == ' ')
+          q++;
+        if (*q == '0')
+        {
+          errno = 0;
+          *(unsigned long *)(&ALU_memory[idx]) = strtoul(buf, &endptr, 0);
+        }                          /* if (*q == '0') */
+      }                            /* if (errno == ERANGE) */
+      if (errno)
+      {
+        fprintf(stderr, "%s. %s (strtol)", strerror(errno), buf);
+        GIVE_UP;
+      }                            /* if (errno) */
+    }                              /* if (errno) */
+    if (!*endptr || (oldcom->toklen == 2 &&
+      toupper((unsigned char)buf[0]) == 'T' &&
+      gettab(buf[1], false, &ALU_memory[idx], false)))
+    {
+      if (oldval && !BRIEF)
+        printf("Warning - value was previously %ld\r\n", oldval);
+      return 1;                    /* All chars parsed */
+    }
+    if (*endptr && !(oldcom->toklen == 2 &&
+      toupper((unsigned char)buf[0]) == 'T'))
+      fprintf(stderr, "Illegal character '%c' in number \"%s\"", *endptr, buf);
+    else
+      fprintf(stderr, "Invalid number format");
+    GIVE_UP;
+  }                                /* if (verb & 07000 == 07000) */
 /*
  * Advise user if an existing macro being overwritten
  */
   if (scmacs[verb] && (curmac < 0 || !BRIEF))
     printf("Warning - overwriting old macro\r\n");
-  return newmac2(mcchrs, false) ? 1 : 0;
+  return newmac2(false) ? 1 : 0;
 }

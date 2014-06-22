@@ -1,0 +1,17 @@
+  ++ A L U   -   A R I T H M E T I C  &   L O G I C A L   U N I T ++
+
+Q contains an ALU to enable macros to execute small general-purpose programs.
+The emulated processor is stack-based with 512 memory locations, and direct
+access to Q's tabs. It has one main register stack (R) currently 16 deep, and an
+index register (X). Instructions can cause a skip of the next 2 charatcters in
+the invoking macro, in the same way as ^NS does.
+
+Macros 7000 - 7777 implement the memory locations. These macros may be defined
+using N-NEWMACRO or ^NM^<7xxx>, and retrieved using ^ND^N^<7xxx>. When using
+N-NEWMACRO to define a 7xxx macro, do not code ^NU after the number.
+
+Instructions are pseudomacros, but one should always code them using their
+symbolic opcodes, because the relationship between opcode and macro number can
+change between revisions of Q.
+
+When coding a symbolic opcode, do *not* code a preceding ^N.

@@ -18,6 +18,7 @@
 #include "alledit.h"
 #include "edmast.h"
 #include "macros.h"
+#include "fmode.h"
 #include "c1in.h"
 int tabsiz = 8;                    /* How often tabstops are */
 
@@ -222,8 +223,10 @@ prclin(void)                       /* Build up line; return 1 for eof */
 
 /* ******************************* ctlcak ****************************** */
 
-/* Called when an interrupt (always ^C) has been noticed. If in a macro or comi,
- * abandon w/out asking a question, and do not clear the ^C flag. Else ask */
+/* Called when an interrupt (i.e. ^C) has been noticed.
+ * If in a macro or U-use file,
+ * abandon w/out asking a question, and do not clear the ^C flag.
+ * Else ask */
 
 static bool
 ctlcak(void)

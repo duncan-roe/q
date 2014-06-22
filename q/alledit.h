@@ -3,55 +3,29 @@
 /* A L L E D I T
  */
 
-/* Headers required by prototypes &c. */
+/* Headers required by this header */
+
 #include <signal.h>
 #include <sys/types.h>
 #include "ckalloc.h"
 #include "typedefs.h"
 
-/* Macros */
-#define CARAT '^'
-#define SPACE ' '
-#define LT '<'
-#define ESC '\33'
-#define DEL 0177
-#define CTL_U 025
-#define GT '>'
-#define SLASH '/'
-#define QM '?'
-#define COMMA ','
-#define A5NDEF 0
-#define A5DYES 1
-#define A5DNO -1
-/* */
-#define PTHSIZ 256
-#define PTHMAX PTHSIZ-4            /* Allow for .tm */
-#define FTNMOD (fmode&01000000000)
-#define CASDEP ((fmode&02000000000)==0)
-#define INDENT (fmode&04000000000)
-/* BRIEF and NONE are now bits in fmode. Both are set for NONE... */
-#define BRIEF (fmode&010000000000)
-#define NONE (fmode&020000000000u)
-#define QUOTE '\''
-#define ASTRSK '*'
-#define BLKCAP (64-sizeof(void*))  /* Capacity of a data block */
-/*
- * Prototypes
- */
+/* Function Prototypes */
+
 void memrec(unsigned char *start, unsigned char *end, unsigned long mode,
   scrbuf5 *a1);
 void mapfil(ino_t inode, off_t size, unsigned char *addr);
 void dfread(long num, scrbuf5 *s);
 int ismapd(ino_t inode);
 void newmap(ino_t inode, off_t size, unsigned char *addr);
-short trytab(short, unsigned char *, scrbuf5 *);
+bool trytab(unsigned char *zvuf, scrbuf5 *scline);
 void scrdit(scrbuf5 *curr, scrbuf5 *prev, char *prmpt, int pchrs, int cmmand);
 void insmem(unsigned char *linptr, unsigned char *last);
 void ordch(unsigned char, scrbuf5 *);
 void pdsply(scrbuf5 *, unsigned char *, int);
 short getlin(int, int);
-short gettab(int, int, long *);
-short getnum(int), tabset(scrbuf5 *), setmode(void);
+short getnum(int), setmode(void);
+bool tabset(scrbuf5 *scbuf);
 int scrdtk(int, unsigned char *, int, scrbuf5 *);
 int newmac(void), rdlin(scrbuf5 *, int), ysno5a(char *, int);
 bool kbd5(void);
@@ -59,11 +33,10 @@ int lsub5a(unsigned char *, int, unsigned char *, int, int, int *, int *);
 int ltok5a(unsigned char *, int, unsigned char *, int, int, int *, int *,
   unsigned char *);
 int do_cmd(void);
-int macdef(unsigned int, unsigned char *, int, bool);
-int macdefw(unsigned int, unsigned short *, int, bool);
 void duplx5(bool enable_IXON);
-void lstmac(void), typmac(void), showmac(int), sccmnd(void), scmnrd(void);
-void restore_stdout(void), notmac(int), sinitl(void);
+void lstmac(void), typmac(void), sccmnd(void), scmnrd(void);
+void restore_stdout(void), sinitl(void);
+void notmac(bool err);
 void disply(scrbuf5 *, int), refrsh(scrbuf5 *);
 void scrset(scrbuf5 *), setcrs(int), setptr(long);
 void delete(long), clrfgt(void), inslin(scrbuf5 *), forget(void), setaux(long);
@@ -79,7 +52,7 @@ char c1in5(bool *eof_encountered);
 int cmd(char *buf);
 bool pop_stdin(void);
 void devnull_stdout(void);
-/* */
+
 unsigned int verb;           /*Command Processing - COMANL, ONEOF, NEWMAC &c. */
 int ndntch;                        /* # of chars to indent */
 bool vt100;                        /* Enable VT100-style curpos */
@@ -97,7 +70,6 @@ int funit;                         /* File i/o ptr */
 char pcnta[256];                   /* Pathname we are editing */
 unsigned int row5, col5;           /* Screen / window geometry */
 bool cntrlc, seenwinch;
-unsigned long fmode;
 char *macro_dir;                   /* Where macros are */
 int orig_stdout;                   /* stdout funit at start */
 #endif

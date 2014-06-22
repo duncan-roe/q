@@ -1,7 +1,7 @@
 /* S C R S E T
  *
- * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 1981 D. C. Roe
+ * Copyright (C) 2012,2014 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -16,6 +16,7 @@
 #include <memory.h>
 #include "alledit.h"
 #include "scrnedit.h"
+#include "fmode.h"
 /* */
 void
 scrset(line)
@@ -118,7 +119,7 @@ p1005:icurs = icurs + 1;           /* Point to next vacant space */
   if (thisch == CARAT && fmode & 040)
     cntrl = 1;
   else if (thisch == 0177)
-    cntrl = 1;                     /* Set CNTRL if RUBOUT */
+    cntrl = 1;                     /* Set CNTRL if DEL */
   if (cntrl)                       /* If not guaranteed room */
   {
     i = 0;
@@ -189,7 +190,7 @@ p1005:icurs = icurs + 1;           /* Point to next vacant space */
       if (thisch == CARAT)
         thisch = ASTRSK;           /* O/p '*' */
       else if (thisch == 0177)
-        thisch = QM;               /* O/p RUBOUT */
+        thisch = QM;               /* O/p DEL */
       else
         thisch = thisch + 0100;    /* O/p appropriate symbol */
     }

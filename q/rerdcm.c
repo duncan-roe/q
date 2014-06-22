@@ -9,12 +9,12 @@
  * Project started 1980.
  *
  * To reread a command after an error has been detected.
- * SCRDTK will have left OLDCOM'S
+ * scrdtk() will have left oldcom's
  * cursor after the last parameter read, so all we have to do is
- * transfer this to NEWCOM and reissue the CMANRD.
- * Additionally however if COMINPUT is ON, put it OFF.
+ * transfer this to newcom and reissue the scmnrd().
+ * Additionally however if input is from a U-use file, revert to tty.
  * Includes coding to deal with BRIEF mode being on, also after a bad
- * error we force TTY o/p back on, and abandon any SCMACRO.
+ * error we force tty o/p back on, and abandon any macro.
  */
 #include <stdio.h>
 #include <memory.h>
@@ -22,15 +22,17 @@
 #include "edmast.h"
 #include "macros.h"
 #include "cmndcmmn.h"
+#include "fmode.h"
 #include "c1in.h"
-/* */
+
 void
 rerdcm()
 {
+  bool use_sccmd = false;
 
   int i;                           /* Scratch */
   unsigned char *p, *q;
-/* */
+
   if (curmac < 0)
     locerr = false;                /* LOCERR irrelevant if ! in scmac */
   if (locerr)                      /* Macro can detect error */
@@ -42,28 +44,27 @@ rerdcm()
     return;                        /* Finished */
   }
   restore_stdout();                /* Force on TTY o/p */
-  if (USING_FILE)                      /* Input was from file */
+  if (USING_FILE)
   {
     while (USING_FILE)
       pop_stdin();
-    noRereadIfMacro = noRereadIfMacro ? 2 : 0;
+    use_sccmd = noRereadIfMacro;
     printf(", (input from terminal)");
   }
-/*
- * Abandon any macro if undetectable error
- */
+
+/* Abandon any macro if undetectable error */
   if (curmac >= 0)
   {
-    notmac(1);                     /* As in SCRDIT */
-    noRereadIfMacro = noRereadIfMacro ? 2 : 0;
+    notmac(true);                     /* As in SCRDIT */
+    use_sccmd = noRereadIfMacro;
   }                                /* if(curmac>=0) */
-  if (noRereadIfMacro == 2)
+
+  noRereadIfMacro = false;
+  if (use_sccmd)
   {
-    noRereadIfMacro = false;
     sccmnd();                      /* Get next command */
     return;                        /* Finished */
   }                                /* if(noRereadIfMacro==2) */
-  noRereadIfMacro = false;
   fprintf(stderr, "%s\r\n", ", correct the command:");
 /*
  * If we had a split line, rejoin the 2 halves and leave the cursor
@@ -90,11 +91,7 @@ rerdcm()
 /*
  * Move in the 1st half
  */
-    memcpy(newcom->bdata, oldcom->bdata,
-#ifdef ANSI5
-      (size_t)
-#endif
-      oldcom->bchars);
+    memcpy(newcom->bdata, oldcom->bdata, oldcom->bchars);
     newcom->bcurs = oldcom->bchars; /* Set cursor to 1st chr 2nd 1/2 */
     newcom->bchars += oldcom->bchars; /* Set length to total */
   }

@@ -1,7 +1,7 @@
 /* D I S P L Y */
 /*
- * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 1981 D. C. Roe
+ * Copyright (C) 2012,2014 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include "alledit.h"
 #include "scrnedit.h"
+#include "fmode.h"
 /* */
 void
 disply(line, savecurs)

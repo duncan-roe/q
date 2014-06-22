@@ -1,7 +1,7 @@
 /* G E T L I N */
 /*
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2014 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -16,22 +16,13 @@
  */
 #include <stdio.h>
 #include <limits.h>
-#ifdef ANSI5
 #include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
-#endif
 #include "alledit.h"
 #include "edmast.h"
-#ifdef ANSI5
 short
 getlin(int reperr, int eofok)
-#else
-short
-getlin(reperr, eofok)
-int reperr;                        /* Whether to report error here */
-int eofok;                         /* EOF line is ok, MUST be 0 or 1 */
-#endif
 {
   unsigned char zbuf[14];
   long wanted;                     /* Lines wanted from dfread */
@@ -55,7 +46,7 @@ int eofok;                         /* EOF line is ok, MUST be 0 or 1 */
   }
   if (!(oldcom->decok))            /* Not decimal */
   {
-    if (trytab(1, zbuf, oldcom))
+    if (trytab(zbuf, oldcom))
       goto p1005;                  /* J was a Tx (ok) */
     if (oldcom->toklen == 3 && ((zbuf[0] & 0337) == 'E') &&
       ((zbuf[1] & 0337) == 'O') && ((zbuf[2] & 0337) == 'F'))

@@ -1,8 +1,8 @@
-#define Q_VERSION 6
+#define Q_VERSION 12
 #include <stdio.h>
 #include "edmast.h"
 void
 q_version()
 {
-  printf("Q version %d\n", Q_VERSION);
+  printf("Q version %d\r\n", Q_VERSION);
 }                                  /* q_version() */

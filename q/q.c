@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <ctype.h>
 #include <signal.h>
 #include <memory.h>
 #include <string.h>
@@ -30,8 +31,10 @@
 #include "alledit.h"
 #include "edmast.h"
 #include "macros.h"
+#include "fmode.h"
 #include "c1in.h"
 #include "q_pipe.h"
+#include "alu.h"
 
 /* Macros */
 
@@ -60,13 +63,28 @@ typedef enum command_state
   TRY_INITIAL_COMMAND,
 } command_state;
 
-/* Instantiate externals */
+/* Externals that are not in any header */
 
 long timlst;
 unsigned char fxtabl[128];
+
+/* Instantiate externals */
+
 int tbstat;
 bool offline = false;
 bool piping = true;                /* Needs to start off true for quthan() */
+int stack_size = 16;               /* Register stack initial depth */
+long *rs = NULL;                   /* The register stack */
+long xreg = 0;                     /* Index Register */
+int rsidx = -1;                    /* No current register yet */
+bool index_next = false;
+int effaddr;
+bool alu_skip = false;
+int num_ops = 0;
+alu_dict_ent root_alu_dict_ent = { NULL, NULL, -2, 0 };
+int *alu_table_index;
+bool alu_macros_only = false;      /* N- was N-- */
+unsigned long fmode;
 
 /* Static Variables */
 
@@ -508,6 +526,148 @@ dev_null_stdout(void)
   }                                /* if (retcod != STDOUT5FD) */
 }                                  /* dev_null_stdout() */
 
+/* ******************************** make_node ******************************* */
+
+static alu_dict_ent *
+make_node(int initial_fn_idx)
+{
+  alu_dict_ent *result;
+
+  result = malloc(sizeof *result);
+  if (!result)
+  {
+    fprintf(stderr, "%s. (malloc)\n", strerror(errno));
+    exit(1);
+  }                                /* if (!result) */
+  memset(result, 0, sizeof *result);
+  result->fn_idx = initial_fn_idx;
+  return result;
+}                                  /* make_node() */
+
+/* ********************************* add_op ********************************* */
+
+static void
+add_op(alu_dict_ent * root, char *opcode)
+{
+  static int next_fn_idx = 0;
+  alu_dict_ent *ptr, *old_alt;
+  char thisch = toupper(*opcode);
+
+/* Return condition for the recursive function */
+  if (!thisch)
+  {
+    if (root->fn_idx != -1)
+    {
+      fprintf(stderr, "fn_idx (=%d) already claimed by another opcode!\r\n",
+        root->fn_idx);
+      exit(1);
+    }                              /* if (root->fn_idx != -1) */
+    root->fn_idx = next_fn_idx++;
+    return;
+  }                                /* if (!thisch) */
+
+  ptr = root;
+  while (ptr->letter != thisch)
+  {
+    if (ptr->alt)
+    {
+      if (thisch < ptr->alt->letter)
+      {
+        old_alt = ptr->alt;
+        ptr->alt = make_node(-3);
+        ptr = ptr->alt;
+        ptr->alt = old_alt;
+        ptr->letter = thisch;
+      }                            /* if (thisch < ptr->alt->letter) */
+      else
+        ptr = ptr->alt;
+    }                              /* if (ptr->alt) */
+    else
+    {
+      ptr->alt = make_node(-3);
+      ptr = ptr->alt;
+      ptr->letter = thisch;
+    }                              /* if (ptr->alt) else */
+  }                                /* while (ptr->letter != thisch) */
+  if (!ptr->next)
+    ptr->next = make_node(-1);
+
+/* Make the recursive call */
+  add_op(ptr->next, opcode + 1);
+  return;
+}                                  /* add_op() */
+
+/* ******************************** init_alu ******************************** */
+
+static void
+init_alu(void)
+{
+  int i, j;
+
+/* Allocate the register stack */
+  rs = malloc(stack_size * sizeof *rs);
+  if (!rs)
+  {
+    fprintf(stderr, "%s. (malloc)\n", strerror(errno));
+    exit(1);
+  }                                /* if (!rs) */
+
+/* Count how many opcodes there are */
+  for (i = num_alu_opcode_table_entries - 1; i >= 0; i--)
+    if (opcode_defs[i].func)
+      num_ops++;
+
+/* Allocate the array of function pointers for the run machine */
+  alu_table_index = malloc(sizeof *alu_table_index * num_ops);
+  if (!alu_table_index)
+  {
+    fprintf(stderr, "%s. (malloc)\n", strerror(errno));
+    exit(1);
+  }                                /* if (!alu_table_index) */
+
+/* Set up indicies and lookup dictionary */
+  for (i = 0, j = 0; i < num_alu_opcode_table_entries; i++)
+    if (opcode_defs[i].func)
+    {
+      alu_table_index[j++] = i;
+      add_op(&root_alu_dict_ent, opcode_defs[i].name);
+    }                              /* if (opcode_defs[i].func) */
+}                                  /* init_alu() */
+
+/* ***************************** display_opcodes **************************** */
+static void
+display_opcodes(void)
+{
+  int i;
+  char tbuf[16];
+  char *p;
+
+  printf("\r\n"
+    "\t Instructions to Access Tabs\r\n"
+    "\t ============ == ====== ====\r\n"
+    "\t (x is a tab ID; type of tab is neither examined nor changed)\r\n"
+    "PSHTAB x Push value of tab x to R\r\n"
+    "POPTAB x Pop R to set value of tab x\r\n"
+    "\r\n"
+    "\t Memory Reference Instructions\r\n"
+    "\t ====== ========= ============\r\n"
+    "PSH xxx  Push contents of N7xxx to R\r\n"
+    "POP xxx  Pop R to define N7xxx\r\n");
+
+  for (i = 0; i < num_alu_opcode_table_entries; i++)
+  {
+    if (opcode_defs[i].func)
+    {
+      strcpy(tbuf, opcode_defs[i].name);
+      for (p = tbuf; *p; p++)
+        *p = toupper(*p);
+      printf("%s\t %s\r\n", tbuf, opcode_defs[i].description);
+    }                              /* if (opcode_defs[i].func) */
+    else
+      printf("\t %s\r\n", opcode_defs[i].description);
+  }                     /* for (i = 0; i < num_alu_opcode_table_entries; i++) */
+}                                  /* display_opcodes() */
+
 /* ********************************** main ********************************** */
 int
 main(int xargc, char **xargv)
@@ -553,6 +713,7 @@ main(int xargc, char **xargv)
   bool do_rc = true;
   bool errflg = false;             /* Illegal switch seen */
   bool vrsflg = false;             /* -V seen */
+  bool aluflg = false;             /* -A seen */
   bool quiet_flag = false;         /* -q seen */
   bool verbose_flag = false;       /* -v seen */
   command_state cmd_state = TRY_INITIAL_COMMAND;
@@ -565,12 +726,17 @@ main(int xargc, char **xargv)
  */
   argc = xargc;                    /* Xfer invocation arg to common */
   argv = xargv;                    /* Xfer invocation arg to common */
-  dfltmode = 012045;               /* +e +m +* +tr +dr */
+  dfltmode = 0212045;               /* +e +m +* +tr +dr +i */
   end_seq = normal_end_sequence;
+  init_alu();
 /* Pick up any option arguments and set cmd_state if more args follow */
-  while ((i = getopt(argc, argv, "Vbdei:mnoqtv")) != -1)
+  while ((i = getopt(argc, argv, "AVbdei:mnoqtv")) != -1)
     switch (i)
     {
+      case 'A':
+        aluflg = true;
+        break;
+
       case 'V':
         vrsflg = true;
         break;
@@ -623,10 +789,16 @@ main(int xargc, char **xargv)
   if (errflg)
   {
     fprintf(stderr, "%s",
-      "Usage: q [-bdemnto] [-i <macro definition>] [+<n> file]"
+      "Usage: q [-AVbdemnto] [-i <macro definition>] [+<n> file]"
       " [file[:<n>]]...\n");
     return 1;
   }
+  if (aluflg)
+  {
+    display_opcodes();
+    if (argc == 2)
+      return 0;
+  }                                /* if (aluflg) */
   if (vrsflg)
   {
     q_version();
@@ -844,7 +1016,7 @@ main(int xargc, char **xargv)
     puts("Type H for help\r");
 
   if (size5)
-    printf("Noted screen dimensions %hd x %hd\r\n", col5, row5);
+    printf("Noted screen dimensions %u x %u\r\n", col5, row5);
   orig_stdout = -1;                /* Haven't dup'd stdout */
 /*
  * Initially INDENT switched OFF
@@ -1115,7 +1287,7 @@ p1201:
         REREAD_CMD;
       }                            /* if (immnxfr > LAST_IMMEDIATE_MACRO) */
       verb = immnxfr++;
-      if (!newmac2(strlen(buf), true))
+      if (!newmac2(true))
         REREAD_CMD;
 
 /* FI does an implied ^ND */
@@ -1420,15 +1592,38 @@ try_open:
           cmd_state = HAVE_LINE_NUMBER; /* line # in colonline */
           *colonpos = '\0';        /* Truncate filename */
           if (!do_stat_symlink() || !eolok())
+          {
+            cmd_state = RUNNING;
             REREAD_CMD;
+          }                        /* if (!do_stat_symlink() || !eolok()) */
           goto colontrunc;         /* Try with truncated buf */
         }                          /* if((colonpos=strchr(buf,':'))&&... */
       }                            /* if (cmd_state == RUNNING) */
       else if (cmd_state == HAVE_LINE_NUMBER) /* Just tried truncating at ":" */
         *colonpos = ':';           /* Undo truncation */
-      cmd_state = TRY_INITIAL_COMMAND;
+      cmd_state = RUNNING;
+
+/* Look for Q command-line option that is enabled while running */
+      if (strlen(buf) == 2 && buf[0] == '-' && ( /* Could be option */
+        buf[1] == 'A' ||           /* Display opcodes */
+        buf[1] == 'V'))            /* Display version */
+      {
+        switch (buf[1])
+        {
+          case 'A':
+            display_opcodes();
+            break;
+
+          case 'V':
+            q_version();
+            break;
+        }                          /* switch (buf[1]) */
+        READ_NEXT_COMMAND;
+      }                            /* if (strlen(buf) == 2 && ... */
+
       if (ysno5a("Do you want to create a new file (y,n,Cr [n])", A5DNO))
       {
+        cmd_state = TRY_INITIAL_COMMAND;
         q_new_file = true;         /* Q-QUIT into new file */
         rdwr = O_WRONLY + O_CREAT + O_EXCL; /* File should *not* exist */
         goto try_open;             /* So create file */
@@ -2112,7 +2307,10 @@ p1501:
     else
     {
       if (!eolok())
+      {
+        alu_macros_only = false;
         REREAD_CMD;
+      }                            /* if (!eolok()) */
 /* Need to preserve stdout for this */
       if (orig_stdout == -1)
       {
@@ -2124,6 +2322,7 @@ p1501:
       {
         fprintf(stderr, "\r\n%s. (dup(1))\r\n", strerror(errno));
         refrsh(NULL);
+        alu_macros_only = false;
         REREAD_CMD;
       }                            /* if (orig_stdout == -1) */
       else
@@ -2131,9 +2330,7 @@ p1501:
         do
           i = close(1);
         while (i == -1 && errno == EINTR);
-        do
-          i = open_buf(O_WRONLY + O_CREAT, 0666);
-        while (i == -1 && errno == EINTR);
+        i = open_buf(O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (i == 1)
         {
           lstmac();
@@ -2147,6 +2344,7 @@ p1501:
         i = !i;                    /* Required below */
       }                            /* if (orig_stdout == -1) else */
     }                              /* if (oldcom->toktyp == eoltok) else */
+    alu_macros_only = false;
   }                                /* if (i < 0) */
   if (i)
     READ_NEXT_COMMAND;             /* No error */

@@ -3,17 +3,11 @@
 /* S C R N E D I T
  *
  * Copyright (C) 1981, 2011 D. C. Roe
+ * Copyright (C) 2014 Duncan Roe
  *
  * Universal Statements for Screenedit Subsystem Segments
  */
-/* Tabs are stored zero-based for character position, even though the
- * user enters them as if they were 1-based, in the Tabset command */
-struct
-  {
-    enum {undefined, chrpos, linenum} tabtyp;
-    long value;
-  }
-  tabs[80];
+
 /* Allow for up to 512 screen width - should be good for a while... */
 #define SCRMAX 512
 #define PRSIZ 16

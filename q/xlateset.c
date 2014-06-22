@@ -1,13 +1,14 @@
 /* X L A T E S E T
  *
- * Copyright (C) 1994, Duncan Roe & Associates P/L
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 1994 Duncan Roe & Associates P/L
+ * Copyright (C) 2012,2014 Duncan Roe
  *
  * This routine sets up Q's translation table for case (in)dependent L,
  * Y, FL, & FY commands.
  * When called, the table is not in the right state...
  */
 #include "alledit.h"
+#include "fmode.h"
 /* */
 unsigned char xlatable[256];
 int tbstat;

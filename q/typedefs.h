@@ -4,6 +4,27 @@
 /* Macros */
 #define Q_BUFSIZ 8192
 #define BUFMAX Q_BUFSIZ-1
+#define BLKCAP (64-sizeof(void*))  /* Capacity of a data block */
+#define PTHSIZ 256
+#define PTHMAX PTHSIZ-4            /* Allow for .tm */
+
+#define CARAT '^'
+#define SPACE ' '
+#define LT '<'
+#define ESC '\33'
+#define DEL 0177
+#define CTL_N 016
+#define CTL_U 025
+#define GT '>'
+#define SLASH '/'
+#define QM '?'
+#define COMMA ','
+#define QUOTE '\''
+#define ASTRSK '*'
+
+#define A5NDEF 0
+#define A5DYES 1
+#define A5DNO -1
 
 /* Typedefs */
 typedef enum bool

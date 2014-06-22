@@ -19,3 +19,4 @@ Q COMMANDS: QC		SCREENEDIT CONTROL CHARACTERS: SC
 Line no. argument: L#	# of lines argument: #L Pseudo macros: PM
 Indent mode: IM 	Screenedit macros: SM	Invoking Q IQ
 ASCII chars: AS 	Running in a pipe: QP
+Arithmetic & Logic Unit: ALU

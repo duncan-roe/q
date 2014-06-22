@@ -1,5 +1,8 @@
+DONE Active pseudomacro to return screen width
+DONE Active pseudomacro to return screen height
+Give some kind of acknowledgement to ^NF (& ^NO?)
 DONE x command does not work in a macro
--h option to give invocation help
+-H option to give invocation help
 DONE Be able to run in pipe
  DONE need -i first
  DONE need -o functionality first
@@ -8,14 +11,15 @@ DONE Be able to run in pipe
   DONE At end: s; cat temp file to stdout; rm temp file
    DONE If o/p is not a pipe do not cat file
 Can test if a macro is defined: n4007 x; ^ND^N^<4007>
-Add reverse Polish calculator
+DONE Add reverse Polish calculator
 Can set actual amount for "1 line forward / back" half-page / full-page
-update scmacs.info a lot (for pres'n)
+CANCELLED update scmacs.info a lot (for pres'n)
 Re-check whether cmd.c needs to put command buffer in quotes
 DONE Some option to display version
 Properly reinstate output optimisation (old hack removed as "quick fix")
  needs select() /poll()
  needs nanosleep when outputting chars
+ needs stack of command input buffers probably
  get per-char delay from stty baud rate
  reinstate setting per-char delay (useful for testing)
 INTERNALS
@@ -28,8 +32,8 @@ INTERNALS
   STARTED: rework asg2 blocks (including xistcs.c)
   STARTED: alledit.h prototypes to have variable names
   STARTED: Use meaningful names instead of logtemp &c.
-  Tidy scmnrd.c - it's horrible
+  STARTED Tidy scmnrd.c - it's horrible
   STARTED: Be more careful what goes to stderr / stdin
 DONE replace terminal ioctls with tc{g,s}etattr
 Show what arguments Q started with (?)
-CATALOGUE OF USEFUL MACROS
+Catalogue of useful macros

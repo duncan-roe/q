@@ -16,7 +16,7 @@
 #ifndef OPEN_MAX
 #  define OPEN_MAX 2048            /* Surely more than anyone would want */
 #endif
-#define USING_FILE (stdidx >= 0)
+#define USING_FILE (bool)(stdidx >= 0)
 int buf5len, buf5idx;
 void init5(void), final5(void);
 extern struct termios tio5save, tio5;

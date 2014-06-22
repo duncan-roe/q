@@ -3,7 +3,8 @@
 or displays them.
  Formats
  NEWMACRO <macro id>,<macro body>
- NEWMACRO - <treename>
+ NEWMACRO -  <treename>            /* Type or list to file all macros
+ NEWMACRO -- <treename>            /* Type or list to file ALU macros only
  Parameters
  <macro id>   identification of the macro to be defined. The macros that can be
               defined are the control chars except NULL, the next 32 characters
@@ -38,6 +39,5 @@ or displays them.
               This format is also available for normal characters,
               e.g. "n001 ^<054> defines the control-A macro to be a comma.
  <treename>   Treename to accept macro definitions, which will be written in a
-              format suitable for re-input using USE, and which will have a
-              terminating 'Z'. Optional - if omitted, macro definitions are
-              displayed at the terminal.
+              format suitable for re-input using U-USE. Optional - if omitted,
+              macro definitions are displayed at the terminal.

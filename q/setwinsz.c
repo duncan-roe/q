@@ -44,7 +44,7 @@ int msg;
         col5 = 80;
       if (msg)
       {
-        printf("\r\nNoted screen dimensions %hd x %hd", col5, row5);
+        printf("\r\nNoted screen dimensions %u x %u", col5, row5);
         newlin();
       }
       else

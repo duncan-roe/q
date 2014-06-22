@@ -1,7 +1,7 @@
 /* M A C D E F W . C
  *
  * Copyright (C) 1994, Duncan Roe & Associates P/L
- * Copyright (C) 2012,2013 Duncan Roe
+ * Copyright (C) 2012-2014 Duncan Roe
  *
  * This routine carries out the definition of a macro. Storage is
  * acquired if necessary - if inadequate storage was previously assigned
@@ -11,12 +11,11 @@
  */
 #include <stdio.h>
 #include <memory.h>
-/* Following line for system-defined malloc() & free() only */
 #include <stdlib.h>
 #include "alledit.h"
 #include "macros.h"
 /* */
-int
+bool
 macdefw(unsigned int mcnum, unsigned short *buff, int buflen, bool appnu)
 {
   int i, k;                        /* Scratch */
@@ -35,14 +34,10 @@ macdefw(unsigned int mcnum, unsigned short *buff, int buflen, bool appnu)
  * We always round up to a 16-byte multiple for malloc...
  */
     k = ((i + 15) >> 4) << 4;      /* Bytes we will ask for */
-#ifdef ANSI5
-    if (!(scmacs[mcnum] = (macro5 *) malloc((size_t)k)))
-#else
-    if (!(scmacs[mcnum] = (macro5 *) malloc(k)))
-#endif
+    if (!(scmacs[mcnum] = (macro5 *)malloc((size_t)k)))
     {
-      printf("MALLOC out of memory in MACDEF");
-      return 0;
+      fprintf(stderr, "MALLOC out of memory in MACDEF");
+      return false;
     }
 /* Store how many chars there is actually room for... */
     scmacs[mcnum]->maclen = buflen + (k - i) / sizeof *buff + (appnu ? 2 : 0);
@@ -55,5 +50,5 @@ macdefw(unsigned int mcnum, unsigned short *buff, int buflen, bool appnu)
     scmacs[mcnum]->data[i++] = 0125; /* U */
   }
   scmacs[mcnum]->mcsize = i;
-  return 1;
+  return true;
 }

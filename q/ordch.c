@@ -1,7 +1,7 @@
 /* O R D C H
  *
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2014 Duncan Roe
  *
  * This routine processes a normal chr (or a special that was preceded
  * by ^C), overwriting/inserting as appropriate.
@@ -11,17 +11,12 @@
 #include <memory.h>
 #include "alledit.h"
 #include "macros.h"
+#include "fmode.h"
 #include "cmndcmmn.h"
 #include "scrnedit.h"
-#ifdef ANSI5
+
 void
 ordch(unsigned char chr, scrbuf5 *scbuf)
-#else
-void
-ordch(chr, scbuf)
-scrbuf5 *scbuf;
-unsigned char chr;
-#endif
 {
 /*
  * Parameters
@@ -33,9 +28,8 @@ unsigned char chr;
   int i, k;                        /* Scratch */
   unsigned char *p, *q;
 /*
- * Except only for SCRDIT on encountering a ^I,
- * this is the only routine in the entire system that can increase
- * the value of the indent point, if indenting.
+ * Apart from SCRDIT on encountering a tab (^I),
+ * this is the only Q function that can increase the value of the indent point.
  * Do so now, if at the indent point and we have a space.
  */
   if (INDENT && scbuf->bcurs == ndntch && chr == SPACE)
@@ -61,7 +55,14 @@ unsigned char chr;
   if (scbuf->bcurs == scbuf->bchars || insert)
   {
     if (scbuf->bchars == scbuf->bmxch)
-      goto p1003;                  /* J no room */
+    {
+      fprintf(stderr, "\a%s",
+        curmac >= 0 ? "\r\nNo room in line for insert" : "");
+      mctrst = false;
+      cmover = true;               /* Warn notmac in case input from U-use */
+      notmac(true);                   /* Want macro diagnostics */
+      return;
+    }                              /* if (scbuf->bchars == scbuf->bmxch) */
     if (scbuf->bcurs < scbuf->bchars) /* A real insert */
     {
 /* We have to zot the r/h portion of line (incl. cursor chr) up 1. */
@@ -79,13 +80,4 @@ unsigned char chr;
   scbuf->bdata[scbuf->bcurs] = chr; /* Store chr */
   scbuf->bcurs++;                  /* Up cursor */
   return;                          /* Finished */
-/* */
-p1003:
-  putchar('\a');                   /* Bell */
-  if (curmac >= 0)
-    printf("\r\nNo room in line for insert");
-  mctrst = false;
-  cmover = true;                   /* Warn SCMNRD in case COMINPutting */
-  notmac(1);                       /* Want macro diagnostics */
-  return;
 }

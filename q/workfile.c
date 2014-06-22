@@ -1,6 +1,6 @@
 /* W O R K F I L E
  *
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2014 Duncan Roe
  *
  * Dual-mode Workfile System
  * ========= ======== ======
@@ -66,6 +66,7 @@
 #include <sys/mman.h>
 #include <limits.h>
 #include "alledit.h"
+#include "fmode.h"
 
 #define NOM_PAGE 8192              /* Largest known pagesize on any system */
 #define FULLPAGES (NOM_PAGE/sizeof(void*)-2)

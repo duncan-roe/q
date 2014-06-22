@@ -1,7 +1,7 @@
 /* S C R D I T */
 /*
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2012,2013 Duncan Roe
+ * Copyright (C) 2012-2014 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -16,6 +16,7 @@
  *
  */
 #include <stdio.h>
+#include <ctype.h>
 #include <malloc.h>
 #include <memory.h>
 #include <string.h>
@@ -25,28 +26,107 @@
 #include "macros.h"
 #include "cmndcmmn.h"
 #include "scrnedit.h"
+#include "fmode.h"
+#include "tabs.h"
 #include "c1in.h"
+#include "alu.h"
 
-#define GETNEXTCHR goto p7700
+/* Macros */
+
+#define GETNEXTCHR goto getnextchr
+#define BOL_OR_EOL goto bol_or_eol
+#define RAWNEXTCHR goto rawnextchr
+#define ERR_IF_MAC goto err_if_mac
+#define SOUNDALARM goto soundalarm
+#define TABOORANGE goto taboorange
+#define SKIP2MACCH goto skip2macch
+#define NORMALCHAR goto normalchar
+#define RANOFF_END goto ranoff_end
+
+/* Externals that are not in any header */
 
 unsigned char fxtabl[128];
 long timlst;
+
+/* *************************** print_failed_opcode ************************** */
+
+static void
+print_failed_opcode(short thisch)
+{
+  char *opcd = opcode_defs[alu_table_index[thisch - FIRST_ALU_OP]].name;
+
+  fprintf(stderr, "\r\nFailing opcode: ");
+  while (*opcd)
+    putc(toupper(*opcd++), stdout);
+}                                  /* print_failed_opcode) */
+
+/* ************************** get_effective_address ************************* */
+
+static bool
+get_effective_address(int addr)
+{
+  effaddr = addr;
+  if (index_next)
+  {
+    index_next = false;
+    effaddr += xreg;
+    if ((effaddr & 0777) != effaddr)
+    {
+      fprintf(stderr, "\r\nIndexing fault at 0%o. ", effaddr);
+      dump_registers(true);
+      notmac(true);
+      return false;
+    }                              /* if ((effaddr & 0777) != effaddr) */
+  }                                /* if (index_next) */
+  return true;
+}                                  /* get_effective_address() */
+
+/* ****************************** push_register ***************************** */
+
+static bool
+push_register(long val)
+{
+  if (++rsidx >= stack_size)
+  {
+    fprintf(stderr, "\r\nRegister stack overflow.");
+    dump_registers(true);
+    notmac(true);
+    return false;
+  }                                /* if (++rsidx >= stack_size) */
+  rs[rsidx] = val;
+  return true;
+}                                  /* push_register() */
+
+/* ****************************** pop_register ****************************** */
+
+static bool
+pop_register(long *val)
+{
+  if (rsidx < 0)
+  {
+    fprintf(stderr, "\r\nRegister stack underflow.");
+    dump_registers(true);
+    notmac(true);
+    return false;
+  }                                /* if (++rsidx >= stack_size) */
+  *val = rs[rsidx--];
+  return true;
+}                                  /* pop_register() */
+
+/* ********************************* scrdit ********************************* */
 
 void
 scrdit(scrbuf5 *curr, scrbuf5 *prev, char *prmpt, int pchrs, int cmmand)
 {
   unsigned char *p, *q             /* Scratch */
    ;
-  char *c                          /* Scratch */
-   , *err = NULL                   /* Point to error text */
-    , tbuf[20]                     /* Scratch */
-    ;
-  int i, j, k, l = 0, m = 0,       /* Scratch variables */
-    gotoch                         /* Char of last ^G */
-    ;
-  long i4                          /* Scratch */
-   , olen                          /* Original line length */
-   ;
+  char *c;                         /* Scratch */
+  char *err = NULL;                /* Point to error text */
+  char tbuf[30];                   /* Scratch */
+  int i, j, k, l = 0, m = 0;       /* Scratch variables */
+  int gotoch;                      /* Char of last ^G */
+  long i4;                         /* Scratch */
+  long olen;                       /* Original line length */
   struct tms tloc;                 /* Junk from TIMES */
   long timnow;                     /* Time from TIMES */
   short thisch;                    /* Character being processed */
@@ -85,44 +165,47 @@ scrdit(scrbuf5 *curr, scrbuf5 *prev, char *prmpt, int pchrs, int cmmand)
  */
   if ((olen = curr->bchars) > curr->bmxch)
   {
-    err = "Bad char cnt curr line\r";
+    err = "Bad char cnt curr line";
   p1001:
-    puts(err);
+    fprintf(stderr, "%s\r\n", err);
+    err = NULL;
     verb = 'J';                    /* Let user... */
     return;                        /* ... salvage his edit. */
   }
 /* J bad char cnt this line */
   if (curr->bcurs < 0)             /* Bad cursor this line */
   {
-    err = "Curr curs<1\r";
+    err = "Curr curs<1";
     goto p1001;
   }
   if (pchrs > PRMAX)               /* Prompt too big */
   {
-    err = "Prompt>10 chars\r";
+    err = "Prompt>15 chars";
     goto p1001;
   }
 /* J cursor off end this lin */
   if (curr->bcurs > curr->bchars)
   {
-    err = "Curr curs off end of info\r";
+    err = "Curr curs off end of info";
     goto p1001;
   }
 /*
- * Switch off XOFF if on unless COMINPutting
+ * Switch off XOFF if input from tty
  */
-  if (USING_FILE)
-    goto p1521;
-  if (curmac >= 0)
-    goto p1816;                    /* May want to ^S macro */
-  duplx5(false);                   /* No XOFF recognition */
-  nodup = false;
-  goto p1521;
-p1816:nodup = true;                /* So we don't do one on the way out */
+  if (!USING_FILE)
+  {
+    if (curmac < 0)
+    {
+      duplx5(false);               /* No XOFF recognition */
+      nodup = false;
+    }                              /* if (curmac < 0) */
+    else
+      nodup = true;                /* So we don't do one on the way out */
+  }                                /* if (!USING_FILE) */
 /*
  * Initialise common variables &c
  */
-p1521:endlin = false;
+  endlin = false;
   modlin = false;
   insert = false;
   pchars = pchrs;
@@ -148,12 +231,7 @@ p1005:contc = false;
  */
   if (curmac >= 0 && !cmmand && BRIEF && !NONE && pchars)
   {
-    if ((timnow = times(&tloc)) == -1)
-    {
-      perror("times");
-      putchar('\r');
-      goto p1816;
-    }
+    timnow = times(&tloc);
 /* Assume a clock tick rate of 100 - not critical. We don't cater for
  * wraparound, currently... */
     if (timnow - timlst >= 20)
@@ -195,18 +273,17 @@ p1005:contc = false;
   }                                /* if (INDENT) */
   else
     ndntch = 0;                    /* Not indenting, so no indent chars */
-/* */
-p1027:
+
   mctrst = false;
+rawnextchr:
   if (curmac < 0)
     refrsh(curr);                  /* Display prompt etc */
-p1026:
   if (curmac >= 0)
   {
 /* Clear expanding if that was last char from macro */
     if (mcposn >= scmacs[curmac]->mcsize)
     {
-      notmac(0);
+      notmac(false);
       GETNEXTCHR;
     }                              /* if (mcposn >= scmacs[curmac]->mcsize) */
     thisch = scmacs[curmac]->data[mcposn];
@@ -216,7 +293,7 @@ p1026:
   {
     bool eof_encountered;
 
-    thisch = c1in5(&eof_encountered);          /* Read 1 char */
+    thisch = c1in5(&eof_encountered); /* Read 1 char */
     if (eof_encountered)
     {
       if (cmmand && curr->bchars == 0 && USING_FILE)
@@ -244,9 +321,9 @@ p1026:
   if (thisch == 0177)
     goto p10065;                   /* J it was a rubout */
   if (thisch & 0200)
-    goto p1007;                    /* J parity-high */
+    NORMALCHAR;                    /* J parity-high */
   if (thisch >= SPACE)
-    goto p1007;                    /* J not a control */
+    NORMALCHAR;                    /* J not a control */
   verb = thisch + 0100;            /* 'J' for ^J, &c. */
   switch (thisch)
   {
@@ -309,21 +386,21 @@ p1026:
     case 30:
       goto p7736;
   }
-  goto p1007;                      /* Not special control */
+  NORMALCHAR;                      /* Not special control */
 p1802:
   if (cntrlw)
     thisch |= 0200;                /* Set parity following ^W */
   cntrlw = false;
   if (nseen)
     goto p1905;                    /* Treat as macro char if ^N prev */
-  goto p1007;                      /* Treat as ordinary character */
+  NORMALCHAR;                      /* Treat as ordinary character */
 /*
- * RUBOUT - Deletes char before cursor
+ * DEL - Deletes char before cursor
  */
 p10065:
   k = curr->bcurs - 1;
   if (k < 0)
-    goto p1023;                    /* J at start lin (error) */
+    BOL_OR_EOL;                    /* J at start lin (error) */
   modlin = true;                   /* Line has been changed */
 /* If at indent point,decrement INDENT */
   if (INDENT && k + 1 == ndntch)
@@ -338,35 +415,37 @@ p10065:
   }                                /* if (j != k) */
   curr->bcurs = k;                 /* Step cursor back */
   curr->bchars = j;                /* Reduce # of chars */
-p7700:
+getnextchr:
 /* Get another character if one available */
-  if (curmac >= 0 || USING_FILE || kbd5())
-    goto p1026;
-  goto p1027;                      /* Refresh */
-p1023:
+  if (curmac < 0 && !USING_FILE && !kbd5())
+    refrsh(curr);
+  RAWNEXTCHR;
+bol_or_eol:
   err = "Ran off beginning or end of line";
-p10231:
+err_if_mac:
   if (curmac >= 0)
   {
     if (*err)
-      printf("\r\n%s. ", err);
-    notmac(1);
+      fprintf(stderr, "\r\n%s. ", err);
+    err = NULL;
+    notmac(true);
   }
-p10232:
+soundalarm:
   putchar('\a');                   /* O/p BEL since error */
   mctrst = false;                  /* User no longer trusted */
   GETNEXTCHR;                      /* End rubout */
-w1023:
+taboorange:
   if (curmac >= 0)
   {
     printf("\r\nTab ID %c or value in that tab out of range. ", thisch);
-    notmac(1);
+    notmac(true);
   }
-  goto p10231;
+  SOUNDALARM;
 /*
  * Non-special character
  */
-p1007:ordch(thisch, curr);         /* Insert or replace as appropriate */
+normalchar:
+  ordch(thisch, curr);             /* Insert or replace as appropriate */
   modlin = true;                   /* Line has been changed */
   contc = false;
   GETNEXTCHR;                      /* Finish */
@@ -407,7 +486,7 @@ p7702:i = 0;                       /* S.O.L. if no indenting */
   k = curr->bcurs - i;             /* K - running available movement */
 /* Note k can be -ve, if he used ^NR to move before the indent point */
   if (k <= 0)
-    goto p1023;                    /* J start of line (error) */
+    BOL_OR_EOL;                    /* J start of line (error) */
 /* Check whether at word start. If so, back up to a non-space (or line
  * start)... */
   p = &curr->bdata[curr->bcurs];
@@ -447,9 +526,9 @@ p7706:
  * unless at EOL to start with... */
   if (k < 0)
   {
-    printf("Internal error: k=%d\r", k);
-    notmac(1);
-    goto p10232;
+    fprintf(stderr, "Internal error: k=%d\r\n", k);
+    notmac(true);
+    SOUNDALARM;
   }
   if (k)
     for (;;)
@@ -485,7 +564,7 @@ p7711:
  * Find 1st tab past where we are
  */
   for (i = 0; i < tabcnt; i++)
-    if (k < tabs[i].value && tabs[i].tabtyp == chrpos)
+    if (k < tabs[i].value && tabs[i].tabtyp == CHRPOS)
       goto p1040;                  /* J found 1 */
 /* Force 1 space if drop thro' */
 p1038:j = 1;                       /* Insert 1 space */
@@ -502,7 +581,7 @@ p1042:
   {
   q1023:
     err = "Line full";
-    goto p10231;
+    ERR_IF_MAC;
   }
   p = &curr->bdata[i];             /* 1 past last char to pick up */
   m = i - k;                       /* # chars to move up */
@@ -635,7 +714,7 @@ p7731:
   if (INDENT)
     i = ndntch;
   if (k == i)
-    goto p1023;                    /* J strt alrdy */
+    BOL_OR_EOL;                    /* J strt alrdy */
   curr->bcurs--;
   GETNEXTCHR;                      /* Finish ^Y */
 /*
@@ -705,7 +784,7 @@ p7704:
   if (curr->bcurs == curr->bchars)
   {
     err = "^D at EOL";
-    goto p10231;
+    ERR_IF_MAC;
   }
 /* BEL if at EOL */
   curr->bcurs++;                   /* Get past char to erase */
@@ -797,7 +876,7 @@ p7736:
   if (gotoch == -1)                /* No prev ^G */
   {
     err = "^^ no previous ^G";
-    goto p10231;
+    ERR_IF_MAC;
   }
   thisch = gotoch;
   goto p1804;                      /* Join ^G */
@@ -805,10 +884,10 @@ p7736:
  * ^N - expaNd macro
  */
 p7716:nseen = true;
-  goto p1026;
+  RAWNEXTCHR;
 /*
  * P1502 - We have the macro char. May be a real macro or a pseudo
- * if we already in a macro. May also be RUBOUT if user has changed
+ * if we already in a macro. May also be DEL if user has changed
  * his mind. May be ^P or ^W, in which case we want the character
  * following...
  */
@@ -817,10 +896,11 @@ p1502:
     goto p7703;                    /* J is ^C or ^P */
   if (thisch == '\27')
     goto p7727;                    /* J is ^W */
-p1905:nseen = false;
+p1905:
+  nseen = false;
   contc = false;
   if (thisch == (unsigned char)'\377')
-    goto p1026;                    /* High parity rubout */
+    RAWNEXTCHR;                    /* High parity rubout */
 /* Recognise ESC  if not in a macro */
   if (thisch == ESC && curmac < 0)
   {
@@ -837,7 +917,7 @@ p1905:nseen = false;
     if (!USING_FILE)
       cntrlc = false;
     err = "Interrupt";
-    goto p10231;
+    ERR_IF_MAC;
   }
 /* Check for out of range or active pseudo macro */
   if (thisch > TOPMAC)
@@ -930,33 +1010,112 @@ p1905:nseen = false;
         macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
 
+      case 04005:                  /* Return screen width */
+        snprintf(tbuf, sizeof tbuf, "%u", col5);
+        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+        break;
+
+      case 04006:                  /* Return screen height */
+        snprintf(tbuf, sizeof tbuf, "%u", row5);
+        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+        break;
+
       default:
         found = false;
         break;
     }                              /* switch (thisch) */
+/*
+ * Deal with ALU memory and tab access pseudos
+ */
+    if ((thisch & 07000) == 07000)
+    {
+      snprintf(tbuf, sizeof tbuf, "%ld", ALU_memory[thisch & 0777]);
+      macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+      found = true;
+    }                              /* if ((thisch & 07000) == 07000) */
+    else if ((thisch & 07000) == 05000)
+    {
+      if (get_effective_address(thisch & 0777) &&
+        push_register(ALU_memory[effaddr]))
+        GETNEXTCHR;
+      SOUNDALARM;
+    }                              /* else if ((thisch & 05000) == 05000) */
+    else if ((thisch & 07000) == 06000)
+    {
+      if (get_effective_address(thisch & 0777) &&
+        pop_register(&ALU_memory[effaddr]))
+        GETNEXTCHR;
+      SOUNDALARM;
+    }                              /* else if ((thisch & 06000) == 06000) */
+    else if (thisch >= FIRST_ALU_OP + num_ops &&
+      thisch < FIRST_ALU_OP + num_ops + NUM_TABS * 2)
+    {
+      bool is_pop = false;
+      int tabidx = thisch - FIRST_ALU_OP - num_ops;
+      bool success;
+
+      if (tabidx >= NUM_TABS)
+      {
+        tabidx -= NUM_TABS;
+        is_pop = true;
+      }                            /* if (tabidx >= NUM_TABS) */
+      if (is_pop)
+        success = pop_register(&tabs[tabidx].value);
+      else
+        success = push_register(tabs[tabidx].value);
+      if (success)
+        GETNEXTCHR;
+      SOUNDALARM;
+    }                         /* else if (ch >= FIRST_ALU_OP + num_ops && ... */
+
     if (found)
     {
       curmac = 64;
       mcposn = 0;
       GETNEXTCHR;
     }                              /* if (found) */
+    if (thisch >= FIRST_ALU_OP && thisch < FIRST_ALU_OP + num_ops)
+    {
+      if (exec_alu_opcode(thisch, &err))
+      {
+        if (alu_skip)
+        {
+          alu_skip = false;
+          mcposn = mcposn + 2;     /* Skip 2 */
+          if (mcposn > scmacs[curmac]->mcsize)
+          {
+            print_failed_opcode(thisch);
+            err = "ALU skip off macro end";
+            ERR_IF_MAC;
+          }                        /* if (mcposn > scmacs[curmac]->mcsize) */
+        }                          /* if (alu_skip) */
+        GETNEXTCHR;
+      }                            /* if (exec_alu_opcode(thisch)) */
+      else
+      {
+        print_failed_opcode(thisch);
+        fprintf(stderr, "\r\nRegister dump:-\r\n");
+        dump_registers(false);
+        ERR_IF_MAC;                /* It always will be in a macro */
+      }                            /* if (exec_alu_opcode(thisch)) else */
+    }       /* if (thisch >= FIRST_ALU_OP && thisch < FIRST_ALU_OP + num_ops) */
   }                                /* if (thisch > TOPMAC) */
 /* Signal error if null or bad macro */
   if (thisch > TOPMAC || !scmacs[thisch])
   {
     if (curmac >= 0)
     {
-      printf("\r\nCalling undefined macro ^<%o>. ", thisch);
-      notmac(1);
+      printf("\r\nCalling undefined macro ^<%03o>. ", thisch);
+      notmac(true);
     }
-    goto p10232;
+    SOUNDALARM;
   }
   mcposn = 0;                      /* Got the macro */
   curmac = thisch;
-  goto p1026;
+  RAWNEXTCHR;
 p1503:
   if (thisch == 0177)
-    goto p1026;                    /* J rubout */
+    RAWNEXTCHR;                    /* J rubout */
 /*
  * Look for a pseudo macro. Some are only legal if in a macro
  */
@@ -971,7 +1130,7 @@ p1503:
       if (*c == verb)
         break;
     if (*c == 0)
-      goto p10232;                 /* This pseudo not allowed */
+      SOUNDALARM;                  /* This pseudo not allowed */
   }                                /* if (curmac < 0) */
   switch (thisch & 037)
   {                                /* Try for a pseudo u/c or l/c */
@@ -1030,9 +1189,9 @@ p1503:
   if (curmac >= 0)
   {
     printf("\r\nCalling undefined pseudo-macro \"%c\". ", thisch);
-    notmac(1);
+    notmac(true);
   }
-  goto p10232;
+  SOUNDALARM;
 /*
  * ^NI - Increment link (to make macro a conditional)
  */
@@ -1040,12 +1199,12 @@ p7611:
 /* Error if < 2 chars left in macro, because it can't then do a ^NU */
   if (mcposn > scmacs[curmac]->mcsize - 2)
   {
-  p76111:
+  ranoff_end:
     err = "^NI, ^NB &c. too near macro end";
-    goto p10231;
+    ERR_IF_MAC;
   }
   if (mcnxfr == MCDTUM)
-    goto p1026;                    /* No-op if stack empty */
+    RAWNEXTCHR;                    /* No-op if stack empty */
   l = curmac;                      /* Save current macro */
   m = mcposn;                      /* Save current macro position */
   goto p1706;                      /* Do a dummy UP */
@@ -1062,7 +1221,7 @@ p1710:gtest = false;               /* Not B or P */
   if (mcposn >= scmacs[curmac]->mcsize)
   {
     err = "^NO &c. too near macro end";
-    goto p10231;
+    ERR_IF_MAC;
   }
 p1716:gposn = true;                /* Distinguish from ^G */
   goto p1707;                      /* Get tab # */
@@ -1081,23 +1240,26 @@ p7631:gdiff = true;                /* (^NY) we are YDIFF */
  *        1->tab 1 ... D->tab 20
  */
 p1708:
-  i = thisch - '1';                /* Get TABS array subscript */
-  if (i < 0 || i > 80)
-    goto w1023;
+  if (thisch == '-')
+    i = 79;
+  else
+    i = thisch - '1';              /* Get TABS array subscript */
+  if (i < 0 || i >= NUM_TABS)
+    TABOORANGE;
   if (gtest)
     goto p1718;                    /* J test pos'n */
   if (gwrit)
     goto p1712;                    /* J remember current pos'n */
   i4 = tabs[i].value;
   if (i4 < 0)
-    goto w1023;                    /* J certainly too low */
+    TABOORANGE;                    /* J certainly too low */
   if (!gcurs)
     goto p1713;                    /* J file positioner */
   if (i4 > BUFMAX)
-    goto w1023;                    /* J too big for a cursor value */
+    TABOORANGE;                    /* J too big for a cursor value */
   i = i4;
   if (i > curr->bchars)
-    goto w1023;                    /* J trying to pos'n off end of line */
+    TABOORANGE;                    /* J trying to pos'n off end of line */
   curr->bcurs = i;                 /* Set cursor position */
   GETNEXTCHR;                      /* End ^NR - may want to REFRSH */
 /*
@@ -1111,37 +1273,37 @@ p1813:
   gtest = true;                    /* We are a position tester */
 /* Err if not tabid + 2 chars */
   if (mcposn > scmacs[curmac]->mcsize - 3)
-    goto p76111;
+    RANOFF_END;
   goto p1716;                      /* Get tab # */
 p1718:
-  if (tabs[i].tabtyp == undefined)
+  if (tabs[i].tabtyp == UNDEFINED)
   {
     err = "^NB &c. testing undefined tab";
-    goto p10231;
+    ERR_IF_MAC;
   }
   if (gpast)
     goto p1719;                    /* J on if not a B */
   if (!gcurs)
     goto p1814;                    /* J actually ^N[ */
-  if (tabs[i].tabtyp == linenum)
+  if (tabs[i].tabtyp == LINENUM)
   {
   p17181:
     err = "^NB/^NP testing filepos tab";
-    goto p10231;
+    ERR_IF_MAC;
   }
   if (curr->bcurs < tabs[i].value)
-    goto p1026;
-  goto p1511;
+    RAWNEXTCHR;
+  SKIP2MACCH;
 p1814:
-  if (tabs[i].tabtyp == chrpos)
+  if (tabs[i].tabtyp == CHRPOS)
   {
   p1841:
     err = "^N[/^N] testing chrpos tab";
-    goto p10231;
+    ERR_IF_MAC;
   }
   if (ptrpos < tabs[i].value)
-    goto p1026;
-  goto p1511;
+    RAWNEXTCHR;
+  SKIP2MACCH;
 /*
  * ^NP - obey if Past spec'd tab
  */
@@ -1149,17 +1311,17 @@ p7620:gpast = true;                /* We are in fact P */
   goto p1717;
 p1719:if (!gcurs)
     goto p1815;                    /* J actually ^N] */
-  if (tabs[i].tabtyp == linenum)
+  if (tabs[i].tabtyp == LINENUM)
     goto p17181;
   if (curr->bcurs > tabs[i].value)
-    goto p1026;
-  goto p1511;
+    RAWNEXTCHR;
+  SKIP2MACCH;
 p1815:
-  if (tabs[i].tabtyp == chrpos)
+  if (tabs[i].tabtyp == CHRPOS)
     goto p1841;
   if (ptrpos > tabs[i].value)
-    goto p1026;
-  goto p1511;
+    RAWNEXTCHR;
+  SKIP2MACCH;
 /*
  * ^N[ - Obey if file pos'n before specified tab
  */
@@ -1176,13 +1338,13 @@ p7635:gpast = true;                /* We are ], not [ */
  */
 p1713:
   if (!cmmand && !mctrst) /* Not trusted to change file pos'n while modifying */
-    goto p1023;
+    BOL_OR_EOL;
 /* Eof */
   if (i4 > lintot + 1 && !(deferd &&
     (dfread(i4 - lintot, NULL), i4 <= lintot + 1)))
-    goto p1023;
+    BOL_OR_EOL;
   setptr(i4);                      /* Position the file */
-  goto p1026;                      /* Finish ^NN */
+  RAWNEXTCHR;                      /* Finish ^NN */
 /*
  * P1712 - Remember file or cursor position
  */
@@ -1191,23 +1353,23 @@ p1712:if (gcurs)
   if (gdiff)
     goto p1809;                    /* ^NY splits off here */
   tabs[i].value = ptrpos;
-  tabs[i].tabtyp = linenum;
-  goto p1026;
+  tabs[i].tabtyp = LINENUM;
+  RAWNEXTCHR;
 p1714:
   tabs[i].value = curr->bcurs;     /* ^NO */
-  tabs[i].tabtyp = chrpos;
-  goto p1026;
+  tabs[i].tabtyp = CHRPOS;
+  RAWNEXTCHR;
 /*
  * P1809 - ^NY continuing
  */
 p1809:
   if (i > 77)
-    goto w1023;                    /* J above max for a result */
-  if (tabs[i].tabtyp == undefined || tabs[i].tabtyp != tabs[i + 1].tabtyp ||
+    TABOORANGE;                    /* J above max for a result */
+  if (tabs[i].tabtyp == UNDEFINED || tabs[i].tabtyp != tabs[i + 1].tabtyp ||
     tabs[i].value >= tabs[i + 1].value)
   {
     err = "^NY tab type / value error";
-    goto p10231;
+    ERR_IF_MAC;
   }
   tabs[i + 2].value = tabs[i + 1].value - tabs[i].value; /* Set result */
   tabs[i + 2].tabtyp = tabs[i].tabtyp;
@@ -1216,56 +1378,57 @@ p1809:
  * are stored zero-based. To maintain the deception, we must subtract 1
  * from the result if dealing with cursor tabs...
  */
-  if (tabs[i].tabtyp == chrpos)
+  if (tabs[i].tabtyp == CHRPOS)
     tabs[i + 2].value--;
-  goto p1026;
+  RAWNEXTCHR;
 /*
  * ^NA - Obey if at EOL
  */
 p7601:
   if (mcposn > scmacs[curmac]->mcsize - 2)
-    goto p76111;
+    RANOFF_END;
 /* J could skip off e.o. mac */
   if (curr->bcurs == curr->bchars)
-    goto p1026;
+    RAWNEXTCHR;
 /* J at EOL */
-p1511:mcposn = mcposn + 2;         /* Skip 2 */
+skip2macch:
+  mcposn = mcposn + 2;             /* Skip 2 */
   if (mcposn > scmacs[curmac]->mcsize)
-    goto p76111;
-/* J skipped off e.o. mac */
-  goto p1026;
+    RANOFF_END;                    /* J skipped off e.o. mac */
+  RAWNEXTCHR;
 /*
  * ^NC - Obey if in command processor
  */
 p7603:
   if (mcposn > scmacs[curmac]->mcsize - 2)
-    goto p1023;
+    BOL_OR_EOL;
 /* J could skip off e.o. mac */
   if (!cmmand)
-    goto p1511;
-  goto p1026;
+    SKIP2MACCH;
+  RAWNEXTCHR;
 /*
  * ^NX - eXit from macro
  */
 p7630:
-  notmac(0);
+  notmac(false);
   GETNEXTCHR;
 /*
  * ^NT - Trust user if he wants to change file pointer during modify
  */
 p7624:mctrst = true;
-  goto p1026;
+  RAWNEXTCHR;
 /*
  * ^NS - Unconditional skip (reverse obey sense)
  */
-p7623:goto p1511;
+p7623:
+  SKIP2MACCH;
 /*
  * ^NE - Reset insErt mode (^E) to OFF
  */
 p7605:insert = false;
   if (curmac < 0)
     refrsh(curr);                  /* Close gap */
-  goto p1026;
+  RAWNEXTCHR;
 /*
  * ^NU - Up from a macro s/r
  */
@@ -1286,8 +1449,8 @@ p1706:
   {
   p17061:
     printf("\r\nReturn macro ^<%o>out of range or empty. ", i);
-    notmac(1);
-    goto p10232;
+    notmac(true);
+    SOUNDALARM;
   }
   if (i > TOPMAC)
     goto p17061;                   /* Illegal macro # */
@@ -1324,18 +1487,18 @@ p1706:
   }                                /* if (mcstck[mcnxfr+1].u_use) */
   else if (verb == 'I')
     goto p7604;
-  goto p1026;
+  RAWNEXTCHR;
 /*
  * ^ND - go Down a level ( a macro as a subroutine)
  */
 p7604:
 /* Error if < 2 chars left in macro */
   if (mcposn > scmacs[curmac]->mcsize - 2)
-    goto p1023;
+    BOL_OR_EOL;
   if (MCLMIT == mcnxfr)
   {
     err = "Macro stack depth limit exceeded";
-    goto p10231;
+    ERR_IF_MAC;
   }
   mcstck[mcnxfr].mcprev = curmac;
 /* Return addr after following macro */
@@ -1348,21 +1511,21 @@ p7604:
     curmac = l;
     mcposn = m;
   }
-  goto p1026;
+  RAWNEXTCHR;
 /*
  * ^NJ long (signed) jump
  */
 p7612:
 /* Must be 1 more char in macro */
   if (mcposn >= scmacs[curmac]->mcsize)
-    goto p76111;
+    RANOFF_END;
   fornj = true;                    /* Indicate ^N^J */
   goto p1902;                      /* Get jump length */
 /*
  * ^NL - Long skip
  */
 p7614:mcposn = mcposn + 2;         /* Skip 2 ... */
-  goto p1511;                      /* ... skip 2 more */
+  SKIP2MACCH;                      /* ... skip 2 more */
 /*
  * ^NM - Make Macro from current line
  */
@@ -1371,7 +1534,7 @@ p7615:
     goto p1908;                    /* J keybd pseudo */
 /* Must be 1 more char in macro */
   if (scmacs[curmac]->mcsize == mcposn)
-    goto p1023;
+    BOL_OR_EOL;
 p1908:gmacr = true;                /* We are defining a macro */
   goto p1902;                      /* Get macro ID */
 /*
@@ -1380,12 +1543,12 @@ p1908:gmacr = true;                /* We are defining a macro */
 p7607:
 /* J not another char + something to obey */
   if (scmacs[curmac]->mcsize - mcposn < 3)
-    goto p76111;
+    RANOFF_END;
   gmacr = false;                   /* We are not defining a macro */
 p1902:gposn = false;               /* We are not a file or curs posn */
 p1707:glast = true;                /* So we will come back */
   gpseu = true;                    /* So we will come back */
-  goto p1026;
+  RAWNEXTCHR;
 /*
  * P1601 - Come here with ^NG char
  */
@@ -1395,36 +1558,43 @@ p1601:
     fornj = false;
     mcposn += thisch;              /* Do the jump */
     if (mcposn >= 0 && mcposn < scmacs[curmac]->mcsize)
-      goto p1026;
+      RAWNEXTCHR;
     err = "^NJ off macro end or start";
-    goto p10231;
+    ERR_IF_MAC;
   }
   if (gposn)
     goto p1708;                    /* J in fact for a positioner */
   if (gmacr)
     goto p1903;                    /* J in fact defining a macro */
   if (curr->bcurs == curr->bchars)
-    goto p1511;
+    SKIP2MACCH;
 /* Skip if at eol */
   if (curr->bdata[curr->bcurs] != thisch)
-    goto p1511;
+    SKIP2MACCH;
 /* Skip if mismatch */
-  goto p1026;
+  RAWNEXTCHR;
 /*
  * P1903 - Come here with macro to define. All characters are legal
  *         except the pseudomacros...
  */
 p1903:
-  if ((thisch < 0200 && thisch > 077) || thisch > TOPMAC)
-    goto w1023;
+  if ((thisch < 0200 && thisch > 077) ||
+    (thisch > TOPMAC && thisch < 07000) || thisch > 07777)
+  {
+    err = "";
+    fprintf(stderr, "\r\n^NM cannot define macro %o", thisch);
+    newlin();
+    ERR_IF_MAC;
+  }                                /* if ((thisch < 0200 && ... )) */
   if (curr->bchars == 0)
-    goto p1023;                    /* Trying to define null macro */
+    BOL_OR_EOL;                    /* Trying to define null macro */
 /* Define the macro. Report if some problem... */
+  curr->bdata[curr->bchars] = 0;   /* macdef prefers terminated strings */
   if (macdef((int)thisch, curr->bdata, (int)curr->bchars, true))
-    goto p1026;
+    RAWNEXTCHR;
   if (curmac >= 0)
-    notmac(1);
-  goto p10232;                     /* Report failure */
+    notmac(true);
+  SOUNDALARM;                      /* Report failure */
 /*
  * ^W - Next char not special but Without parity
  */

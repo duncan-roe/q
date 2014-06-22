@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include "alledit.h"
 #include "edmast.h"
+#include "fmode.h"
 /* */
 #define STC(c) do {*q++ = c;\
   if (!--unused) \
