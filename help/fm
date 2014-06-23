@@ -16,7 +16,7 @@ than one mode: for instance "d" affects dr & dw.
  00000000004 tr       Conventionally expand tabs on reading (t 1 9 17 25...)  +
  00000000010 tw       Conventionally compress spaces to tabs on writing       -
  00000000020 s        Leave trailing Spaces when writing                      -
- 00000000040 *        Show '^' as "^*" (always applies to macros)             +
+ 00000000040 *        Show '^' as "^*" (always applies to macros)             -
  00000000100 q        Q command in macro can quit (otherwise macro returns)   -
  00000000200 #        Q $<number> moves argument pointer to <number>          -
  00000000400 f        Fixed length edit (esp. for -Binary)                    *

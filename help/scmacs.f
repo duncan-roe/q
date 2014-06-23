@@ -39,7 +39,7 @@ N ) '^NC^NS^N\^NFas^J!ci^ND^N^<1302> -u "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^NNa^N
 N @ '^NO9^ND^N!^NR9^NU Non-space -> equals
 N 0 '^NC^NS^N\T,7,36^J^N^<1271> FORTRAN Comment cc36 + beautify
 N 6 '^NC^N^<1277>^N\ FORTRAN C-comment beautify
-N 7 '^NC^NS^N\^H^NA*^@^NM^<1201>^U*             1         2         3         4         5         6         7^J*    123456789012345678901234567890123456789012345678901234567890123456789012^J^ND^N^<1201>^J
+N 7 '^NC^NS^N\^H^NA*^@^NM^<1201>^U^<ZAM>^<RST>^ND^N^<4005>^NM^<7000>^U8^NM^<7001>^U^<PSH 1>^<PSH 0>^<SUB>^<POP 0>^ND^N^<7000>^NM^<1073>^U^ND^N^<777>^ND^N^<1201>^J
 N 8 '^NC^NS^N\^H^NA*^@^NM^<1201>^U*             1         2         3         4         5         6         7         8         9        10        11        12        13        14        15        16        17        18        19^J*    12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890^J^ND^N^<1201>^J
 N 9 'fi fl ^ND^N2^*J^*NC^*NU^*[fb^*Jg-1^*Jv^*Jv0^*Jg+1^*Jfv^*J^*NU^J^NU
 N 2 '!!Put token to match here!!^N\ ; e.g. n2 ioctl^NU or ioctl^NM2
@@ -47,7 +47,7 @@ N ; '^NC^NS^N\^H^NE^NM ^N^<514>
 N < '^NC^NS^N\g-1^Jv^J^NU
 N > '^NC^NS^N\g+1^Jv^J^NU
 N201 ^A^J^NC^NU^[^N^<201> ;Repeat last LOCATE till no more found
-* n206 - (Ctrl-NWF) search current file for all occurrences of command line.
+* n206 - (^N^W^F) search current file for all occurrences of command line.
 *        grep options in n1074
 N1074 -wn^NU ; grep options for ctrl-NWF
 N206 ^NC^NS^N\^NM^<1202>^U!grep ^ND^N^<1074> -- '^ND^N^<1202>' "^ND^N^<4002>"^J^NU
@@ -92,6 +92,8 @@ N322 n1106 ^*ND^*N^*<1104>^*NU^Jn1107 ^*ND^*N^*<1105>^*NU^J^NU ; ^N^WR global re
 N325 n1106 ^*NU^Jn1107 ^*NU^J^NU
 * n363 - show what files $C expands to
 N363 ^NC^NS^N\! for i in ^ND^N^<1075>;do echo $i;done|pr -n -t^J^NU
+N1070 /* 107X - DEFAULT VALUES FOR VARIOUS MACROS
+N1073 80^NU ; Ruler width
 N1075 $C^NU ; override with invocation wildcard
 * n372 (^N^Wz) - set up N N to globally uppercase its line contents
 N372 ^NC^NS^N\n016 ^*NM^*<526>^*Uq $1^*J^*ND^*N^*<526>^*ND^*N^*<360>^*ND^*N^*<526>^*H^*S^*ND^*N^*<361>^*ND^*N^*<362>^*NU^J^NU
@@ -113,6 +115,31 @@ N366 1^NU ;Put initial value&format here & use <266>, <300>, <304>
 N514 ^NC^NS^[^@^G;^NA^NL^D^T^N^<514>^J^NU
 N515 ^G^H^NA^NU^D^D^D^?^NG^H^Y^@^N^<515>
 N522 ^NU ; RCSDIFF options for Ctl-N &
+* N777 - Draw ruler of length ^N^<1073>. Sets up initial values then calls N776
+*        To fit the screen exactly, N1073 should be 8 less than screen width (as returned by N4005)
+*   Memory locations:-
+*   N7000 - ruler width
+*   N7001 - constant 10
+*   N7002 - constant 100
+*   N7003 - constant 1000
+*   N7004 - How many spaces to put before next 10's marker
+*   N7005 - How many 10's markers left to do or Value of next single digit
+*   N7006 - Value of next 10's marker
+* N776 If more markers to do, increment marker value.
+*      Work out how many spaces before next marker: there are only 8 after the initial '*'
+*      - there are 9 if the marker value is less than 10
+*      - otherwise there are 8 if the marker value is less than 100
+*      - otherwise there are 7 if the marker value is less than 1000
+*      - otherwise there are 6.
+*      Call N775 to o/p these spaces.
+*      Output the marker.
+*      Repeat.
+* N775 - Outputs spaces
+* N774 - Output digits 0 - 10 repeatedly until all done
+N777 ^<ZAM>^<RST>^ND^N^<1073>^NM^<7000>^U10^NM^<7001>^U100^NM^<7002>^U1000^NM^<7003>^U^<PSH 1>^<PSH 0>^<DIV>^<POP 5>*    ^ND^N^<776>^<POPN>^J*    ^<PSH 0>^<POPX>^ND^N^<774>^J^NU
+N776 ^<PSH 5>^<S1>^<SGE>^NU^<POP 5>^<PSH 1>^<POPX>^<S1X>^<PSH 6>^<A1>^<POP 6>^<PSH 6>^<PSH 1>^<SUB>^<SGT>^<S1X>^<POPN>^<PSH 6>^<PSH 2>^<SUB>^<SGT>^<S1X>^<POPN>^<PSH 6>^<PSH 3>^<SUB>^<SGT>^<S1X>^<POPN>^ND^N^<775>^ND^N^<7006>^N^<776>
+N775 ^<S1X>^<SXGE>^NU ^N^<775>
+N774 ^<S1X>^<SXGE>^NU^<PSH 1>^<PSH 5>^<A1>^<POP 5>^<PSH 5>^<SUB>^<SLT>^NS^NL^<PS0>^<POP 5>^<POPN>^ND^N^<7005>^N^<774>
 N1001 ^NC^NS^N\^[^NFa^ND^N^<4000>^NM^<1021>^[^NU ; Env save #1
 N1011 ^NC^NS^N\g ta^Jfm^ND^N^<1021>^J^NU ; Env restore #1
 N1021 !!SCRATCH - USED BY ENV DUMP #1
@@ -128,4 +155,3 @@ N1277 L C,,,,1^J^NC^NX^F^NA^NL^S^X^Q^@^J^N^<1277>
 N1300 /* 13XX - USED FOR MISCELLANEOUS FLGS. Change to ^NU for no effect
 N1301  -M^NU  ;for ^N(
 N1302  -d -M^NU  ;for ^N)
-z

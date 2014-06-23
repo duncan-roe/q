@@ -726,7 +726,7 @@ main(int xargc, char **xargv)
  */
   argc = xargc;                    /* Xfer invocation arg to common */
   argv = xargv;                    /* Xfer invocation arg to common */
-  dfltmode = 0212045;               /* +e +m +* +tr +dr +i */
+  dfltmode = 0212005;               /* +e +m +* +tr +dr +i */
   end_seq = normal_end_sequence;
   init_alu();
 /* Pick up any option arguments and set cmd_state if more args follow */
