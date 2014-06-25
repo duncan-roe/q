@@ -26,7 +26,6 @@ void pdsply(scrbuf5 *, unsigned char *, int);
 short getlin(int, int);
 short getnum(int), setmode(void);
 bool tabset(scrbuf5 *scbuf);
-int scrdtk(int, unsigned char *, int, scrbuf5 *);
 int newmac(void), rdlin(scrbuf5 *, int), ysno5a(char *, int);
 bool kbd5(void);
 int lsub5a(unsigned char *, int, unsigned char *, int, int, int *, int *);

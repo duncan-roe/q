@@ -52,4 +52,8 @@ typedef struct scrbuf5             /* Screenedit buffer */
   unsigned char bdata[Q_BUFSIZ];   /* Data for the line */
 }
 scrbuf5;
+
+/* Prototype */
+
+int scrdtk(int key, unsigned char *buf, int bufcap, scrbuf5 *scline);
 #endif

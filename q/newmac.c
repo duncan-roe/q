@@ -30,6 +30,11 @@
 /* Instantiate externals */
 long ALU_memory[01000] = { 0 };
 
+/* Static Variables */
+
+static unsigned char alubuf[64];
+static scrbuf5 aluscrbuf;
+
 int
 newmac()
 {
@@ -159,9 +164,24 @@ newmac()
     char *endptr;
     int idx = verb & 0777;
     long oldval = ALU_memory[idx];
+    char *strbuf = buf;
+
+/* Parse out token from supplied buffer to allow slash star comments */
+    scrdtk(5, 0, 0, &aluscrbuf);
+    aluscrbuf.bchars = snprintf((char *)aluscrbuf.bdata, BUFMAX, "%s", buf);
+    if (aluscrbuf.bchars >0)
+    {
+      scrdtk(1, alubuf, sizeof alubuf - 1, &aluscrbuf);
+      if (aluscrbuf.toktyp == nortok)
+      {
+        scrdtk(1, 0, 0, &aluscrbuf);
+        if (aluscrbuf.toktyp == eoltok)
+          strbuf = (char *)alubuf;
+      }                            /* if (aluscrbuf.toktyp == nortok) */
+    }                              /* if (aluscrbuf.bchars >0) */
 
     errno = 0;
-    ALU_memory[idx] = strtol(buf, &endptr, 0);
+    ALU_memory[idx] = strtol(strbuf, &endptr, 0);
     if (errno)
     {
       if (errno == ERANGE)
@@ -174,7 +194,7 @@ newmac()
         if (*q == '0')
         {
           errno = 0;
-          *(unsigned long *)(&ALU_memory[idx]) = strtoul(buf, &endptr, 0);
+          *(unsigned long *)(&ALU_memory[idx]) = strtoul(strbuf, &endptr, 0);
         }                          /* if (*q == '0') */
       }                            /* if (errno == ERANGE) */
       if (errno)

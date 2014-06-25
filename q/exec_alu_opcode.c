@@ -74,39 +74,36 @@ tc(char **err)
 }                                  /* tc() */
 
 static bool
-a1(char **err)
+add_any(char **err, long val)
 {
   if (!r_valid(err))
     return false;
-  rs[rsidx]++;
+  rs[rsidx] += val;
   return true;
+}                                  /* add_any() */
+
+static bool
+a1(char **err)
+{
+  return add_any(err, 1);
 }                                  /* a1() */
 
 static bool
 a2(char **err)
 {
-  if (!r_valid(err))
-    return false;
-  rs[rsidx] += 2;
-  return true;
+  return add_any(err, 2);
 }                                  /* a2() */
 
 static bool
 s2(char **err)
 {
-  if (!r_valid(err))
-    return false;
-  rs[rsidx] -= 2;
-  return true;
+  return add_any(err, -2);
 }                                  /* s2() */
 
 static bool
 s1(char **err)
 {
-  if (!r_valid(err))
-    return false;
-  rs[rsidx]--;
-  return true;
+  return add_any(err, -1);
 }                                  /* s1() */
 
 static bool
