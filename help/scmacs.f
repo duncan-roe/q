@@ -39,8 +39,8 @@ N ) '^NC^NS^N\^NFas^J!ci^ND^N^<1302> -u "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^NNa^N
 N @ '^NO9^ND^N!^NR9^NU Non-space -> equals
 N 0 '^NC^NS^N\T,7,36^J^N^<1271> FORTRAN Comment cc36 + beautify
 N 6 '^NC^N^<1277>^N\ FORTRAN C-comment beautify
-N 7 '^NC^NS^N\^H^NA*^@^NM^<1201>^U^<ZAM>^<RST>^ND^N^<4005>^NM^<7000>^U8^NM^<7001>^U^<PSH 1>^<PSH 0>^<SUB>^<POP 0>^ND^N^<7000>^NM^<1073>^U^ND^N^<777>^ND^N^<1201>^J
-N 8 '^NC^NS^N\^H^NA*^@^NM^<1201>^U*             1         2         3         4         5         6         7         8         9        10        11        12        13        14        15        16        17        18        19^J*    12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890^J^ND^N^<1201>^J
+N 7 '^NC^NS^N\^H^NA*^@^NM^<1201>^U^<ZAM>^<RST>^ND^N^<4005>^NM^<7000>^U^<PS8>^<PSH 0>^<SUB>^<POP 0>^ND^N^<7000>^NM^<1073>^U^ND^N^<777>^ND^N^<1201>^J
+N 8 '^NC^NS^N\^H^NA*^@^NM^<1201>^U^ND^N^<1405>^NM^<1073>^U^ND^N^<777>^ND^N^<1201>^J
 N 9 'fi fl ^ND^N2^*J^*NC^*NU^*[fb^*Jg-1^*Jv^*Jv0^*Jg+1^*Jfv^*J^*NU^J^NU
 N 2 '!!Put token to match here!!^N\ ; e.g. n2 ioctl^NU or ioctl^NM2
 N ; '^NC^NS^N\^H^NE^NM ^N^<514>
@@ -48,9 +48,8 @@ N < '^NC^NS^N\g-1^Jv^J^NU
 N > '^NC^NS^N\g+1^Jv^J^NU
 N201 ^A^J^NC^NU^[^N^<201> ;Repeat last LOCATE till no more found
 * n206 - (^N^W^F) search current file for all occurrences of command line.
-*        grep options in n1074
-N1074 -wn^NU ; grep options for ctrl-NWF
-N206 ^NC^NS^N\^NM^<1202>^U!grep ^ND^N^<1074> -- '^ND^N^<1202>' "^ND^N^<4002>"^J^NU
+*        grep options in n1404
+N206 ^NC^NS^N\^NM^<1202>^U!grep ^ND^N^<1404> -- '^ND^N^<1202>' "^ND^N^<4002>"^J^NU
 N207 ^NC^NS^N\^ND^N^<1001>fm-dw^Js^J!runindent.sh "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^ND^N^<1011>^ND^N1s^J^NU
 N210 ^E^ND^N^<1201>^J^NC^NU^N^<210> ;Insert ^*N^<1201> at Home posn
 N222 ^NC^NS^N\^NM^<1201>^UM ^NU ;Define string to be appended/inserted
@@ -64,20 +63,18 @@ N265 ^NC^NS^N\^NE^H^NA^NS^N\^NOI^ND^N^<365>^Y^N^<511> ;Decr. SPZ ^<365>
 N266 ^NC^NS^N\^NE^H^NA^NS^N\^NOI^ND^N^<366>^Y^N^<507> ;Decimal inc ^<366>
 * n347 (^N^Wg) Check in current source with message 1103
 N347 ^NC^NS^N\!ci -u -m'^ND^N^<1103>' "^ND^N^<4002>"^J^NU
-* n362 - Multi-file replacer. If N1100 returns at once, got to next file.
+* n362 - (^N^Wr) Multi-file replacer. If N1100 returns at once, got to next file.
 *        Else invoke n1101.
 *        Go to line 1 & turn off indenting before calling each macro
 * n360 & n361 - generate n1100 & n1101 for n362
-N360 ^NC^NS^N\^NM^<1202>^Un1100 ^ND^N^<1076>l '^ND^N^<1202>'^*J^*NC^*NU^*[^*NI^*NU^J^NU
-N361 ^NC^NS^N\^NM^<1201>^Un1101 ^*ND^*N^*<1106>^ND^N^<1076>y '^ND^N^<1202>' '^ND^N^<1201>'^*J^*NU^J^NU
+N360 ^NC^NS^N\^NM^<1202>^Un1100 ^ND^N^<1401>l '^ND^N^<1202>'^*J^*NC^*NU^*[^*NI^*NU^J^NU
+N361 ^NC^NS^N\^NM^<1201>^Un1101 ^*ND^*N^*<1106>^ND^N^<1401>y '^ND^N^<1202>' '^ND^N^<1201>'^*J^*NU^J^NU
 N362 ^NC^NS^N\^[n523 ^ND^N^<4000>^*NU^J^ND^N^<524>^[fm ^ND^N^<523>^J^NU
 * n367 (^N^Ww) Check in current source with message 1102
 N367 ^NC^NS^N\!ci -u -m'^ND^N^<1102>' "^ND^N^<4002>"^J^NU
 N523 !!! SCRATCH - DEFINED BY OTHER MACROS !!!
-N524 o n^Jg1^J^ND^N^<1100>^N^<525>g1^J^ND^N^<1101>^ND^N^<1077>^N^<525>
+N524 o n^Jg1^J^ND^N^<1100>^N^<525>g1^J^ND^N^<1101>^ND^N^<1402>^N^<525>
 N525 ^[q^J^N^<524>
-N1076 f^NU ; Override with "" (i.e. ^NU) for l & y instead of fl & fy NWp&q
-N1077 s^J^ND^N^<1107>^NU ; Override with "b", &c. as required
 N1100 !! put DECIDER macro here !!
 N1101 !! put EDITOR macro here !!
 N1102 Warning-free with -Wall -Wmissing-prototypes -Wstrict-prototypes^NU
@@ -90,11 +87,10 @@ N1107 ^NU ; Can change to enable RCS / CVS
 N322 n1106 ^*ND^*N^*<1104>^*NU^Jn1107 ^*ND^*N^*<1105>^*NU^J^NU ; ^N^WR global replace does co/ci
 * n325 (^N^WU) "U"ndo RCS / CVS enable in ^N^Wr
 N325 n1106 ^*NU^Jn1107 ^*NU^J^NU
-* n363 - show what files $C expands to
-N363 ^NC^NS^N\! for i in ^ND^N^<1075>;do echo $i;done|pr -n -t^J^NU
+* n363 - (^N^Ws) show what files $C expands to
+N363 ^NC^NS^N\! for i in ^ND^N^<1403>;do echo $i;done|pr -n -t^J^NU
 N1070 /* 107X - DEFAULT VALUES FOR VARIOUS MACROS
-N1073 80^NU ; Ruler width
-N1075 $C^NU ; override with invocation wildcard
+N1073 80^NU ; Ruler width (set by macros)
 * n372 (^N^Wz) - set up N N to globally uppercase its line contents
 N372 ^NC^NS^N\n016 ^*NM^*<526>^*Uq $1^*J^*ND^*N^*<526>^*ND^*N^*<360>^*ND^*N^*<526>^*H^*S^*ND^*N^*<361>^*ND^*N^*<362>^*NU^J^NU
 N526 !!! SCRATCH - DEFINED BY OTHER MACROS !!!
@@ -155,3 +151,10 @@ N1277 L C,,,,1^J^NC^NX^F^NA^NL^S^X^Q^@^J^N^<1277>
 N1300 /* 13XX - USED FOR MISCELLANEOUS FLGS. Change to ^NU for no effect
 N1301  -M^NU  ;for ^N(
 N1302  -d -M^NU  ;for ^N)
+N1400 /* 14XX - MACRO USER-SETTABLE DEFAULTS (I.E. PARAMETERS)
+N1401 f^NU ; Define to be ^NU for l & y instead of fl & fy (^N^Wp & ^N^Wq)
+N1402 s^J^ND^N^<1107>^NU ; Override with "b", &c. as required
+N1403 $C^NU ; override with invocation wildcard (^N^Ws)
+N1404 -wn^NU ; grep options for ^N^W^F
+N1405 80^NU ; Ruler width (^N8)
+N1500 /* 15XX - RESERVED FOR MACRO PROGRAMS (*.qm)

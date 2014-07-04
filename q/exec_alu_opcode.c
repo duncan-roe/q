@@ -432,6 +432,78 @@ ps2(char **err)
   return push(2, err);
 }                                  /* ps2() */
 
+static bool
+ps4(char **err)
+{
+  return push(4, err);
+}                                  /* ps4() */
+
+static bool
+ps8(char **err)
+{
+  return push(8, err);
+}                                  /* ps8() */
+
+static bool
+ps16(char **err)
+{
+  return push(16, err);
+}                                  /* ps16() */
+
+static bool
+ps32(char **err)
+{
+  return push(32, err);
+}                                  /* ps32() */
+
+static bool
+ps64(char **err)
+{
+  return push(64, err);
+}                                  /* ps64() */
+
+static bool
+ps128(char **err)
+{
+  return push(128, err);
+}                                  /* ps128() */
+
+static bool
+ps256(char **err)
+{
+  return push(256, err);
+}                                  /* ps256() */
+
+static bool
+ps512(char **err)
+{
+  return push(512, err);
+}                                  /* ps512() */
+
+static bool
+ps1024(char **err)
+{
+  return push(1024, err);
+}                                  /* ps1024() */
+
+static bool
+ps2048(char **err)
+{
+  return push(2048, err);
+}                                  /* ps2048() */
+
+static bool
+ps4096(char **err)
+{
+  return push(4096, err);
+}                                  /* ps4096() */
+
+static bool
+ps8192(char **err)
+{
+  return push(8192, err);
+}                                  /* ps8192() */
+
 /* **************************** The Opcode Table **************************** */
 
 alu_opcode opcode_defs[] = {
@@ -465,6 +537,18 @@ alu_opcode opcode_defs[] = {
   OPCODE(ps0, "Push constant 0 to R"),
   OPCODE(ps1, "Push constant 1 to R"),
   OPCODE(ps2, "Push constant 2 to R"),
+  OPCODE(ps4, "Push constant 4 to R"),
+  OPCODE(ps8, "Push constant 8 to R"),
+  OPCODE(ps16, "Push constant 16 to R"),
+  OPCODE(ps32, "Push constant 32 to R"),
+  OPCODE(ps64, "Push constant 64 to R"),
+  OPCODE(ps128, "Push constant 128 to R"),
+  OPCODE(ps256, "Push constant 256 to R"),
+  OPCODE(ps512, "Push constant 512 to R"),
+  OPCODE(ps1024, "Push constant 1024 to R"),
+  OPCODE(ps2048, "Push constant 2048 to R"),
+  OPCODE(ps4096, "Push constant 4096 to R"),
+  OPCODE(ps8192, "Push constant 8192 to R"),
   CAPTION(""),
   CAPTION("Instructions with 2 operands"),
   CAPTION("============ ==== = ========"),
