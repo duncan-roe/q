@@ -164,7 +164,9 @@ scrdit(scrbuf5 *curr, scrbuf5 *prev, char *prmpt, int pchrs, int cmmand)
  *
  *   Validate cursor &c
  */
-  if ((olen = curr->bchars) > curr->bmxch)
+
+/* curr->bchars counts the trailing null but curr->bmxch does not */
+  if ((olen = curr->bchars) > curr->bmxch + 1)
   {
     err = "Bad char cnt curr line";
   p1001:
@@ -173,6 +175,7 @@ scrdit(scrbuf5 *curr, scrbuf5 *prev, char *prmpt, int pchrs, int cmmand)
     verb = 'J';                    /* Let user... */
     return;                        /* ... salvage his edit. */
   }
+
 /* J bad char cnt this line */
   if (curr->bcurs < 0)             /* Bad cursor this line */
   {
@@ -184,7 +187,8 @@ scrdit(scrbuf5 *curr, scrbuf5 *prev, char *prmpt, int pchrs, int cmmand)
     err = "Prompt>15 chars";
     goto p1001;
   }
-/* J cursor off end this lin */
+
+/* J cursor off end this line */
   if (curr->bcurs > curr->bchars)
   {
     err = "Curr curs off end of info";

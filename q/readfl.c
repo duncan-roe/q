@@ -207,15 +207,27 @@ prclin(void)                       /* Build up line; return 1 for eof */
   state = 0;                       /* No longer holding on to Cr */
   if (!binary && lngwrn)
   {
-    puts("Long line found!\r");
+/* If the very next ch is Nl, we haven't actually misssed anything, */
+/* so defer outputting a warning here. */
+    bool tried_next_ch = false;
+
     for (;;)
     {
       if (!bytes && getblk())
+      {
+        if (!tried_next_ch)
+          puts("Long line found!\r");
         return 1;
+      }                            /* if (!bytes && getblk()) */
       thisch = *bufpos++;
       bytes--;
       if (thisch == '\n')          /* Eol */
         break;
+      if (!tried_next_ch)
+      {
+        tried_next_ch = true;
+        puts("Long line found!\r");
+      }                            /* if (!tried_next_ch) */
     }                              /* for(;;) */
   }                                /* if(!binary&&lngwrn) */
   return 0;

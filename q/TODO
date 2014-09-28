@@ -1,4 +1,5 @@
-DONE Allow "/*" comments on n7xxx lines
+ALU is always 64-bit
+cater for >4G lines in L & Y
 Give some kind of acknowledgement to ^NF (& ^NO?)
 -H option to give invocation help
 Can test if a macro is defined: n4007 x; ^ND^N^<4007>
@@ -21,5 +22,6 @@ INTERNALS
   STARTED: Use meaningful names instead of logtemp &c.
   STARTED Tidy scmnrd.c - it's horrible
   STARTED: Be more careful what goes to stderr / stdin
+  use stdint types
 Show what arguments Q started with (?)
 Catalogue of useful macros

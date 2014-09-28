@@ -689,8 +689,8 @@ main(int xargc, char **xargv)
   int yposn;                       /* How far we are along a line (Y) */
   int locpos;                   /* Position in line of string found by LOCATE */
   int minlen = 0;                  /* Min line length (L&Y) */
-  int first = 0;                   /* First pos to search (L&Y) */
-  int last = 0;                    /* Last pos to search (L&Y) */ ;
+  int firstpos = 0;                /* First pos to search (L&Y) */
+  int lastpos = 0;                 /* Last pos to search (L&Y) */ ;
   bool revrse;                     /* Locate backwards */
   int savtok;                      /* Saved token type */
   int colonline;                   /* Line number from <file>:<line> */
@@ -726,7 +726,7 @@ main(int xargc, char **xargv)
  */
   argc = xargc;                    /* Xfer invocation arg to common */
   argv = xargv;                    /* Xfer invocation arg to common */
-  dfltmode = 0212005;               /* +e +m +* +tr +dr +i */
+  dfltmode = 0212005;              /* +e +m +* +tr +dr +i */
   end_seq = normal_end_sequence;
   init_alu();
 /* Pick up any option arguments and set cmd_state if more args follow */
@@ -2002,23 +2002,23 @@ p1722:
   nonum = 1716;                    /* 1st pos 0 default */
   goto p17165;                     /* Get 1st pos to search */
 p1716:
-  first = oldcom->decval - 1;      /* Columns start at 0 */
+  firstpos = oldcom->decval - 1;   /* Columns start at 0 */
   numok = 1717;
   nonum = 1718;                    /* Last max lin len default */
   goto p17165;                     /* Get last pos'n */
 p1718:
-  last = BUFMAX - 1;
+  lastpos = BUFMAX;                /* BUFMAX does not include trlg null */
   goto p1719;
 p1717:
-  last = oldcom->decval - 1;       /* Last start position */
-  if (last < first)                /* Impossible combination of columns */
+  lastpos = oldcom->decval - 1;    /* Last start position */
+  if (lastpos < firstpos)          /* Impossible combination of columns */
   {
     printf("Last pos'n < first\r\n");
     REREAD_CMD;
-  }                                /* if(last<first) */
-  last = last + l;                 /* Add search length to get wanted length */
+  }                                /* if(lastpos < firstpos) */
+  lastpos += l;                    /* Add search length to get wanted length */
 p1719:
-  minlen = first + l;              /* Get minimum line length to search */
+  minlen = firstpos + l;           /* Get minimum line length to search */
   if (eolok())
     goto asg2rtn;
   REREAD_CMD;
@@ -2057,11 +2057,11 @@ p1715:
     m = curr->bchars;
     if (m < minlen)
       continue;                    /* Skip search if too short */
-    if (m > last)
-      m = last;                    /* Get length to search */
-    if (tokens ? ltok5a((unsigned char *)ermess, l, curr->bdata, first, m,
+    if (m > lastpos)
+      m = lastpos;                 /* Get length to search */
+    if (tokens ? ltok5a((unsigned char *)ermess, l, curr->bdata, firstpos, m,
       &locpos, &dummy, (unsigned char *)ndel) : lsub5a((unsigned char *)ermess,
-      l, curr->bdata, first, m, &locpos, &dummy))
+      l, curr->bdata, firstpos, m, &locpos, &dummy))
     {                              /* Line located */
       if (revrse)
         setptr(revpos);
@@ -2564,14 +2564,14 @@ p1710:savpos = ptrpos;             /* Remember so we can get back */
 /*
  * Initial tasks for each line
  */
-    yposn = first;                 /* Search from 1st position spec'd */
+    yposn = firstpos;              /* Search from 1st position spec'd */
     linmod = false;                /* No match this line yet */
     k = curr->bchars;              /* Remembers line length */
     if (k < minlen)
       continue;                    /* J line shorter than minimum */
     n = 0;
-    if (k > last)
-      n = k - last;                /* N=# at end not to search */
+    if (k > lastpos)
+      n = k - lastpos;             /* N=# at end not to search */
 /* */
   p1619:if (tokens)
       goto p2011;                  /* J FY */

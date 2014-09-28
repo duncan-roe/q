@@ -391,6 +391,14 @@ popn(char **err)
 }                                  /* popn() */
 
 static bool
+dup(char **err)
+{
+  if (!r_valid(err))
+    return false;
+  return push(rs[rsidx], err);
+}                                  /* dup() */
+
+static bool
 dmp(char **err)
 {
   dump_registers(true);
@@ -531,6 +539,7 @@ alu_opcode opcode_defs[] = {
   OPCODE(rss, "R = R >> 1 (signed)"),
   OPCODE(rsu, "R = R >> 1 (unsigned)"),
   OPCODE(popn, "Pop R to nowhere (value is discarded)"),
+  OPCODE(dup, "Push a copy of R"),
   CAPTION(""),
   CAPTION("Immediate Data Instructions"),
   CAPTION("========= ==== ============"),
