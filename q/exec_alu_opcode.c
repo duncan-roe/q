@@ -412,6 +412,7 @@ rst(char **err)
   xreg = 0;
   index_next = false;
   alu_skip = false;
+  store_file_pos = false;
   return true;
 }                                  /* rst() */
 
@@ -421,6 +422,18 @@ zam(char **err)
   memset(ALU_memory, 0, sizeof ALU_memory);
   return true;
 }                                  /* zam() */
+
+static bool
+scpt(char **err)
+{
+  return !(store_file_pos = false);
+}                                  /* scpt() */
+
+static bool
+sfpt(char **err)
+{
+  return store_file_pos = true;
+}                                  /* sfpt() */
 
 static bool
 ps0(char **err)
@@ -594,6 +607,8 @@ alu_opcode opcode_defs[] = {
   OPCODE(dmp, "Dump Registers"),
   OPCODE(rst, "Reset Registers to initial state"),
   OPCODE(zam, "Zeroise All Memory"),
+  OPCODE(scpt, "Store Cursor Position Tabs (initial setting, also after RST)"),
+  OPCODE(sfpt, "Store File Position Tabs"),
 };                                 /* alu_opcode opcode_defs[] = */
 
 /* Instantiate other externals */

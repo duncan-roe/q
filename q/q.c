@@ -84,6 +84,7 @@ int num_ops = 0;
 alu_dict_ent root_alu_dict_ent = { NULL, NULL, -2, 0 };
 int *alu_table_index;
 bool alu_macros_only = false;      /* N- was N-- */
+bool store_file_pos = false;
 unsigned long fmode;
 
 /* Static Variables */
@@ -645,9 +646,11 @@ display_opcodes(void)
   printf("\r\n"
     "\t Instructions to Access Tabs\r\n"
     "\t ============ == ====== ====\r\n"
-    "\t (x is a tab ID; type of tab is neither examined nor changed)\r\n"
+    "\t (x is a tab ID; type of tab is not examined)\r\n"
     "PSHTAB x Push value of tab x to R\r\n"
-    "POPTAB x Pop R to set value of tab x\r\n"
+    "POPTAB x Pop R to set value of tab x;\r\n"
+    "                  set tab type to file or cursor pos'n"
+    " as set by SCPT / SFTP\r\n"
     "\r\n"
     "\t Memory Reference Instructions\r\n"
     "\t ====== ========= ============\r\n"

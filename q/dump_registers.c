@@ -14,6 +14,8 @@ dump_registers(bool append_newline)
     index_next ? "TRUE" : "FALSE");
   fprintf(stderr, "Skip next 2 macro chars is %s\r\n",
     alu_skip ? "TRUE" : "FALSE");
+  fprintf(stderr, "Storing %s-position tabs\r\n",
+    store_file_pos ? "file" : "cursor");
   if (rsidx < 0)
     fprintf(stderr, "R is empty\r\n");
   else
