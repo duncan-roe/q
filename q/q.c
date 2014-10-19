@@ -57,10 +57,12 @@ typedef enum command_state
 {
   RUNNING,
   Q_ARG1,
+  TRY_INITIAL_COMMAND,
+/* Below here for line number states only (i.e. q <file>:<line number>) */
+  LINE_NUMBER_BASE,
   LINE_NUMBER_SAVED,
   DO_V_NEXT,
   HAVE_LINE_NUMBER,
-  TRY_INITIAL_COMMAND,
 } command_state;
 
 /* Externals that are not in any header */
@@ -1091,7 +1093,7 @@ main(int xargc, char **xargv)
  * Main command reading loop
  */
 p1004:
-  if (!USING_FILE && curmac < 0)
+  if ((!USING_FILE && curmac < 0) || cmd_state > LINE_NUMBER_BASE)
   {
     switch (cmd_state)
     {
@@ -1147,6 +1149,11 @@ p1004:
  * either initially or any time subsequently.
  * They are also used on an initial "q +line file". */
 
+      case LINE_NUMBER_BASE:
+        fprintf(stderr, "Illegal command state in %s:%d\r\n", __FILE__,
+          __LINE__);
+        exit(1);
+
       case LINE_NUMBER_SAVED:
         oldcom->bchars =
           snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "g %s",
@@ -1173,7 +1180,7 @@ p1004:
         break;
     }                              /* switch(cmd_state) */
     printf("> %s\r\n", oldcom->bdata);
-  }
+  }                               /* if ((!USING_FILE && curmac < 0) || ... ) */
   else
   read_command_normally:
     sccmnd();                      /* Read a command; set VERB */
