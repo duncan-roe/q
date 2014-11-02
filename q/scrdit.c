@@ -1066,9 +1066,8 @@ p1905:
       }                            /* if (tabidx >= NUM_TABS) */
       if (is_pop)
         success = pop_register(&tabs[tabidx].value);
-      else
-        if ((success = push_register(tabs[tabidx].value)))
-          tabs[tabidx].tabtyp = store_file_pos ? LINENUM : CHRPOS;
+      else if ((success = push_register(tabs[tabidx].value)))
+        tabs[tabidx].tabtyp = store_file_pos ? LINENUM : CHRPOS;
       if (success)
         GETNEXTCHR;
       SOUNDALARM;
@@ -1106,18 +1105,25 @@ p1905:
       }                            /* if (exec_alu_opcode(thisch)) else */
     }       /* if (thisch >= FIRST_ALU_OP && thisch < FIRST_ALU_OP + num_ops) */
   }                                /* if (thisch > TOPMAC) */
-/* Signal error if null or bad macro */
-  if (thisch > TOPMAC || !scmacs[thisch])
+
+/* ^N^<000> restarts current macro */
+  if (!thisch && curmac > 0)
+    mcposn = 0;                    /* Leave curmac as-is */
+  else
   {
-    if (curmac >= 0)
+/* Signal error if null or bad macro */
+    if (thisch > TOPMAC || !scmacs[thisch])
     {
-      printf("\r\nCalling undefined macro ^<%03o>. ", thisch);
-      notmac(true);
+      if (curmac >= 0)
+      {
+        printf("\r\nCalling undefined macro ^<%03o>. ", thisch);
+        notmac(true);
+      }
+      SOUNDALARM;
     }
-    SOUNDALARM;
-  }
-  mcposn = 0;                      /* Got the macro */
-  curmac = thisch;
+    mcposn = 0;                    /* Got the macro */
+    curmac = thisch;
+  }                                /* if (!thisch && curmac > 0) else */
   RAWNEXTCHR;
 p1503:
   if (thisch == 0177)

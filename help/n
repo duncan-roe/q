@@ -15,17 +15,27 @@ or displays them.
               macro, as does "n a ...". "n A ..." follows the suggested macro-
               writing convention that control characters are shown in upper-
               case, and Q commands in lower.
+
               The next 32 macros may be identified as themselves, except for
               minus ('-'), which can be identified by '@'. Quotes are required
               for macros so specified, if they contain comma or space.
               Macros 01 - 077 may also identified by their 2-digit octal ASCII
               value, e.g. "n ',' ..." & "n54 ..." both define the comma macro.
+
               All other macros must be identified using 3 or more octal digits.
               Quoting is not required and must not be used in the bodies of
               macros so identified (but it is required with 2-digit octal ID).
               This (long octal) format is also available for normal characters,
               e.g. "n001 ..." also defines the control-A macro,
               but now "..." must not be quoted.
+
+              Macro zero (NULL) may not be defined by N-NEWMACRO because ^N^@
+              inside a macro has the special meaning of "restart the current
+              macro". This is particularly useful for FI-FIMMEDIATE_MACRO where
+              the macro is otherwise inaccessible (its macro number lies in the
+              pseudo-macro range), but any macro may use ^N^@ (or ^N^<0>) to
+              re-invoke itself.
+
  <macro body> The definition. If the <macro-id> was specified as 1 or 2
               characters, this will need to be quoted if it contains comma or
               space. Otherwise it is read as raw text and should not be quoted.
@@ -38,6 +48,7 @@ or displays them.
               characters 0200 onwards are entered as "^<3+ -digit octal>".
               This format is also available for normal characters,
               e.g. "n001 ^<054> defines the control-A macro to be a comma.
+
  <treename>   Treename to accept macro definitions, which will be written in a
               format suitable for re-input using U-USE. Optional - if omitted,
               macro definitions are displayed at the terminal.

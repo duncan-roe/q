@@ -136,8 +136,8 @@ newmac()
   else
   {
 /* Check for being in pseudomacro region or out of range */
-    if ((verb > TOPMAC || (verb >= FIRST_PSEUDO && verb <= LAST_PSEUDO)) &&
-      (verb & 07000) != 07000)
+    if ((!verb || verb > TOPMAC ||
+      (verb >= FIRST_PSEUDO && verb <= LAST_PSEUDO)) && (verb & 07000) != 07000)
     {
       fprintf(stderr, "Macro %o is reserved or out of range", (int)verb);
       GIVE_UP;
@@ -169,7 +169,7 @@ newmac()
 /* Parse out token from supplied buffer to allow slash star comments */
     scrdtk(5, 0, 0, &aluscrbuf);
     aluscrbuf.bchars = snprintf((char *)aluscrbuf.bdata, BUFMAX, "%s", buf);
-    if (aluscrbuf.bchars >0)
+    if (aluscrbuf.bchars > 0)
     {
       scrdtk(1, alubuf, sizeof alubuf - 1, &aluscrbuf);
       if (aluscrbuf.toktyp == nortok)
