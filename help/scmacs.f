@@ -52,6 +52,8 @@ N201 ^A^J^NC^NU^[^N^<201> ;Repeat last LOCATE till no more found
 N206 ^NC^NS^N\^NM^<1202>^U!grep ^ND^N^<1404> -- '^ND^N^<1202>' "^ND^N^<4002>"^J^NU
 N207 ^NC^NS^N\^ND^N^<1001>fm-dw^Js^J!runindent.sh "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^ND^N^<1011>^ND^N1s^J^NU
 N210 ^E^ND^N^<1201>^J^NC^NU^N^<210> ;Insert ^*N^<1201> at Home posn
+N211 ^NC^NS^N\g1^J^ND^N^<772>^NU ; Update "at line" lines
+N772 l 'at line'^J^NC^NU^F^G ^K^ND^N^<773>^<ZAM>^<POP 0> ^ND^N^<7000>^J^N^@
 N222 ^NC^NS^N\^NM^<1201>^UM ^NU ;Define string to be appended/inserted
 N224 ^NC^NS^N\!ci -l "^ND^N^<4002>"</dev/null^Js^J!ci -l "^ND^N^<4002>"<~/spaces^JQ^J^N^<224> ;Check in all args
 N225 ^NC^NS^N\!ci -d -t- "^ND^N^<4002>"^J!rcs -U "^ND^N^<4002>"^J!co -M "^ND^N^<4002>"^J^NU ;Make known to RCS - non-strict locking
@@ -136,6 +138,7 @@ N777 ^<ZAM>^<RST>^ND^N^<1073>^NM^<7000>^U10^NM^<7001>^U100^NM^<7002>^U1000^NM^<7
 N776 ^<PSH 5>^<S1>^<SGE>^NU^<POP 5>^<PSH 1>^<POPX>^<S1X>^<PSH 6>^<A1>^<POP 6>^<PSH 6>^<PSH 1>^<SUB>^<SGT>^<S1X>^<POPN>^<PSH 6>^<PSH 2>^<SUB>^<SGT>^<S1X>^<POPN>^<PSH 6>^<PSH 3>^<SUB>^<SGT>^<S1X>^<POPN>^ND^N^<775>^ND^N^<7006>^N^<776>
 N775 ^<S1X>^<SXGE>^NU ^N^<775>
 N774 ^<S1X>^<SXGE>^NU^<PSH 1>^<PSH 5>^<A1>^<POP 5>^<PSH 5>^<SUB>^<SLT>^NS^NL^<PS0>^<POP 5>^<POPN>^ND^N^<7005>^N^<774>
+N773 ^NFZ^<PSHTAB Z>^NC^NS^<S1>^NU ;Push current line number
 N1001 ^NC^NS^N\^[^NFa^ND^N^<4000>^NM^<1021>^[^NU ; Env save #1
 N1011 ^NC^NS^N\g ta^Jfm^ND^N^<1021>^J^NU ; Env restore #1
 N1021 !!SCRATCH - USED BY ENV DUMP #1
