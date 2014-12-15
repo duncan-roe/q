@@ -53,7 +53,9 @@ N206 ^NC^NS^N\^NM^<1202>^U!grep ^ND^N^<1404> -- '^ND^N^<1202>' "^ND^N^<4002>"^J^
 N207 ^NC^NS^N\^ND^N^<1001>fm-dw^Js^J!runindent.sh "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^ND^N^<1011>^ND^N1s^J^NU
 N210 ^E^ND^N^<1201>^J^NC^NU^N^<210> ;Insert ^*N^<1201> at Home posn
 N211 ^NC^NS^N\g1^J^ND^N^<772>^NU ; Update "at line" lines
-N772 l 'at line'^J^NC^NU^F^G ^K^ND^N^<773>^<ZAM>^<POP 0> ^ND^N^<7000>^J^N^@
+N772 l 'at line'^J^NC^NU^F^G ^NG ^NS^NL^ND^N^<771>^E^ND^N^<773>^<ZAM>^<POP 0> ^ND^N^<7000>^J^N^@
+n771 ^D^N^<770>
+n770 ^NA^NU^NG ^NU^D^N^@
 N222 ^NC^NS^N\^NM^<1201>^UM ^NU ;Define string to be appended/inserted
 N224 ^NC^NS^N\!ci -l "^ND^N^<4002>"</dev/null^Js^J!ci -l "^ND^N^<4002>"<~/spaces^JQ^J^N^<224> ;Check in all args
 N225 ^NC^NS^N\!ci -d -t- "^ND^N^<4002>"^J!rcs -U "^ND^N^<4002>"^J!co -M "^ND^N^<4002>"^J^NU ;Make known to RCS - non-strict locking
