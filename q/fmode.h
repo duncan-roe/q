@@ -10,6 +10,7 @@
 #define CASDEP ((fmode & 02000000000) == 0)
 #define INDENT (fmode & 04000000000)
 #define INTERPRET_ALU_OPCODES (fmode & 00000200000)
+#define WARN_NONZERO_MEMORY (fmode & 00000400000)
 
 /* BRIEF and NONE are bits in fmode. Both are set for NONE */
 #define BRIEF (fmode & 010000000000)

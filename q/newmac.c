@@ -207,7 +207,7 @@ newmac()
       toupper((unsigned char)buf[0]) == 'T' &&
       gettab(buf[1], false, &ALU_memory[idx], false)))
     {
-      if (oldval && !BRIEF)
+      if (oldval && !BRIEF && WARN_NONZERO_MEMORY)
         printf("Warning - value was previously %ld\r\n", oldval);
       return 1;                    /* All chars parsed */
     }

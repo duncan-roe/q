@@ -146,6 +146,10 @@ setmode()
         c = result & 0200000 ? '+' : '-';
         putchar(c);
         putchar('i');
+        (void)write(1, ", ", 2);
+        c = result & 0400000 ? '+' : '-';
+        putchar(c);
+        putchar('w');
         (void)write(1, "\r\n", 2);
         switch ((int)(result >> 30 & 3))
         {
@@ -265,6 +269,10 @@ setmode()
 
         case 'I':                  /* Show Interpreted ALU opcodes */
           u = 0200000;
+          break;
+
+        case 'W':                  /* Warn when overwriting nonzero memory  */
+          u = 0400000;
           break;
 
         default:

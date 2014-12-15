@@ -28,6 +28,7 @@ than one mode: for instance "d" affects dr & dw.
  00000040000 l        Expand/compress Leading tabs                            -
  00000100000 h        ^N^[VQ] scrolls half a screen                           -
  00000200000 i        n- shows Interpreted ALU opcodes                        +
+ 00000400000 w        Warn if overwriting nonzero memory                      -
  10000000000 FB cmnd  FBRIEF command asserted                           verbose
  30000000000 FN cmnd  FNONE command asserted                            verbose
  00000000000 FV cmnd  FVERBOSE command asserted                         verbose
