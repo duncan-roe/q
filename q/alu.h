@@ -44,6 +44,7 @@ bool exec_alu_opcode(int opcode, char **err);
 /* External variables */
 
 extern long ALU_memory[01000];
+extern double FPU_memory[01000];
 extern int stack_size;
 extern long *rs;                   /* Register stack */
 extern long xreg;                  /* Index Register */

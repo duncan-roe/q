@@ -29,6 +29,7 @@
 
 /* Instantiate externals */
 long ALU_memory[01000] = { 0 };
+double FPU_memory[01000] = { 0 };
 
 /* Static Variables */
 
@@ -136,9 +137,9 @@ newmac()
   else
   {
 /* Check for being in pseudomacro region or out of range */
-    if ((!verb || verb > TOPMAC ||
-      (verb >= FIRST_PSEUDO && verb <= LAST_PSEUDO))
-      && (verb & 07000) != 07000 && verb != 04007)
+    if (
+      (!verb || verb > TOPMAC || (verb >= FIRST_PSEUDO && verb <= LAST_PSEUDO))
+      && (verb & 07000) != 07000 && verb != 04007 && (verb & 013000) != 013000)
     {
       fprintf(stderr, "Macro %o is reserved or out of range", (int)verb);
       GIVE_UP;
@@ -159,12 +160,13 @@ newmac()
     GIVE_UP;
   }
 
-/* Setting an ALU memory location? */
-  if ((verb & 07000) == 07000)
+/* Setting an ALU or FPU memory location? */
+  if ((verb & 07000) == 07000 || (verb & 013000) == 013000)
   {
     char *endptr;
     int idx = verb & 0777;
     long oldval = ALU_memory[idx];
+    double oldfpval = FPU_memory[idx];
     char *strbuf = buf;
 
 /* Parse out token from supplied buffer to allow slash star comments */
@@ -182,48 +184,74 @@ newmac()
     }                              /* if (aluscrbuf.bchars >0) */
 
     errno = 0;
-    ALU_memory[idx] = strtol(strbuf, &endptr, 0);
-    if (errno)
+    if (verb < 010000)
     {
-      if (errno == ERANGE)
-      {
-/* Attempt unsigned Hex or Octal entry */
-        char *q = buf;
-
-        while (*q == ' ')
-          q++;
-        if (*q == '0')
-        {
-          errno = 0;
-          *(unsigned long *)(&ALU_memory[idx]) = strtoul(strbuf, &endptr, 0);
-        }                          /* if (*q == '0') */
-      }                            /* if (errno == ERANGE) */
+      ALU_memory[idx] = strtol(strbuf, &endptr, 0);
       if (errno)
       {
-        fprintf(stderr, "%s. %s (strtol)", strerror(errno), buf);
+        if (errno == ERANGE)
+        {
+/* Attempt unsigned Hex or Octal entry */
+          char *q = buf;
+
+          while (*q == ' ')
+            q++;
+          if (*q == '0')
+          {
+            errno = 0;
+            *(unsigned long *)(&ALU_memory[idx]) = strtoul(strbuf, &endptr, 0);
+          }                        /* if (*q == '0') */
+        }                          /* if (errno == ERANGE) */
+        if (errno)
+        {
+          fprintf(stderr, "%s. %s (strtol)", strerror(errno), buf);
+          GIVE_UP;
+        }                          /* if (errno) */
+      }                            /* if (errno) */
+      if (!*endptr || (oldcom->toklen == 2 &&
+        toupper((unsigned char)buf[0]) == 'T' &&
+        gettab(buf[1], false, &ALU_memory[idx], false)))
+      {
+        if (oldval && !BRIEF && WARN_NONZERO_MEMORY)
+          printf("Warning - value was previously %ld\r\n", oldval);
+        return 1;                  /* All chars parsed */
+      }
+      if (*endptr && !(oldcom->toklen == 2 &&
+        toupper((unsigned char)buf[0]) == 'T'))
+        fprintf(stderr, "Illegal character '%c' in number \"%s\"", *endptr,
+          buf);
+      else
+        fprintf(stderr, "Invalid number format");
+      GIVE_UP;
+    }                              /* if (verb < 010000) */
+    else
+    {
+      FPU_memory[idx] = strtod(strbuf, &endptr);
+      if (errno)
+      {
+        fprintf(stderr, "%s. %s (strtod)", strerror(errno), buf);
         GIVE_UP;
       }                            /* if (errno) */
-    }                              /* if (errno) */
-    if (!*endptr || (oldcom->toklen == 2 &&
-      toupper((unsigned char)buf[0]) == 'T' &&
-      gettab(buf[1], false, &ALU_memory[idx], false)))
-    {
-      if (oldval && !BRIEF && WARN_NONZERO_MEMORY)
-        printf("Warning - value was previously %ld\r\n", oldval);
-      return 1;                    /* All chars parsed */
-    }
-    if (*endptr && !(oldcom->toklen == 2 &&
-      toupper((unsigned char)buf[0]) == 'T'))
-      fprintf(stderr, "Illegal character '%c' in number \"%s\"", *endptr, buf);
-    else
-      fprintf(stderr, "Invalid number format");
-    GIVE_UP;
+      if (!*endptr)
+      {
+        if (oldfpval != 0.0 && !BRIEF && WARN_NONZERO_MEMORY)
+        {
+          printf("%s", "Warning - value was previously ");
+          printf(FPformat, oldfpval);
+          printf("\r\n");
+        }
+        return 1;                  /* OK */
+      }                            /* if (!*endptr) */
+          fprintf(stderr, "Illegal character '%c' in number \"%s\"", *endptr,
+            buf);
+          GIVE_UP;
+    }                              /* if (verb < 010000) else */
   }                                /* if (verb & 07000 == 07000) */
 
 /* Defining floating-point format? */
   if (verb == 04007)
   {
-    if (mcchrs > sizeof FPformat -1)
+    if (mcchrs > sizeof FPformat - 1)
     {
       fprintf(stderr, "%s", "Format string too long");
       GIVE_UP;
@@ -232,9 +260,8 @@ newmac()
     FPformat[mcchrs] = 0;
     return 1;
   }                                /* if (verb == 04007) */
-/*
- * Advise user if an existing macro being overwritten
- */
+
+/* Advise user if an existing macro being overwritten */
   if (scmacs[verb] && (curmac < 0 || !BRIEF))
     printf("Warning - overwriting old macro\r\n");
   return newmac2(false) ? 1 : 0;
