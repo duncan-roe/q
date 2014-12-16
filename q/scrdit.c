@@ -1025,6 +1025,11 @@ p1905:
         macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
 
+      case 04007:                  /* Return floating point format */
+        snprintf(tbuf, sizeof tbuf, "%s", FPformat);
+        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+        break;
+
       default:
         found = false;
         break;

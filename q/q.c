@@ -88,6 +88,7 @@ int *alu_table_index;
 bool alu_macros_only = false;      /* N- was N-- */
 bool store_file_pos = false;
 unsigned long fmode;
+char FPformat[40];
 
 /* Static Variables */
 
@@ -627,6 +628,9 @@ init_alu(void)
     fprintf(stderr, "%s. (malloc)\n", strerror(errno));
     exit(1);
   }                                /* if (!alu_table_index) */
+
+/* Set up initial floating point format */
+  strcpy(FPformat, "%g");
 
 /* Set up indicies and lookup dictionary */
   for (i = 0, j = 0; i < num_alu_opcode_table_entries; i++)

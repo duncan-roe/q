@@ -58,4 +58,5 @@ extern int num_alu_opcode_table_entries;
 extern int *alu_table_index;
 extern bool alu_macros_only;       /* N-- lstmac & typmac only show n7000+ */
 extern bool store_file_pos;        /* PSHTAB to store a file postion */
+extern char FPformat[40];
 #endif
