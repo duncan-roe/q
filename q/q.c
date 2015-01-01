@@ -77,8 +77,10 @@ bool offline = false;
 bool piping = true;                /* Needs to start off true for quthan() */
 int stack_size = 16;               /* Register stack initial depth */
 long *rs = NULL;                   /* The register stack */
+double *fs = NULL;                 /* The FP register stack */
 long xreg = 0;                     /* Index Register */
 int rsidx = -1;                    /* No current register yet */
+int fsidx = -1;                    /* No current FP register yet */
 bool index_next = false;
 int effaddr;
 bool alu_skip = false;
@@ -615,6 +617,12 @@ init_alu(void)
     fprintf(stderr, "%s. (malloc)\n", strerror(errno));
     exit(1);
   }                                /* if (!rs) */
+  fs = malloc(stack_size * sizeof *fs);
+  if (!fs)
+  {
+    fprintf(stderr, "%s. (malloc)\n", strerror(errno));
+    exit(1);
+  }                                /* if (!fs) */
 
 /* Count how many opcodes there are */
   for (i = num_alu_opcode_table_entries - 1; i >= 0; i--)

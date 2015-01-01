@@ -89,7 +89,8 @@ push_register(long val)
   if (++rsidx >= stack_size)
   {
     rsidx--;
-    fprintf(stderr, "\r\nRegister stack overflow.\r\nFailing opcode: PSH\r\n");
+    fprintf(stderr, "%s",
+      "\r\nRegister stack overflow.\r\nFailing opcode: PSH\r\n");
     dump_registers(true);
     notmac(true);
     return false;
@@ -98,6 +99,24 @@ push_register(long val)
   return true;
 }                                  /* push_register() */
 
+/* **************************** push_fp_register **************************** */
+
+static bool
+push_fp_register(double val)
+{
+  if (++fsidx >= stack_size)
+  {
+    fsidx--;
+    fprintf(stderr, "%s",
+      "\r\nFP register stack overflow.\r\nFailing opcode: PSHF\r\n");
+    dump_registers(true);
+    notmac(true);
+    return false;
+  }                                /* if (++fsidx >= stack_size) */
+  fs[fsidx] = val;
+  return true;
+}                                  /* push_fp_register() */
+
 /* ****************************** pop_register ****************************** */
 
 static bool
@@ -105,14 +124,32 @@ pop_register(long *val)
 {
   if (rsidx < 0)
   {
-    fprintf(stderr, "\r\nRegister stack underflow.\r\nFailing opcode: POP\r\n");
+    fprintf(stderr, "%s",
+      "\r\nRegister stack underflow.\r\nFailing opcode: POP\r\n");
     dump_registers(true);
     notmac(true);
     return false;
-  }                                /* if (++rsidx >= stack_size) */
+  }                                /* if (rsidx < 0) */
   *val = rs[rsidx--];
   return true;
 }                                  /* pop_register() */
+
+/* ***************************** pop_fp_register **************************** */
+
+static bool
+pop_fp_register(double *val)
+{
+  if (fsidx < 0)
+  {
+    fprintf(stderr, "%s",
+      "\r\nFP register stack underflow.\r\nFailing opcode: POPF\r\n");
+    dump_registers(true);
+    notmac(true);
+    return false;
+  }                                /* if (fsidx < 0) */
+  *val = fs[fsidx--];
+  return true;
+}                                  /* pop_fp_register() */
 
 /* ********************************* scrdit ********************************* */
 
@@ -123,7 +160,7 @@ scrdit(scrbuf5 *curr, scrbuf5 *prev, char *prmpt, int pchrs, int cmmand)
    ;
   char *c;                         /* Scratch */
   char *err = NULL;                /* Point to error text */
-  char tbuf[30];                   /* Scratch */
+  char tbuf[64];                   /* Scratch */
   int i, j, k, l = 0, m = 0;       /* Scratch variables */
   int gotoch;                      /* Char of last ^G */
   long i4;                         /* Scratch */
@@ -1011,22 +1048,22 @@ p1905:
             j = row5 / 2 - 1;
         }
 
-        snprintf(tbuf, sizeof tbuf, "%d", j);
+        sprintf(tbuf, "%d", j);
         macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
 
       case 04005:                  /* Return screen width */
-        snprintf(tbuf, sizeof tbuf, "%u", col5);
+        sprintf(tbuf, "%u", col5);
         macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
 
       case 04006:                  /* Return screen height */
-        snprintf(tbuf, sizeof tbuf, "%u", row5);
+        sprintf(tbuf, "%u", row5);
         macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
 
       case 04007:                  /* Return floating point format */
-        snprintf(tbuf, sizeof tbuf, "%s", FPformat);
+        sprintf(tbuf, "%s", FPformat);
         macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
 
@@ -1037,26 +1074,46 @@ p1905:
 /*
  * Deal with ALU memory and tab access pseudos
  */
-    if ((thisch & 07000) == 07000)
+    if ((thisch & 017000) == 07000)
     {
-      snprintf(tbuf, sizeof tbuf, "%ld", ALU_memory[thisch & 0777]);
+      sprintf(tbuf, "%ld", ALU_memory[thisch & 0777]);
       macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
       found = true;
-    }                              /* if ((thisch & 07000) == 07000) */
-    else if ((thisch & 07000) == 05000)
+    }                              /* if ((thisch & 017000) == 07000) */
+    else if ((thisch & 017000) == 05000)
     {
       if (get_effective_address(thisch & 0777) &&
         push_register(ALU_memory[effaddr]))
         GETNEXTCHR;
       SOUNDALARM;
-    }                              /* else if ((thisch & 05000) == 05000) */
-    else if ((thisch & 07000) == 06000)
+    }                              /* else if ((thisch & 017000) == 05000) */
+    else if ((thisch & 017000) == 06000)
     {
       if (get_effective_address(thisch & 0777) &&
         pop_register(&ALU_memory[effaddr]))
         GETNEXTCHR;
       SOUNDALARM;
-    }                              /* else if ((thisch & 06000) == 06000) */
+    }                              /* else if ((thisch & 017000) == 06000) */
+    else if ((thisch & 017000) == 013000)
+    {
+      sprintf(tbuf, FPformat, FPU_memory[thisch & 0777]);
+      macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+      found = true;
+    }                              /* if ((thisch & 017000) == 013000) */
+    else if ((thisch & 017000) == 011000)
+    {
+      if (get_effective_address(thisch & 0777) &&
+        push_fp_register(FPU_memory[effaddr]))
+        GETNEXTCHR;
+      SOUNDALARM;
+    }                              /* else if ((thisch & 017000) == 011000) */
+    else if ((thisch & 017000) == 012000)
+    {
+      if (get_effective_address(thisch & 0777) &&
+        pop_fp_register(&FPU_memory[effaddr]))
+        GETNEXTCHR;
+      SOUNDALARM;
+    }                              /* else if ((thisch & 017000) == 012000) */
     else if (thisch >= FIRST_ALU_OP + num_ops &&
       thisch < FIRST_ALU_OP + num_ops + NUM_TABS * 2)
     {

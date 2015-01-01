@@ -73,6 +73,17 @@ typmac(void)
       sizeof(long) - 4 ? 20 : 11, ALU_memory[j], /* Decimal */
       (int)(sizeof(long) * 2), ALU_memory[j]); /* Hex */
   }                           /* for (i = 07000, j = 0; i <= 07777; i++, j++) */
+  for (i = 013000, j = 0; i <= 013777; i++, j++)
+  {
+    if (cntrlc)
+      break;                       /* User has interrupted */
+    if (FPU_memory[j] == 0.0)
+      continue;
+    gotone = true;
+    printf("%o %.17e ", i, FPU_memory[j]);
+    printf(FPformat, FPU_memory[j]);
+    printf("\r\n");
+  }                           /* for (i = 07000, j = 0; i <= 07777; i++, j++) */
   if (!gotone && !cntrlc)
   {
     if (alu_macros_only)

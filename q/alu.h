@@ -46,9 +46,12 @@ bool exec_alu_opcode(int opcode, char **err);
 extern long ALU_memory[01000];
 extern double FPU_memory[01000];
 extern int stack_size;
+extern int f_stack_size;
 extern long *rs;                   /* Register stack */
+extern double *fs;                 /* FP register stack */
 extern long xreg;                  /* Index Register */
 extern int rsidx;                  /* Index of current register */
+extern int fsidx;                  /* Index of current FP register */
 extern bool index_next;            /* Next PSH or POP is indexed */
 extern int effaddr;                /* Effective address */
 extern alu_opcode opcode_defs[];

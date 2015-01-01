@@ -50,6 +50,7 @@ notmac(bool err)
 /* Minimally reset the ALU */
     xreg = 0;
     rsidx = -1;
+    fsidx = -1;
     index_next = false;
     alu_skip = false;
 
