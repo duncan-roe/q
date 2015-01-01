@@ -527,6 +527,24 @@ frnd(char **err)
 }                                  /* frnd() */
 
 static bool
+ffloor(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  fs[fsidx] = floor(fs[fsidx]);
+  return true;
+}                                  /* ffloor() */
+
+static bool
+fceil(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  fs[fsidx] = ceil(fs[fsidx]);
+  return true;
+}                                  /* fceil() */
+
+static bool
 fsin(char **err)
 {
   if (!f_valid(err))
@@ -534,6 +552,51 @@ fsin(char **err)
   fs[fsidx] = sin(fs[fsidx]);
   return true;
 }                                  /* fsin() */
+
+static bool
+fcos(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  fs[fsidx] = cos(fs[fsidx]);
+  return true;
+}                                  /* fcos() */
+
+static bool
+ftan(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  fs[fsidx] = tan(fs[fsidx]);
+  return true;
+}                                  /* ftan() */
+
+static bool
+flog(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  fs[fsidx] = log(fs[fsidx]);
+  return true;
+}                                  /* flog() */
+
+static bool
+fexp(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  fs[fsidx] = exp(fs[fsidx]);
+  return true;
+}                                  /* fexp() */
+
+static bool
+fsqrt(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  fs[fsidx] = sqrt(fs[fsidx]);
+  return true;
+}                                  /* fsqrt() */
 
 static bool
 addf(char **err)
@@ -772,7 +835,14 @@ alu_opcode opcode_defs[] = {
   OPCODE(popnf, "Pop F to nowhere (value is discarded)"),
   OPCODE(dupf, "Push a copy of F"),
   OPCODE(frnd, "F = rint(F)"),
+  OPCODE(ffloor, "F = floor(F)"),
+  OPCODE(fceil, "F = ceil(F)"),
   OPCODE(fsin, "F = sin(F)"),
+  OPCODE(fcos, "F = cos(F)"),
+  OPCODE(ftan, "F = tan(F)"),
+  OPCODE(flog, "F = log(F)"),
+  OPCODE(fexp, "F = exp(F)"),
+  OPCODE(fsqrt, "F = sqrt(F)"),
   CAPTION(""),
   CAPTION("Immediate Data Instructions"),
   CAPTION("========= ==== ============"),
