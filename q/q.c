@@ -668,8 +668,10 @@ display_opcodes(void)
     "\r\n"
     "\t Memory Reference Instructions\r\n"
     "\t ====== ========= ============\r\n"
-    "PSH xxx  Push contents of N7xxx to R\r\n"
-    "POP xxx  Pop R to define N7xxx\r\n");
+    "PSH  xxx  Push contents of N7xxx to R\r\n"
+    "POP  xxx  Pop R to define N7xxx\r\n"
+    "PSHF xxx  Push contents of N13xxx to F\r\n"
+    "POPF xxx  Pop F to define N13xxx\r\n");
 
   for (i = 0; i < num_alu_opcode_table_entries; i++)
   {

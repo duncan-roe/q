@@ -1,10 +1,11 @@
 /* E X E C _ A L U _ O P C O D E . C
  *
- * Copyright (C) 2014 Duncan Roe
+ * Copyright (C) 2014,2015 Duncan Roe
  */
 
 /* Headers */
 
+#include <math.h>
 #include <string.h>
 #include "alu.h"
 
@@ -43,6 +44,38 @@ r_valid2(char **err)
 }                                  /* r_valid() */
 
 static bool
+fpush(double val, char **err)
+{
+  if (fsidx >= stack_size - 1)
+  {
+    *err = "FP register stack overflow";
+    return false;
+  }                                /* if (fsidx >= stack_size - 1) */
+  fs[++fsidx] = val;
+  return true;
+}                                  /* fpush() */
+
+static bool
+f_valid(char **err)
+{
+  if (fsidx >= 0)
+    return true;
+  *err = "FP register stack underflow";
+  return false;
+}                                  /* f_valid() */
+
+static bool
+f_valid2(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  if (fsidx >= 1)
+    return true;
+  *err = "FP register stack underflow (no 2nd argument pushed)";
+  return false;
+}                                  /* f_valid() */
+
+static bool
 nop(char **err)
 {
   return true;
@@ -72,6 +105,15 @@ tc(char **err)
   rs[rsidx] = -rs[rsidx];
   return true;
 }                                  /* tc() */
+
+static bool
+tcf(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  fs[fsidx] = -fs[fsidx];
+  return true;
+}                                  /* tcf() */
 
 static bool
 add_any(char **err, long val)
@@ -192,6 +234,66 @@ slt(char **err)
     alu_skip = true;
   return true;
 }                                  /* slt() */
+
+static bool
+sfeq(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  if (fs[fsidx] == 0.0)
+    alu_skip = true;
+  return true;
+}                                  /* sfeq() */
+
+static bool
+sfne(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  if (fs[fsidx] != 0.0)
+    alu_skip = true;
+  return true;
+}                                  /* sfne() */
+
+static bool
+sfge(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  if (fs[fsidx] >= 0.0)
+    alu_skip = true;
+  return true;
+}                                  /* sfge() */
+
+static bool
+sfle(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  if (fs[fsidx] <= 0.0)
+    alu_skip = true;
+  return true;
+}                                  /* sfle() */
+
+static bool
+sfgt(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  if (fs[fsidx] > 0.0)
+    alu_skip = true;
+  return true;
+}                                  /* sfgt() */
+
+static bool
+sflt(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  if (fs[fsidx] < 0.0)
+    alu_skip = true;
+  return true;
+}                                  /* sflt() */
 
 static bool
 sxeq(char **err)
@@ -399,6 +501,108 @@ dup(char **err)
 }                                  /* dup() */
 
 static bool
+popnf(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  fsidx--;
+  return true;
+}                                  /* popnf() */
+
+static bool
+dupf(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  return fpush(fs[fsidx], err);
+}                                  /* dupf() */
+
+static bool
+frnd(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  fs[fsidx] = rint(fs[fsidx]);
+  return true;
+}                                  /* frnd() */
+
+static bool
+fsin(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  fs[fsidx] = sin(fs[fsidx]);
+  return true;
+}                                  /* fsin() */
+
+static bool
+addf(char **err)
+{
+  if (!f_valid2(err))
+    return false;
+  fs[fsidx - 1] = fs[fsidx] + fs[fsidx - 1];
+  fsidx--;
+  return true;
+}                                  /* addf() */
+
+static bool
+subf(char **err)
+{
+  if (!f_valid2(err))
+    return false;
+  fs[fsidx - 1] = fs[fsidx] - fs[fsidx - 1];
+  fsidx--;
+  return true;
+}                                  /* subf() */
+
+static bool
+mpyf(char **err)
+{
+  if (!f_valid2(err))
+    return false;
+  fs[fsidx - 1] = fs[fsidx] * fs[fsidx - 1];
+  fsidx--;
+  return true;
+}                                  /* mpyf() */
+
+static bool
+divf(char **err)
+{
+  if (!f_valid2(err))
+    return false;
+  if (fs[fsidx - 1] == 0.0)
+  {
+    *err="Attempt to divide by zero";
+    return false;
+  }                                /* if (fs[fsidx - 1] == 0) */
+  fs[fsidx - 1] = fs[fsidx] / fs[fsidx - 1];
+  fsidx--;
+  return true;
+}                                  /* divf() */
+
+static bool
+popfr(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  if (!push((long)fs[fsidx], err))
+    return false;
+  fsidx--;
+  return true;
+}                                  /* popfr(char **err) */
+
+static bool
+poprf(char **err)
+{
+  if (!r_valid(err))
+    return false;
+  if (!fpush((double)rs[rsidx], err))
+    return false;
+  rsidx--;
+  return true;
+}                                  /* poprf(char **err) */
+
+static bool
 dmp(char **err)
 {
   dump_registers(true);
@@ -409,6 +613,7 @@ static bool
 rst(char **err)
 {
   rsidx = -1;
+  fsidx = -1;
   xreg = 0;
   index_next = false;
   alu_skip = false;
@@ -420,6 +625,7 @@ static bool
 zam(char **err)
 {
   memset(ALU_memory, 0, sizeof ALU_memory);
+  memset(FPU_memory, 0, sizeof FPU_memory);
   return true;
 }                                  /* zam() */
 
@@ -539,6 +745,12 @@ alu_opcode opcode_defs[] = {
   OPCODE(sle, "Skip if R is less than or equal to zero"),
   OPCODE(sgt, "Skip if R is greater than zero"),
   OPCODE(slt, "Skip if R is less than zero"),
+  OPCODE(sfeq, "Skip if F is zero"),
+  OPCODE(sfne, "Skip if F is not zero"),
+  OPCODE(sfge, "Skip if F is greater than or equal to zero"),
+  OPCODE(sfle, "Skip if F is less than or equal to zero"),
+  OPCODE(sfgt, "Skip if F is greater than zero"),
+  OPCODE(sflt, "Skip if F is less than zero"),
   CAPTION(""),
   CAPTION("Instructions that Modify R"),
   CAPTION("============ ==== ====== ="),
@@ -553,6 +765,14 @@ alu_opcode opcode_defs[] = {
   OPCODE(rsu, "R = R >> 1 (unsigned)"),
   OPCODE(popn, "Pop R to nowhere (value is discarded)"),
   OPCODE(dup, "Push a copy of R"),
+  CAPTION(""),
+  CAPTION("Instructions that Modify F"),
+  CAPTION("============ ==== ====== ="),
+  OPCODE(tcf, "Negate (2's complement)"),
+  OPCODE(popnf, "Pop F to nowhere (value is discarded)"),
+  OPCODE(dupf, "Push a copy of F"),
+  OPCODE(frnd, "F = rint(F)"),
+  OPCODE(fsin, "F = sin(F)"),
   CAPTION(""),
   CAPTION("Immediate Data Instructions"),
   CAPTION("========= ==== ============"),
@@ -575,7 +795,7 @@ alu_opcode opcode_defs[] = {
   CAPTION("Instructions with 2 operands"),
   CAPTION("============ ==== = ========"),
   CAPTION("(These have the same effect as:-"),
-  CAPTION("    pop A; pop B; push A {instr} B"),
+  CAPTION("    pop A; pop B; push A {instr} B (or FP equivalents)"),
   CAPTION("except attempted divide by zero leaves the registers unchanged)"),
   OPCODE(add, "Add"),
   OPCODE(sub, "Subtract"),
@@ -585,10 +805,19 @@ alu_opcode opcode_defs[] = {
   OPCODE(and, "Bitwise AND"),
   OPCODE(or, "Bitwise OR"),
   OPCODE(xor, "Bitwise EXCLUSIVE OR"),
+  OPCODE(addf, "Add F"),
+  OPCODE(subf, "Subtract F"),
+  OPCODE(mpyf, "Multiply F"),
+  OPCODE(divf, "Divide F"),
+  CAPTION(""),
+  CAPTION("FP (double) <==> Integer (long)"),
+  CAPTION("== ======== ==== ======= ======"),
+  OPCODE(popfr, "Pop F; push (long) to R"),
+  OPCODE(poprf, "Pop R; push (double) to F"),
   CAPTION(""),
   CAPTION("Index Register Instructions"),
   CAPTION("===== ======== ============"),
-  OPCODE(indx, "Index next PSH or POP"),
+  OPCODE(indx, "Index next PSH[F] or POP[F]"),
   OPCODE(pshx, "Push contents of X to R"),
   OPCODE(popx, "Pop R to define value of X"),
   OPCODE(sxeq, "Skip if X is zero"),

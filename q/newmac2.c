@@ -108,7 +108,30 @@ get_alu_op(char *mybuf, unsigned short *result, char **endptr)
     }                              /* if (locn < 0 || locn > 0777) */
     *result = (strncasecmp(mybuf, "POP ", 4) ? 05000 : 06000) | locn;
     return true;
-  }                                /* if (!strncasecmp(mybuf, "PSH ", 4)) */
+  }                                /* if (!strncasecmp(mybuf, "PSH ", 4 ... */
+  if (!strncasecmp(mybuf, "PSHF ", 5) || !strncasecmp(mybuf, "POPF ", 5))
+  {
+    errno = 0;
+    locn = strtol(mybuf + 5, endptr, 8);
+    if (errno)
+    {
+      fprintf(stderr, "%s. %s (strtol)\r\n", strerror(errno), mybuf);
+      GIVE_UP;
+    }                              /* if (errno) */
+    if (**endptr != GT)
+    {
+      fprintf(stderr, "Character '%c' illegal\r\n", **endptr);
+      GIVE_UP;
+    }                              /* if (**endptr != GT) */
+    if (locn < 0 || locn > 0777)
+    {
+      fprintf(stderr, "Value %lo is out of range (not between 0 & 0777)\r\n",
+        locn);
+      GIVE_UP;
+    }                              /* if (locn < 0 || locn > 0777) */
+    *result = (strncasecmp(mybuf, "POPF ", 5) ? 011000 : 012000) | locn;
+    return true;
+  }                                /* if (!strncasecmp(mybuf, "PSHF ", 5 ... */
 
 /* Tab accessors are similar to memory accessors */
   if (!strncasecmp(mybuf, "PSHTAB ", 7) || !strncasecmp(mybuf, "POPTAB ", 7))
