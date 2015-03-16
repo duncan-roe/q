@@ -91,6 +91,7 @@ bool alu_macros_only = false;      /* N- was N-- */
 bool store_file_pos = false;
 unsigned long fmode;
 char FPformat[40];
+char DTformat[256];
 
 /* Static Variables */
 
@@ -639,6 +640,9 @@ init_alu(void)
 
 /* Set up initial floating point format */
   strcpy(FPformat, "%g");
+
+/* Set up initial date format */
+  strcpy(DTformat, "%F_%T");
 
 /* Set up indicies and lookup dictionary */
   for (i = 0, j = 0; i < num_alu_opcode_table_entries; i++)

@@ -15,6 +15,7 @@
  * (newlin() can be used to initialise screen)
  *
  */
+#include <time.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <malloc.h>
@@ -160,7 +161,7 @@ scrdit(scrbuf5 *curr, scrbuf5 *prev, char *prmpt, int pchrs, int cmmand)
    ;
   char *c;                         /* Scratch */
   char *err = NULL;                /* Point to error text */
-  char tbuf[64];                   /* Scratch */
+  char tbuf[256];                  /* Scratch */
   int i, j, k, l = 0, m = 0;       /* Scratch variables */
   int gotoch;                      /* Char of last ^G */
   long i4;                         /* Scratch */
@@ -1064,6 +1065,19 @@ p1905:
 
       case 04007:                  /* Return floating point format */
         sprintf(tbuf, "%s", FPformat);
+        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+        break;
+
+      case 04010:                  /* Return date format */
+        sprintf(tbuf, "%s", DTformat);
+        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+        break;
+
+      case 04011:                  /* Return date */
+      {
+        time_t t = time(NULL);
+        strftime(tbuf, sizeof tbuf, DTformat, localtime(&t));
+      }
         macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
 

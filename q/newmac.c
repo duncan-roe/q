@@ -139,7 +139,8 @@ newmac()
 /* Check for being in pseudomacro region or out of range */
     if (
       (!verb || verb > TOPMAC || (verb >= FIRST_PSEUDO && verb <= LAST_PSEUDO))
-      && (verb & 07000) != 07000 && verb != 04007 && (verb & 013000) != 013000)
+      && (verb & 07000) != 07000 && verb != 04007 && (verb & 013000) != 013000
+      && verb != 04010)
     {
       fprintf(stderr, "Macro %o is reserved or out of range", (int)verb);
       GIVE_UP;
@@ -260,6 +261,18 @@ newmac()
     FPformat[mcchrs] = 0;
     return 1;
   }                                /* if (verb == 04007) */
+/* Defining date format? */
+  if (verb == 04010)
+  {
+    if (mcchrs > sizeof DTformat - 1)
+    {
+      fprintf(stderr, "%s", "Format string too long");
+      GIVE_UP;
+    }                              /* if (mcchrs > sizeof FPformat -1) */
+    strncpy(DTformat, buf, mcchrs);
+    DTformat[mcchrs] = 0;
+    return 1;
+  }                                /* if (verb == 04010) */
 
 /* Advise user if an existing macro being overwritten */
   if (scmacs[verb] && (curmac < 0 || !BRIEF))
