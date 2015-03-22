@@ -2,7 +2,7 @@
  *
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2002,2007,2012,2013 Duncan Roe
+ * Copyright (C) 2002,2007,2012-2015 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -35,6 +35,7 @@
 #include "c1in.h"
 #include "q_pipe.h"
 #include "alu.h"
+#include "isacharspecial.h"
 
 /* Macros */
 
@@ -744,6 +745,7 @@ main(int xargc, char **xargv)
   scrbuf5 b1, b2, b3, b4;          /* 2 line & 2 command buffers */
   q_yesno answer;
   char *initial_command = NULL;
+  bool P, Q;                      /* For determining whether we are in a pipe */
 /*
  * Initial Tasks
  */
@@ -867,7 +869,9 @@ main(int xargc, char **xargv)
 #endif
 
 /* Check for running in a pipe (or with redirection) */
-  if (!isatty(STDIN5FD) && !isatty(STDOUT5FD))
+  P = isatty(STDIN5FD);
+  Q = isatty(STDOUT5FD);
+  if (!P && !Q)
   {
     if (initial_command == NULL)
     {
@@ -875,6 +879,11 @@ main(int xargc, char **xargv)
         "You must supply an initial command to run Q in a pipe");
       return 1;
     }                              /* if (initial_command == NULL) */
+
+/* If either stdin or stdout is a character special (typically /dev/null),
+ * we are not in fact in a pipe.*/
+    if (isacharspecial(STDIN5FD) || isacharspecial(STDOUT5FD))
+      goto not_pipe;
     if (argno != -1)
     {
       fprintf(stderr, "%s\n",
@@ -978,7 +987,8 @@ main(int xargc, char **xargv)
  * Not in a pipe
  */
   {
-    if (!(isatty(STDIN5FD) && isatty(STDOUT5FD)) && !(!isatty(STDIN5FD) && offline))
+  not_pipe:
+    if (!(P && Q) && !offline)
     {
       fprintf(stderr, "%s\n",
         "stdin & stdout must either both be a tty or both not");

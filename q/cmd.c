@@ -3,7 +3,7 @@
  * Obey a shell command returning its exit status
  *
  * Copyright (C) 2002, Duncan Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2015 Duncan Roe
  */
 #include <stdio.h>
 #include <errno.h>

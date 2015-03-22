@@ -1,56 +1,15 @@
+/* A L L E D I T . H */
 #ifndef ALLEDIT_H
 #define ALLEDIT_H
-/* A L L E D I T
- */
 
 /* Headers required by this header */
 
 #include <signal.h>
 #include <sys/types.h>
 #include "ckalloc.h"
-#include "typedefs.h"
+#include "prototypes.h"     /* New code uses this unless it needs stuff below */
 
-/* Function Prototypes */
-
-void memrec(unsigned char *start, unsigned char *end, unsigned long mode,
-  scrbuf5 *a1);
-void mapfil(ino_t inode, off_t size, unsigned char *addr);
-void dfread(long num, scrbuf5 *s);
-int ismapd(ino_t inode);
-void newmap(ino_t inode, off_t size, unsigned char *addr);
-bool trytab(unsigned char *zvuf, scrbuf5 *scline);
-void scrdit(scrbuf5 *curr, scrbuf5 *prev, char *prmpt, int pchrs, int cmmand);
-void insmem(unsigned char *linptr, unsigned char *last);
-void ordch(unsigned char, scrbuf5 *);
-void pdsply(scrbuf5 *, unsigned char *, int);
-short getlin(int, int);
-short getnum(int), setmode(void);
-bool tabset(scrbuf5 *scbuf);
-int newmac(void), rdlin(scrbuf5 *, int), ysno5a(char *, int);
-bool kbd5(void);
-int lsub5a(unsigned char *, int, unsigned char *, int, int, int *, int *);
-int ltok5a(unsigned char *, int, unsigned char *, int, int, int *, int *,
-  unsigned char *);
-int do_cmd(void);
-void duplx5(bool enable_IXON);
-void lstmac(void), typmac(void), sccmnd(void), scmnrd(void);
-void restore_stdout(void), sinitl(void);
-void notmac(bool err);
-void disply(scrbuf5 *, int), refrsh(scrbuf5 *);
-void scrset(scrbuf5 *), setcrs(int), setptr(long);
-void delete(long), clrfgt(void), inslin(scrbuf5 *), forget(void), setaux(long);
-void finitl(void), sprmpt(long);
-void quthan(int signum, siginfo_t *siginfo, void *ucontext);
-void sdsply(void);
-bool cl5get(char *buf, int bufcap, bool action_eof, bool read_macros);
-void readfl(void), writfl(long);
-void xlateset(void), showchar(unsigned char), tildexpn(char *);
-void winchhan(int), setwinsz(int), newlin(void), rerdcm(void), xistcs(void);
-void sindnt(void);
-char c1in5(bool *eof_encountered);
-int cmd(char *buf);
-bool pop_stdin(void);
-void devnull_stdout(void);
+/* Global variables */
 
 unsigned int verb;           /*Command Processing - COMANL, ONEOF, NEWMAC &c. */
 int ndntch;                        /* # of chars to indent */
