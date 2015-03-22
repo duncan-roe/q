@@ -978,7 +978,7 @@ main(int xargc, char **xargv)
  * Not in a pipe
  */
   {
-    if (!(isatty(STDIN5FD) && isatty(STDOUT5FD)))
+    if (!(isatty(STDIN5FD) && isatty(STDOUT5FD)) && !(!isatty(STDIN5FD) && offline))
     {
       fprintf(stderr, "%s\n",
         "stdin & stdout must either both be a tty or both not");
