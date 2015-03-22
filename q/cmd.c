@@ -60,7 +60,7 @@ cmd(char *mybuf)
 
   else
   {
-    execl(sh, sh, "-c", mybuf, NULL);
+    execl(sh, sh, "-c", mybuf, (char *)NULL);
     perror("execl");
   }                                /* if(pid) else */
 
