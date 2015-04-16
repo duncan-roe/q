@@ -26,7 +26,6 @@ long lintot;                       /* Total # of lines known to system */
 long ptrpos;                       /* Line # where pointer is now */
 int funit;                         /* File i/o ptr */
 char pcnta[256];                   /* Pathname we are editing */
-unsigned int row5, col5;           /* Screen / window geometry */
 bool cntrlc, seenwinch;
 char *macro_dir;                   /* Where macros are */
 int orig_stdout;                   /* stdout funit at start */

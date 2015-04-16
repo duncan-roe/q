@@ -1,7 +1,7 @@
 /* S E T W I N S Z . C
  *
  * Copyright (C) 1994, Duncan Roe & Associates P/L
- * Copyright (C) 2012,2013 Duncan Roe
+ * Copyright (C) 2012,2013,2015 Duncan Roe
  *
  * This routine sets up the line width and # lines currently prevailing
  *
@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include "alledit.h"
+#include "scrnedit.h"
 #include "c1in.h"
 void
 setwinsz(msg)
@@ -60,4 +61,7 @@ int msg;
   row5 = 24;                       /* Default screen rows */
   col5 = 80;                       /* Default screen columns */
 #endif
+/* Guard against huge screens */
+  if (col5 > sizeof screen)
+    col5 = sizeof screen;
 }
