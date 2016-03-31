@@ -11,7 +11,7 @@ Alternatively, you can export Q_HELP_DIR to nominate any directory location.
 
  OTHER PLATFORMS
 
-Under Windows, you can make Q available to CMD.EXE (i.e. outside ofthe Cygwin
+Under Windows, you can make Q available to CMD.EXE (i.e. outside of the Cygwin
 environment) by copying q.exe to C:\WINDOWS. You also need to copy a Cygwin
 library - you'll get told which one the first time you try to use Q.
 
