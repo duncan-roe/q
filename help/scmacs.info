@@ -178,17 +178,6 @@ to delete, now jump back to the start of the ^N^K macro (^NG ^NS^N^K).
 Otherwise (we are sitting on the space after the word) delete this space and
 subroutine exit (^D^NU).
 
- ^N^L - (FORTRAN line join). This macro joins lines in a FORTRAN program. The
-business part of the macro is ^ND^N^G^?^D^D^D^D^D^D^NU which works as follows:
-call the ^N^G macro as a subroutine (^ND^N^G). This joins the current line of
-the program to the next, assuming as it does that the lines are ordinary text
-and so inserting a space between them. The cursor gets left on the 1st
-character that came from the 2nd line i.e. immediately following the inserted
-space so we delete that space with a RUBOUT (^?) then we delete the 1st 6 chars
-that came from the 2nd FORTRAN line (^D^D^D^D^D^D) which will usually be 5
-spaces and the continuation character (+ if ^N^A was used). That's all we have
-to do so now subroutine exit (^NU).
-
  ^N^O - (comment beautify - no n/l). This macro (^H^O^X^Q^NU) is similar to the
 ^N^J main comment beautify macro (^H^O^S^X^Q^J^NU) except that it's missing the
 ^J so you have the chance to do more mods to the comment after using ^N^O. For
