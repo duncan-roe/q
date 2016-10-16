@@ -13,7 +13,7 @@ The skip is done relative to the character following the macro (i.e. the X
 mentioned previously). Thus a backwards jump of 1, 2 or 3 characters will end
 up in the ^NJ sequence again. For example:-
 
-...^NL^NJ^<06>X^[m-2^j...
+...^NL^NJ^<06>X^[m-2^J...
 
 conditionally obeys the 5-character sequence  starting with ^[ (assuming ^NL
 was preceded by a conditional like ^NA).

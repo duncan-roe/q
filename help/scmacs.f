@@ -50,7 +50,7 @@ N201 ^A^J^NC^NU^[^N^<201> ;Repeat last LOCATE till no more found
 * n206 - (^N^W^F) search current file for all occurrences of command line.
 *        grep options in n1404
 N206 ^NC^NS^N\^NM^<1202>^U!grep ^ND^N^<1404> -- '^ND^N^<1202>' "^ND^N^<4002>"^J^NU
-N207 ^NC^NS^N\^ND^N^<1001>fm-dw^Js^J!runindent.sh "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^ND^N^<1011>^ND^N1s^J^NU
+N207 ^NC^NS^N\^ND^N^<1001>fm-dw^Js^J!runindent "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^ND^N^<1011>^ND^N1s^J^NU
 N210 ^E^ND^N^<1201>^J^NC^NU^N^<210> ;Insert ^*N^<1201> at Home posn
 N211 ^NC^NS^N\g1^J^ND^N^<772>^NU ; Update "at line" lines
 N772 l 'at line'^J^NC^NU^F^G ^NG ^NS^NL^ND^N^<771>^E^ND^N^<773>^<ZAM>^<POP 0> ^ND^N^<7000>^J^N^@
