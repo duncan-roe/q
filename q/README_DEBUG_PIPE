@@ -1,0 +1,15 @@
+When you need to debug Q running as a pipe, you don't need the second screen.
+The template below is enough to debug the pipe mechanism.
+You will always want to set brakpoints, because there is no user interaction
+with Q running in a pipe.
+Q wil always need a "-i" (initial command) argument.
+The one below is trivial: if you have a specific use case then you would want to
+replace it and likely also provide your own input file.
+
+Q does not insist that its input and output files are pipes:
+regular files are fine.
+
+The file "xxx" is provided as input.
+The command below uses that and creates the file /tmp/yyy.
+
+ggo q -a "-iy,x,y^J <xxx >/tmp/yyy"
