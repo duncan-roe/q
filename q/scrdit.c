@@ -155,7 +155,7 @@ pop_fp_register(double *val)
 /* ********************************* scrdit ********************************* */
 
 void
-scrdit(scrbuf5 *curr, scrbuf5 *prev, char *prmpt, int pchrs, int cmmand)
+scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, int cmmand)
 {
   unsigned char *p, *q             /* Scratch */
    ;
@@ -173,8 +173,8 @@ scrdit(scrbuf5 *curr, scrbuf5 *prev, char *prmpt, int pchrs, int cmmand)
  * PARAMETERS:-
  * ============
  *
- * curr  - Current buffer to modify \ these are scrnedit buffers
- * prev  - Previous line modified   / as defined above
+ * Curr  - Current buffer to modify \ these are scrnedit buffers
+ * Prev  - Previous line modified   / as defined above
  * prmpt - Prompt characters (if any) (string)
  * pchrs - # of prompt chars (zero implies none and PRMPT not a valid
  *                                  addr)
@@ -203,10 +203,10 @@ scrdit(scrbuf5 *curr, scrbuf5 *prev, char *prmpt, int pchrs, int cmmand)
  *   Validate cursor &c
  */
 
-/* curr->bchars counts the trailing null but curr->bmxch does not */
-  if ((olen = curr->bchars) > curr->bmxch + 1)
+/* Curr->bchars counts the trailing null but Curr->bmxch does not */
+  if ((olen = Curr->bchars) > Curr->bmxch + 1)
   {
-    err = "Bad char cnt curr line";
+    err = "Bad char cnt Curr line";
   p1001:
     fprintf(stderr, "%s\r\n", err);
     err = NULL;
@@ -215,7 +215,7 @@ scrdit(scrbuf5 *curr, scrbuf5 *prev, char *prmpt, int pchrs, int cmmand)
   }
 
 /* J bad char cnt this line */
-  if (curr->bcurs < 0)             /* Bad cursor this line */
+  if (Curr->bcurs < 0)             /* Bad cursor this line */
   {
     err = "Curr curs<1";
     goto p1001;
@@ -227,7 +227,7 @@ scrdit(scrbuf5 *curr, scrbuf5 *prev, char *prmpt, int pchrs, int cmmand)
   }
 
 /* J cursor off end this line */
-  if (curr->bcurs > curr->bchars)
+  if (Curr->bcurs > Curr->bchars)
   {
     err = "Curr curs off end of info";
     goto p1001;
@@ -252,7 +252,7 @@ scrdit(scrbuf5 *curr, scrbuf5 *prev, char *prmpt, int pchrs, int cmmand)
   modlin = false;
   insert = false;
   pchars = pchrs;
-  mxchrs = curr->bchars;
+  mxchrs = Curr->bchars;
   nseen = false;
   glast = false;
   fornj = false;
@@ -290,29 +290,29 @@ p1005:contc = false;
  */
   if (INDENT)
   {
-    if (!curr->bchars)
+    if (!Curr->bchars)
     {
       if (!lstvld)
         sindnt();                  /* Get the indent */
       if (ndntch > 0)
       {
         for (i = ndntch; i > 0; i--)
-          ordch(SPACE, curr);      /* Pad out with spaces */
+          ordch(SPACE, Curr);      /* Pad out with spaces */
         modlin = true;             /* Line has been changed */
       }                            /* if (ndntch > 0) */
-    }                              /* if !(curr->bchars) */
+    }                              /* if !(Curr->bchars) */
     else
     {
       ndntch = 0;
-      for (j = curr->bchars; j > 0; j--)
+      for (j = Curr->bchars; j > 0; j--)
       {
-        if (curr->bdata[ndntch] != SPACE)
+        if (Curr->bdata[ndntch] != SPACE)
           break;
         ndntch = ndntch + 1;
       }
-      if (curr->bcurs < ndntch)
-        curr->bcurs = ndntch;
-    }                              /* if !(curr->bchars) else */
+      if (Curr->bcurs < ndntch)
+        Curr->bcurs = ndntch;
+    }                              /* if !(Curr->bchars) else */
   }                                /* if (INDENT) */
   else
     ndntch = 0;                    /* Not indenting, so no indent chars */
@@ -320,7 +320,7 @@ p1005:contc = false;
   mctrst = false;
 rawnextchr:
   if (curmac < 0)
-    refrsh(curr);                  /* Display prompt etc */
+    refrsh(Curr);                  /* Display prompt etc */
   if (curmac >= 0)
   {
 /* Clear expanding if that was last char from macro */
@@ -339,10 +339,10 @@ rawnextchr:
     thisch = c1in5(&eof_encountered); /* Read 1 char */
     if (eof_encountered)
     {
-      if (cmmand && curr->bchars == 0 && USING_FILE)
+      if (cmmand && Curr->bchars == 0 && USING_FILE)
       {
-        curr->bdata[0] = 'z';
-        curr->bchars = 1;
+        Curr->bdata[0] = 'z';
+        Curr->bchars = 1;
       }                            /* if (cmmand && ...) */
       else
         thisch = c1in5(NULL);
@@ -435,33 +435,33 @@ p1802:
     thisch |= 0200;                /* Set parity following ^W */
   cntrlw = false;
   if (nseen)
-    goto p1905;                    /* Treat as macro char if ^N prev */
+    goto p1905;                    /* Treat as macro char if ^N Prev */
   NORMALCHAR;                      /* Treat as ordinary character */
 /*
  * DEL - Deletes char before cursor
  */
 p10065:
-  k = curr->bcurs - 1;
+  k = Curr->bcurs - 1;
   if (k < 0)
     BOL_OR_EOL;                    /* J at start lin (error) */
   modlin = true;                   /* Line has been changed */
 /* If at indent point,decrement INDENT */
   if (INDENT && k + 1 == ndntch)
     ndntch--;
-  j = curr->bchars - 1;            /* How many chars there will be */
+  j = Curr->bchars - 1;            /* How many chars there will be */
   if (j != k)
   {
-    q = &curr->bdata[k];           /* Where chars to move to */
+    q = &Curr->bdata[k];           /* Where chars to move to */
     p = q + 1;                     /* Where chars to come from */
     for (i = j - k; i > 0; i--)
       *q++ = *p++;                 /* Move chars back */
   }                                /* if (j != k) */
-  curr->bcurs = k;                 /* Step cursor back */
-  curr->bchars = j;                /* Reduce # of chars */
+  Curr->bcurs = k;                 /* Step cursor back */
+  Curr->bchars = j;                /* Reduce # of chars */
 getnextchr:
 /* Get another character if one available */
   if (curmac < 0 && !USING_FILE && !kbd5())
-    refrsh(curr);
+    refrsh(Curr);
   RAWNEXTCHR;
 bol_or_eol:
   err = "Ran off beginning or end of line";
@@ -488,7 +488,7 @@ taboorange:
  * Non-special character
  */
 normalchar:
-  ordch(thisch, curr);             /* Insert or replace as appropriate */
+  ordch(thisch, Curr);             /* Insert or replace as appropriate */
   modlin = true;                   /* Line has been changed */
   contc = false;
   GETNEXTCHR;                      /* Finish */
@@ -501,21 +501,21 @@ p7701:i = ndntch;                  /* In case we  SINDNT */
   if (!lstvld)
     sindnt();                      /* Get previous line valid */
   ndntch = i;
-  if (curr->bchars >= prev->bchars)
+  if (Curr->bchars >= Prev->bchars)
     goto p1029;
 /* J append only */
 /*
  * We have to move chars from the previous line
  */
   modlin = true;                   /* Line has been changed */
-  memcpy((char *)&curr->bdata[curr->bchars],
-    (char *)&prev->bdata[curr->bchars], (size_t)(prev->bchars - curr->bchars));
-  curr->bchars = prev->bchars;     /* Extend length of line */
-  if (mxchrs < curr->bchars)
-    mxchrs = curr->bchars;
+  memcpy((char *)&Curr->bdata[Curr->bchars],
+    (char *)&Prev->bdata[Curr->bchars], (size_t)(Prev->bchars - Curr->bchars));
+  Curr->bchars = Prev->bchars;     /* Extend length of line */
+  if (mxchrs < Curr->bchars)
+    mxchrs = Curr->bchars;
 /* For ^R */
 p1029:
-  curr->bcurs = curr->bchars;      /* Put cursor at end */
+  Curr->bcurs = Curr->bchars;      /* Put cursor at end */
   GETNEXTCHR;                      /* Finish ^A */
 /*
  * ^B - Go back to the start of this word or back to the start of the
@@ -526,13 +526,13 @@ p1029:
 p7702:i = 0;                       /* S.O.L. if no indenting */
   if (INDENT)
     i = ndntch;
-  k = curr->bcurs - i;             /* K - running available movement */
+  k = Curr->bcurs - i;             /* K - running available movement */
 /* Note k can be -ve, if he used ^NR to move before the indent point */
   if (k <= 0)
     BOL_OR_EOL;                    /* J start of line (error) */
 /* Check whether at word start. If so, back up to a non-space (or line
  * start)... */
-  p = &curr->bdata[curr->bcurs];
+  p = &Curr->bdata[Curr->bcurs];
 /* Reduce movement available, B none left; B found non-space */
   if (*(p - 1) == SPACE)
     for (;;)
@@ -545,7 +545,7 @@ p7702:i = 0;                       /* S.O.L. if no indenting */
     for (;;)
       if (*--p == SPACE || !--k)
         break;
-  curr->bcurs = i + k;             /* Start of line + room */
+  Curr->bcurs = i + k;             /* Start of line + room */
   GETNEXTCHR;                      /* Finish ^B */
 /*
  * ^C - nextch not special
@@ -562,9 +562,9 @@ p7705:insert = !insert;
  * if on last word, stop at e.o.l.
  */
 p7706:
-  k = curr->bchars - curr->bcurs;  /* K - how far we can move forward */
+  k = Curr->bchars - Curr->bcurs;  /* K - how far we can move forward */
 /* If on non-space, move forward to space, unless at EOL now... */
-  p = &curr->bdata[curr->bcurs];
+  p = &Curr->bdata[Curr->bcurs];
 /* Ensure we're pointing at a space (or we were). Always reduces K,
  * unless at EOL to start with... */
   if (k < 0)
@@ -582,15 +582,15 @@ p7706:
     for (;;)
       if (*p++ != SPACE || !--k)
         break;
-  curr->bcurs = curr->bchars - k;
+  Curr->bcurs = Curr->bchars - k;
   GETNEXTCHR;                      /* Refresh or read */
 /*
  * ^H - Home
  */
 p7710:
-  curr->bcurs = 0;                 /* Reset cursor */
+  Curr->bcurs = 0;                 /* Reset cursor */
   if (INDENT)
-    curr->bcurs = ndntch;          /* Set to S.O.Data if indenting */
+    Curr->bcurs = ndntch;          /* Set to S.O.Data if indenting */
   GETNEXTCHR;                      /* Finish ^H */
 /*
  * ^I - Insert a tab. We insert enough spaces to get to next tab
@@ -599,7 +599,7 @@ p7710:
  * individually deleted etc.
  */
 p7711:
-  k = curr->bcurs;                 /* Useful to know */
+  k = Curr->bcurs;                 /* Useful to know */
   modlin = true;                   /* Line has been changed */
   if (tabcnt == 0)
     goto p1038;                    /* If no tabs, force 1 space */
@@ -618,25 +618,25 @@ p1040:
  * See how many spaces we actually have room for
  */
 p1042:
-  i = curr->bchars;
-  l = curr->bmxch - i;             /* # there is room for */
+  i = Curr->bchars;
+  l = Curr->bmxch - i;             /* # there is room for */
   if (l == 0)                      /* no room at all */
   {
   q1023:
     err = "Line full";
     ERR_IF_MAC;
   }
-  p = &curr->bdata[i];             /* 1 past last char to pick up */
+  p = &Curr->bdata[i];             /* 1 past last char to pick up */
   m = i - k;                       /* # chars to move up */
   if (l > j)
     l = j;                         /* # spaces to insert */
   i = i + l;                       /* New length */
-  q = &curr->bdata[i];             /* 1 past last char to set down */
+  q = &Curr->bdata[i];             /* 1 past last char to set down */
 /* Do the right-hand overlapping move */
   for (; m > 0; m--)
     *--q = *--p;
 /* Move in spaces */
-  p = &curr->bdata[k];
+  p = &Curr->bdata[k];
   for (m = l; m > 0; m--)
     *p++ = SPACE;
 /*
@@ -647,8 +647,8 @@ p1042:
   if (k == ndntch)
     ndntch = ndntch + l;           /* Up indent if were at strt */
 p2001:
-  curr->bcurs = k + l;             /* New cursor */
-  curr->bchars = i;
+  Curr->bcurs = k + l;             /* New cursor */
+  Curr->bchars = i;
   if (mxchrs < i)
     mxchrs = i;
   if (j != l)
@@ -658,7 +658,7 @@ p2001:
  * ^K - Kill
  */
 p7713:
-  curr->bchars = curr->bcurs;
+  Curr->bchars = Curr->bcurs;
   modlin = true;                   /* Line has been changed */
   GETNEXTCHR;                      /* Finished ^K */
 /*
@@ -668,10 +668,10 @@ p7713:
  ^T obeys this code with some modification.
  */
 p7714:
-  k = curr->bcurs;
+  k = Curr->bcurs;
   if (k)
   {
-    p = &curr->bdata[k];           /* 1st char to be moved down */
+    p = &Curr->bdata[k];           /* 1st char to be moved down */
     if (verb == 'L')
       modlin = true;               /* ^T makes its own decision */
     j = 0;                         /* Eventual cursor pos if not */
@@ -683,10 +683,10 @@ p7714:
       k = k - ndntch;
       j = ndntch;
     }                              /* if (INDENT) */
-    l = curr->bchars - k;          /* Set new line length */
-    curr->bchars = l;
-    curr->bcurs = j;
-    q = &curr->bdata[j];           /* Dest'n 1st movedown char */
+    l = Curr->bchars - k;          /* Set new line length */
+    Curr->bchars = l;
+    Curr->bcurs = j;
+    q = &Curr->bdata[j];           /* Dest'n 1st movedown char */
     if (l != j)
     {
 /* Do overlapping left hand move */
@@ -706,21 +706,21 @@ p7724:
 /*
  * Move across l/h info
  */
-  k = curr->bcurs;
+  k = Curr->bcurs;
 /* J attempt to change file length in Fixed-Length mode */
-  if (curr->bchars != olen && !cmmand && fmode & 0400)
+  if (Curr->bchars != olen && !cmmand && fmode & 0400)
     goto p2101;
 /* If at eol, old line not modified here */
-  modlin = modlin || (k < curr->bchars);
+  modlin = modlin || (k < Curr->bchars);
 p1048:
   if (k)                           /* If some chars to move */
   {
-    memcpy((char *)prev->bdata, (char *)curr->bdata, (size_t)k);
+    memcpy((char *)Prev->bdata, (char *)Curr->bdata, (size_t)k);
     lstvld = true;                 /* Last line now valid */
   }                                /* if (k) */
-  prev->bchars = k;
-  prev->bdata[k] = '\0';           /* Null terminate */
-  prev->bcurs = 0;
+  Prev->bchars = k;
+  Prev->bdata[k] = '\0';           /* Null terminate */
+  Prev->bcurs = 0;
   if (verb == 'J')
     goto p1201;                    /* Finish if was n/l */
   goto p7714;                      /* Move down r/h chars & finish */
@@ -729,22 +729,22 @@ p1048:
  */
 p7725:
   i = INDENT ? ndntch : 0;
-  if (curr->bchars != i)
+  if (Curr->bchars != i)
     modlin = true;                 /* Cancel empty line not a mod */
-  curr->bchars = i;
-  curr->bcurs = i;
+  Curr->bchars = i;
+  Curr->bcurs = i;
   GETNEXTCHR;                      /* Finish ^U */
 /*
  * ^X - Move cursor 1 forward. If at end, force a space
  */
 p7730:
-  k = curr->bcurs;
-  if (k != curr->bchars)
+  k = Curr->bcurs;
+  if (k != Curr->bchars)
   {
-    curr->bcurs++;                 /* Move cursor fwd */
+    Curr->bcurs++;                 /* Move cursor fwd */
     GETNEXTCHR;                    /* Refresh etc */
-  }                                /* if (k != curr->bchars) */
-  ordch(SPACE, curr);
+  }                                /* if (k != Curr->bchars) */
+  ordch(SPACE, Curr);
   modlin = true;                   /* Line has been changed */
   GETNEXTCHR;                      /* Finish ^X */
 /*
@@ -752,13 +752,13 @@ p7730:
  * Not allowed into indent area however
  */
 p7731:
-  k = curr->bcurs;
+  k = Curr->bcurs;
   i = 0;
   if (INDENT)
     i = ndntch;
   if (k == i)
     BOL_OR_EOL;                    /* J strt alrdy */
-  curr->bcurs--;
+  Curr->bcurs--;
   GETNEXTCHR;                      /* Finish ^Y */
 /*
  * ESC - Abandon
@@ -770,19 +770,19 @@ p7733:goto p1201;                  /* Simply exit */
 p7712:
   verb = 'J';                      /* In case it was 'M' */
 /* Disallow length change in FIXED LENGTH mode, when editing the file */
-  if ((k = curr->bchars) != olen && !cmmand && fmode & 0400)
+  if ((k = Curr->bchars) != olen && !cmmand && fmode & 0400)
   {
   p2101:
     printf("\007\r\nLine length must not change in FIXED LENGTH mode");
     newlin();
     GETNEXTCHR;
   }
-  goto p1048;                      /* Move chars to prev */
+  goto p1048;                      /* Move chars to Prev */
 /*
  * ^Z - Go to end current line but ignore previous 1
  */
 p7732:
-  curr->bcurs = curr->bchars;
+  Curr->bcurs = Curr->bchars;
   GETNEXTCHR;                      /* Finish ^Z */
 /*
  * ^Q - Rest of line upper -> lower
@@ -790,9 +790,9 @@ p7732:
 p7721:
   l = 1204;
 p1207:
-  k = curr->bchars;
-  j = curr->bcurs;
-  p = &curr->bdata[j];
+  k = Curr->bchars;
+  j = Curr->bcurs;
+  p = &Curr->bdata[j];
   k = k - j;                       /* # to do */
   if (k == 0)
     GETNEXTCHR;                    /* J out at end of line */
@@ -824,13 +824,13 @@ p1206:                             /* Convert lower -> upper */
  * ^D - Right hand rubout
  */
 p7704:
-  if (curr->bcurs == curr->bchars)
+  if (Curr->bcurs == Curr->bchars)
   {
     err = "^D at EOL";
     ERR_IF_MAC;
   }
 /* BEL if at EOL */
-  curr->bcurs++;                   /* Get past char to erase */
+  Curr->bcurs++;                   /* Get past char to erase */
   goto p10065;                     /* Do an ordinary rubout */
 /*
  * ^R - Reveal all of line
@@ -843,25 +843,25 @@ p7722:
   i = INDENT ? ndntch : 0;
   if (mxchrs == i)
   {
-    for (k = curr->bmxch - 1; k >= i; k--)
-      if (curr->bdata[k])
+    for (k = Curr->bmxch - 1; k >= i; k--)
+      if (Curr->bdata[k])
         break;
     mxchrs = k + 1;
   }
-  if (curr->bchars != mxchrs)
+  if (Curr->bchars != mxchrs)
     modlin = true;                 /* If characters rescued */
-  curr->bchars = mxchrs;
-  curr->bcurs = mxchrs;
+  Curr->bchars = mxchrs;
+  Curr->bcurs = mxchrs;
   GETNEXTCHR;                      /* Finish ^R */
 /*
  * ^O - cOmment modify
  */
 p7717:
-  k = curr->bcurs;                 /* Cursor pos'n */
-  j = curr->bchars;                /* Saves array accesses */
+  k = Curr->bcurs;                 /* Cursor pos'n */
+  j = Curr->bchars;                /* Saves array accesses */
   if (k == j)
     GETNEXTCHR;                    /* J if at E.O.L. already */
-  p = &curr->bdata[k];             /* 1st char to check */
+  p = &Curr->bdata[k];             /* 1st char to check */
   i = j - k - 1;                   /* Chars to check for "/" */
   for (; i > 0; i--)
   {
@@ -871,16 +871,16 @@ p7717:
     p++;
   }
 p1407:
-  curr->bcurs = j;                 /* Set cursor to E.O.L. */
+  Curr->bcurs = j;                 /* Set cursor to E.O.L. */
   GETNEXTCHR;                      /* End ^O here */
 p1409:k = k + 1;
 p14091:
   k++;
   if (k >= j)
     goto p1407;
-  if (curr->bdata[k] == SPACE)
+  if (Curr->bdata[k] == SPACE)
     goto p14091;                   /* J not 1st sig char */
-  curr->bcurs = k;                 /* Cursor to 1st comment char */
+  Curr->bcurs = k;                 /* Cursor to 1st comment char */
   GETNEXTCHR;                      /* Finish ^O */
 /*
  * ^V - recoVer from a broadcast etc.
@@ -903,20 +903,20 @@ p1518:glast = false;
     goto p1601;                    /* J on if actually for pseudomac */
 p1804:
 /* Search the rest of the line AFTER the current character */
-  i = curr->bchars - curr->bcurs - 1; /* # chars to search */
-  p = &curr->bdata[curr->bcurs];   /* Point to cursor char */
+  i = Curr->bchars - Curr->bcurs - 1; /* # chars to search */
+  p = &Curr->bdata[Curr->bcurs];   /* Point to cursor char */
   for (; i > 0; i--)
     if (*++p == thisch)
       break;
   if (i >= 0)
-    curr->bcurs = curr->bchars - i; /* Guard against -ve i */
+    Curr->bcurs = Curr->bchars - i; /* Guard against -ve i */
   gotoch = thisch;                 /* Remember char for ^^ */
   GETNEXTCHR;                      /* Finish ^G */
 /*
  * ^^ - repeat ^G
  */
 p7736:
-  if (gotoch == -1)                /* No prev ^G */
+  if (gotoch == -1)                /* No Prev ^G */
   {
     err = "^^ no previous ^G";
     ERR_IF_MAC;
@@ -1346,9 +1346,9 @@ p1708:
   if (i4 > BUFMAX)
     TABOORANGE;                    /* J too big for a cursor value */
   i = i4;
-  if (i > curr->bchars)
+  if (i > Curr->bchars)
     TABOORANGE;                    /* J trying to pos'n off end of line */
-  curr->bcurs = i;                 /* Set cursor position */
+  Curr->bcurs = i;                 /* Set cursor position */
   GETNEXTCHR;                      /* End ^NR - may want to REFRSH */
 /*
  * ^NB - Obey if Before spec'd tab
@@ -1379,7 +1379,7 @@ p1718:
     err = "^NB/^NP testing filepos tab";
     ERR_IF_MAC;
   }
-  if (curr->bcurs < tabs[i].value)
+  if (Curr->bcurs < tabs[i].value)
     RAWNEXTCHR;
   SKIP2MACCH;
 p1814:
@@ -1401,7 +1401,7 @@ p1719:if (!gcurs)
     goto p1815;                    /* J actually ^N] */
   if (tabs[i].tabtyp == LINENUM)
     goto p17181;
-  if (curr->bcurs > tabs[i].value)
+  if (Curr->bcurs > tabs[i].value)
     RAWNEXTCHR;
   SKIP2MACCH;
 p1815:
@@ -1444,7 +1444,7 @@ p1712:if (gcurs)
   tabs[i].tabtyp = LINENUM;
   RAWNEXTCHR;
 p1714:
-  tabs[i].value = curr->bcurs;     /* ^NO */
+  tabs[i].value = Curr->bcurs;     /* ^NO */
   tabs[i].tabtyp = CHRPOS;
   RAWNEXTCHR;
 /*
@@ -1476,7 +1476,7 @@ p7601:
   if (mcposn > scmacs[curmac]->mcsize - 2)
     RANOFF_END;
 /* J could skip off e.o. mac */
-  if (curr->bcurs == curr->bchars)
+  if (Curr->bcurs == Curr->bchars)
     RAWNEXTCHR;
 /* J at EOL */
 skip2macch:
@@ -1515,7 +1515,7 @@ p7623:
  */
 p7605:insert = false;
   if (curmac < 0)
-    refrsh(curr);                  /* Close gap */
+    refrsh(Curr);                  /* Close gap */
   RAWNEXTCHR;
 /*
  * ^NU - Up from a macro s/r
@@ -1654,10 +1654,10 @@ p1601:
     goto p1708;                    /* J in fact for a positioner */
   if (gmacr)
     goto p1903;                    /* J in fact defining a macro */
-  if (curr->bcurs == curr->bchars)
+  if (Curr->bcurs == Curr->bchars)
     SKIP2MACCH;
 /* Skip if at eol */
-  if (curr->bdata[curr->bcurs] != thisch)
+  if (Curr->bdata[Curr->bcurs] != thisch)
     SKIP2MACCH;
 /* Skip if mismatch */
   RAWNEXTCHR;
@@ -1674,11 +1674,11 @@ p1903:
     newlin();
     ERR_IF_MAC;
   }                                /* if ((thisch < 0200 && ... )) */
-  if (curr->bchars == 0)
+  if (Curr->bchars == 0)
     BOL_OR_EOL;                    /* Trying to define null macro */
 /* Define the macro. Report if some problem... */
-  curr->bdata[curr->bchars] = 0;   /* macdef prefers terminated strings */
-  if (macdef((int)thisch, curr->bdata, (int)curr->bchars, true))
+  Curr->bdata[Curr->bchars] = 0;   /* macdef prefers terminated strings */
+  if (macdef((int)thisch, Curr->bdata, (int)Curr->bchars, true))
     RAWNEXTCHR;
   if (curmac >= 0)
     notmac(true);

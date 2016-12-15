@@ -1,7 +1,7 @@
 /* S D S P L Y
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2016 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -19,14 +19,14 @@ void
 sdsply()
 {
 /* */
-  scrbuf5 curr;                    /* Dummy scrnedit buffer */
-  curr.bmxch = 1;
-  curr.bchars = 0;
-  curr.bcurs = 0;
+  scrbuf5 Curr;                    /* Dummy scrnedit buffer */
+  Curr.bmxch = 1;
+  Curr.bchars = 0;
+  Curr.bcurs = 0;
 /* */
   endlin = true;                   /* Force max speed + no cursor repos */
   partno = 1;                      /* Required by SCRSET */
   cdone = 0;                       /* Required by SCRSET */
-  refrsh(&curr);                   /* Display the prompt only */
+  refrsh(&Curr);                   /* Display the prompt only */
   endlin = false;
 }
