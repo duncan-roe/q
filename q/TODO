@@ -1,3 +1,6 @@
+Use GNU autotools so can package for Slackware
+Search up directory tree for .qrc
+Do Delete properly (not as an edit)
 ALU is always 64-bit
 cater for >4G lines in L & Y
 Give some kind of acknowledgement to ^NF (& ^NO?)
@@ -20,7 +23,7 @@ INTERNALS
   STARTED: rework asg2 blocks (including xistcs.c)
   STARTED: alledit.h prototypes to have variable names
   STARTED: Use meaningful names instead of logtemp &c.
-  STARTED Tidy scmnrd.c - it's horrible
+  STARTED Tidy scmnrd.c in particular
   STARTED: Be more careful what goes to stderr / stdin
   use stdint types
 Show what arguments Q started with (?)

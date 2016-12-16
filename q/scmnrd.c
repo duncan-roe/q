@@ -381,7 +381,7 @@ scmnrd()
       strncpy((char *)&oldcom->bdata[oldcom->bchars], *(argv + optind + l), k);
       oldcom->bchars += k;         /* Append next arg */
     }
-  }
+  }                                /* if (verb == 'Q') */
   if (want_disply)
     disply(oldcom, 0);             /* Display the command */
   oldcom->bcurs = i;
