@@ -161,7 +161,7 @@ pop_fp_register(double *val)
 /* ********************************* get_inp ******************************** */
 
 bool
-get_inp(long *val, long *len, char **err)
+get_inp(double *fval, long *val, long *len, char **err)
 {
   char *endptr;                    /* 1st char after number */
   unsigned char lastch;            /* Dump for char we nullify */
@@ -178,7 +178,8 @@ get_inp(long *val, long *len, char **err)
   }                                /* if (i == last_Curr->bchars) */
   if (!(isdigit(last_Curr->bdata[i]) ||
     last_Curr->bdata[i] == '+' ||
-    last_Curr->bdata[i] == '-'))
+    last_Curr->bdata[i] == '-' ||
+    (fval && last_Curr->bdata[i] == '.')))
   {
     *err = "Next item on line is not a number";
     return false;
@@ -191,7 +192,10 @@ get_inp(long *val, long *len, char **err)
 
 /* Get the value (cast is to conform with strtol prototype) */
   errno = 0;
-  *val = strtol((char *)last_Curr->bdata + i, &endptr, 0);
+  if (val)
+    *val = strtol((char *)last_Curr->bdata + i, &endptr, 0);
+  else
+    *fval = strtod((char *)last_Curr->bdata + i, &endptr);
 
 /* Reinstate zeroed char */
   last_Curr->bdata[last_Curr->bchars] = lastch;

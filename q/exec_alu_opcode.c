@@ -85,12 +85,35 @@ inp(char **err)
     *err = "Register stack overflow";
     return false;
   }                                /* if (rsidx >= stack_size - 2) */
-  if (!get_inp(&val, &len, err))
+  if (!get_inp(NULL, &val, &len, err))
     return false;
   rs[++rsidx] = val;
   rs[++rsidx] = len;
   return true;
 }                                  /* inp() */
+
+static bool
+inpf(char **err)
+{
+  long len;
+  double fval;
+
+  if (rsidx >= stack_size - 1)
+  {
+    *err = "Register stack overflow";
+    return false;
+  }                                /* if (rsidx >= stack_size - 2) */
+  if (fsidx >= stack_size - 1)
+  {
+    *err = "FP register stack overflow";
+    return false;
+  }                                /* if (fsidx >= stack_size - 1) */
+  if (!get_inp(&fval, NULL, &len, err))
+    return false;
+  fs[++fsidx] = fval;
+  rs[++rsidx] = len;
+  return true;
+}                                  /* inpf() */
 
 static bool
 nop(char **err)
@@ -846,6 +869,7 @@ alu_opcode opcode_defs[] = {
   OPCODE(popn, "Pop R to nowhere (value is discarded)"),
   OPCODE(dup, "Push a copy of R"),
   OPCODE(inp, "Read next integer in line, push value & length"),
+  CAPTION("(leaves cursor on 1st char of number)"),
   CAPTION(""),
   CAPTION("Instructions that Modify F"),
   CAPTION("============ ==== ====== ="),
@@ -861,6 +885,8 @@ alu_opcode opcode_defs[] = {
   OPCODE(flog, "F = log(F)"),
   OPCODE(fexp, "F = exp(F)"),
   OPCODE(fsqrt, "F = sqrt(F)"),
+  OPCODE(inpf, "Read next number in line, push value to F & length to R"),
+  CAPTION("(leaves cursor on 1st char of number)"),
   CAPTION(""),
   CAPTION("Immediate Data Instructions"),
   CAPTION("========= ==== ============"),

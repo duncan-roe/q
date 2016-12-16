@@ -40,7 +40,7 @@ typedef struct alu_dict_ent
 
 void dump_registers(bool append_newline);
 bool exec_alu_opcode(int opcode, char **err);
-bool get_inp(long *val, long *len, char **err);
+bool get_inp(double *fval, long *val, long *len, char **err);
 
 /* External variables */
 
