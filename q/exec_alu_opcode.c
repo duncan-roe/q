@@ -1,6 +1,6 @@
 /* E X E C _ A L U _ O P C O D E . C
  *
- * Copyright (C) 2014,2015 Duncan Roe
+ * Copyright (C) 2014-2016 Duncan Roe
  */
 
 /* Headers */
@@ -74,6 +74,23 @@ f_valid2(char **err)
   *err = "FP register stack underflow (no 2nd argument pushed)";
   return false;
 }                                  /* f_valid() */
+
+static bool
+inp(char **err)
+{
+  long val, len;
+
+  if (rsidx >= stack_size - 2)
+  {
+    *err = "Register stack overflow";
+    return false;
+  }                                /* if (rsidx >= stack_size - 2) */
+  if (!get_inp(&val, &len, err))
+    return false;
+  rs[++rsidx] = val;
+  rs[++rsidx] = len;
+  return true;
+}                                  /* inp() */
 
 static bool
 nop(char **err)
@@ -828,6 +845,7 @@ alu_opcode opcode_defs[] = {
   OPCODE(rsu, "R = R >> 1 (unsigned)"),
   OPCODE(popn, "Pop R to nowhere (value is discarded)"),
   OPCODE(dup, "Push a copy of R"),
+  OPCODE(inp, "Read next integer in line, push value & length"),
   CAPTION(""),
   CAPTION("Instructions that Modify F"),
   CAPTION("============ ==== ====== ="),

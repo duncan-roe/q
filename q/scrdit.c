@@ -18,9 +18,11 @@
 #include <time.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <errno.h>
 #include <malloc.h>
 #include <memory.h>
 #include <string.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/times.h>
 #include "alledit.h"
@@ -48,6 +50,10 @@
 
 unsigned char fxtabl[128];
 long timlst;
+
+/* Static Variables */
+
+static scrbuf5 *last_Curr = NULL;
 
 /* *************************** print_failed_opcode ************************** */
 
@@ -152,13 +158,64 @@ pop_fp_register(double *val)
   return true;
 }                                  /* pop_fp_register() */
 
+/* ********************************* get_inp ******************************** */
+
+bool
+get_inp(long *val, long *len, char **err)
+{
+  char *endptr;                    /* 1st char after number */
+  unsigned char lastch;            /* Dump for char we nullify */
+  int i;
+
+/* Skip whitespace (including tabs) */
+  for (i = last_Curr->bcurs; i < last_Curr->bchars; i++)
+    if (!isspace(last_Curr->bdata[i]))
+      break;
+  if (i == last_Curr->bchars)
+  {
+    *err = "No number before eol";
+    return false;
+  }                                /* if (i == last_Curr->bchars) */
+  if (!(isdigit(last_Curr->bdata[i]) ||
+    last_Curr->bdata[i] == '+' ||
+    last_Curr->bdata[i] == '-'))
+  {
+    *err = "Next item on line is not a number";
+    return false;
+  }                                /* if (!(isdigit(last_Curr->bdata[i] ... */
+  last_Curr->bcurs = i;
+
+/* Force null termination so strtol() will stop at end */
+  lastch = last_Curr->bdata[last_Curr->bchars];
+  last_Curr->bdata[last_Curr->bchars] = 0;
+
+/* Get the value (cast is to conform with strtol prototype) */
+  errno = 0;
+  *val = strtol((char *)last_Curr->bdata + i, &endptr, 0);
+
+/* Reinstate zeroed char */
+  last_Curr->bdata[last_Curr->bchars] = lastch;
+
+/* Check for overflow. Only check errno (previously zeroed) */
+/* since LONG_MAX or LONG_MIN might be returned legitimately */
+  if (errno)
+  {
+    *err = strerror(errno);
+    return false;
+  }                                /* if (errno) */
+
+/* All OK. Return length and finish */
+  *len = endptr - (char *)last_Curr->bdata - i;
+  return true;
+  return true;
+}                                  /* get_inp() */
+
 /* ********************************* scrdit ********************************* */
 
 void
 scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, int cmmand)
 {
-  unsigned char *p, *q             /* Scratch */
-   ;
+  unsigned char *p, *q;            /* Scratch */
   char *c;                         /* Scratch */
   char *err = NULL;                /* Point to error text */
   char tbuf[256];                  /* Scratch */
@@ -256,6 +313,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, int cmmand)
   nseen = false;
   glast = false;
   fornj = false;
+  last_Curr = Curr;
   if (pchars == 0)
     goto p1005;                    /* J no prompt to move in */
 /*

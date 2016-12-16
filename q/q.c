@@ -2,7 +2,7 @@
  *
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2002,2007,2012-2015 Duncan Roe
+ * Copyright (C) 2002,2007,2012-2016 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -43,6 +43,7 @@
 #define ERR1025(x) do {fprintf(stderr, "%s", (x)); REREAD_CMD;} while (0)
 #define READ_NEXT_COMMAND goto p1004
 #define ERRRTN(x) do {fprintf(stderr, "%s", (x)); return false;} while (0)
+#define PIPE_NAME "qpipeXXXXXX"
 
 /* Typedefs */
 
@@ -113,7 +114,7 @@ static int rdwr = 0;               /* Mode for file opens */
 static long savpos = 0;            /* Remembered pointer during S, B & Y */
 static int saved_pipe_stdout;
 static int pipe_temp_fd;
-static char *pipe_temp_name = NULL;
+static char pipe_temp_name[sizeof PIPE_NAME] = {0};
 static struct sigaction act;
 
 /* Static functions */
@@ -465,7 +466,7 @@ rm_pipe_temp(void)
 {
   int retcod;
 
-  if (pipe_temp_name && *pipe_temp_name)
+  if (*pipe_temp_name)
   {
     retcod = unlink(pipe_temp_name);
     if (retcod == -1 && errno != ENOENT)
@@ -669,7 +670,7 @@ display_opcodes(void)
     "PSHTAB x Push value of tab x to R\r\n"
     "POPTAB x Pop R to set value of tab x;\r\n"
     "                  set tab type to file or cursor pos'n"
-    " as set by SCPT / SFTP\r\n"
+    " as set by SCPT / SFPT\r\n"
     "\r\n"
     "\t Memory Reference Instructions\r\n"
     "\t ====== ========= ============\r\n"
@@ -922,17 +923,9 @@ main(int xargc, char **xargv)
  */
 
 /* Create & open a temporary file to buffer the entire pipe */
-    pipe_temp_name = tempnam("/tmp", "qpipe");
-    if (!pipe_temp_name)
-    {
-      fprintf(stderr, "%s. (tempnam)\r\n", strerror(errno));
-      return 1;
-    }                              /* if (!pipe_temp_name) */
+    strcpy(pipe_temp_name, PIPE_NAME);
     atexit(rm_pipe_temp);
-    do
-      pipe_temp_fd = open(pipe_temp_name, O_RDWR | O_CREAT | O_EXCL,
-        S_IRUSR | S_IWUSR);
-    while (pipe_temp_fd == -1 && errno == EINTR);
+    pipe_temp_fd = mkstemp(pipe_temp_name);
     if (pipe_temp_fd == -1)
     {
       fprintf(stderr, "%s. %s (open)\n", strerror(errno), pipe_temp_name);
