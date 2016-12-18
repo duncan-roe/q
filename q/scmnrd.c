@@ -1,7 +1,7 @@
 /* S C M N R D
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2012-2014 Duncan Roe
+ * Copyright (C) 2012-2014,2016 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -105,7 +105,7 @@ scmnrd()
       cmover = false;              /* No line overflow yet */
     }
     lstvld = true;                 /* Previous command is alway valid */
-    scrdit(newcom, oldcom, "> ", 2, 1); /* Read line */
+    scrdit(newcom, oldcom, "> ", 2, true); /* Read line */
     fmode = zmode;                 /* Reinstate indent mode, if on */
     if (USING_FILE)
     {
@@ -190,7 +190,7 @@ scmnrd()
       goto p1109;                  /* Can't massage 1-char verb */
     for (i = 0;; i++)
       if (oldcom->bdata[i] != SPACE)
-        break;                     /* Find start cmmand */
+        break;                     /* Find start of command */
 /*
  * SCRDTK leaves cursor just after token delimiter or at e.o.l.
  */

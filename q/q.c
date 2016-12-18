@@ -1391,7 +1391,7 @@ p1026:
  */
 p1027:if (cntrlc)
     goto p1901;                    /* J ^C keyed */
-  scrdit(curr, prev, (char *)prmpt, pchrs, 0); /* Edit the line */
+  scrdit(curr, prev, (char *)prmpt, pchrs, false); /* Edit the line */
   lgtmp3 = curmac < 0 || !BRIEF;   /* Do a DISPLY if true */
   switch (verb)                    /* Check EOL type */
   {
