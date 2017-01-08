@@ -40,3 +40,10 @@ Script started on Thu 05 Jun 2014 08:10:00 PM EST
 exit
 
 Script done on Thu 05 Jun 2014 08:10:10 PM EST
+Script started on Sun 18 Dec 2016 02:57:27 PM AEDT
+14:57:27$ cat $C|grep -w goto|wc -l
+438
+14:57:49$ exit
+exit
+
+Script done on Sun 18 Dec 2016 02:57:56 PM AEDT

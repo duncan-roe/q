@@ -18,7 +18,7 @@ void dfread(long num, scrbuf5 *s);
 int ismapd(ino_t inode);
 void newmap(ino_t inode, off_t size, unsigned char *addr);
 bool trytab(unsigned char *zvuf, scrbuf5 *scline);
-void scrdit(scrbuf5 *curr, scrbuf5 *prev, char *prmpt, int pchrs, bool in_cmd);
+void scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd);
 void insmem(unsigned char *linptr, unsigned char *last);
 void ordch(unsigned char, scrbuf5 *);
 void pdsply(scrbuf5 *, unsigned char *, int);

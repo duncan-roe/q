@@ -40,7 +40,7 @@ N @ '^NO9^ND^N!^NR9^NU Non-space -> equals
 N 0 '^NC^NS^N\T,7,36^J^N^<1271> FORTRAN Comment cc36 + beautify
 N 6 '^NC^N^<1277>^N\ FORTRAN C-comment beautify
 N 7 '^NC^NS^N\^H^NA*^@^NM^<1201>^U^<ZAM>^<RST>^ND^N^<4005>^NM^<7000>^U^<PS8>^<PSH 0>^<SUB>^<POP 0>^ND^N^<7000>^NM^<1073>^U^ND^N^<777>^ND^N^<1201>^J
-N 8 '^NC^NS^N\^H^NA*^@^NM^<1201>^U^ND^N^<1405>^NM^<1073>^U^ND^N^<777>^ND^N^<1201>^J
+N 8 '^NC^NS^N\N8 is withdrawn - use N7^\
 N 9 'fi fl ^ND^N2^*J^*NC^*NU^*[fb^*Jg-1^*Jv^*Jv0^*Jg+1^*Jfv^*J^*NU^J^NU
 N 2 '!!Put token to match here!!^N\ ; e.g. n2 ioctl^NU or ioctl^NM2
 N ; '^NC^NS^N\^H^NE^NM ^N^<514>
@@ -48,8 +48,8 @@ N < '^NC^NS^N\g-1^Jv^J^NU
 N > '^NC^NS^N\g+1^Jv^J^NU
 N201 ^A^J^NC^NU^[^N^<201> ;Repeat last LOCATE till no more found
 * n206 - (^N^W^F) search current file for all occurrences of command line.
-*        grep options in n1404
-N206 ^NC^NS^N\^NM^<1202>^U!grep ^ND^N^<1404> -- '^ND^N^<1202>' "^ND^N^<4002>"^J^NU
+*        grep options in n1404; pipe-into command in n1405
+N206 ^NC^NS^N\^NM^<1202>^U!grep ^ND^N^<1404> -- '^ND^N^<1202>' "^ND^N^<4002>"^ND^N^<1405>^J^NU
 N207 ^NC^NS^N\^ND^N^<1001>fm-dw^Js^J!runindent "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^ND^N^<1011>^ND^N1s^J^NU
 N210 ^E^ND^N^<1201>^J^NC^NU^N^<210> ;Insert ^*N^<1201> at Home posn
 N211 ^NC^NS^N\g1^J^ND^N^<772>^NU ; Update "at line" lines
@@ -161,5 +161,5 @@ N1401 f^NU ; Define to be ^NU for l & y instead of fl & fy (^N^Wp & ^N^Wq)
 N1402 s^J^ND^N^<1107>^NU ; Override with "b", &c. as required
 N1403 $C^NU ; override with invocation wildcard (^N^Ws)
 N1404 -wn^NU ; grep options for ^N^W^F
-N1405 80^NU ; Ruler width (^N8)
+N1405 ^NU ; Command to run after N206 (^N^W^F) (e.g. |k -E -S^NU, |cat^NU)
 N1500 /* 15XX - RESERVED FOR MACRO PROGRAMS (*.qm)

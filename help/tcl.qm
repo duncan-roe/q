@@ -17,8 +17,8 @@ N477 ^L^L^Z else^NM^<403>^[m-1^J^G;^B^G ^K^NU
 N N '^N^^
 N O '^NC^N\^NOa^H^ND^N^<407>^S^X^ND^N^U^NRa^NU ; Tcl comment beautify - no n/l
 N Y '^NE^H^NA^NS^N^<405>^L# ^NU Tcl comment
-N202 ^NC^NS^N\q ^ND^N^<4003>/scmacs.tcl^J^NU
-N220 ^NC^NS^N\u ^ND^N^<4003>/scmacs.tcl^J^NU
+N202 ^NC^NS^N\q ^ND^N^<4003>/tcl.qm^J^NU
+N220 ^NC^NS^N\u ^ND^N^<4003>/tcl.qm^J^NU
 N405 ^Z^X^NB2^I^@;# ^NU
 * N 0   "beautify" Tcl source. Currently consists solely of pulling back
 *       comments to cc1. File position is restored afterwards. ^N0

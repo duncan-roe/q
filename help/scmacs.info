@@ -1,7 +1,7 @@
   ++ / u s r / q / s c m a c s ++
 
  This "topic" is intended as a reasonably full explanation of what the macros
-in the file /usr/q/scmacs.f can do for you the user, with also some outline of
+in the file /q/help/fndtn.qm can do for you the user, with also some outline of
 how the more complex ones work, in case you would like to write some of your
 own and are looking for a few clues.
  You actually type:-

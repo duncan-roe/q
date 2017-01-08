@@ -10,7 +10,7 @@ Parameter
 Notes
  - If "Z" is missing from the end of the file, Q will silently insert it.
    Hence you don't really need to use Z, but it can be handy e.g. to append
-   documentation (as is done in scmacs.w)
+   documentation (as is done in word.qm)
  - If Q reports an unhandled error while obeying a Used file, the entire file
    stack is unwound and standard input reverts to the original source.
  - Output suppression (by "fd y") is inherited from an invoking Use file. On

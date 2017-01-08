@@ -1,3 +1,7 @@
+^F & ^B to stop after all whitespace chars, not just space
+^G & ^NG space to optionally operate on all whitespace chars (new FMode mode)
+New active pseudo to format output of integers (e.g. as hex / octal)
+New active pseudo to output UTC time
 Use GNU autotools so can package for Slackware
 Search up directory tree for .qrc
 Do Delete properly (not as an edit)

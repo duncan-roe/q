@@ -1,6 +1,6 @@
 When you need to debug Q running as a pipe, you don't need the second screen.
 The template below is enough to debug the pipe mechanism.
-You will always want to set brakpoints, because there is no user interaction
+You will always want to set breakpoints, because there is no user interaction
 with Q running in a pipe.
 Q will always need a "-i" (initial command) argument.
 The one below is trivial: if you have a specific use case then you would want to
