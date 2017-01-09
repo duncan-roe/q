@@ -2,7 +2,7 @@ fd y
 fb
 fm-s -l
 t1 81
-N A '^NC^NS^N\o off^J^a^J^I^I^NR2^NOB^[^<PS0>^<PSHTAB 1>m1,32000^N^<701> Fit into TAB2-1
+N A '^NC^NS^N\^ND^N^<1001>o off^J^a^J^I^I^NR2^NOB^[^<PS0>^<PSHTAB 1>m1,32000^ND^N^<701>^ND^N^<1011>^NU ; Fit into TAB2-1
 N700 ^X^NA^N^<701>^NG ^N^<701>^N^<702> ;Leave lines starting "> " alone
 N701 ^J^NC^NU^NA^N^<706>^NG>^N^<700>^N^<702> ;Leave lines starting "> " alone
 N E 'T1 81^J^N^A^NU ;Editing width
