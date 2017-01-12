@@ -40,7 +40,7 @@ N @ '^NO9^ND^N!^NR9^NU Non-space -> equals
 N 0 '^NC^NS^N\T,7,36^J^N^<1271> FORTRAN Comment cc36 + beautify
 N 6 '^NC^N^<1277>^N\ FORTRAN C-comment beautify
 N 7 '^NC^NS^N\^H^NA*^@^NM^<1201>^U^<ZAM>^<RST>^ND^N^<4005>^NM^<7000>^U^<PS8>^<PSH 0>^<SUB>^<POP 0>^ND^N^<7000>^NM^<1073>^U^ND^N^<777>^ND^N^<1201>^J
-N 8 '^NC^NS^N\N8 is withdrawn - use N7^\
+N 8 '^ND^N^<4011>^NU ; N 8: get the date
 N 9 'fi fl ^ND^N2^*J^*NC^*NU^*[fb^*Jg-1^*Jv^*Jv0^*Jg+1^*Jfv^*J^*NU^J^NU
 N 2 '!!Put token to match here!!^N\ ; e.g. n2 ioctl^NU or ioctl^NM2
 N ; '^NC^NS^N\^H^NE^NM ^N^<514>

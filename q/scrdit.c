@@ -1194,9 +1194,12 @@ p1905:
         is_pop = true;
       }                            /* if (tabidx >= NUM_TABS) */
       if (is_pop)
-        success = pop_register(&tabs[tabidx].value);
-      else if ((success = push_register(tabs[tabidx].value)))
-        tabs[tabidx].tabtyp = store_file_pos ? LINENUM : CHRPOS;
+      {
+        if ((success = pop_register(&tabs[tabidx].value)))
+          tabs[tabidx].tabtyp = store_file_pos ? LINENUM : CHRPOS;
+      }
+      else
+        success = push_register(tabs[tabidx].value);
       if (success)
         GETNEXTCHR;
       SOUNDALARM;
