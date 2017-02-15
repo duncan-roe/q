@@ -4,7 +4,7 @@
  *
  * Copyright (C) 1995, Duncan Roe & Associates P/L
  * Copyright (C) 2002, Duncan Roe
- * Copyright (C) 2012,2014 Duncan Roe
+ * Copyright (C) 2012,2014,2017 Duncan Roe
  */
 #include <stdio.h>
 #include <errno.h>
@@ -21,7 +21,7 @@ do_cmd()
   if (!scrdtk(1, (unsigned char *)buf, 3, oldcom)) /* Next token 2 chars max */
     if (!strcmp("CD", buf))
     {
-      if (scrdtk(2, (unsigned char *)buf, BUFMAX, oldcom)) /* Directory name */
+      if (!scrdtk(2, (unsigned char *)buf, BUFMAX, oldcom)) /* Directory name */
       {
         if (!oldcom->toklen)
         {
