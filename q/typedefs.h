@@ -2,7 +2,7 @@
 #define TYPEDEFS_H
 
 /* Macros */
-#define Q_BUFSIZ 8192
+#define Q_BUFSIZ 65536
 #define BUFMAX Q_BUFSIZ-1
 #define BLKCAP (64-sizeof(void*))  /* Capacity of a data block */
 #define PTHSIZ 256
