@@ -1,35 +1,32 @@
-fd y /* H SCMACS.INFO for extra info on these...
+fd y /* H FNDTN.CAT for extra info on these...
 fm-t +s -* +#
 t7 36 81
 o n
-N A '^L^I^?^NE^E+^E^NU FORTRAN continuation
 N B '^NC^NS^N\A^J^[V1^J^NU "BOTTOM"
-N C '''^ND^N^<4002>''^NU ; Access current edit file name. Call by ^N^C^C / ^N^P^P
-N D '^J^NC^NL^ND^N"M-2^J^N^G Join previous line
-N E '^F^F^F^X^Q
+N C '^N^P^P ;N P replacement when ^P is interrupt character. Call by ^N^C^C
 N F '^Z^NOA^A^NRA^F^K^NU ^F with recall
 N G '^Z ^NO9^J^NC^NL^ND^N"J-1^J^NR9^NU ;Join next line ;^NH sets columns
-N I '^H^O^B^T^I^I^N^J ;Split "/*" comment to next line (OBS)
 N J '^ND^N^O^J^NU ;Single "/*" comment beautify - call by ^N^M
-N K '^D^NA^NU^NG ^NS^N^K^D^NU Word delete
+N K '^D^NA^NU^NG ^NS^N^@^D^NU Word delete
 N N '^N^^ ; Can change for convenience
 N O '^NOa^H^O^S^X^ND^N^U^NRa^NU Comment beautify - no n/l
-N P ^N^C^C
+N P '''^ND^N^<4002>''^NU ; Access current edit file name. Call by ^N^P^P
 N Q '^NC^NS^N\g-^ND^N^<4004>^Jv^J^NU View previous screenful
 N R '^H^NA^N^<1201>^NM^<1201>^NU ;Remember/recall command or line
 N S '^NOD^G ^NOC^Z^NOB^NRC^K^NRD^S^R^NRB^K^NRC^NU ;Word to u/c
 N T '^NC^NS^N\^UG 1^JV 0^J^NU "TOP"
 N U '^Q^NO9^ND^N^<527>^NR9^NU l/c except sentence strt
-N527 ^ND^N'^NU^F^NA^NU^S^X^Q^NG.^F^@^N^<527>
+N527 ^ND^N^<530>^NU^F^NA^NU^S^X^Q^NG.^F^@^N^@
+N530 ^G.^NA^NU^X^NG ^NL^F^N^@^@^NI^NU
 N V '^NC^NS^N\g+^ND^N^<4001>^Jv^J^NU View next screenful
 N X '^Z^NOA^A^NRA^X^K^NU ^X with recall
-N Y '^NE^I^NP2^NS^NL^T^I^I^@^E/* ^E^NU FORTRAN comment
+N Y '^NE^I^NP2^NS^NL^T^I^I^@^E/* ^E^NU "/*" comment without matching "*/"
 N Z '^Z^B^S^J
 N ^ '^NC^NL^J^[^NS^NL^ND^N^^^[M-2,32000^J^NU ;Back up 1 line when modifying
 N _ ^P^M^NU
 N ! '^NA^NU^NG ^NS=^Y^X^N!
 N " '^[G-1^J^NU
-N47 '^G.^NA^NU^X^NG ^NL^F^N''^@^NI^NU
+N $ '^NE^E^X^NA^NU ^N^@ ;Space between each char from cursor onwards
 N $ 'curently spare^N\
 N & '^NC^NS^N\!rcsdiff ^ND^N^<522> "^ND^N^<4002>"|k -E^J^NU
 N246 ^NC^NS^N\!cvs diff ^ND^N^<522> "^ND^N^<4002>"|k -E^J^NU ;NW&
@@ -37,8 +34,6 @@ N * '!/bin/ls -l "^ND^N^<4002>"^J^NU
 N ( '^NC^NS^N\^NFa!co^ND^N^<1301> -l "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^NNa^NU
 N ) '^NC^NS^N\^NFas^J!ci^ND^N^<1302> -u "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^NNa^NU
 N @ '^NO9^ND^N!^NR9^NU Non-space -> equals
-N 0 '^NC^NS^N\T,7,36^J^N^<1271> FORTRAN Comment cc36 + beautify
-N 6 '^NC^N^<1277>^N\ FORTRAN C-comment beautify
 N 7 '^NC^NS^N\^H^NA*^@^NM^<1201>^U^<ZAM>^<RST>^ND^N^<4005>^NM^<7000>^U^<PS8>^<PSH 0>^<SUB>^<POP 0>^ND^N^<7000>^NM^<1073>^U^ND^N^<777>^ND^N^<1201>^J
 N 8 '^ND^N^<4011>^NU ; N 8: get the date
 N 9 'fi fl ^ND^N2^*J^*NC^*NU^*[fb^*Jg-1^*Jv^*Jv0^*Jg+1^*Jfv^*J^*NU^J^NU
@@ -50,7 +45,6 @@ N201 ^A^J^NC^NU^[^N^<201> ;Repeat last LOCATE till no more found
 * n206 - (^N^W^F) search current file for all occurrences of command line.
 *        grep options in n1404; pipe-into command in n1405
 N206 ^NC^NS^N\^NM^<1202>^U!grep ^ND^N^<1404> -- '^ND^N^<1202>' "^ND^N^<4002>"^ND^N^<1405>^J^NU
-N207 ^NC^NS^N\^ND^N^<1001>fm-dw^Js^J!runindent "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^ND^N^<1011>^ND^N1s^J^NU
 N210 ^E^ND^N^<1201>^J^NC^NU^N^<210> ;Insert ^*N^<1201> at Home posn
 N211 ^NC^NS^N\g1^J^ND^N^<772>^NU ; Update "at line" lines
 N772 l 'at line'^J^NC^NU^F^G ^NG ^NS^NL^ND^N^<771>^E^ND^N^<773>^<ZAM>^<POP 0> ^ND^N^<7000>^J^N^@
@@ -147,12 +141,9 @@ N1021 !!SCRATCH - USED BY ENV DUMP #1
 N1200 /* 12XX - USED AS SCRATCH SPACE AND FOR OTHER FORMER KEYBOARD INTERNAL MACROS
 N1201 /* 1201 - REPLACES ^N<
 N1202 /* 1202 - REPLACES ^N>
-N1271 ^ND^N^<1272>^NB2^I^@^NB2^I^@^NP2^NS^NL^ND^N^<1273>^ND^N^J^N^<1271>
-N1272 L ''/*''^J^NC^NX^NU
 N1273 ^Y^NG ^NS^N^<1274>^Y^NG ^N^<1275>^X^N^<1274>
 N1274 ^X^T^I^I^NU
 N1275 ^D^X^NP2^N^<1273>^NU
-N1277 L C,,,,1^J^NC^NX^F^NA^NL^S^X^Q^@^J^N^<1277>
 N1300 /* 13XX - USED FOR MISCELLANEOUS FLGS. Change to ^NU for no effect
 N1301  -M^NU  ;for ^N(
 N1302  -d -M^NU  ;for ^N)

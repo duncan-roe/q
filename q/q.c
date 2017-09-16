@@ -71,6 +71,7 @@ typedef enum command_state
 
 long timlst;
 unsigned char fxtabl[128];
+scrbuf5 b1, b2, b3, b4;            /* 2 line & 2 command buffers */
 
 /* Instantiate externals */
 
@@ -743,7 +744,6 @@ main(int xargc, char **xargv)
   bool verbose_flag = false;       /* -v seen */
   command_state cmd_state = TRY_INITIAL_COMMAND;
   bool fullv = false;              /* Fulll VIEW wanted */
-  scrbuf5 b1, b2, b3, b4;          /* 2 line & 2 command buffers */
   q_yesno answer;
   char *initial_command = NULL;
   bool P, Q;                      /* For determining whether we are in a pipe */

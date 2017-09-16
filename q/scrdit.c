@@ -1589,22 +1589,13 @@ p7625:
 p1706:
   mcnxfr--;                        /* Previous stack entry */
   i = mcstck[mcnxfr].mcprev;       /* Macro # */
-  if (i < 0)
+  j = mcstck[mcnxfr].mcposn;       /* Macro position */
+  if (i < 0 || i > TOPMAC || !scmacs[i] || j > scmacs[i]->mcsize || j < 0)
   {
-  p17061:
     printf("\r\nReturn macro ^<%o>out of range or empty. ", i);
     notmac(true);
     SOUNDALARM;
   }
-  if (i > TOPMAC)
-    goto p17061;                   /* Illegal macro # */
-  if (!scmacs[i])
-    goto p17061;                   /* J undefined macro */
-  j = mcstck[mcnxfr].mcposn;       /* Macro position */
-  if (j > scmacs[i]->mcsize)
-    goto p17061;                   /* J pos'n now off end of macro */
-  if (j < 0)
-    goto p17061;                   /* J -ve pos'n */
 
 /* If leaving an immediate macro, this entry is now free */
   if (curmac >= FIRST_IMMEDIATE_MACRO && curmac <= LAST_IMMEDIATE_MACRO)
