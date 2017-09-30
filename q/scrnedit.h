@@ -19,7 +19,6 @@ int cursr,scurs,pchars,icurs,crscnt,rtcnt;
 int cacnt,tabcnt,cdone,partno,mxchrs;
 bool insert,rfrsh,endlin;
 bool bspace,cntrlw;
-unsigned long zmode;               /* Copy of fmode by scmnrd */
 double delay;
 /*
  * screen - What's on the screen now

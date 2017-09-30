@@ -4,8 +4,9 @@ New active pseudo to format output of integers (e.g. as hex / octal)
 New active pseudo to output UTC time
 Use GNU autotools so can package for Slackware
 Search up directory tree for .qrc
+Use .qrc associated with file to edit
 Do Delete properly (not as an edit)
-ALU is always 64-bit
+ALU is always 64-bit (?)
 cater for >4G lines in L & Y
 Give some kind of acknowledgement to ^NF (& ^NO?)
 -H option to give invocation help
@@ -32,3 +33,5 @@ INTERNALS
   use stdint types
 Show what arguments Q started with (?)
 Catalogue of useful macros
+Whithdraw k cmd in favour of unary ! (! needs changing to do this)
+New pseudomacro to replace "/*" with arbitrary seq: #, // &c

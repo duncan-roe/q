@@ -1,7 +1,7 @@
 /* S C M N R D
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2012-2014,2016 Duncan Roe
+ * Copyright (C) 2012-2014,2016-2017 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -96,6 +96,7 @@ scmnrd()
   {
     cmsplt = false;                /* No split command yet */
     zmode = fmode;                 /* So n4000 can return proper value */
+    zmode_valid = true;
     fmode &= 033777777777U;        /* Turn off indent */
     if (USING_FILE)
     {
@@ -107,6 +108,7 @@ scmnrd()
     lstvld = true;                 /* Previous command is alway valid */
     scrdit(newcom, oldcom, "> ", 2, true); /* Read line */
     fmode = zmode;                 /* Reinstate indent mode, if on */
+    zmode_valid = false;
     if (USING_FILE)
     {
       screen[0] = '$';             /* So get prompt after 'Z' */

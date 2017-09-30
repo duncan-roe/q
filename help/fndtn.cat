@@ -2,257 +2,48 @@
 
  This "topic" is a work in progress. The plan is to document those macros
 in the suite which you might want to invoke directly.
+t1 9 14 23
 
- Macro    Context    Action
- =====    =======    ======
- ^N^B     Command    Jump to end of file, show last line
- ^N^F     Either     Recall next word from previous line or cmd
- ^N^G     Either     Append 1 space then join next line
-                       (Will be in edit mode on completion)
- ^N^J     Either     Single "/*" comment beautify. Can invoke by ^N^M
- ^N^K - (word delete). This macro deletes a single word of text, including the
-space following it if it's not the last word in the line. Thus it's intended
-primarily for use when editing natural-language text although it's sometimes
-useful when editing e.g. COBOL. It assumes you're on the 1st character of the
-word, having got there by ^F or ^B perhaps. This is its NEWMACRO command:-
- N K '^D^NA^NU^NG ^NS^N^K^D^NU Word delete
- We're on the 1st character of the word that's to be deleted so we delete that
-character to start with (^D). If that was the last character in the word we'll
-now either be sitting on a space or else we'll be at the end of the line if
-that was the last word in the line. Test for the latter possibility first: if
-we're now at end of line do a subroutine return (^NA^NU). If we're NOT now
-sitting on the space after the word, i.e. we have more characters in the word
-to delete, now jump back to the start of the ^N^K macro (^NG ^NS^N^K).
-Otherwise (we are sitting on the space after the word) delete this space and
-subroutine exit (^D^NU).
-
- ^N^O - (comment beautify - no n/l). This macro (^H^O^X^Q^NU) is similar to the
-^N^J main comment beautify macro (^H^O^S^X^Q^J^NU) except that it's missing the
-^J so you have the chance to do more mods to the comment after using ^N^O. For
-some reason it's also missing the ^S, but this was probably unintentional.
-
-^N^P^P - Return the name of the current edit file. ^P is the alternate
-interrupt character, and if it is in use then ^N^C^C may be used instead. The
-extra ^P is required when invoking this macro because ^P/^C & ^W take
-precedence over ^N. This is so that the parity-high macros can be invoked from
-the keyboard: you would key ^N^W^A to invoke the ^<201> macro for instance. To
-invoke the ^W macro you key ^N^P^W and to invoke the ^P macro you key ^N^P^P.
-
- ^N^Q backs up by a screenful or half a screenful if FM +H is asserted. The
-number of lines to go back is calculated by the ^<4004> active pseudomacro.
-
- ^NR - (Remember/recall command or line). This macro can remember the line you
-typed when the editor was expecting a command or vice versa. Providing the
-offending misplaced line/command is less than 64 characters just type ^N^R to
-remember it. If it's too long then the bell will sound - truncate as little as
-possible of the line until it'll fit. Then get into or out of command mode as
-necessary, type ^NR, and the remembered line or command will reappear!
- The macro works by using the ^NM pseudo-macro to save the current line as the
-^N< macro. Alternatively, if the current line is empty, the ^N< macro is
-invoked. The working part of the macro is ^H^NA^N<^NM<^NU i.e. "if at the end
-of the line when at the start" (empty line) "then invoke ^N<","otherwise save
-current line in ^N< and subroutine exit". It wouldn't generally make a lot of
-sense to call this macro as a subroutine, although ^NM does save the current
-line as a subroutine if there's room at the end for the ^NU, but the ^NU is
-there so that there can be a cryptic comment afterwards. ^NX (exit from obeying
-macros altogether) could have been used here but using ^NU is a healthier
-habit.
-
- ^N^S (word to u/c) does a lower-case to upper-case conversion UP TO THE END OF
-THE CURRENT WORD ONLY. Typically you would be at the start of a word (as for
-^N^K) so that the macro would turn the whole word to upper case.
- In operation, the macro demonstrates an unusual use of the ^R (rescue)
-character. Here is its definition:
- N S '^NOD^G ^NOC^Z^NOB^NRC^K^NRD^S^R^NRB^K^NRC^NU ;Word to u/c
- ^NOD set tab 20 to current cursor position; ^G ^NOC set tab 19 to position of
-next space in line; ^Z^NOB set tab 18 to position after end of line; ^NRC move
-cursor back to that space; ^K delete rest of line (!); ^NRD cursor to original
-position; ^S rest of line now visible to upper case; ^R rescue ^K'd part of
-line (and possibly more if line was once longer); ^NRB^K move cursor to 1st
-spuriously-recovered character and delete any excess; ^NRC^NU move cursor to
-space after upper-cased word and subroutine exit. Note the technique of using
-^K and ^R to temporarily "hide"  a portion of a line. Split (^T) and the JOIN
-command could have been used of course but would have looked much messier on
-the screen and would have been much slower if called repeatedly by another
-macro.
-
- ^N^T does much the same as ED's "TOP" command i.e. go to line 1 of the file
-and display that line. Here it is:
- N T '^NC^NS^N\^UG 1^JV 0^J^NU "TOP"
- Editor must be expecting a command (^NC^NS^N\), delete anything currently on
-the line (^U), go to line 1 and view the current line only (G 1^JV 0^J) and
-exit (^NU)
-
- ^N^U - (l/c except sentence start). This macro treats the current line as
-ordinary text and makes it all lower case except for what it perceives to be
-the first words of sentences, which it starts with capitals. It's a fairly
-rough and ready macro as described here: not as crafty as it could be in
-recognising the end of a sentence (just looks for a full stop so wrongly picks
-up abbreviations e.g. e.g.), destroys the upper or lower case settings of any
-highlighted words (doesn't have ^N^S-style logic) etc. but has been found to be
-useful enough by its author although the reader is welcome to write a better
-one. It calls a subsidiary macro so is actually quite short:-
-^Q^NO9^ND^N^P^NR9^NU - rest of line to lower case, remember cursor as tab 9,
-call ^N^P macro subroutine to actually do the u/c sentence starts, restore
-cursor to original position, subroutine exit. Here's the definition for ^N^P:
- N P '^G.^NA^NU^F^NA^NU^S^X^Q^N^P
- Go to next full stop (^G.). If now at end of line (no more full stops) then
-subroutine exit (^NA^NU). Go forward to next word - if now at end of line (full
-stop was after last word) then exit (^F^NA^NU). Make 1st character of word u/c,
-make rest of line l/c, loop back to do it again (^S^X^Q^N^P).
-
- ^N^V - (view next screenful). This macro jumps you 23 lines further down the
-file and does a VIEW. Assuming you have just done a VIEW, the 1st line output
-by this new VIEW will be just after the last line output by the previous one.
-Generally this macro provides a handy way of skipping down the file to the bit
-you want. The macro is extremely simple:
- N V '^NC^NS^N\G+23^JV^J^NU View next screenful
- Providing editor is expecting a command (^NC^NS^N\); GOTO +23, VIEW, and
-subroutine exit (G+23^JV^J^NU).
-
- ^N^C^W - ^NC^NS^N\G1^J^N% "beautifies" comments in a COBOL source program.
-That is, each comment line is dropped to lower case. The extra ^C is needed as
-explained for the ^N^C^C macro above. Comment lines are identified by a '*' in
-column 7. The ^W macro is actually only an entry to the % macro which does most
-of the work - it merely verifies that the editor is expecting a comand and
-moves the file pointer to line 1. The % macro is defined as folows:-
- N45 'L*,,,7,7^J^NC^NU^Q^J^N%
- i.e. look for an '*' in col 7, subroutine exit if not found, otherwise drop
-line to lower case, accept line, and repeat.
-
- ^N^X - (^X with recall) recalls a character at a time from the previous line
-in exactly the same way as ^N^F recalls a word from the previous line. The
-definitions of the two macros are identical except that X replaces F in this
-latter one.
-
- ^N^Y - ^NE^I^E/* ^E^NU is for typing at the end of a FORTRAN line when you
-want to add a '/*' comment. It tabs out to col 36 or wherever the next tab is
-(or just 1 space if no more tabs) then inserts '/* '. The reason this is
-inserted is in case the macro is unintentionally used before the end of the
-line - that way, nothing gets overwritten. Inserting is switched off
-afterwards. ^NE^E is a common way for a macro to ensure that inserting is ON.
-
- ^N^Z - ^Z^B^S^J forces the last word in a line to upper case. Typically, the
-last several words in the line will have been in lower case. This is an example
-of a very simple macro containing no pseudos, which is nevertheless very
-useful. With a bit of practice it becomes quite easy make the keyword in a
-comment the last word so that this macro can be used. When inputting text, use
-the macro straight after keying the word to be in upper case then align the
-text file later using the macros in /usr/q/wordmacs (q.v.).
-
- ^N^^ - ^[M-2,32000^J^NU backs up 1 line in the file i.e. if you're modifying a
-range of lines then you notice something that needs changing a line or two back
-then use this macro to get back up there. If it goes back too far, just key
-carriage returns until you get down to the line you want.
-
- The macros up to ^N0 are either subsidiaries or relatively obscure - ^N- is
-slightly useful if you want to underline 'prettily'. When inserting or
-appending a line to be underlined just ^A on the next line then ^N- will change
-all the words to underlines, or you may wish to redefine this macro to put '='
-or take account of FORTRAN printer control &c.
-
- ^N0 is the '/*' comment beautifier for e.g. FORTRAN programs. Comments are
-aligned on tab 2, if they follow lines of code that extend past there they are
-split off onto the next line and aligned. Then they are 'beautified' - all
-chars lower case except first. ^N0 is just the entry, it resets tabs and checks
-for being in command mode. ^N1 can be used directly, if some tab other than col
-36 is required. Here they all are:-
- 0 '^NC^NS^N\T,7,36^J^N1 Comment cc36 + beautify
- 1 '^ND^N2^NB2^I^@^NB2^I^@^NP2^NS^NL^ND^N3^ND^N^J^N1 ditto TAB 2
- 2 'L ''/*''^J^NC^NX^NU
- 3 '^Y^NG ^NS^N4^Y^NG ^N5^X^N4
- 4 '^X^T^I^I^NU
- 5 '^D^X^NP2^N3^NU
- 1 calls 2 to get a line with a /* comment - 2 exits from the suite directly if
-it can't find any more. This is not good practice of course, but this suite of
-macros is actually one of the very early ones: it predates the availability of
-^NI, or at least nobody could figure out how to use ^NI at the time. Anyway,
-providing we get back from 2, then we are now sitting on the '/' of the '/*'.
-If before tab 2, tab f/wd. If still before (may have only got to tab 1 last
-time) tab f/wd again. If we're past tab 2, call 3 which will try and pull the
-comment back to tab 2 or if it can't (FORTRAN line too long) will split it off
-to the next line. Now, still in the 1 macro but now on a line whre the comment
-is guaranteed to be in the right place, call the ^N^J macro to beautify it. 3
-is entered when the comment is too far forward. Remembering that we always want
-to leave at least one space between end of FORTRAN code and '/*' ...
- If previous char not a space, we must definitely do a split, jump to 4. If
-char before that is also a space, we can pull comment back 1 place anyway, jump
-to 5. Otherwise (one space but not two) move back to that space and do a split
-(jump to 4).
- 4 is entered when line is to be split. Cursor will be on char before the '/*'.
-Should be easy enough to understand - the return is to 1 of course. 5 deletes
-the space before the space before '/*' then moves back onto the '/': if still
-too far along the line loop back to 3 otherwise exit back to 1.
-
- ^N6 'beautifies' C comments in a FORTRAN program. It works much the same way
-as ^N^C^W does for COBOL except that it's slightly more fancy because it puts
-the first letter of each comment to upper case and the rest to lower case. The
-reader should have little trouble following how it works:-
- N 6 '^NC^N7^N\ ;C-comment beautify
- N 7 'L C,,,,1^J^NC^NX^F^NA^NL^S^X^Q^@^J^N7
-
- That's about it for user-callable macros in /usr/q/scmacs. The file
-/usr/q/wordmacs contains several large macro 'programs', some of which (the
-"LQP suite") are described in the bottom of the file. The oldest of these,
-^N^A, adjusts text files to any desired width, not splitting any words and
-putting as many words as will go into each line. The right hand margin is not
-straightned up which makes it good for HELP files (because on a slow terminal
-you don't want to wait for multiple spaces), and in fact has been used for this
-file and most other HELP files. To use it:-
- 1) Set tab 2 to 1st column you DON'T want to use (tab 1 immaterial).
- 2) Start any paragraph or line that you don't want to have joined on to the
-previous one with at least one space. Multiple spaces between words may confuse
-the macro and should be avoided.
- 3) Blank lines will be preserved.
- 4) Type ^N^A to start macro (may well be worth selecting BRIEF with the FB
-command first).
- The other callable macros in the file (^E,^N,^W) are not particularly useful -
-you can see for yourself what they do.
- The ^N^A macro is a good example of a really eficient macro. The current macro
-(shown below) is 5 or 6 times as fast as the original one - and that used to be
-acceptable (for small files at any rate). Here's a quick rundown on how it
-works:
- (A technicality) the macro derives some of its power from a use of the ^NY
-subtraction macro that was never dreamt of when the editor was written, hence
-tab 2 has to be duplicated in a non-tab-key tab. This is what the append
-command does. We always modify a large number of lines, this saves unneccessary
-returns to the command processor and means we can detect when we are finished
-by returning to command mode. ^A then either calls the blank line skipper ^N8
-or the new line modifier ^N2. When modifying a new line, take a punt that it
-will fit (especially likely if modifying a large file that is mostly the right
-width already) if too big then commence to step through it word by word. Now
-get into the main processing loop, ^N6. This works along the line until either
- We find a word that won't fit - call ^N7
- End of line is reached - call (the especially crafty) ^N1
- ^N7 doesn't have to do much - see comment that goes with it. ^N1 measures how
-far short of the end of the line we are. That is what the ^NY is used for. If
-the line just fits, an ordinary subtraction would give a result of zero (no
-room). This unfortunately is the "unset" value for a tab hence go back 1
-character in that instance, which will give a result of "room for 1 char". As
-the shortest word occupies 2 characters (1 for the preceding space) this
-doesn't matter. The subtraction is now done, then this line is accepted as is
-and the next line examined. There may be no more, of course, in which case we
-have finished. The line may be empty (^NA) in which case start scanning for a
-non-empty line. Or it may begin with a space (indicating a new paragraph) in
-which case it must not be joined to the previous one. If all these tests are
-passed, ^F to 2nd word, ^Y back to intervening space (unless line only had 1
-word in which case we were in the right place already) and see if that moves us
-past our measurement. Only if it doesn't is there any point in ESCaping out of
-the modify back to the command processor to join this line to the previous one.
-If the test failed, treat the current line as a new line to modify (^N2). If it
-passed, join previous line, insert a space at the join, skip past the first
-word (which must fit) then continue normal middle-of-line processing.
- Note that in the case of a file that has already had the macro run for the
-curent width, no lines are ever joined or split:-
- N A '^NC^NS^N\A^J^R^NR2^NOB^[M1,32000^J^NA^N8^N2 Fit into TAB2-1
- N E 'T1 73^J^N^A^NU ;Editing width
- N J '^G^*^S^F^Q^NU ;control char in HELP file u/c
- N I '^NC^NS^N\G1^J^NOI^N^<064> ;Justify r/h margin T2 unless line < T1
- N N '^NU
- N W '^NC^NS^N\^NM^<055>^H^NE^EQ ^Z.LQP^JA^J^J^[D1 32000^JT17 69^JE ^N^<164>
- N 1 '^NB2^NS^Y^@^NOA^NYA^J^NC^NU^NA^N8^NG ^N2^F^NA^NS^Y^@^NPC^N2^N3
- N 2 '^Z^Y^NP2^H^F^F^N6 ;New line:- first see if not too long
- N 3 '^[J-2,1,32000^J^NRA^E ^E^F^N6 ;We know 1st wd will fit
- N 6 '^NA^NS^Y^@^NP2^N7^NA^N1^F^F^N6 ;Work along line
- N 7 '^B^?^T^N2 ;This wd won''t fit: back 1 wd, ER space, split line
- N 8 '^NA^NS^N2^J^NC^NU^N8 ;Accept extra blank lines until non blank
+ Macro   Oct  Context  Action
+ =====   ===  =======  ======
+ ^N^@    000  Macro    Restart current macro (^N^@ is a pseudomacro)
+ ^N^B    002  Command  Move to end of file, show last line
+ ^N^F    006  Either   Recall next word from previous line or cmd
+                         (including all trailing spaces)
+ ^N^G    007  Either   Append 1 space then join next line
+                         (Will be in edit mode on completion)
+ ^N^J    012  Either   Single "/*" comment beautify. Can invoke by ^N^M
+ ^N^K    013  Either   Word delete. (from cursor to next space incl)
+ ^N^N    016  Either   Same as ^N^^
+                         (^N^N is a convenience macro, you can change it to
+                          whatever you like. Do not use in macros)
+ ^N^O    017  Either   As ^N^J but stay on current line
+ ^N^P^P  020  Either   Return the name of the current edit file, quoted.
+                       In macros, use ^N^<4002>, which is what ^N^P^P does.
+ ^N^Q    021  Command  Move back 1 screenful and view
+                         (half a screenful if fm+h asserted)
+ ^N^R    022  Either   Rememer/recall command or line
+                         (recall if empty, else remember)
+ ^N^S    023  Either   Word to upper case (from cursor to next space excl)
+ ^N^T    024  Command  Move to start of file, show first line
+ ^N^U    025  Either   Sentence-case rest of line (except, e.g. e.g.)
+                         (intended for comment beautifying)
+ ^N^V    026  Command  Move forward 1 screenful and view
+                         (half a screenful if fm+h asserted)
+ ^N^X    030  Either   Recall next character from previous line or cmd
+ ^N^Y    031  Either   Add "/*" comment at tab 2 or after 1 space (no "*/")
+ ^N^Z    032  Either   Force last word to upper case and accept line / cmd
+ ^N^^    036  Either   Modify from previous line for ever (32000 lines)
+ ^N^_    037  Either   Expand to literal Cr (^M) character (e.g. for L-locate)
+                         (but it's often easire to use fi cmd)
+ ^N$     044  Either   Insert space after each char from cursor onwards
+ ^N&     046  Command  rcsdiff current file. n522 gives rcs options
+ ^N(     050  Command  co -l current file and q into it
+                         (n1301 gives extra co options: default -M)
+ ^N)     051  Command  ci -u current file and q into it
+                         (n1302 gives extra ci options: default -d)
+ ^N*     052  Command  ls -l current file
+ ^N-     055  Either   change non-space chars to '=' from cursor to eol
+                         (defined by "N @ ...")
+ ^N7     067  Command  Draw ruler then execute command
+                         (i.e. type command followed by ^N7 rather than Enter)

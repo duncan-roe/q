@@ -1,6 +1,6 @@
 /* E X E C _ A L U _ O P C O D E . C
  *
- * Copyright (C) 2014-2016 Duncan Roe
+ * Copyright (C) 2014-2017 Duncan Roe
  */
 
 /* Headers */
@@ -8,6 +8,7 @@
 #include <math.h>
 #include <string.h>
 #include "alu.h"
+#include "fmode.h"
 
 /* **************************** Static Functions **************************** */
 
@@ -74,6 +75,30 @@ f_valid2(char **err)
   *err = "FP register stack underflow (no 2nd argument pushed)";
   return false;
 }                                  /* f_valid() */
+static bool
+pshmode(char **err)
+{
+  if (rsidx >= stack_size - 1)
+  {
+    *err = "Register stack overflow";
+    return false;
+  }                                /* if (rsidx >= stack_size - 1) */
+  return push(zmode_valid ? zmode : fmode, err);
+}                                  /* pshmode(char **err) */
+
+static bool
+popmode(char **err)
+{
+  if (!r_valid(err))
+    return false;
+  fmode = rs[rsidx--];
+  if (zmode_valid)
+  {
+    zmode = fmode;
+    fmode &= 033777777777U;
+  }                                /* if (zmode_valid) */
+  return true;
+}                                  /* popmode(char **err) */
 
 static bool
 inp(char **err)
@@ -834,6 +859,114 @@ ps8192(char **err)
   return push(8192, err);
 }                                  /* ps8192() */
 
+static bool
+ps2p14(char **err)
+{
+  return push(16384, err);
+}                                  /* ps2p14() */
+
+static bool
+ps2p15(char **err)
+{
+  return push(32768, err);
+}                                  /* ps2p15() */
+
+static bool
+ps2p16(char **err)
+{
+  return push(65536, err);
+}                                  /* ps2p16() */
+
+static bool
+ps2p17(char **err)
+{
+  return push(131072, err);
+}                                  /* ps2p17() */
+
+static bool
+ps2p18(char **err)
+{
+  return push(262144, err);
+}                                  /* ps2p18() */
+
+static bool
+ps2p19(char **err)
+{
+  return push(524288, err);
+}                                  /* ps2p19() */
+
+static bool
+ps2p20(char **err)
+{
+  return push(1048576, err);
+}                                  /* ps2p20() */
+
+static bool
+ps2p21(char **err)
+{
+  return push(2097152, err);
+}                                  /* ps2p21() */
+
+static bool
+ps2p22(char **err)
+{
+  return push(4194304, err);
+}                                  /* ps2p22() */
+
+static bool
+ps2p23(char **err)
+{
+  return push(8388608, err);
+}                                  /* ps2p23() */
+
+static bool
+ps2p24(char **err)
+{
+  return push(16777216, err);
+}                                  /* ps2p24() */
+
+static bool
+ps2p25(char **err)
+{
+  return push(33554432, err);
+}                                  /* ps2p25() */
+
+static bool
+ps2p26(char **err)
+{
+  return push(67108864, err);
+}                                  /* ps2p26() */
+
+static bool
+ps2p27(char **err)
+{
+  return push(134217728, err);
+}                                  /* ps2p27() */
+
+static bool
+ps2p28(char **err)
+{
+  return push(268435456, err);
+}                                  /* ps2p28() */
+
+static bool
+ps2p29(char **err)
+{
+  return push(536870912, err);
+}                                  /* ps2p29() */
+
+static bool
+ps2p30(char **err)
+{
+  return push(1073741824, err);
+}                                  /* ps2p30() */
+
+static bool
+ps2p31(char **err)
+{
+  return push(2147483648, err);
+}                                  /* ps2p31() */
+
 /* **************************** The Opcode Table **************************** */
 
 alu_opcode opcode_defs[] = {
@@ -870,6 +1003,8 @@ alu_opcode opcode_defs[] = {
   OPCODE(dup, "Push a copy of R"),
   OPCODE(inp, "Read next integer in line, push value & length"),
   CAPTION("(leaves cursor on 1st char of number)"),
+  OPCODE(pshmode, "Push mode (as per n4000) to R"),
+  OPCODE(popmode, "Pop R to set mode (as per n4000)"),
   CAPTION(""),
   CAPTION("Instructions that Modify F"),
   CAPTION("============ ==== ====== ="),
@@ -905,6 +1040,24 @@ alu_opcode opcode_defs[] = {
   OPCODE(ps2048, "Push constant 2048 to R"),
   OPCODE(ps4096, "Push constant 4096 to R"),
   OPCODE(ps8192, "Push constant 8192 to R"),
+  OPCODE(ps2p14, "Push constant 16384 (2**14) to R"),
+  OPCODE(ps2p15, "Push constant 32768 (2**15) to R"),
+  OPCODE(ps2p16, "Push constant 65536 (2**16) to R"),
+  OPCODE(ps2p17, "Push constant 131072 (2**17) to R"),
+  OPCODE(ps2p18, "Push constant 262144 (2**18) to R"),
+  OPCODE(ps2p19, "Push constant 524288 (2**19) to R"),
+  OPCODE(ps2p20, "Push constant 1048576 (2**20) to R"),
+  OPCODE(ps2p21, "Push constant 2097152 (2**21) to R"),
+  OPCODE(ps2p22, "Push constant 4194304 (2**22) to R"),
+  OPCODE(ps2p23, "Push constant 8388608 (2**23) to R"),
+  OPCODE(ps2p24, "Push constant 16777216 (2**24) to R"),
+  OPCODE(ps2p25, "Push constant 33554432 (2**25) to R"),
+  OPCODE(ps2p26, "Push constant 67108864 (2**26) to R"),
+  OPCODE(ps2p27, "Push constant 134217728 (2**27) to R"),
+  OPCODE(ps2p28, "Push constant 268435456 (2**28) to R"),
+  OPCODE(ps2p29, "Push constant 536870912 (2**29) to R"),
+  OPCODE(ps2p30, "Push constant 1073741824 (2**30) to R"),
+  OPCODE(ps2p31, "Push constant 2147483648 (2**31) to R"),
   CAPTION(""),
   CAPTION("Instructions with 2 operands"),
   CAPTION("============ ==== = ========"),

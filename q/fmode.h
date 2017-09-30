@@ -19,4 +19,6 @@
 /* External variables */
 
 extern unsigned long fmode;
+extern unsigned long zmode;        /* Copy of fmode by scmnrd */
+extern bool zmode_valid;
 #endif

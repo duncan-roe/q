@@ -17,7 +17,7 @@
 
 #define OPCODE(op, desc) {#op, op, desc}
 #define CAPTION(desc) {"", NULL, desc}
-#define FIRST_ALU_OP 04400
+#define FIRST_ALU_OP 04200
 
 /* Typedefs */
 

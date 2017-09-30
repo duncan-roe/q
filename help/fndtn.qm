@@ -5,7 +5,8 @@ o n
 N B '^NC^NS^N\A^J^[V1^J^NU "BOTTOM"
 N C '^N^P^P ;N P replacement when ^P is interrupt character. Call by ^N^C^C
 N F '^Z^NOA^A^NRA^F^K^NU ^F with recall
-N G '^Z ^NO9^J^NC^NL^ND^N"J-1^J^NR9^NU ;Join next line ;^NH sets columns
+N G '^Z ^NO9^J^NC^NL^ND^N^<402>J-1^J^NR9^NU ;Join next line after space
+N402 ^[G-1^J^NU ; Used by ^N^G
 N J '^ND^N^O^J^NU ;Single "/*" comment beautify - call by ^N^M
 N K '^D^NA^NU^NG ^NS^N^@^D^NU Word delete
 N N '^N^^ ; Can change for convenience
@@ -21,20 +22,19 @@ N530 ^G.^NA^NU^X^NG ^NL^F^N^@^@^NI^NU
 N V '^NC^NS^N\g+^ND^N^<4001>^Jv^J^NU View next screenful
 N X '^Z^NOA^A^NRA^X^K^NU ^X with recall
 N Y '^NE^I^NP2^NS^NL^T^I^I^@^E/* ^E^NU "/*" comment without matching "*/"
-N Z '^Z^B^S^J
+N Z '^Z^B^S^J^NU
 N ^ '^NC^NL^J^[^NS^NL^ND^N^^^[M-2,32000^J^NU ;Back up 1 line when modifying
 N _ ^P^M^NU
-N ! '^NA^NU^NG ^NS=^Y^X^N!
-N " '^[G-1^J^NU
 N $ '^NE^E^X^NA^NU ^N^@ ;Space between each char from cursor onwards
-N $ 'curently spare^N\
 N & '^NC^NS^N\!rcsdiff ^ND^N^<522> "^ND^N^<4002>"|k -E^J^NU
 N246 ^NC^NS^N\!cvs diff ^ND^N^<522> "^ND^N^<4002>"|k -E^J^NU ;NW&
 N * '!/bin/ls -l "^ND^N^<4002>"^J^NU
 N ( '^NC^NS^N\^NFa!co^ND^N^<1301> -l "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^NNa^NU
 N ) '^NC^NS^N\^NFas^J!ci^ND^N^<1302> -u "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^NNa^NU
-N @ '^NO9^ND^N!^NR9^NU Non-space -> equals
-N 7 '^NC^NS^N\^H^NA*^@^NM^<1201>^U^<ZAM>^<RST>^ND^N^<4005>^NM^<7000>^U^<PS8>^<PSH 0>^<SUB>^<POP 0>^ND^N^<7000>^NM^<1073>^U^ND^N^<777>^ND^N^<1201>^J
+* n@ defines the - macro (since n- has special meaning)
+N @ '^NO9^ND^N^<401>^NR9^NU Non-space -> equals
+N401 ^NA^NU^NG ^NS=^Y^X^N^@ ; Used by ^N-
+N 7 '^NC^NS^N\^H^NA*^@^NM^<1201>^U^<ZAM>^<RST>^ND^N^<4005>^NM^<7000>^U^<PS8>^<PSH 0>^<SUB>^<POP 0>^<PSHMODE>^<DUP>^<PS2P30>^<PS2P31>^<OR>^<NOT>^<AND>^<POPMODE>^ND^N^<777>^ND^N^<1201>^J^<POPMODE>
 N 8 '^ND^N^<4011>^NU ; N 8: get the date
 N 9 'fi fl ^ND^N2^*J^*NC^*NU^*[fb^*Jg-1^*Jv^*Jv0^*Jg+1^*Jfv^*J^*NU^J^NU
 N 2 '!!Put token to match here!!^N\ ; e.g. n2 ioctl^NU or ioctl^NM2
@@ -87,8 +87,8 @@ N322 n1106 ^*ND^*N^*<1104>^*NU^Jn1107 ^*ND^*N^*<1105>^*NU^J^NU ; ^N^WR global re
 N325 n1106 ^*NU^Jn1107 ^*NU^J^NU
 * n363 - (^N^Ws) show what files $C expands to
 N363 ^NC^NS^N\! for i in ^ND^N^<1403>;do echo $i;done|pr -n -t^J^NU
+n400 /* 4XX - RESERVED FOR INTERMEDIATE MACROS THAT USED TO BE KEYBOARD-ACCESSIBLE
 N1070 /* 107X - DEFAULT VALUES FOR VARIOUS MACROS
-N1073 80^NU ; Ruler width (set by macros)
 * n372 (^N^Wz) - set up N N to globally uppercase its line contents
 N372 ^NC^NS^N\n016 ^*NM^*<526>^*Uq $1^*J^*ND^*N^*<526>^*ND^*N^*<360>^*ND^*N^*<526>^*H^*S^*ND^*N^*<361>^*ND^*N^*<362>^*NU^J^NU
 N526 !!! SCRATCH - DEFINED BY OTHER MACROS !!!
@@ -109,8 +109,8 @@ N366 1^NU ;Put initial value&format here & use <266>, <300>, <304>
 N514 ^NC^NS^[^@^G;^NA^NL^D^T^N^<514>^J^NU
 N515 ^G^H^NA^NU^D^D^D^?^NG^H^Y^@^N^<515>
 N522 ^NU ; RCSDIFF options for Ctl-N &
-* N777 - Draw ruler of length ^N^<1073>. Sets up initial values then calls N776
-*        To fit the screen exactly, N1073 should be 8 less than screen width (as returned by N4005)
+* N777 - Draw ruler of length ^N^<7000>. Sets up initial values then calls N776
+*        To fit the screen exactly, N7000 should be 8 less than screen width (as returned by N4005)
 *   Memory locations:-
 *   N7000 - ruler width
 *   N7001 - constant 10
@@ -130,8 +130,8 @@ N522 ^NU ; RCSDIFF options for Ctl-N &
 *      Repeat.
 * N775 - Outputs spaces
 * N774 - Output digits 0 - 10 repeatedly until all done
-N777 ^<ZAM>^<RST>^ND^N^<1073>^NM^<7000>^U10^NM^<7001>^U100^NM^<7002>^U1000^NM^<7003>^U^<PSH 1>^<PSH 0>^<DIV>^<POP 5>*    ^ND^N^<776>^<POPN>^J*    ^<PSH 0>^<POPX>^ND^N^<774>^J^NU
-N776 ^<PSH 5>^<S1>^<SGE>^NU^<POP 5>^<PSH 1>^<POPX>^<S1X>^<PSH 6>^<A1>^<POP 6>^<PSH 6>^<PSH 1>^<SUB>^<SGT>^<S1X>^<POPN>^<PSH 6>^<PSH 2>^<SUB>^<SGT>^<S1X>^<POPN>^<PSH 6>^<PSH 3>^<SUB>^<SGT>^<S1X>^<POPN>^ND^N^<775>^ND^N^<7006>^N^<776>
+N777 10^NM^<7001>^U100^NM^<7002>^U1000^NM^<7003>^U^<PSH 1>^<PSH 0>^<DIV>^<POP 5>*    ^ND^N^<776>^<POPN>^J*    ^<PSH 0>^<POPX>^ND^N^<774>^J^NU
+N776 ^<PSH 5>^<S1>^<SGE>^NU^<POP 5>^<PSH 1>^<POPX>^<S1X>^<PSH 6>^<A1>^<POP 6>^<PSH 6>^<PSH 1>^<SUB>^<SGT>^<S1X>^<POPN>^<PSH 6>^<PSH 2>^<SUB>^<SGT>^<S1X>^<POPN>^<PSH 6>^<PSH 3>^<SUB>^<SGT>^<S1X>^<POPN>^ND^N^<775>^ND^N^<7006>^N^@
 N775 ^<S1X>^<SXGE>^NU ^N^<775>
 N774 ^<S1X>^<SXGE>^NU^<PSH 1>^<PSH 5>^<A1>^<POP 5>^<PSH 5>^<SUB>^<SLT>^NS^NL^<PS0>^<POP 5>^<POPN>^ND^N^<7005>^N^<774>
 N773 ^NFZ^<PSHTAB Z>^NC^NS^<S1>^NU ;Push current line number

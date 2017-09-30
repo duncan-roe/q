@@ -93,6 +93,8 @@ int *alu_table_index;
 bool alu_macros_only = false;      /* N- was N-- */
 bool store_file_pos = false;
 unsigned long fmode;
+unsigned long zmode;
+bool zmode_valid = false;
 char FPformat[40];
 char DTformat[256];
 

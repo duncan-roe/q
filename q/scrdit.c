@@ -995,7 +995,7 @@ p1502:
 p1905:
   nseen = false;
   contp = false;
-  if (thisch == (unsigned char)'\377')
+  if (thisch == (unsigned char)'\377') /* BRKPT starting macro */
     RAWNEXTCHR;                    /* High parity rubout */
 /* Recognise ESC  if not in a macro */
   if (thisch == ESC && curmac < 0)
@@ -1102,27 +1102,27 @@ p1905:
             j = row5 / 2 - 1;
         }
 
-        sprintf(tbuf, "%d", j);
+        snprintf(tbuf, sizeof tbuf, "%d", j);
         macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
 
       case 04005:                  /* Return screen width */
-        sprintf(tbuf, "%u", col5);
+        snprintf(tbuf, sizeof tbuf, "%u", col5);
         macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
 
       case 04006:                  /* Return screen height */
-        sprintf(tbuf, "%u", row5);
+        snprintf(tbuf, sizeof tbuf, "%u", row5);
         macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
 
       case 04007:                  /* Return floating point format */
-        sprintf(tbuf, "%s", FPformat);
+        snprintf(tbuf, sizeof tbuf, "%s", FPformat);
         macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
 
       case 04010:                  /* Return date format */
-        sprintf(tbuf, "%s", DTformat);
+        snprintf(tbuf, sizeof tbuf, "%s", DTformat);
         macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
 
@@ -1143,7 +1143,7 @@ p1905:
  */
     if ((thisch & 017000) == 07000)
     {
-      sprintf(tbuf, "%ld", ALU_memory[thisch & 0777]);
+      snprintf(tbuf, sizeof tbuf, "%ld", ALU_memory[thisch & 0777]);
       macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
       found = true;
     }                              /* if ((thisch & 017000) == 07000) */
@@ -1349,7 +1349,7 @@ p7611:
   }
   if (mcnxfr == MCDTUM)
     RAWNEXTCHR;                    /* No-op if stack empty */
-  l = curmac;                      /* Save current macro */
+  l = curmac;                      /* Save current macro BRKPT ^NI invoked */
   m = mcposn;                      /* Save current macro position */
   goto p1706;                      /* Do a dummy UP */
 /*
@@ -1601,7 +1601,7 @@ p1706:
   if (curmac >= FIRST_IMMEDIATE_MACRO && curmac <= LAST_IMMEDIATE_MACRO)
     immnxfr = curmac;
 
-  curmac = i;
+  curmac = i;                      /* BRKPT resuming macro */
   mcposn = j;                      /* Accept the popped values */
 
 /* If the frame we just freed was created by U-use, we must reinstate it. */

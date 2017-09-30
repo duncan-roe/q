@@ -13,7 +13,7 @@ than one mode: for instance "d" affects dr & dw.
  (Unary - or +)       Show current modes
  00000000001 dr       DOS read (Cr Nl -> Nl)                                  +
  00000000002 dw       DOS write (end lines with Cr Nl)                        -
- 00000000004 tr       Conventionally expand tabs on reading (t 1 9 17 25...)  +
+ 00000000004 tr       Conventionally expand tabs on reading (see h x, h x-t)  +
  00000000010 tw       Conventionally compress spaces to tabs on writing       -
  00000000020 s        Leave trailing Spaces when writing                      -
  00000000040 *        Show '^' as "^*" (always applies to macros)             -
@@ -32,7 +32,7 @@ than one mode: for instance "d" affects dr & dw.
  10000000000 FB cmnd  FBRIEF command asserted                           verbose
  30000000000 FN cmnd  FNONE command asserted                            verbose
  00000000000 FV cmnd  FVERBOSE command asserted                         verbose
- 04000000000 O  cmnd  ONOFFINDENY command set to ON                   no indent
+ 04000000000 O  cmnd  ONOFFINDENT command set to ON                   no indent
  02000000000 FC cmnd  FCASEINDEPENT command set to ON            case dependent
  01000000000 FF cmnd  FFORTRAN command set to ON                         FF OFF
 

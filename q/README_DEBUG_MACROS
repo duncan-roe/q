@@ -168,4 +168,5 @@ ggo q -a "-n -iu,${k:-../help/.qrc}^Jfv^Jfm+v^J $j </dev/pts/$my_pty \
   b\ scrdit.c:998 commands silent "echo starting macro" p/o\ thisch end \
   "cond 2 (thisch < 0101 || thisch > 0132) && thisch < 04000" \
   b\ scrdit.c:1604 commands silent "echo resuming macro" p/o\ i end \
-  'cond 3 verb != '"'I' && (curmac < FIRST_PSEUDO || curmac > LAST_PSEUDO)" c
+  'cond 3 verb != '"'I' && (curmac < FIRST_PSEUDO || curmac > LAST_PSEUDO)" \
+  b\ scrdit.c:1352 commands silent "echo ^NI invoked\\n" end c
