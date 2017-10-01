@@ -2,7 +2,7 @@
 
  This "topic" is a work in progress. The plan is to document those macros
 in the suite which you might want to invoke directly.
-t1 9 14 23
+t2 10 15 24
 
  Macro   Oct  Context  Action
  =====   ===  =======  ======
@@ -47,3 +47,4 @@ t1 9 14 23
                          (defined by "N @ ...")
  ^N7     067  Command  Draw ruler then execute command
                          (i.e. type command followed by ^N7 rather than Enter)
+ ^N8     070  Either   Expands to the local time formatted by n4010

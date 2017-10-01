@@ -55,8 +55,8 @@ N1533 ^ND^N^<265>^N^<1534>M-^J^NC^N:^E ^J^N^<1533>
 N : '^ND^N4^NS^N^<1536>N 4 ^*NI^*NU^J^NU
 * N135 pads the last page to 54 or whatever lines then outputs footer
 N1536 A^J^J^[^ND^N^<265>^NS^N^<1536>D-1^JA^J^ND^N^<1535>^[^NU
-N1534 ^ND^N4^N9M-^J^NC^NS^NLA^@^NL^[I-1^J^ND^N^<1535>^[^N^<1532>
-N 9 'N 4 ^*NI^*NU^J^N^<1532> ; ^N^W^W foot of 1st page
+N1534 ^ND^N4^N^<424>M-^J^NC^NS^NLA^@^NL^[I-1^J^ND^N^<1535>^[^N^<1532>
+N424 N 4 ^*NI^*NU^J^N^<1532> ; ^N^W^W foot of 1st page
 N1535 ^J^J^ND^N^<1540>^ND^N^<1537>^ND^N^<1503>^J^[^N^<1541> ; FOOTER start
 N1537 Page ^NU ; Put required footer pagination text here
 N1541 N143 ^ND^N^<366>^*NU^J^ND^N^<1503>^NM^<366>^U^N^<1543>

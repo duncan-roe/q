@@ -125,16 +125,16 @@ static struct sigaction act;
 /* ********************************* pushmac ******************************** */
 
 static bool
-pushmac(void)
+pushmac(bool set_u_use)
 {
   if (mcnxfr == MCLMIT)
     return false;
   mcstck[mcnxfr].mcprev = curmac;
   mcstck[mcnxfr].mcposn = mcposn;
-  mcstck[mcnxfr].u_use = true;
+  mcstck[mcnxfr].u_use = set_u_use;
   mcnxfr++;
   return true;
-}                                  /* if (curmac >= 0) */
+}                                  /* static bool pushmac(bool set_u_use) */
 /* ********************************** eolok ********************************* */
 
 /* Check no extra params */
@@ -1324,7 +1324,7 @@ p1201:
         REREAD_CMD;
 
 /* FI does an implied ^ND */
-      if (curmac >= 0 && !pushmac())
+      if (curmac >= 0 && !pushmac(false))
         REREAD_CMD;
 
       curmac = verb;
@@ -1794,7 +1794,7 @@ p1020:
 /* If invoked from a macro, suspend that macro */
   if (curmac >= 0)
   {
-    if (!pushmac())
+    if (!pushmac(true))
       REREAD_CMD;
     curmac = -1;
     stdinfo[stdidx].frommac = true;

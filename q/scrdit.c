@@ -1022,7 +1022,7 @@ p1905:
     switch (thisch)
     {
       case 04000:                  /* Return mode */
-        sprintf(tbuf, "%lo", zmode);
+        sprintf(tbuf, "%lo", zmode_valid ? zmode : fmode);
         macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
 
