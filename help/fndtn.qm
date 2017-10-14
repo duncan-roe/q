@@ -54,7 +54,7 @@ n770 ^NA^NU^NG ^NU^D^N^@
 N222 ^NC^NS^N\^NM^<1201>^UM ^NU ;Define string to be appended/inserted
 N225 ^NC^NS^N\!ci -d -t- "^ND^N^<4002>"^J!rcs -U "^ND^N^<4002>"^J!co -M "^ND^N^<4002>"^J^NU ;Make known to RCS - non-strict locking
 N230 ^NC^NS^N\^ND^N^<4002>^[!echo "^P^[]0;"^ND^N^<4002>"^P^G"^J^NU ; Set xterm title to file (stuff at front guards against sending bad Ec seq when no file)
-N232 ^Z^ND^N^<1201>^J^NC^NU^N^<232> ;Append ^*N^<1201> to lines
+N232 ^NC^N\^NE^Z^ND^N^<1201>^J^NC^NU^N^@ ;Append ^N^<1201> to lines
 N241 ^NC^NS^N\^NM^<1201>^U^ND^N^<506>^NU ; NW! delete lines found by L
 N265 ^NC^NS^N\^NE^H^NA^NS^N\^NOI^ND^N^<365>^Y^N^<511> ;Decr. SPZ ^<365>
 N266 ^NC^NS^N\^NE^H^NA^NS^N\^NOI^ND^N^<366>^Y^N^<507> ;Decimal inc ^<366>
