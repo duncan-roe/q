@@ -9,6 +9,7 @@
 #include <string.h>
 #include "alu.h"
 #include "fmode.h"
+#include "typedefs.h"
 
 /* **************************** Static Functions **************************** */
 
@@ -75,6 +76,7 @@ f_valid2(char **err)
   *err = "FP register stack underflow (no 2nd argument pushed)";
   return false;
 }                                  /* f_valid() */
+
 static bool
 pshmode(char **err)
 {
@@ -99,6 +101,28 @@ popmode(char **err)
   }                                /* if (zmode_valid) */
   return true;
 }                                  /* popmode(char **err) */
+
+static bool
+pshcrs(char **err)
+{
+  if (rsidx >= stack_size - 1)
+  {
+    *err = "Register stack overflow";
+    return false;
+  }                                /* if (rsidx >= stack_size - 1) */
+  return push(last_Curr->bcurs, err);
+}                                  /* pshcrs(char **err) */
+
+static bool
+pshlnln(char **err)
+{
+  if (rsidx >= stack_size - 1)
+  {
+    *err = "Register stack overflow";
+    return false;
+  }                                /* if (rsidx >= stack_size - 1) */
+  return push(last_Curr->bchars, err);
+}                                  /* pshlnln(char **err) */
 
 static bool
 inp(char **err)
@@ -1005,6 +1029,8 @@ alu_opcode opcode_defs[] = {
   CAPTION("(leaves cursor on 1st char of number)"),
   OPCODE(pshmode, "Push mode (as per n4000) to R"),
   OPCODE(popmode, "Pop R to set mode (as per n4000)"),
+  OPCODE(pshcrs, "Push cursor position to R (zero-based)"),
+  OPCODE(pshlnln, "Push line length to R"),
   CAPTION(""),
   CAPTION("Instructions that Modify F"),
   CAPTION("============ ==== ====== ="),

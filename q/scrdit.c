@@ -51,9 +51,9 @@
 unsigned char fxtabl[128];
 long timlst;
 
-/* Static Variables */
+/* Initialise External Variables */
 
-static scrbuf5 *last_Curr = NULL;
+scrbuf5 *last_Curr = NULL;
 
 /* *************************** print_failed_opcode ************************** */
 

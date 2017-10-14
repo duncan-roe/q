@@ -65,5 +65,6 @@ extern bool alu_macros_only;       /* N-- lstmac & typmac only show n7000+ */
 extern bool store_file_pos;        /* PSHTAB to store a file postion */
 extern char FPformat[40];          /* Floating-point format */
 extern char DTformat[256];         /* Date format (can be really huge) */
+extern scrbuf5 *last_Curr;         /* Line that scrdit is working on */
 
 #endif

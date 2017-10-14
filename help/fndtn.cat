@@ -1,7 +1,8 @@
   ++ F N D T N . Q M   M A C R O   C A T A L O G U E ++
 
- This "topic" is a work in progress. The plan is to document those macros
-in the suite which you might want to invoke directly.
+ This "topic" is a work in progress. The plan is to document those macros in the
+suite which you might want to invoke directly.
+
 t2 10 15 24
 
  Macro   Oct  Context  Action
@@ -19,7 +20,7 @@ t2 10 15 24
                           whatever you like. Do not use in macros)
  ^N^O    017  Either   As ^N^J but stay on current line
  ^N^P^P  020  Either   Return the name of the current edit file, quoted.
-                       In macros, use ^N^<4002>, which is what ^N^P^P does.
+                       In macros, use ^N^<4002>, which is all ^N^P^P does.
  ^N^Q    021  Command  Move back 1 screenful and view
                          (half a screenful if fm+h asserted)
  ^N^R    022  Either   Rememer/recall command or line
@@ -48,3 +49,70 @@ t2 10 15 24
  ^N7     067  Command  Draw ruler then execute command
                          (i.e. type command followed by ^N7 rather than Enter)
  ^N8     070  Either   Expands to the local time formatted by n4010
+ ^N9     071  Command  View around next occurrence of command line contents
+                         Target line is repeated at foot of screen
+                         Empty command line repeats last search
+                         n1401 sets whether to use fl or l (fl dflt)
+ ^N;     073  Command  Save cmd line as space macro then execute each semicolon-
+                         delimited part of the command
+ ^N<     074  Command  Go back 1 line then view
+ ^N>     076  Command  Go forward 1 line then view
+ ^N^W^A  201  Command  Repeat last LOCATE till no more found (i.e.l or fl)
+ ^N^W^F  206  Command  Grep current file for all occurrences of command line
+                         grep options in n1404; pipe-into command in n1405
+ ^N^W^H  210  Edit     Apply ^N^W^R sequence at start of each line with insert
+                         on
+                         (See note 1)
+ ^N^W^R  222  Command  Save composed edit string
+                         (See note 1)
+ ^N^W^U  225  Command  Initialise current file to RCS with no title, non-strict
+                         locking and DTM preserved
+ ^N^W^X  230  Command  Set xterm title to current file
+ ^N^W^Z  232  Edit     Apply ^N^W^R sequence at end of each line with insert off
+                         (See note 1)
+ ^N^W!   241  Command  Delete lines found by l or fl command     **USE WITH CARE
+                         (i.e. type command followed by ^N^W! rather than Enter)
+ ^N^W&   246  Command  cvs diff current file. n522 gives cvs options
+                         (compare this with ^N&. In general, ^N& is primary VCS
+                          and ^N^W& is secondary. E.g. git.qm sets git / RCS)
+
+ UTILITY MACROS
+ ======= ======
+
+Macros can use the following macros to perform common functions
+
+ Macro   Tabs Context  Action
+ =====   ==== =======  ======
+ 1001    a    Command  Dump context (mode & line #)
+ 1011    a    Command  Restore context (mode & line #)
+
+
+ NOTES
+ =====
+
+1. The ^N^W^R / ^N^W^H / ^N^W^Z suite
+   === ====== = ====== = ====== =====
+
+These macros work together to apply the same change to a numbber of lines that
+you specify in one or more M-Modify commands.
+
+^N^W^R creates an edit sequence. The sequence may contain control characters:
+enter these by e.g. ^P^F (actual Control-P Control-F) to do a forward-word (^F).
+Enter ^N^W^R once you have composed your edit sequence. The macro stores your
+sequence as a macro and starts your first M command. You fill in the first line
+and number of lines then touch Enter.
+
+^N^W^H applies the ^N^W^R sequence with insert on at the start of each line the
+M command modifies. E.g. to "email-quote" lines 1-10 (insert "> " at fron of
+each line) enter:
+> > ^N^W^R
+> M 1 10
+> ^N^W^H
+except you don't enter "M " above: the macro does that.
+
+^N^W^Z works similarly to ^N^W^H except the edit sequence is applied at the
+*end* of the line with insert *off*.
+
+Either sequence may of course contain edit characters to modify the basic
+operation, e.g. ^E to toggle insert, ^F, ^B, ^H, ^Z &c. to move the cursor, and
+so on.

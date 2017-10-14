@@ -37,7 +37,7 @@ N401 ^NA^NU^NG ^NS=^Y^X^N^@ ; Used by ^N-
 N 7 '^NC^NS^N\^H^NA*^@^NM^<1201>^U^<ZAM>^<RST>^ND^N^<4005>^NM^<7000>^U^<PS8>^<PSH 0>^<SUB>^<POP 0>^<PSHMODE>^<DUP>^<PS2P30>^<PS2P31>^<OR>^<NOT>^<AND>^<POPMODE>^ND^N^<777>^ND^N^<1201>^J^<POPMODE>
 N 8 '^N^<4011> ; N 8: get the date
 N 9 '^NC^NS^N\^<PSHMODE>^ND^N^<425>^<POPMODE>^NU
-N425 ^H^NA^NL^NM^<423>^Ufi fl ^ND^N^<423>^*J^*NC^*NU^*[fb^*Jg-1^*Jv^*Jp1^*J^*NU^J^NU
+N425 ^H^NA^NL^NM^<423>^Ufv^J^ND^N^<1401>l '^ND^N^<423>'^J^NC^NU^[fb^Jg-1^Jv^Jp1^J^NU
 N423 /* N 9 puts token to match here
 N ; '^NC^NS^N\^H^NE^NM ^N^<514>
 N < '^NC^NS^N\g-1^Jv^J^NU
@@ -46,18 +46,16 @@ N201 ^A^J^NC^NU^[^N^<201> ;Repeat last LOCATE till no more found
 * n206 - (^N^W^F) search current file for all occurrences of command line.
 *        grep options in n1404; pipe-into command in n1405
 N206 ^NC^NS^N\^NM^<1202>^U!grep ^ND^N^<1404> -- '^ND^N^<1202>' "^ND^N^<4002>"^ND^N^<1405>^J^NU
-N210 ^E^ND^N^<1201>^J^NC^NU^N^<210> ;Insert ^*N^<1201> at Home posn
+N210 ^NC^N\^NE^E^ND^N^<1201>^J^NC^NU^N^@ ;Insert ^*N^<1201> at Home posn
 N211 ^NC^NS^N\g1^J^ND^N^<772>^NU ; Update "at line" lines
 N772 l 'at line'^J^NC^NU^F^G ^NG ^NS^NL^ND^N^<771>^E^ND^N^<773>^<ZAM>^<POP 0> ^ND^N^<7000>^J^N^@
 n771 ^D^N^<770>
 n770 ^NA^NU^NG ^NU^D^N^@
 N222 ^NC^NS^N\^NM^<1201>^UM ^NU ;Define string to be appended/inserted
-N224 ^NC^NS^N\!ci -l "^ND^N^<4002>"</dev/null^Js^J!ci -l "^ND^N^<4002>"<~/spaces^JQ^J^N^<224> ;Check in all args
 N225 ^NC^NS^N\!ci -d -t- "^ND^N^<4002>"^J!rcs -U "^ND^N^<4002>"^J!co -M "^ND^N^<4002>"^J^NU ;Make known to RCS - non-strict locking
 N230 ^NC^NS^N\^ND^N^<4002>^[!echo "^P^[]0;"^ND^N^<4002>"^P^G"^J^NU ; Set xterm title to file (stuff at front guards against sending bad Ec seq when no file)
 N232 ^Z^ND^N^<1201>^J^NC^NU^N^<232> ;Append ^*N^<1201> to lines
 N241 ^NC^NS^N\^NM^<1201>^U^ND^N^<506>^NU ; NW! delete lines found by L
-N255 ^NC^N\^H^ND^N^<515>^NU
 N265 ^NC^NS^N\^NE^H^NA^NS^N\^NOI^ND^N^<365>^Y^N^<511> ;Decr. SPZ ^<365>
 N266 ^NC^NS^N\^NE^H^NA^NS^N\^NOI^ND^N^<366>^Y^N^<507> ;Decimal inc ^<366>
 * n347 (^N^Wg) Check in current source with message 1103
@@ -108,7 +106,6 @@ N506 ^ND^N^<1201>^J^NC^NU^[D-1^J^N^<506>
 N365 0^NU ;Put required iteration count here & use <265>
 N366 1^NU ;Put initial value&format here & use <266>, <300>, <304>
 N514 ^NC^NS^[^@^G;^NA^NL^D^T^N^<514>^J^NU
-N515 ^G^H^NA^NU^D^D^D^?^NG^H^Y^@^N^<515>
 N522 ^NU ; RCSDIFF options for Ctl-N &
 * N777 - Draw ruler of length ^N^<7000>. Sets up initial values then calls N776
 *        To fit the screen exactly, N7000 should be 8 less than screen width (as returned by N4005)
@@ -131,10 +128,10 @@ N522 ^NU ; RCSDIFF options for Ctl-N &
 *      Repeat.
 * N775 - Outputs spaces
 * N774 - Output digits 0 - 10 repeatedly until all done
-N777 10^NM^<7001>^U100^NM^<7002>^U1000^NM^<7003>^U^<PSH 1>^<PSH 0>^<DIV>^<POP 5>*    ^ND^N^<776>^<POPN>^J*    ^<PSH 0>^<POPX>^ND^N^<774>^J^NU
-N776 ^<PSH 5>^<S1>^<SGE>^NU^<POP 5>^<PSH 1>^<POPX>^<S1X>^<PSH 6>^<A1>^<POP 6>^<PSH 6>^<PSH 1>^<SUB>^<SGT>^<S1X>^<POPN>^<PSH 6>^<PSH 2>^<SUB>^<SGT>^<S1X>^<POPN>^<PSH 6>^<PSH 3>^<SUB>^<SGT>^<S1X>^<POPN>^ND^N^<775>^ND^N^<7006>^N^@
+N777 10^NM^<7001>0^NM^<7002>0^NM^<7003>^U^<PSH 1>^<PSH 0>^<DIV>^<POP 5>*    ^ND^N^<776>^<POPN>^J*    ^<PSH 0>^<POPX>^ND^N^<774>^J^NU
+N776 ^<PSH 5>^<S1>^<SGE>^NU^<POP 5>^<PSH 1>^<POPX>^<S1X>^<PSH 6>^<A1>^<DUP>^<POP 6>^<PSH 1>^<SUB>^<SGT>^<S1X>^<POPN>^<PSH 6>^<PSH 2>^<SUB>^<SGT>^<S1X>^<POPN>^<PSH 6>^<PSH 3>^<SUB>^<SGT>^<S1X>^<POPN>^ND^N^<775>^ND^N^<7006>^N^@
 N775 ^<S1X>^<SXGE>^NU ^N^<775>
-N774 ^<S1X>^<SXGE>^NU^<PSH 1>^<PSH 5>^<A1>^<POP 5>^<PSH 5>^<SUB>^<SLT>^NS^NL^<PS0>^<POP 5>^<POPN>^ND^N^<7005>^N^@
+N774 ^<S1X>^<SXGE>^NU^<PSH 1>^<PSH 5>^<A1>^<DUP>^<POP 5>^<SUB>^<SLT>^NS^NL^<PS0>^<POP 5>^<POPN>^ND^N^<7005>^N^@
 N773 ^NFZ^<PSHTAB Z>^NC^NS^<S1>^NU ;Push current line number
 N1001 ^NC^NS^N\^[^NFa^ND^N^<4000>^NM^<1021>^[^NU ; Env save #1
 N1011 ^NC^NS^N\g ta^Jfm^ND^N^<1021>^J^NU ; Env restore #1
@@ -149,7 +146,7 @@ N1300 /* 13XX - USED FOR MISCELLANEOUS FLGS. Change to ^NU for no effect
 N1301  -M^NU  ;for ^N(
 N1302  -d -M^NU  ;for ^N)
 N1400 /* 14XX - MACRO USER-SETTABLE DEFAULTS (I.E. PARAMETERS)
-N1401 f^NU ; Define to be ^NU for l & y instead of fl & fy (^N^Wp & ^N^Wq)
+N1401 f^NU ; Define to be ^NU for l & y instead of fl & fy (^N^Wp, ^N^Wq & ^N9)
 N1402 s^J^ND^N^<1107>^NU ; Override with "b", &c. as required
 N1403 $C^NU ; override with invocation wildcard (^N^Ws)
 N1404 -wn^NU ; grep options for ^N^W^F
