@@ -1,9 +1,10 @@
 /* D U M P _ R E G I S T E R S . C
  *
- * Copyright (C) 2014 Duncan Roe
+ * Copyright (C) 2014,2017 Duncan Roe
  */
 #include <stdio.h>
 #include "alu.h"
+#include "fmode.h"
 
 void
 dump_registers(bool append_newline)
@@ -15,7 +16,7 @@ dump_registers(bool append_newline)
   fprintf(stderr, "Skip next 2 macro chars is %s\r\n",
     alu_skip ? "TRUE" : "FALSE");
   fprintf(stderr, "Storing %s-position tabs\r\n",
-    store_file_pos ? "file" : "cursor");
+    STORE_FILE_POS ? "file" : "cursor");
   if (rsidx < 0)
     fprintf(stderr, "R is empty\r\n");
   else

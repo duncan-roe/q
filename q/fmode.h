@@ -1,20 +1,23 @@
 #ifndef FMODE_H
 #define FMODE_H
 /*
- * Copyright (C) 2014 Duncan Roe
+ * Copyright (C) 2014,2017 Duncan Roe
  */
 
 /* Macro definitions */
 
-#define FTNMOD (fmode & 01000000000)
-#define CASDEP ((fmode & 02000000000) == 0)
-#define INDENT (fmode & 04000000000)
-#define INTERPRET_ALU_OPCODES (fmode & 00000200000)
-#define WARN_NONZERO_MEMORY (fmode & 00000400000)
+#define FMODE (zmode_valid ? zmode : fmode)
+#define FTNMOD (FMODE & 01000000000)
+#define CASDEP ((FMODE & 02000000000) == 0)
+#define INDENT (FMODE & 04000000000)
+#define INTERPRET_ALU_OPCODES (FMODE & 00000200000)
+#define WARN_NONZERO_MEMORY (FMODE & 00000400000)
+#define FILE_POS_BIT 00400000000
+#define STORE_FILE_POS (FMODE & FILE_POS_BIT)
 
 /* BRIEF and NONE are bits in fmode. Both are set for NONE */
-#define BRIEF (fmode & 010000000000)
-#define NONE (fmode & 020000000000u)
+#define BRIEF (FMODE & 010000000000)
+#define NONE (FMODE & 020000000000u)
 
 /* External variables */
 

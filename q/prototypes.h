@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include "ckalloc.h"
 #include "typedefs.h"
+#include "pushable_values.h"
 
 /* Function Prototypes */
 
@@ -62,8 +63,6 @@ bool lstvld;                       /* "previous" buffer has valid data */
 bool modlin;                       /* This line has actually changed */
 bool mods;                         /* Mods done since last SAVE */
 bool binary;                       /* Q invoked -b */
-long lintot;                       /* Total # of lines known to system */
-long ptrpos;                       /* Line # where pointer is now */
 int funit;                         /* File i/o ptr */
 char pcnta[256];                   /* Pathname we are editing */
 unsigned int row5, col5;           /* Screen / window geometry */

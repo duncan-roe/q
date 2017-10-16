@@ -2,7 +2,7 @@
  *
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2002,2007,2012-2016 Duncan Roe
+ * Copyright (C) 2002,2007,2012-2017 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -91,12 +91,13 @@ int num_ops = 0;
 alu_dict_ent root_alu_dict_ent = { NULL, NULL, -2, 0 };
 int *alu_table_index;
 bool alu_macros_only = false;      /* N- was N-- */
-bool store_file_pos = false;
 unsigned long fmode;
 unsigned long zmode;
 bool zmode_valid = false;
 char FPformat[40];
 char DTformat[256];
+long lintot = 0;
+long ptrpos = 0;
 
 /* Static Variables */
 

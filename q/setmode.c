@@ -1,7 +1,7 @@
 /* S E T M O D E
  *
  * Copyright (C) 1994,1995 Duncan Roe & Associates P/L
- * Copyright (C) 2003,2012,2014 Duncan Roe
+ * Copyright (C) 2003,2012,2014,2017 Duncan Roe
  *
  * This routine manipulates the fmode bit settings
  */
@@ -172,11 +172,9 @@ setmode()
           putchar('d');
         else
           (void)write(1, "ind", 3);
-        printf("ependent L&Y, FF ");
-        if (FTNMOD)
-          (void)write(1, "on", 2);
-        else
-          (void)write(1, "off", 3);
+        printf("ependent L&Y, FF o%s", FTNMOD ? "n" : "ff");
+        printf(", ALU stores %s-position tabs",
+          STORE_FILE_POS ? "file" : "cursor");
         (void)write(1, ".\r\n", 3);
         continue;
       }                            /* if(oldcom->toklen==1) */

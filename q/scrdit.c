@@ -1196,7 +1196,7 @@ p1905:
       if (is_pop)
       {
         if ((success = pop_register(&tabs[tabidx].value)))
-          tabs[tabidx].tabtyp = store_file_pos ? LINENUM : CHRPOS;
+          tabs[tabidx].tabtyp = STORE_FILE_POS ? LINENUM : CHRPOS;
       }
       else
         success = push_register(tabs[tabidx].value);

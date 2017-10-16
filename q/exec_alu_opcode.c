@@ -10,6 +10,7 @@
 #include "alu.h"
 #include "fmode.h"
 #include "typedefs.h"
+#include "pushable_values.h"
 
 /* **************************** Static Functions **************************** */
 
@@ -123,6 +124,28 @@ pshlnln(char **err)
   }                                /* if (rsidx >= stack_size - 1) */
   return push(last_Curr->bchars, err);
 }                                  /* pshlnln(char **err) */
+
+static bool
+pshnbln(char **err)
+{
+  if (rsidx >= stack_size - 1)
+  {
+    *err = "Register stack overflow";
+    return false;
+  }                                /* if (rsidx >= stack_size - 1) */
+  return push(lintot, err);
+}                                  /* pshnbln(char **err) */
+
+static bool
+pshlnnb(char **err)
+{
+  if (rsidx >= stack_size - 1)
+  {
+    *err = "Register stack overflow";
+    return false;
+  }                                /* if (rsidx >= stack_size - 1) */
+  return push(ptrpos, err);
+}                                  /* pshlnnb(char **err) */
 
 static bool
 inp(char **err)
@@ -769,7 +792,10 @@ rst(char **err)
   xreg = 0;
   index_next = false;
   alu_skip = false;
-  store_file_pos = false;
+  if (zmode_valid)
+    zmode &= ~FILE_POS_BIT;
+  else
+    fmode &= ~FILE_POS_BIT;
   return true;
 }                                  /* rst() */
 
@@ -784,13 +810,21 @@ zam(char **err)
 static bool
 scpt(char **err)
 {
-  return !(store_file_pos = false);
+  if (zmode_valid)
+    zmode &= ~FILE_POS_BIT;
+  else
+    fmode &= ~FILE_POS_BIT;
+  return true;
 }                                  /* scpt() */
 
 static bool
 sfpt(char **err)
 {
-  return store_file_pos = true;
+  if (zmode_valid)
+    zmode |= FILE_POS_BIT;
+  else
+    fmode |= FILE_POS_BIT;
+  return true;
 }                                  /* sfpt() */
 
 static bool
@@ -1031,6 +1065,8 @@ alu_opcode opcode_defs[] = {
   OPCODE(popmode, "Pop R to set mode (as per n4000)"),
   OPCODE(pshcrs, "Push cursor position to R (zero-based)"),
   OPCODE(pshlnln, "Push line length to R"),
+  OPCODE(pshnbln, "Push number of lines in file to R (i.e. # read so far)"),
+  OPCODE(pshlnnb, "Push line number to R (same as ^NF / PSHTAB)"),
   CAPTION(""),
   CAPTION("Instructions that Modify F"),
   CAPTION("============ ==== ====== ="),

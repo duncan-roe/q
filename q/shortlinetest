@@ -1,0 +1,6 @@
+this is a test of ^N^A in word.qm.
+There should be a newline after every full stop.
+the test is, got to the last line and execute ^N^A.
+The number of lines in the file is reduced.
+When the environment is restored on macro completion, "g ta" should not fail.
+Instead it should leave the file at EOF.
