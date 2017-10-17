@@ -6,10 +6,15 @@
 
 /* Macro definitions */
 
+/* This macro is because the ALU can modify the mode at any time */
 #define FMODE (zmode_valid ? zmode : fmode)
+
 #define FTNMOD (FMODE & 01000000000)
 #define CASDEP ((FMODE & 02000000000) == 0)
-#define INDENT (FMODE & 04000000000)
+
+/* INDENT is special - must always test fmode */
+#define INDENT (fmode & 04000000000)
+
 #define INTERPRET_ALU_OPCODES (FMODE & 00000200000)
 #define WARN_NONZERO_MEMORY (FMODE & 00000400000)
 #define FILE_POS_BIT 00400000000
