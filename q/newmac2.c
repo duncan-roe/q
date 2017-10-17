@@ -175,11 +175,9 @@ get_alu_op(char *mybuf, unsigned short *result, char **endptr)
       GIVE_UP;
     }                              /* if (!*p) */
     if (*p == GT)
-    {
-      *p = 0;
       break;
-    }                              /* if (*p == GT) */
   }       /* for (i = MAX_OPCODE_LEN, p = tbuf; i > 0; i--, p++, (*endptr)++) */
+  *p = 0;
   if (**endptr != GT)
   {
     fprintf(stderr, "Opcode mnemonic too long (%d chars max)\r\n",
