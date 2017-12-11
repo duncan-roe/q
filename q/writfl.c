@@ -1,7 +1,7 @@
 /* W R I T F L
  *
  * Copyright (C) 1993, 1995, 1998, 1999 Duncan Roe & Associates P/L
- * Copyright (C) 2003,2012,2014 Duncan Roe
+ * Copyright (C) 2003,2012,2014,2017 Duncan Roe
  *
  * This routine writes out the spec'd # of lines to the file open on
  * FUNIT. If EOF is reached, it reports how many lines were written...
@@ -22,12 +22,11 @@
 #include "alledit.h"
 #include "edmast.h"
 #include "fmode.h"
+#include "tabsiz.h"
 /* */
 #define STC(c) do {*q++ = c;\
   if (!--unused) \
   {if (do_write() <0) goto errlbl; q = fbuf; unused = Q_BUFSIZ;}} while (0)
-
-extern int tabsiz;                 /* How many spaces per tab */
 
 static unsigned char fbuf[Q_BUFSIZ]; /* I/o buffer */
 static int unused;                 /* Bytes in f/s buffer */

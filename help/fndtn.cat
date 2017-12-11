@@ -13,6 +13,8 @@ t2 10 15 24
                          (including all trailing spaces)
  ^N^G    007  Either   Append 1 space then join next line
                          (Will be in edit mode on completion)
+ ^N^H    010  Edit     Outdent current line by tab amount (outputs DEL characters)
+ ^N^I    011  Either   Output tab-amount spaces (i.e. indent, if in insert mode)
  ^N^J    012  Either   Single "/*" comment beautify. Can invoke by ^N^M
  ^N^K    013  Either   Word delete. (from cursor to next space incl)
  ^N^N    016  Either   Same as ^N^^

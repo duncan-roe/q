@@ -1,6 +1,6 @@
 /* R D F I L E
  * Copyright (C) 1993,1998 Duncan Roe & Associates P/L
- * Copyright (C) 2005,2012-2014 Duncan Roe
+ * Copyright (C) 2005,2012-2014,2017  Duncan Roe
  *
  * This routine reads in a file, inserting it in the Workfile.
  *
@@ -20,6 +20,10 @@
 #include "macros.h"
 #include "fmode.h"
 #include "c1in.h"
+#include "tabsiz.h"
+
+/* Initialise External Variables */
+
 int tabsiz = 8;                    /* How often tabstops are */
 
 static long dcount;                /* # deferred lines read */

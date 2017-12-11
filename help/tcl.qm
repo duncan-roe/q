@@ -2,6 +2,10 @@ FD Y /* Tcl macros that differ from default FTN ones
 o y
 ft_
 fm-t -s -l
+* Set up for indent amount / file tab spacing of 2 (my preference)
+* See c_brkts.qm for how to change this
+fi ^<PS2>^<POPTBSZ>
+*
 N061 ^NC^NS^N\n2000 (gdb) ^*NU^J^ND^N^<1270>^NU
 N062 ^NC^NS^N\n2000 \r\n>^*NU^J^ND^N^<1267>^NU
 N063 ^NC^NS^N\n2000 [$#] ^*NU^J^ND^N^<1276>^NU
@@ -9,12 +13,11 @@ N1267 ^NC^NS^N\n2001 "^*NU^Jn2002 "^*NU^J^NU
 N1270 ^NC^NS^N\n2001 {^*NU^Jn2002 }^*NU^J^NU
 N1276 ^NC^NS^N\n2001 -re {^*NU^Jn2002 }^*NU^J^NU
 N A '^NC^N\^Z \  ^T^NU ;Continuations
-N E '^NC^N\^NM^<1201>^Z \^T{^T}^J^[i-^J^ND^N^<1201>^H^L^NM^<1201>^[m-1^J^Z ^NB2^I^@^NB2^I^@;# ^ND^N^<1201>^J^[i-1^J^ND^N^I^NU Tcl new bracket level
-N H '^NC^N\^?^?^NU ; Outdent amount (should match ^N^I)
-N I '  ^NU ; Indent amount
-N L '^NC^N\^NFa^J^[n403 ^*NU^J^NNam-1^J^NG}^NS^N\^F^NG;^NS^NL^ND^N^<477>^Z^Y^NG ^NS^X ^Z\^Telse \^T{^T} ^ND^N^<403>^Ji-1^J^ND^N^I^NU
+N E '^NC^N\^ND^N^<1406>^N^<427>^NM^<1201>^Z \^T{^T}^J^[i-^J^ND^N^<1201>^H^L^NM^<1201>^[m-1^J^Z ^NB2^I^@^NB2^I^@;# ^ND^N^<1201>^J^[i-1^J^ND^N^I^NU Tcl new bracket level
+N427 ^Z \^T{^T}^J^[i-1^J^ND^N^I^NU
+N L '^NC^N\^ND^N^<1406>^N^<430>^NFa^J^[n403 ^*NU^J^NNam-1^J^NG}^NS^N\^F^NG;^NS^NL^ND^N^<477>^Z^Y^NG ^NS^X ^Z\^Telse \^T{^T} ^ND^N^<403>^Ji-1^J^ND^N^I^NU
+N430 ^Z \^Telse^N^<427>
 N477 ^L^L^Z else^NM^<403>^[m-1^J^G;^B^G ^K^NU
-N N '^N^^
 N O '^NC^N\^NOa^H^ND^N^<407>^S^X^ND^N^U^NRa^NU ; Tcl comment beautify - no n/l
 N Y '^NE^H^NA^NS^N^<405>^L# ^NU Tcl comment
 N202 ^NC^NS^N\q ^ND^N^<4003>/tcl.qm^J^NU
@@ -80,4 +83,3 @@ N231 ^NC^N\^G-^NE^E\^T^E^ND^N^I^ND^N^<667>^J^NU
 N667 ^G-^NA^NU^NE^E\^T^N^<667>
 * n333 (^N^W[) fix up eval set
 N333 ^[g-1^Jfl eval,1^J^NC^N\^ND^N^K^G\^NA^N\[s^Eet ^G)^X]^Jfl eval^J^NU
-z

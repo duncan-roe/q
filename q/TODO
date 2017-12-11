@@ -1,5 +1,8 @@
+DONE: New opcodes to get (set) tab interval used by fm+t
+DONE: ^N^I &c. to use this opcode
 ^F & ^B to stop after all whitespace chars, not just space
 ^G & ^NG space to optionally operate on all whitespace chars (new FMode mode)
+"q -l" to insert "fm +l" command before reading file
 New active pseudo to format output of integers (e.g. as hex / octal)
 New active pseudo to output UTC time
 Use GNU autotools so can package for Slackware
@@ -20,18 +23,18 @@ Properly reinstate output optimisation (old hack removed as "quick fix")
  get per-char delay from stty baud rate
  reinstate setting per-char delay (useful for testing)
 INTERNALS
-  STARTED Have a bool enum for logicals
-  STARTED: Fix runindent label squashes
-  More GIVE_UP macros - use error_exit as standard label
-  Use GNU tilde expansion function
-  STARTED: Drop non-ANSI C support
-  STARTED: rework asg2 blocks (including xistcs.c)
-  STARTED: alledit.h prototypes to have variable names
-  STARTED: Use meaningful names instead of logtemp &c.
-  STARTED Tidy scmnrd.c in particular
-  STARTED: Be more careful what goes to stderr / stdin
-  use stdint types
+	STARTED Have a bool enum for logicals
+	STARTED: Fix runindent label squashes
+	More GIVE_UP macros - use error_exit as standard label
+	Use GNU tilde expansion function
+	STARTED: Drop non-ANSI C support
+	STARTED: rework asg2 blocks (including xistcs.c)
+	STARTED: alledit.h prototypes to have variable names
+	STARTED: Use meaningful names instead of logtemp &c.
+	STARTED Tidy scmnrd.c in particular
+	STARTED: Be more careful what goes to stderr / stdin
+	use stdint types
 Show what arguments Q started with (?)
-Catalogue of useful macros
+STARTED: Catalogue of useful macros
 Whithdraw k cmd in favour of unary ! (! needs changing to do this)
 New pseudomacro to replace "/*" with arbitrary seq: #, // &c

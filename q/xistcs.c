@@ -1,7 +1,7 @@
 /* X I S T C S
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2017 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -25,7 +25,11 @@
 #include "alledit.h"
 #include "scrnedit.h"
 #include "c1in.h"
-extern int tabsiz;
+#include "tabsiz.h"
+
+/* Macros */
+
+#define REREAD_CMD goto msg_read_command
 
 char *xistics_end_sequence = "\025x\n";
 void
@@ -48,8 +52,12 @@ xistcs()
 ok_command:
   msg = "Ok";
 msg_read_command:
-  printf("%s", msg);
-  printf("%s", "> ");
+  if (strcmp(msg, "Ok"))
+  {
+    fprintf(stderr, "%s\r\n", msg);
+    msg = "ER";
+  }                                /* if (strcmp(msg, "Ok")) */
+  printf("%s> ", msg);
   if (!cl5get((char *)cmdbuf.bdata, BUFMAX, true, true))
   {
     cmdbuf.bdata[0] = 'x';
@@ -66,7 +74,7 @@ msg_read_command:
  * Bad verb
  */
     msg = "Must have single-char command";
-    goto msg_read_command;
+    REREAD_CMD;
   }
   switch (verb)
   {
@@ -91,7 +99,7 @@ msg_read_command:
   }
   putchar(verb);                   /* Error if drop thro' GOTO */
   msg = " is not a recognised characteristic";
-  goto msg_read_command;
+  REREAD_CMD;
 /* T - Tab spacing in file */
 p1401:
   rtn = 1402;
@@ -109,19 +117,19 @@ p1001:
  */
 p1025:
   if (scrdtk(1, buf, 5, &cmdbuf))
-    printf("%s. decno (scrdtk)\r\n", strerror(errno));
+    fprintf(stderr, "%s. decno (scrdtk)\r\n", strerror(errno));
   result = 0;
   if (cmdbuf.toktyp == eoltok)
     goto asg2rtn;                  /* Finish if EOL */
   if (cmdbuf.toktyp != nortok)
   {
     msg = "Null decno illegal";
-    goto msg_read_command;
+    REREAD_CMD;
   }                                /* if (cmdbuf.toktyp != nortok) */
   if (!cmdbuf.decok)
   {
     msg = "Bad decno";
-    goto msg_read_command;
+    REREAD_CMD;
   }                                /* if (!cmdbuf.decok) */
   result = cmdbuf.decval;          /* All checks OK: set result */
   goto asg2rtn;
@@ -151,10 +159,10 @@ p1011:
   p1034:
     if (scrdtk(1, buf, 4, &cmdbuf))
     {
-      printf("%s. octno (scrdtk)\r\n", strerror(errno));
+      fprintf(stderr, "%s. octno (scrdtk)\r\n", strerror(errno));
     p1101:
       msg = "Bad octal #";
-      goto msg_read_command;
+      REREAD_CMD;
     }
     if (cmdbuf.toktyp == eoltok)
       goto asg2rtn;                /* J EOL */
@@ -171,9 +179,9 @@ p1011:
   p1203:
     if (octnum < 0200)
       goto asg2rtn;                /* J a char */
-    printf("%*s", cmdbuf.toklen, buf);
+    fprintf(stderr, "%*s", cmdbuf.toklen, buf);
     msg = " not octal for any char";
-    goto msg_read_command;
+    REREAD_CMD;
 /*
  * P1013 - ^A Continuing
  */
@@ -191,7 +199,7 @@ p10216:
   if (cmdbuf.toktyp == eoltok)
     goto asg2rtn;                  /* J EOL (OK) */
   msg = "Spurious params - command not done";
-  goto msg_read_command;
+  REREAD_CMD;
 /*
  * B - Backspace
  */
@@ -205,7 +213,7 @@ p1019:
   if (cmdbuf.toktyp != nortok)
   {
     msg = "Bad param";
-    goto msg_read_command;
+    REREAD_CMD;
   }                                /* if (cmdbuf.toktyp != nortok) */
 /*
  * If we have been given an octal character, set this as the
@@ -234,7 +242,7 @@ p10213:
       goto p1023;
   }
   msg = "param not recognised";
-  goto msg_read_command;
+  REREAD_CMD;
 /*
  * P1201 - We have a octal param to B. Check in limits (i.e a character)
  */
@@ -273,7 +281,7 @@ p1029:
   if (result >= 2)
   {
     msg = "C/r sequence 1 chr max";
-    goto msg_read_command;
+    REREAD_CMD;
   }                                /* if (result >= 2) */
   rtn = 1033;
   if (result == 1)
@@ -291,7 +299,7 @@ p1029:
   goto p10216;
 p1035:
   msg = "# of chrs supplied & spec'd disagree";
-  goto msg_read_command;
+  REREAD_CMD;
 /*
  * X - Back to main editor
  */
@@ -328,6 +336,6 @@ asg2rtn:switch (rtn)
     case 1402:
       goto p1402;
     default:
-      printf("Assigned Goto failure, rtn = %d\r\n", rtn);
+      fprintf(stderr, "Assigned Goto failure, rtn = %d\r\n", rtn);
   }
 }

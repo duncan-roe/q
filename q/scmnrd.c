@@ -175,7 +175,7 @@ scmnrd()
     {
       if (verb != '!')             /* If not system command */
       {
-        if (oldcom->toklen == 1 && verb == '*')
+        if (oldcom->toklen == 1 && verb == ASTRSK)
           goto p1109;              /* J * comment - display */
       p1106:
         newlin();
@@ -257,7 +257,7 @@ scmnrd()
       return;
     }
     i = (buf[0] & 037) - 1;        /* Get 1st char as a subscript */
-    if (verb == '*')               /* Was just an * comment */
+    if (verb == ASTRSK)            /* Was just an * comment */
     {
       if (want_disply)
         disply(oldcom, 1);

@@ -7,8 +7,6 @@ FC N
 ft_
 N ' ' !make^J^NU
 N A '^H^NA^NS^NL^L^N^<421>^@^ND^N^U^Z^Y^Y^Y^NE^E^NG ^NU^X ^NU ;Continuations
-N H '^NC^N\^?^?^NU ; Outdent amount (should match ^N^I)
-N I '  ^NU ; indent amount
 N Y '^NE^H^NA^NS^N^<422>^L^E/*  */^Y^Y^Y^NU ;C comment
 N Z '^Z^b^B^S^J
 N417 ^NBa ^@^NBa^N^<417>
@@ -87,4 +85,3 @@ N674 ^NBc^NS^NU ^N^<674>
 N673 i ta^J/*  */^B^Y^E^ND^N^<671>^H^L^NM^<672>^[^NU
 * n671 - fill line with minuses
 N671 ^NBc^NS^NU-^N^<671>
-z

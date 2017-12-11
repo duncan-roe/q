@@ -11,17 +11,26 @@
 #include "fmode.h"
 #include "typedefs.h"
 #include "pushable_values.h"
+#include "tabsiz.h"
 
 /* **************************** Static Functions **************************** */
 
 static bool
-push(long val, char **err)
+room(char **err)
 {
   if (rsidx >= stack_size - 1)
   {
     *err = "Register stack overflow";
     return false;
   }                                /* if (rsidx >= stack_size - 1) */
+  return true;
+}                                  /* room() */
+
+static bool
+push(long val, char **err)
+{
+  if (!room(err))
+    return false;
   rs[++rsidx] = val;
   return true;
 }                                  /* push() */
@@ -79,15 +88,29 @@ f_valid2(char **err)
 }                                  /* f_valid() */
 
 static bool
+pshtbsz(char **err)
+{
+  if (!room(err))
+    return false;
+  return push(tabsiz, err);
+}                                  /* pshtbsz) */
+
+static bool
+poptbsz(char **err)
+{
+  if (!r_valid(err))
+    return false;
+  tabsiz = rs[rsidx--];
+  return true;
+}                                  /* poptbsz() */
+
+static bool
 pshmode(char **err)
 {
-  if (rsidx >= stack_size - 1)
-  {
-    *err = "Register stack overflow";
+  if (!room(err))
     return false;
-  }                                /* if (rsidx >= stack_size - 1) */
   return push(zmode_valid ? zmode : fmode, err);
-}                                  /* pshmode(char **err) */
+}                                  /* pshmode() */
 
 static bool
 popmode(char **err)
@@ -101,51 +124,39 @@ popmode(char **err)
     fmode &= 033777777777U;
   }                                /* if (zmode_valid) */
   return true;
-}                                  /* popmode(char **err) */
+}                                  /* popmode() */
 
 static bool
 pshcrs(char **err)
 {
-  if (rsidx >= stack_size - 1)
-  {
-    *err = "Register stack overflow";
+  if (!room(err))
     return false;
-  }                                /* if (rsidx >= stack_size - 1) */
   return push(last_Curr->bcurs, err);
-}                                  /* pshcrs(char **err) */
+}                                  /* pshcrs() */
 
 static bool
 pshlnln(char **err)
 {
-  if (rsidx >= stack_size - 1)
-  {
-    *err = "Register stack overflow";
+  if (!room(err))
     return false;
-  }                                /* if (rsidx >= stack_size - 1) */
   return push(last_Curr->bchars, err);
-}                                  /* pshlnln(char **err) */
+}                                  /* pshlnln() */
 
 static bool
 pshnbln(char **err)
 {
-  if (rsidx >= stack_size - 1)
-  {
-    *err = "Register stack overflow";
+  if (!room(err))
     return false;
-  }                                /* if (rsidx >= stack_size - 1) */
   return push(lintot, err);
-}                                  /* pshnbln(char **err) */
+}                                  /* pshnbln() */
 
 static bool
 pshlnnb(char **err)
 {
-  if (rsidx >= stack_size - 1)
-  {
-    *err = "Register stack overflow";
+  if (!room(err))
     return false;
-  }                                /* if (rsidx >= stack_size - 1) */
   return push(ptrpos, err);
-}                                  /* pshlnnb(char **err) */
+}                                  /* pshlnnb() */
 
 static bool
 inp(char **err)
@@ -170,11 +181,8 @@ inpf(char **err)
   long len;
   double fval;
 
-  if (rsidx >= stack_size - 1)
-  {
-    *err = "Register stack overflow";
+  if (!room(err))
     return false;
-  }                                /* if (rsidx >= stack_size - 2) */
   if (fsidx >= stack_size - 1)
   {
     *err = "FP register stack overflow";
@@ -1067,6 +1075,8 @@ alu_opcode opcode_defs[] = {
   OPCODE(pshlnln, "Push line length to R"),
   OPCODE(pshnbln, "Push number of lines in file to R (i.e. # read so far)"),
   OPCODE(pshlnnb, "Push line number to R (same as ^NF / PSHTAB)"),
+  OPCODE(pshtbsz, "Push number of spaces between tabstops in file to R"),
+  OPCODE(poptbsz, "Pop R to number of spaces between tabstops in file"),
   CAPTION(""),
   CAPTION("Instructions that Modify F"),
   CAPTION("============ ==== ====== ="),

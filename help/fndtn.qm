@@ -7,6 +7,10 @@ N C '^N^P^P ;N P replacement when ^P is interrupt character. Call by ^N^C^C
 N F '^Z^NOA^A^NRA^F^K^NU ^F with recall
 N G '^Z ^NO9^J^NC^NL^ND^N^<402>J-1^J^NR9^NU ;Join next line after space
 N402 ^[G-1^J^NU ; Used by ^N^G
+N H '^NC^N\^<PSHTBSZ>^ND^N^<432>^<POPN>^NU ; Outdent one tab
+N432 ^<SNE>^NU^?^<S1>^N^@
+N I '^<PSHTBSZ>^ND^N^<431>^<POPN>^NU ; indent one tab
+N431 ^<SNE>^NU ^<S1>^N^@
 N J '^ND^N^O^J^NU ;Single "/*" comment beautify - call by ^N^M
 N K '^D^NA^NU^NG ^NS^N^@^D^NU Word delete
 N N '^N^^ ; Can change for convenience
@@ -172,4 +176,6 @@ N1402 s^J^ND^N^<1107>^NU ; Override with "b", &c. as required
 N1403 $C^NU ; override with invocation wildcard (^N^Ws)
 N1404 -wn^NU ; grep options for ^N^W^F
 N1405 ^NU ; Command to run after N206 (^N^W^F) (e.g. |k -E -S^NU, |cat^NU)
+N1406 ^NI^NU ; Change to ^NU for no comments from ^NE / ^NL macros (all languages)
+n426 /* N427 & N430 are short-form ^NE / ^NL (all languages)
 N1500 /* 15XX - RESERVED FOR MACRO PROGRAMS (*.qm)

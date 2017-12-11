@@ -1,3 +1,19 @@
-N E '^NC^N\^NM^<1201>^Z^T{^T}^J^[i-^J^ND^N^<1201>^H^L^NM^<1201>^[m-1^J^Z^ND^N^Y^ND^N^<1201>^Ji-1^J^ND^N^I^NU ;C new bracket level'
-N L '^NC^N\^NFa^J^[^NNam-1^J^NG}^NS^N\^Z^B^NG*^NS^N\^Z^T^A^B^Eelse ^Jm-2^J^Z^Telse^T{^Ji-^J^ND^N^I^NU
-z
+* Set up for indent amount / file tab spacing of 2 (my preference)
+*
+* To change this to some other value, use x-t or the ALU.
+*
+* E.g. to change to 4, either do:
+*
+* x
+* t 4
+* x
+*
+* or do:
+*
+* fi ^<PS4>^<POPTBSZ>
+*
+fi ^<PS2>^<POPTBSZ>
+N E '^NC^N\^ND^N^<1406>^N^<427>^NM^<1201>^Z^T{^T}^J^[i-^J^ND^N^<1201>^H^L^NM^<1201>^[m-1^J^Z^ND^N^Y^ND^N^<1201>^Ji-1^J^ND^N^I^NU ;C new bracket level'
+N L '^NC^N\^ND^N^<1406>^N^<430>^NFa^J^[^NNam-1^J^NG}^NS^N\^Z^B^NG*^NS^N\^Z^T^A^B^Eelse ^Jm-2^J^Z^Telse^T{^Ji-^J^ND^N^I^NU
+N427 ^Z^T{^T}^J^[i-1^J^ND^N^I^NU ;;C new bracket level (no comment)
+N430 ^Z^Telse^N^<427>

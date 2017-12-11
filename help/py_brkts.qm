@@ -1,17 +1,13 @@
 fd y
 N202 ^NC^NS^N\q ^ND^N^<4003>/py_brkts.qm^J^NU
 N220 ^NC^NS^N\u ^ND^N^<4003>/py_brkts.qm^J^NU
-N I '    ^NU ; indent 4 spaces
-N H '^NC^N\^?^?^?^?^NU
+fi ^<PS8>^<POPTBSZ>^NU ; Files have the default 8-space tab compression...
+N I '    ^NU ; ... but code indents 4 spaces
+N H '^NC^N\^?^?^?^?^NU ; and outdents 4 spaces
 N E '^NC^N\^Z:^J^[i-^J^ND^N^I^NU
 N L '^N\   ; no fancy else
 N Y '^NC^N\^NE^H^NA^NS^NL# ^NU^Z^NB2^I^Y^NG ^N^<422>^Z # ^NU
 N422 ^Z# ^NU
-N N '^N^^
-N040 !umake 2>&1|tee hee|grep --line-buffered error|egrep --line-buffered -v 'No errors|cdc_fatal_error_handler|rec_remvol_error_states|scm_[bo]sc_error|javadoc';umake do_install 2>&1|tee heeinst^J^NU
-x
-t 8
-x
+n040 ^\ ; No make with python
 fm -l /* Python doesn't like tabs
 fm +s /* Minimise diffs
-z
