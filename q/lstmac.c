@@ -8,7 +8,7 @@
  * assigned standard output to a file before calling this routine...
  */
 #include <stdio.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "macros.h"
 #include "alu.h"
 void

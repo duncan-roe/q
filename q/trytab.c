@@ -17,7 +17,7 @@
 #include <unistd.h>
 #include <strings.h>
 #include <sys/types.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "edmast.h"
 #include "tabs.h"
 

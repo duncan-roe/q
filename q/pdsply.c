@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "scrnedit.h"
 #ifdef ANSI5
 void

@@ -11,7 +11,7 @@
  * Gets out of obeying a macro.
  */
 #include <stdio.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "macros.h"
 #include "scrnedit.h"
 #include "fmode.h"

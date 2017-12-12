@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "c1in.h"
 
 int

@@ -20,7 +20,7 @@
  *  The function result is 1 if a match is found, else 0.
  */
 #include <stdio.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "fmode.h"
 /* */
 unsigned char xlatable[256];

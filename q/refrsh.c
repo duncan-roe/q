@@ -24,7 +24,7 @@
 #include <unistd.h>
 #include <string.h>
 #endif
-#include "alledit.h"
+#include "prototypes.h"
 #include "scrnedit.h"
 /* */
 #ifdef ANSI5

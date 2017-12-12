@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "c1in.h"
 
 char *normal_end_sequence = "\033\033fq\n";

@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <limits.h>
-#include "alledit.h"
+#include "prototypes.h"
 int scrdtk                         /* errno is int, so we are */
   (int key,                        /* What to do */
   unsigned char *buf,              /* Receives token */

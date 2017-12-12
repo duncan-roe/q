@@ -15,7 +15,7 @@
 #ifdef ANSI5
 #include <stdlib.h>
 #endif
-#include "alledit.h"
+#include "prototypes.h"
 #ifdef ANSI5
 void
 tildexpn(char *path)

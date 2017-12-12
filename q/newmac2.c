@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "edmast.h"
 #include "macros.h"
 #include "tabs.h"

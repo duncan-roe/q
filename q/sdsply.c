@@ -13,7 +13,7 @@
  */
 /* */
 #include <stdio.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "scrnedit.h"
 void
 sdsply()

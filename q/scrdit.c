@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/times.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "macros.h"
 #include "cmndcmmn.h"
 #include "scrnedit.h"

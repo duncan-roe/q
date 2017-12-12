@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <termios.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "c1in.h"
 /* */
 struct termios tio5save = { 0 }, tio5 =

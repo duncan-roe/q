@@ -17,7 +17,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "edmast.h"
 #include "macros.h"
 #include "cmndcmmn.h"

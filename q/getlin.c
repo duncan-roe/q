@@ -19,7 +19,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "edmast.h"
 short
 getlin(int reperr, int eofok)

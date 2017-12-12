@@ -7,7 +7,7 @@
  * Y, FL, & FY commands.
  * When called, the table is not in the right state...
  */
-#include "alledit.h"
+#include "prototypes.h"
 #include "fmode.h"
 /* */
 unsigned char xlatable[256];

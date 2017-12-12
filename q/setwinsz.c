@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "scrnedit.h"
 #include "c1in.h"
 void

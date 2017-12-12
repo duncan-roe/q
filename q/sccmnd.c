@@ -14,7 +14,7 @@
  * command buffer and  SCMNRD...
  */
 #include <stdio.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "edmast.h"
 #include "cmndcmmn.h"
 void

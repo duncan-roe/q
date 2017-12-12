@@ -12,7 +12,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "q_pipe.h"
 void
 quthan(int signum, siginfo_t *siginfo, void *ucontext)

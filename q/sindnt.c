@@ -13,7 +13,7 @@
  * previous line, unless we are inserting line 1.
  */
 #include <stdio.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "edmast.h"
 #include "fmode.h"
 void

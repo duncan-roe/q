@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "macros.h"
 #include "c1in.h"
 /* */

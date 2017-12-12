@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "edmast.h"
 #include "fmode.h"
 short

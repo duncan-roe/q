@@ -22,7 +22,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <string.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "scrnedit.h"
 #include "c1in.h"
 #include "tabsiz.h"

@@ -11,7 +11,7 @@
  * Initial tasks for screenedit subsystem
  */
 #include <stdio.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "macros.h"
 #include "cmndcmmn.h"
 #include "scrnedit.h"

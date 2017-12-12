@@ -7,7 +7,7 @@
  * standard output.
  */
 #include <stdio.h>
-#include "alledit.h"
+#include "prototypes.h"
 #ifdef ANSI5
 void
 showchar(unsigned char c)

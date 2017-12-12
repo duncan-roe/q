@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "c1in.h"
 void
 restore_stdout()

@@ -11,7 +11,7 @@
  * This function types a list of current non-null macros
  */
 #include <stdio.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "macros.h"
 #include "alu.h"
 

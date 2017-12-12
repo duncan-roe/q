@@ -14,7 +14,7 @@
  * May be called by user program
  */
 #include <stdio.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "scrnedit.h"
 void
 newlin()

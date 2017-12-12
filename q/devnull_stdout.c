@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "fmode.h"
 #include "c1in.h"
 

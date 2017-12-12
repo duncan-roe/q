@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "edmast.h"
 int
 cmd(char *mybuf)

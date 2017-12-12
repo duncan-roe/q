@@ -65,7 +65,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <limits.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "fmode.h"
 
 #define NOM_PAGE 8192              /* Largest known pagesize on any system */

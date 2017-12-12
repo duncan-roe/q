@@ -15,7 +15,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "edmast.h"
 #include "macros.h"
 #include "fmode.h"

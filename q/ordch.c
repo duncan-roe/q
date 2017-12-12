@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <memory.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "macros.h"
 #include "fmode.h"
 #include "cmndcmmn.h"

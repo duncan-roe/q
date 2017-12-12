@@ -4,7 +4,7 @@
  * Copyright (C) 2012-2014 Duncan Roe
  */
 #include <termios.h>
-#include "alledit.h"
+#include "prototypes.h"
 #include "c1in.h"
 
 void

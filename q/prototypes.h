@@ -52,6 +52,8 @@ int cmd(char *buf);
 bool pop_stdin(void);
 void devnull_stdout(void);
 
+/* Global variables */
+
 unsigned int verb;           /*Command Processing - COMANL, ONEOF, NEWMAC &c. */
 int ndntch;                        /* # of chars to indent */
 bool vt100;                        /* Enable VT100-style curpos */
