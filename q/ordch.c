@@ -1,12 +1,13 @@
 /* O R D C H
  *
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2012,2014 Duncan Roe
+ * Copyright (C) 2012,2014,2017 Duncan Roe
  *
  * This routine processes a normal chr (or a special that was preceded
  * by ^C), overwriting/inserting as appropriate.
  */
 #include <stdio.h>
+#include <ctype.h>
 #include <signal.h>
 #include <memory.h>
 #include "prototypes.h"
@@ -27,12 +28,13 @@ ordch(unsigned char chr, scrbuf5 *scbuf)
  */
   int i, k;                        /* Scratch */
   unsigned char *p, *q;
+  bool done = false;
 /*
  * Apart from SCRDIT on encountering a tab (^I),
  * this is the only Q function that can increase the value of the indent point.
  * Do so now, if at the indent point and we have a space.
  */
-  if (INDENT && scbuf->bcurs == ndntch && chr == SPACE)
+  if (INDENT && scbuf->bcurs == ndntch && isspace(chr))
   {
     ndntch++;
 /*
@@ -40,13 +42,19 @@ ordch(unsigned char chr, scrbuf5 *scbuf)
  */
     if (!insert)
     {
+      bool first = true;
       for (;;)
       {
         if (scbuf->bcurs == scbuf->bchars)
           break;                   /* B no more chars follow */
-        if (scbuf->bdata[scbuf->bcurs + 1] != SPACE)
+        if (!isspace(scbuf->bdata[scbuf->bcurs + 1]))
           break;                   /* B not a space following */
-        scbuf->bdata[scbuf->bcurs] = SPACE;
+        if (first)
+        {
+          scbuf->bdata[scbuf->bcurs] = chr;
+          done = true;
+          first = false;
+        }                          /* if(first) */
         scbuf->bcurs++;
         ndntch++;
       }
@@ -60,7 +68,7 @@ ordch(unsigned char chr, scrbuf5 *scbuf)
         curmac >= 0 ? "\r\nNo room in line for insert" : "");
       mctrst = false;
       cmover = true;               /* Warn notmac in case input from U-use */
-      notmac(true);                   /* Want macro diagnostics */
+      notmac(true);                /* Want macro diagnostics */
       return;
     }                              /* if (scbuf->bchars == scbuf->bmxch) */
     if (scbuf->bcurs < scbuf->bchars) /* A real insert */
@@ -77,7 +85,8 @@ ordch(unsigned char chr, scrbuf5 *scbuf)
     if (mxchrs < scbuf->bchars)
       mxchrs = scbuf->bchars;      /* For ^R */
   }
-  scbuf->bdata[scbuf->bcurs] = chr; /* Store chr */
+  if (!done)
+    scbuf->bdata[scbuf->bcurs] = chr; /* Store chr */
   scbuf->bcurs++;                  /* Up cursor */
   return;                          /* Finished */
 }

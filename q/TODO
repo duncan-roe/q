@@ -1,10 +1,8 @@
-DONE: New opcodes to get (set) tab interval used by fm+t
-DONE: ^N^I &c. to use this opcode
-^F & ^B to stop after all whitespace chars, not just space
-^G & ^NG space to optionally operate on all whitespace chars (new FMode mode)
-'^NG ' to return true for any whitespace char
-  New fm mode to make above optional(?)
-Indenting to work with e.g. '^I'
+DONE: ^F & ^B to stop after all whitespace chars, not just space
+DONE: ^G & ^NG space to optionally operate on all whitespace chars (new FMode mode)
+DONE: '^NG ' to return true for any whitespace char
+DONE:   New fm mode to make above optional(?)
+DONE: Indenting to work with e.g. '^I'
 "q -l" to insert "fm +l" command before reading file
 New active pseudo to format output of integers (e.g. as hex / octal)
 New active pseudo to output UTC time

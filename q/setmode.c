@@ -150,6 +150,10 @@ setmode()
         c = result & 0400000 ? '+' : '-';
         putchar(c);
         putchar('w');
+        (void)write(1, ", ", 2);
+        c = result & 01000000 ? '+' : '-';
+        putchar(c);
+        putchar('a');
         (void)write(1, "\r\n", 2);
         switch ((int)(result >> 30 & 3))
         {
@@ -271,6 +275,10 @@ setmode()
 
         case 'W':                  /* Warn when overwriting nonzero memory  */
           u = 0400000;
+          break;
+
+        case 'A':                  /* ^G & ^NG match Any whitespace */
+          u = 01000000;
           break;
 
         default:

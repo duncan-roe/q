@@ -50,6 +50,7 @@
 
 unsigned char fxtabl[128];
 long timlst;
+unsigned char *indent_string;
 
 /* Initialise External Variables */
 
@@ -316,14 +317,9 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
   glast = false;
   fornj = false;
   last_Curr = Curr;
-  if (pchars == 0)
-    goto p1005;                    /* J no prompt to move in */
-/*
- * Get a null-terminated prompt buffer first
- */
-  strcpy((char *)prompt, (char *)prmpt);
-/* Move prompt to common area */
-p1005:contp = false;
+  if (pchars)
+    strcpy((char *)prompt, (char *)prmpt); /* Move prompt to common area */
+  contp = false;
   cntrlw = false;
   gotoch = -1;                     /* No ^G yet */
 /*
@@ -356,8 +352,8 @@ p1005:contp = false;
         sindnt();                  /* Get the indent */
       if (ndntch > 0)
       {
-        for (i = ndntch; i > 0; i--)
-          ordch(SPACE, Curr);      /* Pad out with spaces */
+        for (i = ndntch, p = indent_string; i > 0; i--)
+          ordch(*p++, Curr);       /* Pad out with spaces */
         modlin = true;             /* Line has been changed */
       }                            /* if (ndntch > 0) */
     }                              /* if !(Curr->bchars) */
@@ -366,7 +362,7 @@ p1005:contp = false;
       ndntch = 0;
       for (j = Curr->bchars; j > 0; j--)
       {
-        if (Curr->bdata[ndntch] != SPACE)
+        if (!isspace(Curr->bdata[ndntch]))
           break;
         ndntch = ndntch + 1;
       }
@@ -608,16 +604,16 @@ p7702:i = 0;                       /* S.O.L. if no indenting */
  * start)... */
   p = &Curr->bdata[Curr->bcurs];
 /* Reduce movement available, B none left; B found non-space */
-  if (*(p - 1) == SPACE)
+  if (isspace(*(p - 1)))
     for (;;)
-      if (!--k || *--p != SPACE)
+      if (!--k || !isspace(*--p))
         break;
 /* We may now be back at line start. If not, move cursor back until the
  * preceding character is space. This may now be the case already, so
  * check the value of the preceding character first... */
   if (k)
     for (;;)
-      if (*--p == SPACE || !--k)
+      if (isspace(*--p) || !--k)
         break;
   Curr->bcurs = i + k;             /* Start of line + room */
   GETNEXTCHR;                      /* Finish ^B */
@@ -644,12 +640,12 @@ p7706:
   }
   if (k)
     for (;;)
-      if (!--k || *p++ == SPACE)
+      if (!--k || isspace(*p++))
         break;
 /* Reduce K further if not now pointing at a non-space... */
   if (k)
     for (;;)
-      if (*p++ != SPACE || !--k)
+      if (!isspace(*p++) || !--k)
         break;
   Curr->bcurs = Curr->bchars - k;
   GETNEXTCHR;                      /* Refresh or read */
@@ -956,8 +952,11 @@ p1804:
   i = Curr->bchars - Curr->bcurs - 1; /* # chars to search */
   p = &Curr->bdata[Curr->bcurs];   /* Point to cursor char */
   for (; i > 0; i--)
-    if (*++p == thisch)
+  {
+    p++;
+    if (*p == thisch || (thisch == SPACE && isspace(*p) && MATCH_ANY_WHSP))
       break;
+  }                                /* for (; i > 0; i--) */
   if (i >= 0)
     Curr->bcurs = Curr->bchars - i; /* Guard against -ve i */
   gotoch = thisch;                 /* Remember char for ^^ */
@@ -1702,11 +1701,10 @@ p1601:
   if (gmacr)
     goto p1903;                    /* J in fact defining a macro */
   if (Curr->bcurs == Curr->bchars)
-    SKIP2MACCH;
-/* Skip if at eol */
-  if (Curr->bdata[Curr->bcurs] != thisch)
-    SKIP2MACCH;
-/* Skip if mismatch */
+    SKIP2MACCH;                    /* Skip if at eol */
+  if (Curr->bdata[Curr->bcurs] != thisch &&
+    !(thisch == SPACE && isspace(Curr->bdata[Curr->bcurs]) && MATCH_ANY_WHSP))
+    SKIP2MACCH;                    /* Skip if mismatch */
   RAWNEXTCHR;
 /*
  * P1903 - Come here with macro to define. All characters are legal

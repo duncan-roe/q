@@ -69,4 +69,4 @@ shell prompt again:
 > 13:43:30$
 Handy template (export my_pty first):
 
-ggo q -a "</dev/pts/$my_pty >/dev/pts/$my_pty 2>&1" c
+ggo q -a "</dev/pts/$my_pty >/dev/pts/$my_pty 2>&1" "set max-value-size sizeof (struct scrbuf5)" c
