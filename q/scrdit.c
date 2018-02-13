@@ -1,7 +1,7 @@
 /* S C R D I T */
 /*
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2012-2014,2017 Duncan Roe
+ * Copyright (C) 2012-2014,2017,2018 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -50,7 +50,6 @@
 
 unsigned char fxtabl[128];
 long timlst;
-unsigned char *indent_string;
 
 /* Initialise External Variables */
 
@@ -229,6 +228,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
   struct tms tloc;                 /* Junk from TIMES */
   long timnow;                     /* Time from TIMES */
   short thisch;                    /* Character being processed */
+  unsigned char *indent_string = NULL;
 /*
  * PARAMETERS:-
  * ============
@@ -348,8 +348,10 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
   {
     if (!Curr->bchars)
     {
-      if (!lstvld)
-        sindnt();                  /* Get the indent */
+      if (lstvld)
+        indent_string = Prev->bdata;
+      else
+        indent_string = sindnt(); /* Sets ndntch & forces lstvld to be true */
       if (ndntch > 0)
       {
         for (i = ndntch, p = indent_string; i > 0; i--)

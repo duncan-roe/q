@@ -1,7 +1,7 @@
 /* P D S P L Y
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2018 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -16,16 +16,8 @@
 #include <sys/types.h>
 #include "prototypes.h"
 #include "scrnedit.h"
-#ifdef ANSI5
 void
 pdsply(scrbuf5 *buf, unsigned char *prm, int pch)
-#else
-void
-pdsply(buf, prm, pch)
-scrbuf5 *buf;
-unsigned char *prm;
-int pch;
-#endif
 {
 /* */
   pchars = pch;
@@ -36,10 +28,11 @@ int pch;
   }
   strcpy((char *)prompt, (char *)prm); /* Move in the prompt */
   if (forych)
-    goto p1002;                    /* J BRIEF display wanted */
-  disply(buf, 0);
-p1003:return;
-p1002:forych = false;              /* YCH sets it every line */
-  sdsply();
-  goto p1003;
+  {
+    forych = false;                /* YCH sets it every line */
+    sdsply();
+  }
+  else
+    disply(buf, false);
+  return;
 }

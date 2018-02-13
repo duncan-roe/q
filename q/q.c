@@ -2,7 +2,7 @@
  *
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2002,2007,2012-2017 Duncan Roe
+ * Copyright (C) 2002,2007,2012-2018 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -118,7 +118,7 @@ static int rdwr = 0;               /* Mode for file opens */
 static long savpos = 0;            /* Remembered pointer during S, B & Y */
 static int saved_pipe_stdout;
 static int pipe_temp_fd;
-static char pipe_temp_name[sizeof PIPE_NAME] = {0};
+static char pipe_temp_name[sizeof PIPE_NAME] = { 0 };
 static struct sigaction act;
 
 /* Static functions */
@@ -1413,10 +1413,10 @@ p1029:
 p1033:
   lgtmp4 = (modify || splt);       /* We are not inserting */
   if (lgtmp4 && modlin)
-    delete(0);                     /* Delete CHANGED existing line */
+    delete(false);                 /* Delete CHANGED existing line */
   splt = false;                    /* Not a split this time */
   if (lgtmp3)
-    disply(prev, 0);               /* Display final line */
+    disply(prev, false);           /* Display final line */
   if ((!lgtmp4) || modlin)
     inslin(prev);                  /* Insert changed or new line */
   goto asg2rtn;                    /* ^M & ^T part here */
@@ -1437,8 +1437,8 @@ p1301:
     if (lgtmp3)                    /* Display req'd */
     {
       setptr(ptrpos - 1);
-      rdlin(prev, 0);
-      disply(prev, 0);
+      rdlin(prev, false);
+      disply(prev, false);
     }                              /* if(lgtmp3) */
     splt = false;
   }                                /* if(modify||splt) */
@@ -1449,7 +1449,7 @@ p1301:
  * I - Insert
  */
 p1012:
-  if (!getlin(1, 1))
+  if (!getlin(true, true))
     REREAD_CMD;                    /* J line # u/s */
   setptr(oldcom->decval);          /* Get ready to insert */
   if (eolok())                     /* No extra params */
@@ -1460,7 +1460,7 @@ p1012:
  */
 p1015:
   modify = true;
-  if (getlin(0, 0))
+  if (getlin(false, false))
   {
     j4 = oldcom->decval;           /* 1st line to be altered */
     lstvld = false;                /* Previous line not valid */
@@ -1471,7 +1471,7 @@ p1015:
   {
     locerr = true;                 /* An scmac can detect this error */
     if (curmac < 0 || !BRIEF)      /* Report err unless brief macro */
-      (void)write(1, ermess, errlen);
+      fprintf(stderr, "%s", ermess);
     REREAD_CMD;                    /* Reread command */
   }
 p1036:
@@ -1480,11 +1480,11 @@ p1036:
     setptr(j4);                    /* Position on 1st line to alter */
   for (i = count; i > 0; i--)
   {
-    if (!rdlin(curr, 0))           /* Get lin to mod / EOF */
+    if (!rdlin(curr, false))       /* Get lin to mod / EOF */
     {
       printf("E - O - F\r\n");
       READ_NEXT_COMMAND;
-    }                              /* if(!rdlin(curr,0)) */
+    }                              /* if(!rdlin(curr, false)) */
     curr->bcurs = locpos;          /* In case just come from LOCATE */
     locpos = 0;                    /* In case just come from LOCATE */
     sprmpt(ptrpos - 1);            /* Set up prompt lin # just read */
@@ -1515,7 +1515,7 @@ p1036:
 p1022:
   if (!get_file_arg() || nofile)
     ERR1025("Error in filename");
-  if (!getlin(1, 0))
+  if (!getlin(true, false))
     REREAD_CMD;                    /* J line # u/s */
   setptr(oldcom->decval);          /* Get ready to write */
   if (!get_opt_lines2count() || !eolok())
@@ -1689,7 +1689,7 @@ try_open:
  * D - DELETE
  */
 p1008:
-  if (!getlin(1, 0))
+  if (!getlin(true, false))
     REREAD_CMD;                    /* J bad line # */
   k4 = oldcom->decval + 1;         /* Pos here for each delete */
   if (!get_opt_lines2count())
@@ -1705,7 +1705,7 @@ p1008:
     if (k4 == lintot + 2 && !(deferd && (dfread(1, NULL), k4 != lintot + 2)))
       goto p1078;
     setptr(k4);                    /* Pos 1 past 1st line to go */
-    delete(0);                     /* Knock off line. Use normal ptr */
+    delete(false);                 /* Knock off line. Use normal ptr */
   }
   READ_NEXT_COMMAND;               /* Finished if get here */
 p1078:
@@ -1724,11 +1724,11 @@ p1079:
  * G - GOTO
  */
 p1010:
-  if (getlin(1, 1) && eolok())
+  if (getlin(true, true) && eolok())
   {
     setptr(oldcom->decval);
     READ_NEXT_COMMAND;             /* Finished GOTO */
-  }                                /* if(getlin(1,1)) */
+  }                                /* if(getlin(true, ... */
   REREAD_CMD;
 /*
  * U - USE
@@ -1880,7 +1880,7 @@ p1016:
 p1104:
   for (i = count; i > 0; i--)
   {
-    if (!rdlin(curr, 0))           /* EOF. Normal ptr */
+    if (!rdlin(curr, false))       /* EOF. Normal ptr */
     {
       puts(" E - O - F\r");
       break;
@@ -2073,9 +2073,9 @@ p1715:
       if (revpos <= 1)             /* Sof (< shouldn't happen) */
         goto s1112;
       setptr(--revpos);            /* Read previous line */
-      rdlin(curr, 0);              /* "can't" hit eof */
+      rdlin(curr, false);          /* "can't" hit eof */
     }                              /* if(revrse) */
-    else if (!rdlin(curr, 0))      /* If eof */
+    else if (!rdlin(curr, false))  /* If eof */
     {
     s1112:
       if (!lgtmp2 || count2 == LONG_MAX) /* No message wanted */
@@ -2087,7 +2087,7 @@ p1715:
     p1111:
       puts("searched\r");
       break;                       /* for(i4=count2;i4>0;i4--) */
-    }                              /* if(!rdlin(curr,0)) */
+    }                              /* if(!rdlin(curr, false)) */
     m = curr->bchars;
     if (m < minlen)
       continue;                    /* Skip search if too short */
@@ -2135,7 +2135,7 @@ p17165:
  * J - Join
  */
 p1013:
-  if (!getlin(1, 0))
+  if (!getlin(true, false))
     REREAD_CMD;                    /* J bad line # */
   setptr(oldcom->decval);          /* Pos'n on line to be joined onto */
   numok = 1114;
@@ -2153,11 +2153,11 @@ p1114:count2 = count;              /* Another # to get */
       puts("Can't join anything - no lines follow\r");
     READ_NEXT_COMMAND;             /* Next command */
   }                                /* if(ptrpos>=lintot&&... */
-  rdlin(prev, 0);                  /* 1st line */
-  delete(0);                       /* Del lin before normal ptr */
+  rdlin(prev, false);              /* 1st line */
+  delete(false);                   /* Del lin before normal ptr */
   for (i4 = count2; i4 > 0; i4--)
   {
-    if (!rdlin(curr, 0))           /* If eof */
+    if (!rdlin(curr, false))       /* If eof */
     {
       rtn = 1118;
       goto r1112;
@@ -2170,7 +2170,7 @@ p1114:count2 = count;              /* Another # to get */
       goto p1117;                  /* J would bust line */
     r = (char *)&prev->bdata[prev->bchars]; /* Appending posn */
     prev->bchars = j;              /* New length */
-    delete(0);                     /* Delete line just read */
+    delete(false);                 /* Delete line just read */
 /* Append line just read */
     memcpy(r, (char *)curr->bdata, (size_t)curr->bchars);
   }
@@ -2191,13 +2191,13 @@ p1018:
   rtn = 1121;
   repos = true;
 p1129:
-  if (!getlin(1, 0))               /* Bad source. C joins here */
+  if (!getlin(true, false))        /* Bad source. C joins here */
   {
     (void)write(1, " in source line", 15);
     REREAD_CMD;
   }
   k4 = oldcom->decval;             /* Remember source */
-  if (!getlin(1, 1))               /* Bad dest'n */
+  if (!getlin(true, true))         /* Bad dest'n */
   {
     (void)write(1, " in dest'n line", 15);
     REREAD_CMD;
@@ -2227,10 +2227,10 @@ p1131:                             /* C joins us here */
   setaux(k4);                      /* Set AUX ptr at source */
   for (i4 = count; i4 > 0; i4--)
   {
-    if (!rdlin(prev, 1))
+    if (!rdlin(prev, true))
       goto p1112;                  /* Read AUX, j eof to mess code */
     if (repos)
-      delete(1);                   /* For reposition only, delete line read */
+      delete(true);                /* For reposition only, delete line read */
     inslin(prev);
   }
   READ_NEXT_COMMAND;               /* Finished C or R */
@@ -2514,11 +2514,11 @@ p2005:
   if (oldcom->toktyp == eoltok)
     goto p1608;                    /* J no more params */
 /* */
-  if (getlin(0, 0))
+  if (getlin(false, false))
     goto p1609;                    /* J definitely ok 1st line # */
   if (oldcom->toktyp != nortok)
     goto p1608;                    /* J ok after all */
-  (void)write(1, ermess, errlen);
+  fprintf(stderr, "%s", ermess);
   REREAD_CMD;
 p1608:j4 = 1;                      /* Start looking at line 1 */
   if (oldcom->toktyp == eoltok)
@@ -2588,7 +2588,7 @@ p1710:savpos = ptrpos;             /* Remember so we can get back */
   {
     if (cntrlc)                    /* User has interrupted */
       goto p1622;
-    if (!rdlin(curr, 0))           /* Eof on main pointer */
+    if (!rdlin(curr, false))       /* Eof on main pointer */
     {
       if (count == LONG_MAX)       /* Was going to deferred eof */
         break;                     /* for(i4=count;i4>0;i4--) */
@@ -2678,7 +2678,7 @@ p1710:savpos = ptrpos;             /* Remember so we can get back */
       pdsply(curr, prmpt, pchrs);  /* Display the modified line */
     }                              /* if(!NONE) */
   p1711:
-    delete(0);                     /* Remove old version of line */
+    delete(false);                 /* Remove old version of line */
     inslin(curr);                  /* Insert new version */
   }                                /* for(i4=count;i4>0;i4--) */
   if (!lgtmp3)

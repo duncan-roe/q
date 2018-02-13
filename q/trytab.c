@@ -1,7 +1,7 @@
 /* T R Y T A B
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012,2014 Duncan Roe
+ * Copyright (C) 2012,2014,2018 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -38,7 +38,7 @@ trytab(unsigned char *zbuf, scrbuf5 *scline)
       GIVE_UP;
     }                              /* if (lstlin <= 0) */
     savlst = lstlin;               /* Will be overwritten by GETLIN */
-    if (!getlin(1, 0))
+    if (!getlin(true, false))
       GIVE_UP;                     /* J back, error reported */
     scline->decval = lstlin - savlst + 1; /* C/vert to a # of lines */
     lstlin = savlst;               /* Reinstate */

@@ -1,6 +1,6 @@
 /* W O R K F I L E
  *
- * Copyright (C) 2012,2014 Duncan Roe
+ * Copyright (C) 2012,2014,2018 Duncan Roe
  *
  * Dual-mode Workfile System
  * ========= ======== ======
@@ -489,14 +489,8 @@ splitb(
 
 /* ******************************* delete ****************************** */
 
-#ifdef ANSI5
 void
-delete(long aux)
-#else
-void
-delete(aux)
-long aux;
-#endif
+delete(bool aux)
 {
   mods = true;                     /* File has been modified */
   if (aux)                         /* Delete line before aux pointer */
@@ -660,14 +654,8 @@ clrfgt()
 
 /* ******************************* inslin ****************************** */
 
-#ifdef ANSI5
 void
 inslin(scrbuf5 *a1)
-#else
-void
-inslin(a1)
-scrbuf5 *a1;
-#endif
 {
   int i;                           /* Scratch */
   unsigned char *p;                /* Scratch */
@@ -723,11 +711,7 @@ scrbuf5 *a1;
   if (count <= sizeof(void *))
   {
     if (count)
-      memcpy(&ix->dtaptr, a1->bdata,
-#ifdef ANSI5
-        (size_t)
-#endif
-        count);
+      memcpy(&ix->dtaptr, a1->bdata, (size_t)count);
     ix->chars = count;             /* No blocks (done), 0-4 chars */
     return;                        /* Finished */
   }
@@ -742,11 +726,7 @@ scrbuf5 *a1;
       return;
     ix->blocks++;                  /* Count extra data block */
     i = count > BLKCAP ? BLKCAP : count; /* # chars to do this time */
-    memcpy(dt->data1, p,
-#ifdef ANSI5
-      (size_t)
-#endif
-      i);
+    memcpy(dt->data1, p, (size_t)i);
     if (count <= BLKCAP)
       break;                       /* Store this then we're done */
     p += i;
@@ -757,21 +737,14 @@ scrbuf5 *a1;
 
 /* ******************************* rdlin ******************************* */
 
-#ifdef ANSI5
-int
-rdlin(scrbuf5 *a1, int aux)
-#else
-int
-rdlin(a1, aux)
-scrbuf5 *a1;
-int aux;
-#endif
+bool
+rdlin(scrbuf5 *a1, bool aux)
 {
   unsigned char *p;                /* Scratch */
   int i;                           /* Scratch */
   databk *dt;                      /* Scratch */
   suppbk *sp;                      /* Scratch */
-  int result;                      /* 1 iff data returned (else eof) */
+  bool result;                     /* iff data returned (else eof) */
 /*  */
   if (aux)                         /* Reading aux pointer */
     auxxch();
@@ -784,17 +757,17 @@ int aux;
       {                           /* Step pointer past new line (back to eof) */
         ptrpos++;
         pointr = &bwork;
-        result = 1;
+        result = true;
       }                            /* if(pointr!=&bwork) */
       else
-        result = 0;
+        result = false;
     }                              /* if(deferd) */
     else
-      result = 0;
+      result = false;
   }                                /* if(pointr==&bwork) */
   else
   {
-    result = 1;                    /* Indicate not eof */
+    result = true;                 /* Indicate not eof */
     if (pointr->blocks < 0)        /* Mmapping */
     {
 
@@ -819,11 +792,7 @@ int aux;
       if (!(i = pointr->blocks))   /* If there are no blocks */
       {                 /* Short line - data is in index block's data pointer */
         if (count)
-          memcpy(a1->bdata, &pointr->dtaptr,
-#ifdef ANSI5
-            (size_t)
-#endif
-            count);
+          memcpy(a1->bdata, &pointr->dtaptr, (size_t)count);
         a1->bchars = pointr->chars;
       }                            /* if(!(i=pointr->blocks)) */
       else                         /* Line with at least 1 data block */
@@ -836,11 +805,7 @@ int aux;
           p += BLKCAP;             /* Up "to" address */
           dt = dt->next;           /* Up "from" address */
         }                          /* for(;i>1;i--) */
-        memcpy(p, dt->data1,       /* Move last block */
-#ifdef ANSI5
-          (size_t)
-#endif
-          count);
+        memcpy(p, dt->data1, (size_t)count); /* Move last block */
         a1->bchars = p - a1->bdata + count; /* Store # of chars in line */
       }                            /* if(!(i=pointr->blocks)) else */
       pointr = pointr->next;       /* Move file pointer on 1 line */
@@ -889,14 +854,8 @@ forget()
 
 /* Move the workfile pointer "pointr" so it points to the requested line */
 
-#ifdef ANSI5
 void
 setptr(long a1)
-#else
-void
-setptr(a1)
-long a1;
-#endif
 {
   long todo;                       /* Scratch */
   int back;                        /* 1 for move backwards */
@@ -1012,14 +971,8 @@ long a1;
 
 /* ******************************* setaux ****************************** */
 
-#ifdef ANSI5
 void
 setaux(long a1)
-#else
-void
-setaux(a1)
-long a1;
-#endif
 {
 
 /* Set aux values = main values, set main pointer to aux request, exchange */

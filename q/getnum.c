@@ -1,7 +1,7 @@
 /* G E T N U M */
 /*
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012,2014 Duncan Roe
+ * Copyright (C) 2012,2014,2018 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -18,18 +18,18 @@
 #include <unistd.h>
 #include "prototypes.h"
 #include "edmast.h"
+
+#define GIVE_UP(x) \
+  do { fprintf(stderr, "%s%s", x, " # of lines"); return false; } while (0)
 /* */
-short
-getnum(int okzero)
+bool
+getnum(bool okzero)
 {
   unsigned char zbuf[14];
 /* */
   if (scrdtk(2, zbuf, 13, oldcom)) /* Read poss # of lines */
   {
-    (void)write(1, "too many digits in", 18);
-  badnumlines:
-    (void)write(1, " # of lines", 11);
-    return 0;
+    GIVE_UP("too many digits in");
   }
   switch (oldcom->toktyp)
   {
@@ -41,10 +41,9 @@ getnum(int okzero)
       if (!oldcom->decok)
       {
       tryfortaborto:
-        if (trytab(zbuf, oldcom)) /* Was a 'Tx' or -TO <something> (OK) */
+        if (trytab(zbuf, oldcom))  /* Was a 'Tx' or -TO <something> (OK) */
           break;                   /* switch(oldcom->toktyp) */
-        (void)write(1, "bad decimal", 11);
-        goto badnumlines;
+        GIVE_UP("bad decimal");
       }                            /* if(!oldcom->decok) */
       if (oldcom->decval > 0)
         break;                     /* switch(oldcom->toktyp) */
@@ -54,12 +53,10 @@ getnum(int okzero)
           break;                   /* switch(oldcom->toktyp) */
         if (oldcom->toklen == 1 && zbuf[0] == '-') /* Is unary minus */
           goto tryfortaborto;
-        (void)write(1, "not allowed zero", 16);
-        goto badnumlines;
+        GIVE_UP("not allowed zero");
       }
 /* Otherwise it is < 0 (illegal) */
-      (void)write(1, "not allowed negative", 20);
-      goto badnumlines;
+      GIVE_UP("not allowed negative");
   }                                /* switch(oldcom->toktyp) */
-  return 1;                        /* OK */
+  return true;                     /* OK */
 }

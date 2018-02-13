@@ -1,7 +1,7 @@
 /* T I L D E X P N
  *
  * Copyright (C) 1994, Duncan Roe & Associates P/L
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2018 Duncan Roe
  *
  * This routine expands the string A1 to an absolute pathname if it
  * starts with the metapathname "~". The expansion is done in-situ,
@@ -12,18 +12,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
-#ifdef ANSI5
 #include <stdlib.h>
-#endif
 #include "prototypes.h"
-#ifdef ANSI5
 void
 tildexpn(char *path)
-#else
-void
-tildexpn(path)
-char *path;
-#endif
 {
   int ln;                          /* I/p string length */
   char temp[Q_BUFSIZ];               /* Holding buffer */

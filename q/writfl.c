@@ -1,7 +1,7 @@
 /* W R I T F L
  *
  * Copyright (C) 1993, 1995, 1998, 1999 Duncan Roe & Associates P/L
- * Copyright (C) 2003,2012,2014,2017 Duncan Roe
+ * Copyright (C) 2003,2012,2014,2017,2018 Duncan Roe
  *
  * This routine writes out the spec'd # of lines to the file open on
  * FUNIT. If EOF is reached, it reports how many lines were written...
@@ -53,7 +53,7 @@ writfl(long wrtnum)
  */
   for (; todo > 0; todo--)
   {
-    if (!rdlin(curr, 0))
+    if (!rdlin(curr, false))
     {
       fprintf(stderr, "End of file reached:- %ld lines written\r\n", count);
       break;

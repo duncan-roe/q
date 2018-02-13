@@ -1,7 +1,7 @@
 /* S C M N R D
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2012-2014,2016-2017 Duncan Roe
+ * Copyright (C) 2012-2014,2016-2018 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -146,7 +146,7 @@ scmnrd()
     if (oldcom->toktyp != nortok)  /* We have to display */
     {
       if (curmac < 0 || !BRIEF)
-        disply(oldcom, 0);
+        disply(oldcom, false);
       if (oldcom->toktyp == eoltok) /* Empty line */
       {
         if (!cmsplt)               /* No valid data in line */
@@ -251,7 +251,7 @@ scmnrd()
     if (oldcom->toklen > 12)       /* Verb too long */
     {
       if (want_disply)
-        disply(oldcom, 1);         /* Display the command */
+        disply(oldcom, true);      /* Display the command */
       printf("Command verb too long");
       rerdcm();
       return;
@@ -260,7 +260,7 @@ scmnrd()
     if (verb == ASTRSK)            /* Was just an * comment */
     {
       if (want_disply)
-        disply(oldcom, 1);
+        disply(oldcom, true);
       if (!cmsplt)                 /* No valid data in line */
       {
         newcom->bchars = 0;
@@ -274,7 +274,7 @@ scmnrd()
   if (verb == '!')                 /* Was system command */
   {
     if (want_disply)
-      disply(oldcom, 1);
+      disply(oldcom, true);
     return;
   }
   if (verb == 'F')
@@ -285,7 +285,7 @@ scmnrd()
     if (oldcom->toklen == 1)       /* Not unique abb'n */
     {
       if (want_disply)
-        disply(oldcom, 1);         /* Display the command */
+        disply(oldcom, true);      /* Display the command */
       printf("Command abbreviation not unique");
       rerdcm();
       return;
@@ -309,7 +309,7 @@ scmnrd()
   {
   p1205:
     if (want_disply)
-      disply(oldcom, 1);           /* Display the command */
+      disply(oldcom, true);        /* Display the command */
     if (fanout)
       putchar('F');
     putchar(verb & 0137);
@@ -331,7 +331,7 @@ scmnrd()
     verb == 'E' || verb == 'I'))
   {
     if (want_disply)
-      disply(oldcom, 1);           /* Display the command */
+      disply(oldcom, true);        /* Display the command */
     printf("Command disallowed when FIXED LENGTH mode asserted");
     rerdcm();
     return;
@@ -385,7 +385,7 @@ scmnrd()
     }
   }                                /* if (verb == 'Q') */
   if (want_disply)
-    disply(oldcom, 0);             /* Display the command */
+    disply(oldcom, false);         /* Display the command */
   oldcom->bcurs = i;
   return;
 }

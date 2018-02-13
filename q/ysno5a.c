@@ -14,7 +14,7 @@
 #include "prototypes.h"
 #include "c1in.h"
 
-int
+bool
 ysno5a(char *mess, int key)
 {
 /*

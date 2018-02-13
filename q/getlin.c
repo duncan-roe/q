@@ -1,7 +1,7 @@
 /* G E T L I N */
 /*
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012,2014 Duncan Roe
+ * Copyright (C) 2012,2014,2018 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -13,6 +13,9 @@
  * reported if REPERR is true
  * Function value is true for good line #. The # itself is in the
  * common DECVAL.
+ *
+ * Implementation note: uses the boolean eofok as an integer value:
+ * so false must be zero and true must be 1
  */
 #include <stdio.h>
 #include <limits.h>
@@ -21,8 +24,11 @@
 #include <string.h>
 #include "prototypes.h"
 #include "edmast.h"
-short
-getlin(int reperr, int eofok)
+
+#define GIVE_UP goto error_exit
+
+bool
+getlin(bool reperr, bool eofok)
 {
   unsigned char zbuf[14];
   long wanted;                     /* Lines wanted from dfread */
@@ -31,18 +37,15 @@ getlin(int reperr, int eofok)
   if (scrdtk(2, zbuf, 13, oldcom)) /* 12 digits max */
   {
     strcpy(ermess, "line # - too many digits");
-    errlen = 24;
-  p1003:
+  error_exit:
     if (reperr)
-      (void)write(1, ermess, errlen);
-    return 0;
+      fprintf(stderr, "%s", ermess);
+    return false;
   }
   if (oldcom->toktyp != nortok)    /* EOF or NULL */
   {
     strcpy(ermess, "line # missing or null");
-  p1007:
-    errlen = 22;
-    goto p1003;
+    GIVE_UP;
   }
   if (!(oldcom->decok))            /* Not decimal */
   {
@@ -58,8 +61,7 @@ getlin(int reperr, int eofok)
     else
     {
       strcpy(ermess, "bad decimal line #");
-      errlen = 18;
-      goto p1003;
+      GIVE_UP;
     }
   }
 /* Relative line #  if signed */
@@ -68,8 +70,7 @@ getlin(int reperr, int eofok)
   if (oldcom->decval <= 0)
   {
     strcpy(ermess, "line # off start of file");
-    errlen = 24;
-    goto p1003;
+    GIVE_UP;
   }
 p1005:
   if (deferd && (wanted = oldcom->decval - lintot - eofok) > 0)
@@ -77,8 +78,8 @@ p1005:
   if (oldcom->decval <= lintot + eofok)
   {
     lstlin = oldcom->decval;       /* For a possible following -TO */
-    return 1;
+    return true;
   }
   strcpy(ermess, "line # off end of file");
-  goto p1007;
+  GIVE_UP;
 }

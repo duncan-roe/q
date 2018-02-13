@@ -1,7 +1,7 @@
 /* S P R M P T */
 /*
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2018 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -15,8 +15,7 @@
 #include "prototypes.h"
 #include "edmast.h"
 void
-sprmpt(number)
-long number;
+sprmpt(long number)
 {
   sprintf((char *)prmpt, "%6ld ", number);
   pchrs = strlen((char *)prmpt);

@@ -1,7 +1,7 @@
 /* S E T M O D E
  *
  * Copyright (C) 1994,1995 Duncan Roe & Associates P/L
- * Copyright (C) 2003,2012,2014,2017 Duncan Roe
+ * Copyright (C) 2003,2012,2014,2017,2018 Duncan Roe
  *
  * This routine manipulates the fmode bit settings
  */
@@ -11,7 +11,7 @@
 #include "prototypes.h"
 #include "edmast.h"
 #include "fmode.h"
-short
+bool
 setmode()
 {
   int octok = 1, first = 1;
@@ -30,7 +30,7 @@ setmode()
       putchar('\r');
     bad_arg:
       printf("Bad argument: %s", buf);
-      return 0;
+      return false;
     }                         /* if(scrdtk(1,(unsigned char *)buf,12,oldcom)) */
     switch (oldcom->toktyp)
     {
@@ -52,7 +52,7 @@ setmode()
         else                       /* Eol, line not empty */
         {
           fmode = result;          /* End of command */
-          return 1;                /* Finished command */
+          return true;                /* Finished command */
         }                          /* if(first) else */
       case nortok:
         break;                     /* normal tokens dealt with below */
@@ -296,7 +296,7 @@ setmode()
     if (!octok)
     {
       printf("Octal arg not allowed after symbolics");
-      return 0;
+      return false;
     }                              /* if(!octok) */
     result = oldcom->octval;
   }                                /* for(;;) */

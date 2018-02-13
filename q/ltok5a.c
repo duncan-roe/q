@@ -1,7 +1,7 @@
 /* L T O K 5 A
  *
  * Copyright (C) 1993 Duncan Roe & Associates P/L
- * Copyright (C) 2012,2014 Duncan Roe
+ * Copyright (C) 2012,2014,2018 Duncan Roe
  *
  * This routine searches for a string as a token. The search is case
  * independent iff CASDEP is 1.
@@ -18,7 +18,7 @@
  *  A7 - (Returned) ending char posn
  *  A8 - Table of non-deliminators. This is a string.
  *
- *  The function result is 1 if a match is found, else 0.
+ *  The function result is true iff a match is found.
  */
 #include <stdio.h>
 #include "prototypes.h"
@@ -27,16 +27,9 @@
 unsigned char xlatable[256];
 int tbstat;
 /* */
-#ifdef ANSI5
-int
+bool
 ltok5a(unsigned char *srchstr, int srchlen, unsigned char *string,
   int first, int len, int *strtpos, int *endpos, unsigned char *ndel)
-#else
-int
-ltok5a(srchstr, srchlen, string, first, len, strtpos, endpos, ndel)
-unsigned char *srchstr, *string, *ndel;
-int srchlen, first, len, *strtpos, *endpos;
-#endif
 {
   unsigned char cfirst,            /* 1st char to look for, u/c if casind */
    *p, *q, *r,                     /* Scratch */
@@ -48,7 +41,7 @@ int srchlen, first, len, *strtpos, *endpos;
   {
     printf("\aFirst position out of range: first=%d, len=%d (lsub5a)\r\n",
       first, len);
-    return 0;
+    return false;
   }
   if (tbstat != CASDEP)
     xlateset();                    /* Get table right */
@@ -111,11 +104,11 @@ int srchlen, first, len, *strtpos, *endpos;
   p1004:
     *strtpos = p - string - 1;
     *endpos = *strtpos + srchlen - 1;
-    return 1;
+    return true;
   p1001:l = 0;
   }
 /*
  *  Not found string if get here
  */
-  return 0;
+  return false;
 }

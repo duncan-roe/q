@@ -23,7 +23,6 @@ scrbuf5 *curr;                     /* Current line */
 scrbuf5 *prev;                     /* Previous (& returned) line */
 int pchrs;                         /* # of chrs in the prompt */
 long lstlin;                       /* Last parsed line # (for -TO) */
-unsigned errlen;                   /* Length of message from GETLIN */
 int fscode;                        /* File system &c code */
 char ermess[Q_BUFSIZ];             /* Text of message from GETLIN */
 char buf[Q_BUFSIZ];                /* Utility buffer for general use */

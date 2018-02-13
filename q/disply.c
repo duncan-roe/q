@@ -1,7 +1,7 @@
 /* D I S P L Y */
 /*
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2012,2014 Duncan Roe
+ * Copyright (C) 2012,2014,2018 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -16,9 +16,7 @@
 #include "fmode.h"
 /* */
 void
-disply(line, savecurs)
-scrbuf5 *line;
-int savecurs;
+disply(scrbuf5 *line, bool savecurs)
 {
   int oldcrs;                      /* Saved cursor value */
 /*

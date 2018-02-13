@@ -1,7 +1,7 @@
 /* S C R S E T
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2012,2014 Duncan Roe
+ * Copyright (C) 2012,2014,2018 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -19,10 +19,9 @@
 #include "fmode.h"
 /* */
 void
-scrset(line)
-scrbuf5 *line;
+scrset(scrbuf5 *line)
 {
-  short pp, cntrl, plow;
+  bool pp, cntrl, phigh;
 /*
  * LOCAL VARIABLES
  * ===============
@@ -34,7 +33,7 @@ scrbuf5 *line;
  * thisch - Char being dealt with
  * cntrl  - true if THISCH is a control or '^'
  * xcurs  - Logical cursor pos'n (saves array accesses)
- * plow - true if THISCH has parity bit clear
+ * phigh - true if THISCH has parity bit set
  */
   int i, j, ichars, thisch, xcurs;
   unsigned char *p;
@@ -113,17 +112,17 @@ p1101:
  */
 p1005:icurs = icurs + 1;           /* Point to next vacant space */
   thisch = line->bdata[cdone++];   /* Get this char */
-  plow = thisch & 0200;            /* Remember high parity bit */
-  cntrl = thisch < SPACE || plow;  /* Set CNTRL if non printing */
+  phigh = (thisch & 0200) != 0;    /* Remember high parity bit */
+  cntrl = thisch < SPACE || phigh; /* Set CNTRL if non printing */
 /* Set CNTRL if '^' 2b shown "^*" */
   if (thisch == CARAT && fmode & 040)
-    cntrl = 1;
+    cntrl = true;
   else if (thisch == 0177)
-    cntrl = 1;                     /* Set CNTRL if DEL */
+    cntrl = true;                  /* Set CNTRL if DEL */
   if (cntrl)                       /* If not guaranteed room */
   {
     i = 0;
-    if (plow)
+    if (phigh)
       i = 4;                       /* I extra amount req'd for octal */
 /* check whether room for this character as expanded, or room for the
  * insert space if at the cursor position and inserting... */
@@ -132,7 +131,7 @@ p1005:icurs = icurs + 1;           /* Point to next vacant space */
     {
       cdone--;                     /* Couldn't do this one after all */
       reqd[icurs] = CARAT;         /* Put in a '^' */
-      if (plow)
+      if (phigh)
         goto p1401;                /* J some octal to try to store */
       goto p1008;                  /* J to eol sequence */
     }
@@ -150,7 +149,7 @@ p1005:icurs = icurs + 1;           /* Point to next vacant space */
     {
       if (cntrl)
         cursr++;                   /* Moves cursor to char after '^' */
-      if (plow)
+      if (phigh)
         cursr++;                   /* Moves cursor to 1st octal digit */
     }
   }
@@ -163,7 +162,7 @@ p1005:icurs = icurs + 1;           /* Point to next vacant space */
     reqd[icurs] = CARAT;
     if (icurs + 1 == WCHRS)
       goto p1008;                  /* J screen now full */
-    if (plow)                      /* If octal to store */
+    if (phigh)                     /* If octal to store */
     {
 /* P1401 - Insert octal char. If it all fits in, leave '>' in THISCH,
  *	   otherwise -> P1008. */

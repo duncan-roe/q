@@ -1,7 +1,7 @@
 /* S I N D N T
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2012,2014,2017 Duncan Roe
+ * Copyright (C) 2012,2014,2017,2018 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -20,11 +20,10 @@
 
 /* Externals that are not in any header */
 
-extern unsigned char *indent_string;
 
 /* ********************************* sindnt ********************************* */
 
-void
+unsigned char *
 sindnt()
 {
   int j;                           /* Scratch */
@@ -45,22 +44,24 @@ sindnt()
       ndntch = 0;                  /* No indent if at s.o.f. */
       prev->bchars = 0;            /* No data in 0th line */
       prev->bcurs = 0;             /* Cursor at line strt */
-      return;
+      *prev->bdata = 0;            /* Null-terminate bdata */
+      return prev->bdata;
     }                              /* if (i4 != k4) */
     setaux(i4 - k4);
-    (void)rdlin(prev, 1);
+    rdlin(prev, true);
     k4 = k4 + 1;                   /* In case line empty */
   }
   while (prev->bchars == 0);
-  if (!INDENT)
-    return;                        /* Finished if no indenting */
+  if (INDENT)
+  {
 /*
  * Set the INDENT - code copied from SCRDIT with CURR -> PREV
  */
-  j = prev->bchars;
-  indent_string = prev->bdata;
+    j = prev->bchars;
 /* Finish when find non-space */
-  for (ndntch = 0; ndntch < j; ndntch++)
-    if (!isspace(prev->bdata[ndntch]))
-      return;
+    for (ndntch = 0; ndntch < j; ndntch++)
+      if (!isspace(prev->bdata[ndntch]))
+        break;
+  }                                /* if (INDENT) */
+  return prev->bdata;
 }
