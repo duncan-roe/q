@@ -362,7 +362,9 @@ do_b_or_s(bool is_b)
 /*
  * Use TMFILE for name of backup file
  */
-    snprintf(tmfile, sizeof tmfile, "%s.%s", buf, is_b ? "bu" : "tm");
+    if (snprintf(tmfile, sizeof tmfile, "%s.%s", buf,
+      is_b ? "bu" : "tm") >= sizeof tmfile)
+      ERRRTN("Filename too long");
 
 /* ---------------------------------------------------- */
 /* We used to rely on link failing if the file existed. */
@@ -1833,7 +1835,12 @@ p1011:
     if (tmfile[i] >= 'A' && tmfile[i] <= 'Z')
       tmfile[i] += 040;
   }
-  sprintf(tmtree, "%s/%s", help_dir, tmfile);
+/* GCC 8.1 complained when the next line was an sprintf. */
+/* To keep gcc quiet, we must test for overflow. */
+/* If truncation happens, there should be a useful message... */
+  if (snprintf(tmtree, sizeof tmtree, "%s/%s", help_dir,
+    tmfile) >= sizeof tmtree)
+    ;
   if (stat(tmtree, &statbuf))
   {
 /* Output a potted message if he "typed h for help" */

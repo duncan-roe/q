@@ -1051,14 +1051,14 @@ unsigned char *addr
 
   if (!(mp = getmem(&bdfree, sizeof(databk), "map")))
     return;                        /* Hopefully won't happen often */
-    mp->inode = inode;
-    mp->start = addr;
-    mp->length = size;
-    qchain(mp, &bmap);
+  mp->inode = inode;
+  mp->start = addr;
+  mp->length = size;
+  qchain(mp, &bmap);
 
-    clrfgt();    /* Empty forgotten chain here once (rather than in insmem()) */
-    mods = true;                   /* File being modified */
-    return;
+  clrfgt();    /* Empty forgotten chain here once (rather than in insmem()) */
+  mods = true;                   /* File being modified */
+  return;
 }                   /* void newmap(ino_t inode,off_t size,unsigned char*addr) */
 
 /* ******************************* insmem ****************************** */

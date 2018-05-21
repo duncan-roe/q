@@ -143,8 +143,8 @@ writfl(long wrtnum)
     if (do_write() < 0)
     errlbl:
       fscode = errno;
-    if (fscode)
-      fprintf(stderr, "%s. fd %d (write)\r\n", strerror(fscode), funit);
+  if (fscode)
+    fprintf(stderr, "%s. fd %d (write)\r\n", strerror(fscode), funit);
   do
     bytes = close(funit);
   while (bytes == -1 && errno == EINTR);
