@@ -1,2 +1,2 @@
-n & '^NC^NS^N\!git diff ^ND^N^<522> "^ND^N^<4002>"^J^NU
+n & '^NC^NS^N\!git diff ^ND^N^<522> -- "^ND^N^<4002>"^J^NU
 N246 ^NC^NS^N\!rcsdiff ^ND^N^<522> "^ND^N^<4002>"|k -E^J^NU ;NW&

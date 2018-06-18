@@ -31,7 +31,7 @@ N ^ '^NC^NL^J^[^NS^NL^ND^N^^^[M-2,32000^J^NU ;Back up 1 line when modifying
 N _ ^P^M^NU
 N $ '^NE^E^X^NA^NU ^N^@ ;Space between each char from cursor onwards
 N & '^NC^NS^N\!rcsdiff ^ND^N^<522> "^ND^N^<4002>"|k -E^J^NU
-N246 ^NC^NS^N\!cvs diff ^ND^N^<522> "^ND^N^<4002>"|k -E^J^NU ;NW&
+N246 ^NC^NS^N\!git diff ^ND^N^<522> -- "^ND^N^<4002>"^J^NU ;NW&
 N * '!/bin/ls -l "^ND^N^<4002>"^J^NU
 N ( '^NC^NS^N\^NFa!co^ND^N^<1301> -l "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^NNa^NU
 N ) '^NC^NS^N\^NFas^J!ci^ND^N^<1302> -u "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^NNa^NU

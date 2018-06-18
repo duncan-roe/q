@@ -74,7 +74,7 @@ t2 10 15 24
                          (See note 1)
  ^N^W!   241  Command  Delete lines found by l or fl command     **USE WITH CARE
                          (i.e. type command followed by ^N^W! rather than Enter)
- ^N^W&   246  Command  cvs diff current file. n522 gives cvs options
+ ^N^W&   246  Command  git diff current file. n522 gives options
                          (compare this with ^N&. In general, ^N& is primary VCS
                           and ^N^W& is secondary. E.g. git.qm sets git / RCS)
 
