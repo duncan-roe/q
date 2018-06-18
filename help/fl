@@ -18,6 +18,5 @@ end-of-range (e.g. line start/end, 1st/last spec'd column to search) OR a
 non-alphanumeric character that has not been declared to be a non-delimiting
 character by the FT command (qv). Thus in ordinary text "his" would match into
 the word "his" but not into the middle of "this".
- In a FORTRAN program, I would match into (I), I=J, 'I' but not into II. To
-stop K matching into K$READ, do an FT $. To stop I matching literal I above,
-use FT '''' but I may still match in longer literal strings.
+ E.g. in a c program, i would match into (i), i=j, 'i' but not into ii. To stop
+i matching into i=j, do an FT =. To stop i matching character i above, FT ''''.

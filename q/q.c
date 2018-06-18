@@ -2310,11 +2310,11 @@ p1407:
     fmode &= ~04000000000;
   READ_NEXT_COMMAND;
 /*
- * P2013 - FFortran. Use the O-indent code...
+ * P2013 - FFnowrap. Use the O-indent code...
  */
 p2013:
   rtn = 2014;
-  logtmp = FTNMOD != 0;
+  logtmp = NOWRAP;
   goto p2015;
 p2014:
   if (logtmp)

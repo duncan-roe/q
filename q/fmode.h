@@ -9,7 +9,7 @@
 /* This macro is because the ALU can modify the mode at any time */
 #define FMODE (zmode_valid ? zmode : fmode)
 
-#define FTNMOD (FMODE & 01000000000)
+#define NOWRAP ((FMODE & 01000000000) != 0)
 #define CASDEP ((FMODE & 02000000000) == 0)
 
 /* INDENT is special - must always test fmode */

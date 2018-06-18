@@ -60,7 +60,7 @@ static char *cmtabl[52] = {        /* Table of commands in full */
   "CASEINDEPEND",                  /* FC */
   "DEVNULL",                       /* FD */
   "",                              /* FE */
-  "FORTRAN",                       /* FF */
+  "FNOWRAP",                       /* FF */
   "",                              /* FG */
   "",                              /* FH */
   "IMMEDIATE_MACRO",               /* FI */
@@ -310,19 +310,11 @@ scmnrd()
   p1205:
     if (want_disply)
       disply(oldcom, true);        /* Display the command */
-    if (fanout)
-      putchar('F');
-    putchar(verb & 0137);
-    putchar(SPACE);
-    if (!cmtabl[i][0])
-      printf("is not a command");
+    printf("%s%c ", fanout ? "F" : "", (char)(verb & 0137));
+    if (cmtabl[i][0])
+      printf("is short for %s%s", fanout ? "F" : "", cmtabl[i]);
     else
-    {
-      printf("is short for ");
-      if (fanout)
-        putchar('F');
-      printf(cmtabl[i]);
-    }
+      printf("is not a command");
     rerdcm();
     return;
   }

@@ -30,7 +30,7 @@ disply(scrbuf5 *line, bool savecurs)
 /* */
 p1001:refrsh(line);
   newlin();
-  if (FTNMOD)
+  if (NOWRAP)
     goto p1002;                    /* J only showing 1st 72 chars */
   if (cdone != line->bchars)
     goto p1001;

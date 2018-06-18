@@ -176,7 +176,7 @@ setmode()
           putchar('d');
         else
           (void)write(1, "ind", 3);
-        printf("ependent L&Y, FF o%s", FTNMOD ? "n" : "ff");
+        printf("ependent L&Y, FF o%s", NOWRAP ? "n" : "ff");
         printf(", ALU stores %s-position tabs",
           STORE_FILE_POS ? "file" : "cursor");
         (void)write(1, ".\r\n", 3);

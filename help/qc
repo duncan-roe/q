@@ -4,7 +4,7 @@ Notation: <unique abbreviation>-<approximate function>
    'F', which require 2.
 A-Append lines    B-Backup file     C-Copy lines      D-Delete lines
 E-Enter file      F-(Fanout)        FB-Brief macro    FC-Case independence
-FD-Disable output FF-truncate lines FI-immediate macro
+FD-Disable output FF-no line wrap   FI-immediate macro
 FL-Locate token   FM-Set/display MODE                 FN-No macro o/p
 FO-FOrget delete  FT-undefine Token delimiter         FV-Verbose macro
 FX-eXchange keys  FY-Token Y        G-Goto line       H-Help

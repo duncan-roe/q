@@ -35,7 +35,7 @@ than one mode: for instance "d" affects dr & dw.
  00000000000 FV cmnd  FVERBOSE command asserted                         verbose
  04000000000 O  cmnd  ONOFFINDENT command set to ON                   no indent
  02000000000 FC cmnd  FCASEINDEPENT command set to ON            case dependent
- 01000000000 FF cmnd  FFORTRAN command set to ON                         FF OFF
+ 01000000000 FF cmnd  FFNOWRAP command set to ON                         FF OFF
  00400000000 ALU      ^<SFPT> asserted (store file position tabs)       ^<SCPT>
 
 * Default is + for Q -B(inary), - otherwise.

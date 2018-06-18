@@ -1,9 +1,8 @@
   <> ^ I - I N S E R T   T A B <>
 
-Inserts spaces until the cursor is at the next tab position. If cursor already
-past the last tab  inserts 1 space.
+Insert spaces until the cursor is at the next tab position. If the cursor is
+already past the last tab, insert 1 space.
 
 Note
- Because individual spaces are inserted, they can also be deleted e.g. the
-default tabs are 7 & 36 for FORTRAN - for a continuation line, tab out to col 7
-^Y back 1 and enter a char in col 6.
+ ^I inserts individual spaces. To insert actual tab characters, be sure to be in
+insert mode, then key ^P^I.
