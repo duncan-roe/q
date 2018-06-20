@@ -23,9 +23,8 @@ INTERNALS
 	STARTED: Fix runindent label squashes
 	More GIVE_UP macros - use error_exit as standard label
 	Use GNU tilde expansion function
-	STARTED: Drop non-ANSI C support
+	DONE: Drop non-ANSI C support
 	STARTED: rework asg2 blocks (including xistcs.c)
-	DONE: alledit.h (now prototypes.h) prototypes to have variable names
 	STARTED: Use meaningful names instead of logtemp &c.
 	STARTED Tidy scmnrd.c in particular
 	STARTED: Be more careful what goes to stderr / stdin

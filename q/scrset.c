@@ -73,11 +73,7 @@ p1014:
   goto p1002;                      /* Finished part# */
 p1003:
   icurs = pchars - 1;              /* Pchars chars moved */
-  memcpy((char *)reqd, (char *)prompt,
-#ifdef ANSI5
-    (size_t)
-#endif
-    pchars);
+  memcpy((char *)reqd, (char *)prompt, (size_t)pchars);
 /* Move in the prompt */
 /*
  * End line initials

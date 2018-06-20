@@ -1,6 +1,6 @@
 /* R D F I L E
  * Copyright (C) 1993,1998 Duncan Roe & Associates P/L
- * Copyright (C) 2005,2012-2014,2017  Duncan Roe
+ * Copyright (C) 2005,2012-2014,2017,2018 Duncan Roe
  *
  * This routine reads in a file, inserting it in the Workfile.
  *
@@ -280,16 +280,8 @@ readfl()
 
 /* ******************************* mapfil ****************************** */
 
-#ifdef ANSI5
 void
 mapfil(ino_t inode, off_t size, unsigned char *addr)
-#else
-void
-mapfil(inode, size, addr)
-unsigned long inode;
-long size;
-unsigned char *addr
-#endif
 {
   newmap(inode, size, addr);      /* Tell the Workfile system about this file */
 
@@ -329,17 +321,8 @@ unsigned char *addr
 
 /* ******************************* memrec ****************************** */
 
-#ifdef ANSI5
 void
 memrec(unsigned char *start, unsigned char *end, unsigned long mode, scrbuf5 *s)
-#else
-void
-memrec(start, end, mode, s)
-unsigned char *start;
-unsigned char *end;
-unsigned long mode;
-scrbuf5 *s;
-#endif
 {
   lngwrn = false;                  /* This *is* memrec */
   fileio = false;                  /* File already mmap'd */
@@ -366,15 +349,8 @@ scrbuf5 *s;
  *                  Perhaps one day we can do something about this
  * LONG_MAX - Report total # lines read */
 
-#ifdef ANSI5
 void
 dfread(long num, scrbuf5 *s)
-#else
-void
-dfread(num)
-long num;
-scrbuf5 *s;
-#endif
 {
   long savpos = ptrpos;            /* Workfile pos'n req'd on exit */
   long l;                          /* Scratch */

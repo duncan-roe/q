@@ -188,11 +188,7 @@ static char
 /* ******************************* auxxch ****************************** */
 
 static void
-auxxch(
-#ifdef ANSI5
-  void
-#endif
-  )
+auxxch(void)
 {
   indxbk *ix;                      /* Scratch */
   long i;                          /* Scratch */
@@ -212,14 +208,8 @@ auxxch(
 
 /* Unchain block "blk" */
 
-#ifdef ANSI5
 static void *
 qunchn(void *blk)
-#else
-static void *
-qunchn(blk)
-void *blk;
-#endif
 {
   ((hddr *) blk)->next->prev = ((hddr *) blk)->prev;
   ((hddr *) blk)->prev->next = ((hddr *) blk)->next;
@@ -230,15 +220,8 @@ void *blk;
 
 /* Chain block "new" before block "old" */
 
-#ifdef ANSI5
 static void
 qchain(void *new, void *old)
-#else
-static void
-qchain(new, old)
-void *new;
-void *old;
-#endif
 {
   ((hddr *) new)->next = (hddr *) old;
   ((hddr *) new)->prev = ((hddr *) old)->prev;
@@ -248,20 +231,10 @@ void *old;
 
 /* ******************************* getmem ****************************** */
 
-#ifdef ANSI5
 static void *
 getmem(chainbase *cb, size_t sz, char *desc)
 {
   size_t roomleft;                 /* Amount of "page" left */
-#else
-static void *
-getmem(cb, sz, desc)
-chainbase *cb;
-unsigned int sz;
-char *desc;
-{
-  unsigned int roomleft;           /* Amount of "page" left */
-#endif
   unsigned char *pg;               /* Addresses "page"-size blocks */
 /*  */
   if (cb->next != cb)              /* There are free blocks */
@@ -296,14 +269,8 @@ char *desc;
 /* Get the pair of blocks required to create an empty mmap'd group, initialising
  * them as much as possible */
 
-#ifdef ANSI5
 static indxbk *
 get2(unsigned char *linptr)
-#else
-static indxbk *
-get2(linptr)
-unsigned char *linptr;
-#endif
 {
   indxbk *ix;                      /* Scratch */
   suppbk *sp;                      /* Scratch */
@@ -334,15 +301,8 @@ unsigned char *linptr;
  * the group: that is how we append. The address of the offset block found is
  * available to other functions in this compilation unit as xxoffs */
 
-#ifdef ANSI5
 static unsigned short *
 gtofst(indxbk * ix, int offset)
-#else
-static unsigned short *
-gtofst(ix, offset)
-indxbk *ix;
-int offset;
-#endif
 {
   suppbk *sp;                      /* Scratch */
   int absoff;                      /* Offset including deleted lines */
@@ -402,11 +362,7 @@ int offset;
  * (pointr points to a block whose 1st non-deleted record is ptrpos)  */
 
 static int
-splitb(
-#ifdef ANSI5
-  void
-#endif
-  )
+splitb(void)
 /* The initial implementation simply duplicates the offset block where the split
  * is (except if the split is on the first line in that block). The 2 new groups
  * have the same file addresses, and block contents are unaltered.
@@ -1033,16 +989,8 @@ finitl()
 
 /* ******************************* newmap ****************************** */
 
-#ifdef ANSI5
 void
 newmap(ino_t inode, off_t size, unsigned char *addr)
-#else
-void
-newmap(inode, size, addr)
-ino_t inode;
-off_t size;
-unsigned char *addr
-#endif
 {
   mapbk *mp;                       /* Scratch */
 
@@ -1071,15 +1019,8 @@ unsigned char *addr
  * - the pointer (aux or main) being used must be at eof, so there is no
  *   question of having to update the "other" pointer above it */
 
-#ifdef ANSI5
 void
 insmem(unsigned char *linptr, unsigned char *last)
-#else
-void
-insmem(linptr)
-unsigned char *linptr;
-unsigned char *last;
-#endif
 {
   indxbk *ix;                      /* Scratch */
   suppbk *sp;                      /* Scratch */
@@ -1151,14 +1092,8 @@ unsigned char *last;
 
 /* ******************************* ismapd ****************************** */
 
-#ifdef ANSI5
 int
 ismapd(ino_t inode)
-#else
-int
-ismapd(inode)
-ino_t inode;
-#endif
 {
   mapbk *mp;                       /* Scratch */
 /*  */

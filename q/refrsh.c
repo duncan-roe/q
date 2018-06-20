@@ -1,7 +1,7 @@
 /* R E F R S H
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2018 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -19,22 +19,14 @@
  * completely updated or not.
  */
 #include <stdio.h>
-#ifdef ANSI5
 #include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
-#endif
 #include "prototypes.h"
 #include "scrnedit.h"
 /* */
-#ifdef ANSI5
 void
 refrsh(scrbuf5 *xline)
-#else
-void
-refrsh(xline)
-scrbuf5 *xline;
-#endif
 {
 /* LOCAL VARIABLES
  * ===============
@@ -83,46 +75,30 @@ p1002:
 /*
  * Error if drop through!
  */
-  puts("\r\nDiscrepancy fwd but not back (REFRSH)\r");
+  fprintf(stderr, "%s", "\r\nDiscrepancy fwd but not back (REFRSH)\r\n");
   return;
 /* */
 p1005:
   setcrs(pos1);
-  if (crscnt == 0)
-    goto p1006;                    /* Skip o/p if none */
-  write(1, crsbuf,
-#ifdef ANSI5
-    (size_t)
-#endif
-    crscnt);
-p1006:i = pos2 - pos1 + 1;         /* No. of chars to rewrite */
-  write(1, (char *)&reqd[pos1],
-#ifdef ANSI5
-    (size_t)
-#endif
-    i);
+  if (crscnt)
+    write(1, crsbuf, (size_t)crscnt);
+  i = pos2 - pos1 + 1;             /* No. of chars to rewrite */
+  write(1, (char *)&reqd[pos1], (size_t)i);
   scurs = pos2 + 1;                /* Where screen cursor now is */
-  memcpy((char *)screen, (char *)reqd,
-#ifdef ANSI5
-    (size_t)
-#endif
-    WCHRS);
+  memcpy((char *)screen, (char *)reqd, (size_t)WCHRS);
 /*
  * P1003 - All chars were ok or are now. Check position of and if
- *	  necessary move cursor.
+ *         necessary move cursor.
  */
-p1003:if (endlin)
-    goto p1009;                    /* Don't cursor posn if DISPLY */
-  if (scurs != cursr)
-    goto p1008;
-/* Move cursor */
-p1009:rfrsh = true;
+p1003:
+  if (!endlin)
+  {
+    if (scurs != cursr)
+    {
+      setcrs(cursr);
+      write(1, crsbuf, (size_t)crscnt);
+    }                              /* if (scurs != cursr) */
+  }                                /* if (!endlin) */
+  rfrsh = true;
   return;
-p1008:setcrs(cursr);
-  write(1, crsbuf,
-#ifdef ANSI5
-    (size_t)
-#endif
-    crscnt);
-  goto p1009;
 }

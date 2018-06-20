@@ -82,22 +82,14 @@ setcrs(int posn)
   if (absnum < rtn)
   {
   p1101:
-    memcpy((char *)crsbuf, absbuf,
-#ifdef ANSI5
-      (size_t)
-#endif
-      absnum);
+    memcpy((char *)crsbuf, absbuf, (size_t)absnum);
     crscnt = absnum;
   }
   else
   {
     crsbuf[0] = '\r';
     if (scurs ^= 0)
-      memcpy((char *)&crsbuf[1], (char *)reqd,
-#ifdef ANSI5
-        (size_t)
-#endif
-        scurs);
+      memcpy((char *)&crsbuf[1], (char *)reqd, (size_t)scurs);
     crscnt = rtn;                  /* Set final # to do */
   }
   return;
@@ -112,20 +104,12 @@ p1003:fwd = scurs - oldcrs;        /* # chars if refresh forward */
     if (ca < fwd)                  /* If ^A faster */
     {
       crscnt = ca;                 /* Set no. of chars in sequence */
-      memcpy((char *)crsbuf, (char *)cachrs,
-#ifdef ANSI5
-        (size_t)
-#endif
-        cacnt);
+      memcpy((char *)crsbuf, (char *)cachrs, (size_t)cacnt);
       return;                      /* Finished */
     }
   }
   if (absnum < fwd)
     goto p1101;                    /* J VT100 is faster */
   crscnt = fwd;                    /* Set result */
-  memcpy((char *)crsbuf, (char *)&reqd[oldcrs],
-#ifdef ANSI5
-    (size_t)
-#endif
-    fwd);                          /* Refresh */
+  memcpy((char *)crsbuf, (char *)&reqd[oldcrs], (size_t)fwd); /* Refresh */
 }
