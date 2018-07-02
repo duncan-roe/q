@@ -67,6 +67,14 @@ typedef enum command_state
   HAVE_LINE_NUMBER,
 } command_state;
 
+typedef enum qrc_state
+{
+  LOCAL,
+  HOME,
+  ETC,
+  GIVE_UP,
+} qrc_state;                       /* typedef enum qrc_state */
+
 /* Externals that are not in any header */
 
 long timlst;
@@ -748,6 +756,7 @@ main(int xargc, char **xargv)
   bool quiet_flag = false;         /* -q seen */
   bool verbose_flag = false;       /* -v seen */
   command_state cmd_state = TRY_INITIAL_COMMAND;
+  qrc_state e_state = LOCAL;
   bool fullv = false;              /* Fulll VIEW wanted */
   q_yesno answer;
   char *initial_command = NULL;
@@ -1056,7 +1065,7 @@ main(int xargc, char **xargv)
   tbstat = -1;                     /* Xlation table not set up */
   stdidx = -1;                     /* No U-use file */
 /*
- * Use .qrc if it exists here or in $HOME
+ * Use .qrc if it exists here or in $HOME; otherwise use /etc/qrc
  */
   if (do_rc)
   {
@@ -1074,46 +1083,44 @@ main(int xargc, char **xargv)
     }                              /* if (stdinfo[stdidx].funit == -1) */
     my_close(0);
 
-/* Try for .qrc or ~/.qrc */
-    logtmp = true;                 /* retry on failure */
-    strcpy(buf, ".qrc");
-  retry_qrc:
-    do
-      i = open_buf(O_RDONLY, 0);
-    while (i == -1 && errno == EINTR);
-    if (i == -1)
+/* Try for .qrc, ~/.qrc or ... */
+    for (;;)
     {
-      if (logtmp)
+      switch (e_state)
       {
-        logtmp = false;
-        strcpy(buf, "~/.qrc");
-        tildexpn(buf);
-        goto retry_qrc;
-      }                            /* if (logtmp) */
-      pop_stdin();
-    }                              /* if (i == -1) */
-    else
-    {
-      if (i)
-      {
-        do
-          j = dup2(i, 0);
-        while (j == -1 && errno == EINTR);
-        if (j == -1)
-        {
-          fprintf(stderr, "\r\n%s. (dup2(%d, 0))\r\n", strerror(errno), i);
-          fprintf(stderr, "Serious problem - new stdin opened on funit %d\r\n",
-            i);
-          refrsh(NULL);
+        case LOCAL:
+          strcpy(buf, ".qrc");
+          break;
+        case HOME:
+          strcpy(buf, "~/.qrc");
+          tildexpn(buf);
+          break;
+        case ETC:
+          strcpy(buf, "/etc/qrc");
+          break;
+        case GIVE_UP:
           pop_stdin();
-          READ_NEXT_COMMAND;
-        }                          /* if (j == -1) */
-        else
-          my_close(i);
-      }                            /* if (i) */
-      duplx5(true);                /* Assert XOFF recognition */
-      printf("> u %s\r\n", buf);   /* Simulate a command */
-    }                              /* if (i == -1) else */
+          break;
+      }                            /* switch (e_state) */
+      if (e_state == GIVE_UP)
+        break;
+      do
+        i = open_buf(O_RDONLY, 0);
+      while (i == -1 && errno == EINTR);
+      if (i != -1)
+        break;
+      e_state++;
+    }                              /* for (;;) */
+    if (i)
+    {
+      my_close(i);
+      fprintf(stderr, "Serious problem - new stdin opened on funit %d\r\n", i);
+      refrsh(NULL);
+      pop_stdin();
+      READ_NEXT_COMMAND;
+    }                              /* if (i) */
+    duplx5(true);                  /* Assert XOFF recognition */
+    printf("> u %s\r\n", buf);     /* Simulate a command */
   }                                /* if (do_rc) */
 /*
  * Main command reading loop
