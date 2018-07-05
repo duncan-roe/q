@@ -1,5 +1,0 @@
-fd y /* ************************ C + git + fm -s ************************
-fi u ^ND^N^<4003>/cmacs^J
-fi u ^ND^N^<4003>/git.qm^J
-fm -s
-n ' ' '!make -j3^J^NU

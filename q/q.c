@@ -1096,7 +1096,7 @@ main(int xargc, char **xargv)
           tildexpn(buf);
           break;
         case ETC:
-          strcpy(buf, "/etc/qrc");
+          strcpy(buf, ETCDIR "/qrc");
           break;
         case GIVE_UP:
           pop_stdin();
