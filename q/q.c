@@ -112,6 +112,7 @@ long ptrpos = 0;
 static long count = 0;             /* Returned by GETNUM seq */
 static char *help_dir;
 static char *help_cmd;
+static char *etc_dir;
 static bool nofile;
 static int tmode;                  /* Mode of file */
 static int towner;                 /* Owner of file */
@@ -858,11 +859,20 @@ main(int xargc, char **xargv)
   if (!(sh = getenv("SHELL")))
     sh = "/bin/sh";
   if (!(help_dir = getenv("Q_HELP_DIR")))
-    help_dir = "/usr/local/lib/q";
+    help_dir = HELP_DIR;
   if (!(macro_dir = getenv("Q_MACRO_DIR")))
-    macro_dir = help_dir;
+  {
+/* If HELP_DIR and MACRO_DIR were initially the same, */
+/* keep them the same now */
+    if (strcmp(HELP_DIR, MACRO_DIR))
+      macro_dir = MACRO_DIR;
+    else
+      macro_dir = help_dir;
+  }                              /* if (!(macro_dir = getenv("Q_MACRO_DIR"))) */
   if (!(help_cmd = getenv("Q_HELP_CMD")) && !(help_cmd = getenv("PAGER")))
-    help_cmd = "more";
+    help_cmd = HELP_CMD;
+  if (!(etc_dir = getenv("Q_ETC_DIR")))
+    etc_dir = ETC_DIR;
   fmode = dfltmode;                /* Assert defaults */
   if (optind < argc)
     cmd_state = Q_ARG1;
@@ -1096,10 +1106,12 @@ main(int xargc, char **xargv)
           tildexpn(buf);
           break;
         case ETC:
-          strcpy(buf, ETCDIR "/qrc");
+          snprintf(buf, sizeof buf, "%s%s", etc_dir, "/qrc");
           break;
         case GIVE_UP:
           pop_stdin();
+/* The /etc/file should exist. so output an error message */
+          fprintf(stderr, "%s. %s (open) (Installation problem?)\r\n", strerror(errno), buf);
           break;
       }                            /* switch (e_state) */
       if (e_state == GIVE_UP)
@@ -1111,16 +1123,19 @@ main(int xargc, char **xargv)
         break;
       e_state++;
     }                              /* for (;;) */
-    if (i)
+    if (e_state != GIVE_UP)
     {
-      my_close(i);
-      fprintf(stderr, "Serious problem - new stdin opened on funit %d\r\n", i);
-      refrsh(NULL);
-      pop_stdin();
-      READ_NEXT_COMMAND;
-    }                              /* if (i) */
-    duplx5(true);                  /* Assert XOFF recognition */
-    printf("> u %s\r\n", buf);     /* Simulate a command */
+      if (i)
+      {
+        my_close(i);
+        fprintf(stderr, "Serious problem - new stdin opened on funit %d\r\n",
+          i);
+        pop_stdin();
+        READ_NEXT_COMMAND;
+      }                            /* if (i) */
+      duplx5(true);                /* Assert XOFF recognition */
+      printf("> u %s\r\n", buf);   /* Simulate a command */
+    }                              /* if (e_state != GIVE_UP) */
   }                                /* if (do_rc) */
 /*
  * Main command reading loop

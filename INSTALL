@@ -1,22 +1,28 @@
-Q comes configured for Linux and Cygwin. Type "make" in the source directory
-below, then install the q executable where you will.
+ Installation instructions for q
+ ============ ============ === =
 
-Absent environment variable settings, Q expects to load its macros from
-/usr/local/lib/q/. You can mv the help directory below there, or you can place a
-symbolic link in /usr/local/lib to point to it here (or wherever else you want
-to have it).
+Q offers autoconf-style configurability without actually using autoconf.
 
-Alternatively, you can export Q_HELP_DIR to nominate any directory location.
-(See the file help/ev).
+The file "config.mak" sets default locations and features. To change from these,
+either edit that file or supply values to *make*, e.g.:
 
- OTHER PLATFORMS
+ make PREFIX=/usr HELP_CMD="less -X" install
 
-Under Windows, you can make Q available to CMD.EXE (i.e. outside of the Cygwin
-environment) by copying q.exe to C:\WINDOWS. You also need to copy a Cygwin
-library - you'll get told which one the first time you try to use Q.
+Additionally, items listed under the Features heading may be changed at (q) run
+time by environment variables which are the item name prepended by Q_, e.g.
+
+  export Q_HELP_CMD="less -X"
+
+MACRO_DIR is treated specially in this regard: if it's the same as HELP_DIR then
+it will stay the same as HELP_DIR when Q_HELP_DIR is in the environment but
+Q_MACRO_DIR isn't.
+
+Q's macro debugger requires that q is compiled with debug.
+
+Q builds under Linux and Cygwin.
 
 Q should build under any POSIX-compliant system with GNU make, but the author
 hasn't had access to other formerly-supported platforms for a while to test
 this. The Makefile needs GNU make (may be available as gmake especially on
 Solaris). Vendors' compilers should be OK absent gcc: the code tries very hard
-not to use gcc extensions. Non-ANSI compiler support is being withdrawn however.
+not to use gcc extensions. Non-ANSI compilers are no longer supported.
