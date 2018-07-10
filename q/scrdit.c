@@ -1135,6 +1135,14 @@ p1905:
         macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
 
+      case 04012:                  /* Return UTC date */
+      {
+        time_t t = time(NULL);
+        strftime(tbuf, sizeof tbuf, DTformat, gmtime(&t));
+      }
+        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+        break;
+
       default:
         found = false;
         break;

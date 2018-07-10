@@ -66,5 +66,6 @@ N4007  returns format in effect for displaying floating point values.
 N4010  returns format in effect for displaying the current time.
        The user can set this pseudomacro e.g. "n 4010 %F %T %z"
 N4011  returns the current local time as formatted by ^N^<4010>
+N4012  returns the current UTC time as formatted by ^N^<4010>
 N7xxx  returns contents of ALU memory location xxx.
 N13xxx returns contents of FPU memory location xxx.
