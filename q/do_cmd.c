@@ -4,12 +4,13 @@
  *
  * Copyright (C) 1995, Duncan Roe & Associates P/L
  * Copyright (C) 2002, Duncan Roe
- * Copyright (C) 2012,2014,2017 Duncan Roe
+ * Copyright (C) 2012,2014,2017,2018 Duncan Roe
  */
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 #include "prototypes.h"
 #include "edmast.h"
 #include "c1in.h"
@@ -42,7 +43,21 @@ do_cmd()
   (void)scrdtk(1, (unsigned char *)NULL, 0, oldcom); /* Skip over '!' */
   (void)scrdtk(4, (unsigned char *)buf, BUFMAX, oldcom); /* Get shell command */
   final5();
-  result = cmd(buf);
+/* Unary exclamation mark gets interactive shell */
+  if (buf[0])
+  {
+    result = cmd(buf);
+  }                                /* if (buf[0]) */
+  else
+  {
+    if (!USING_FILE)
+      puts("Exit from shell to restart");
+    result = system(sh);
+    if (result < 0)
+      fprintf(stderr, "%s. (system(\"%s\")\n)", strerror(errno), sh);
+    if (!USING_FILE)
+      puts("Re-entering Q");
+  }                                /* if (buf[0]) else */
   init5();
   return result;
 }

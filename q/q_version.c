@@ -1,4 +1,4 @@
-#define Q_VERSION 53.5
+#define Q_VERSION 53.6
 #include <stdio.h>
 #include "edmast.h"
 void

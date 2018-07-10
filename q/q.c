@@ -1298,8 +1298,6 @@ p1201:
       goto p1401;
     case 'N':
       goto p1501;
-    case 'K':
-      goto p1525;
     case 'Y':
       goto p1607;
     case 'b':
@@ -2414,22 +2412,6 @@ p1501:
     READ_NEXT_COMMAND;             /* No error */
   REREAD_CMD;
 /*
- * K - pop a shell prompt
- */
-p1525:
-  if (!eolok())
-    REREAD_CMD;
-  if (!USING_FILE)
-    puts("Exit from shell to restart\r");
-  final5();
-  i = system(sh);
-  init5();
-  if (i < 0)
-    fprintf(stderr, "%s. (system(\"%s\"))", strerror(errno), sh);
-  if (!USING_FILE)
-    puts("Re-entering Q\r");
-  READ_NEXT_COMMAND;
-/*
  * FX - Exchange the functions of 2 keyboard keys
  */
 p1904:
@@ -2782,7 +2764,7 @@ p2009:
   strcat(ndel, buf);
   READ_NEXT_COMMAND;
 /*
- * FP or ! - DO SHELL COMMAND
+ * ! - DO SHELL COMMAND
  */
 p1801:
   if (do_cmd())
