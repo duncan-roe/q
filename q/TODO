@@ -1,7 +1,7 @@
 "q -l" to insert "fm +l" command before reading file
 New active pseudo to format output of integers (e.g. as hex / octal)
 New active pseudo to output UTC time
-Use GNU autotools so can package for Slackware
+DONE (sort-of) use GNU autotools so can package for Slackware
 Search up directory tree for .qrc
 Use .qrc associated with file to edit
 Do Delete properly (not as an edit)
@@ -23,7 +23,6 @@ INTERNALS
 	STARTED: Fix runindent label squashes
 	More GIVE_UP macros - use error_exit as standard label
 	Use GNU tilde expansion function
-	DONE: Drop non-ANSI C support
 	STARTED: rework asg2 blocks (including xistcs.c)
 	STARTED: Use meaningful names instead of logtemp &c.
 	STARTED Tidy scmnrd.c in particular

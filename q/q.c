@@ -659,7 +659,7 @@ init_alu(void)
   strcpy(FPformat, "%g");
 
 /* Set up initial date format */
-  strcpy(DTformat, "%F_%T");
+  strcpy(DTformat, "%F %T %z");
 
 /* Set up indicies and lookup dictionary */
   for (i = 0, j = 0; i < num_alu_opcode_table_entries; i++)
@@ -1111,7 +1111,8 @@ main(int xargc, char **xargv)
         case GIVE_UP:
           pop_stdin();
 /* The /etc/file should exist. so output an error message */
-          fprintf(stderr, "%s. %s (open) (Installation problem?)\r\n", strerror(errno), buf);
+          fprintf(stderr, "%s. %s (open) (Installation problem?)\r\n",
+            strerror(errno), buf);
           break;
       }                            /* switch (e_state) */
       if (e_state == GIVE_UP)
