@@ -3,7 +3,7 @@
  Executes the rest of the command line as a shell command.
  Parameters: none. The rest of the line is read as raw text.
  Notes
- - there is 1 command that is actually obeyed by Q
- 1. cd: changes Q's working direcory
- - As with other Q commands, the internal commands are case-insensitive (but the
-path name for CD is not).
+ - Unary "!" pops an interactive shell
+ - Q implements the "cd" command internally
+ - As with other Q commands, "cd" is case-insensitive (but the path name for CD
+is not).

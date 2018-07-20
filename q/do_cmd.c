@@ -29,7 +29,7 @@ do_cmd()
           buf[0] = '~';
           buf[1] = '\0';
         }
-        tildexpn(buf);
+        tildexpn(buf, BUFMAX);
         if (chdir(buf))
         {
           printf("%s. %s (chdir)\r\n", strerror(errno), buf);

@@ -212,7 +212,7 @@ get_file_arg(void)
   nofile = oldcom->toktyp == eoltok;
   if (!nofile && oldcom->toktyp != nortok)
     return false;
-  tildexpn(buf);                   /* Do tilde expansion */
+  tildexpn(buf, PTHMAX);           /* Do tilde expansion */
   return true;
 }                                  /* get_file_arg() */
 
@@ -1103,7 +1103,7 @@ main(int xargc, char **xargv)
           break;
         case HOME:
           strcpy(buf, "~/.qrc");
-          tildexpn(buf);
+          tildexpn(buf, Q_BUFSIZ);
           break;
         case ETC:
           snprintf(buf, sizeof buf, "%s%s", etc_dir, "/qrc");

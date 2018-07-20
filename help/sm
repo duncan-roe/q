@@ -8,24 +8,24 @@ q.v. To key a character in the alternate character set (with high parity
 usually), precede it with ^W, since Q asserts ISTRIP (only input the least
 significant 7 bits of each character). There are currently just under 2000
 possible macros in all, but only the first 192 can be invoked directly from the
-keyboard. The others may be invoked from other macros, which are held
+keyboard, while all macros can be acessed using the fi (immediate macro)
+command. All macros may also be invoked from other macros, which are held
 internally as arrays of 16-bit characters. Type 'H N' for how to define macros.
-Examples of macros can be seen in the file 'scmacs' in the directory /usr/q (on
-Unix systems). Most of the macros in that file do not in fact fall into the
-category of simple macros as defined above - they usually contain '^N' followed
-by an upper-case letter, which is a call to a pseudo-macro. Available pseudos
-can be listed by typing 'H PM'. They add considerable extra power to the macro
-facility by, for example, conditionally obeying part of a macro, testing such
-things as whether the cursor is at end-of-line; implementing a subroutine
-call/return stack, complete with alternate returns; and so on. For extra
-information on the more advanced pseudo-macro facilities offered, type 'H
-SM-X'.
+Examples of macros can be seen by entering the command "h fndtn.qm" which lists
+the file fndtn.qm as long as macros and help files are in the same directory
+(which is the installation default). Most of the macros in that file do not in
+fact fall into the category of simple macros as defined above - they usually
+contain '^N' followed by an upper-case letter, which is a call to a
+pseudo-macro. Available pseudos can be listed by typing 'H PM'. They add
+considerable extra power to the macro facility by, for example, conditionally
+obeying part of a macro, testing such things as whether the cursor is at
+end-of-line; implementing a subroutine call/return stack, complete with
+alternate returns; and so on.
  Note that as alluded to above, ^P/^C and ^W have precedence over ^N, i.e. to
 invoke the macro ^P you have to input ^N^P^P because the first ^P just gets the
 editor ready for what's coming next. Similarly ^N^W^A invokes the macro
 identified by the character ALT-CONTROL-A. DEL with or without parity cancels
 the ^N (e.g. if it was typed by mistake)
- Help is available on all the pseudo-macros separately - 'H PM-X' for details.
  Error handling
  Normally, an error from a command issued by a macro rings the bell and quits
 executing macros (returns to keyboard/command source) with the usual invitation

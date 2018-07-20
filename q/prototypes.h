@@ -63,7 +63,7 @@ void readfl(void);
 void writfl(long wrtnum);
 void xlateset(void);
 void showchar(unsigned char c);
-void tildexpn(char *path);
+void tildexpn(char *path, int pthsiz);
 void setwinsz(int msg);
 void newlin(void);
 void rerdcm(void);

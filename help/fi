@@ -1,10 +1,10 @@
   \/ F I - I M M E D I A T E _ M A C R O \/
 
-Defines a new screenedit macro to be obeyed immediately.
+Defines a new macro to be obeyed immediately.
 
-This command enables U-USE files to invoke screenedit macros without having to
-contain real ^N characters. FI macros have a small stack, (currently 16) and use
-macros N101 (macro 65) onwards.
+This command enables access to any macro from the keyboard or a U-USE file. FI
+macros have a small stack, (currently 16) and use macros N101 (macro 65)
+onwards.
  Parameter
  <macro text> The unquoted definition (as if defined using N-NEWMACRO with a
               macro id of 3 or more octal digits) ("h n" gives more details).

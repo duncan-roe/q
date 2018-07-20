@@ -13,7 +13,8 @@ t2 10 15 24
                          (including all trailing spaces)
  ^N^G    007  Either   Append 1 space then join next line
                          (Will be in edit mode on completion)
- ^N^H    010  Edit     Outdent current line by tab amount (outputs DEL characters)
+ ^N^H    010  Edit     Outdent current line by tab amount
+                         (outputs DEL characters)
  ^N^I    011  Either   Output tab-amount spaces (i.e. indent, if in insert mode)
  ^N^J    012  Either   Single "/*" comment beautify. Can invoke by ^N^M
  ^N^K    013  Either   Word delete. (from cursor to next space incl)
@@ -77,6 +78,13 @@ t2 10 15 24
  ^N^W&   246  Command  git diff current file. n522 gives options
                          (compare this with ^N&. In general, ^N& is primary VCS
                           and ^N^W& is secondary. E.g. git.qm sets git / RCS)
+ ^N^W8   270  Either   Expands to the UTC time formatted by n4010
+ ^N^Wp   360  Command  Define string to be replaced over multiple files
+                         (See note 2)
+ ^N^Wq   361  Command  Define replacement string over multiple files
+                         (See note 2)
+ ^N^Wr   362  Command  Perform replacemenmt over multiple files
+                         (See note 2)
 
  UTILITY MACROS
  ======= ======
@@ -85,8 +93,11 @@ Macros can use the following macros to perform common functions
 
  Macro   Tabs Context  Action
  =====   ==== =======  ======
+  522         Command  define VCS options (for RCS, Git &c.)
  1001    a    Command  Dump context (mode & line #)
  1011    a    Command  Restore context (mode & line #)
+ 1401         Command  Define to be ^NU for l & y instead of fl & fy
+                         (for ^N^Wp, ^N^Wq & ^N9)
 
 
  NOTES
@@ -95,7 +106,7 @@ Macros can use the following macros to perform common functions
 1. The ^N^W^R / ^N^W^H / ^N^W^Z suite
    === ====== = ====== = ====== =====
 
-These macros work together to apply the same change to a numbber of lines that
+These macros work together to apply the same change to a number of lines that
 you specify in one or more M-Modify commands.
 
 ^N^W^R creates an edit sequence. The sequence may contain control characters:
@@ -118,3 +129,38 @@ except you don't enter "M " above: the macro does that.
 Either sequence may of course contain edit characters to modify the basic
 operation, e.g. ^E to toggle insert, ^F, ^B, ^H, ^Z &c. to move the cursor, and
 so on.
+
+2. The ^N^Wp / ^N^Wq / ^N^Wr suite
+   === ===== = ===== = ===== =====
+
+These macros work together to replace one string by another in all the files on
+Q's command line which contain the first string (other files are not touched).
+By default the string is treated as a token (using fl & fy): change n1401 to ^NU
+(from f^NU) to use l & y commands instead.
+ Example: enter the characters below to change token foo to bar in all files
+that Q was invoked with which contain the token foo:
+
+foo^N^Wpbar^N^Wq^N^Wr
+
+For advanced users: ^N^Wr can perform arbitrarily complex edits on files which
+qualify for being so edited according to an arbitrarily complex decision
+process.
+ In detail: ^N^Wr invokes n1100 (the DECIDER macro) to determine whether the
+current file is a candidate for editing. If it is, the ^N^Wr next invokes n1101
+(the EDITOR macro), and S-saves the result. Either way, ^N^Wr next issues a
+Q-quit command, which moves on to editing the next file on the command line if
+there is one else causes the calling macro to return (forces an ^NU).
+ Rules for n1100 & n1101: these macros must be invoked in command mode
+(effectively at the command prompt) and must leave Q that way on return. n1100
+returns immediately if the current file is not a candidate; otherwise it returns
+2 characters further on in the calling macro (i.e. after invoking ^NI once).
+ ^N^Wp defines n1100 and ^N^Wq defines n1101. (^N^Wp also rewinds Q to be
+editing the first file on the command line by issuing the command "q $1", unless
+you disabled that by changing m1407).
+ In the example above, the sequence "foo^N^Wp" defines n1100 as
+ "n 1100 fl 'foo'^J^NC^NU^[^NI^NU", and bar^N^Wq defines n1101 as
+ "n 1101 ^ND^N^<1106>fy 'foo' 'bar'^J^NU". As supplied, n1106 is a no-op (^NU),
+so all n1101 is doing is replacing foo with bar.
+ n1106 & n1107 can optionally be defined as pre- and post-edit actions (such as
+check out from and check back in to a version control system). ^N^Wr invokes
+n1107 after the file is saved.

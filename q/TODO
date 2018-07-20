@@ -9,7 +9,7 @@ Give some kind of acknowledgement to ^NF (& ^NO?)
 -H option to give invocation help
 Can test if a macro is defined: n4007 x; ^ND^N^<4007>
 Can set actual amount for "1 line forward / back" half-page / full-page
-Re-check whether cmd.c needs to put command buffer in quotes
+DONE: Re-check whether cmd.c needs to put command buffer in quotes
 Properly reinstate output optimisation (old hack removed as "quick fix")
  needs select() /poll()
  needs nanosleep when outputting chars
@@ -20,7 +20,7 @@ INTERNALS
 	STARTED Have a bool enum for logicals
 	STARTED: Fix runindent label squashes
 	More GIVE_UP macros - use error_exit as standard label
-	Use GNU tilde expansion function
+	DONE: Use GNU tilde expansion function
 	STARTED: rework asg2 blocks (including xistcs.c)
 	STARTED: Use meaningful names instead of logtemp &c.
 	STARTED Tidy scmnrd.c in particular
@@ -28,5 +28,5 @@ INTERNALS
 	use stdint types
 Show what arguments Q started with (?)
 STARTED: Catalogue of useful macros
-DONE: Whithdraw k cmd in favour of unary ! (! needs changing to do this)
 New pseudomacro to replace "/*" with arbitrary seq: #, // &c
+FQVERSN opcode to push Q version to F

@@ -40,6 +40,7 @@ N @ '^NO9^ND^N^<401>^NR9^NU Non-space -> equals
 N401 ^NA^NU^NG ^NS=^Y^X^N^@ ; Used by ^N-
 N 7 '^NC^NS^N\^H^NA*^@^NM^<1201>^U^<ZAM>^<RST>^ND^N^<4005>^NM^<7000>^U^<PS8>^<PSH 0>^<SUB>^<POP 0>^<PSHMODE>^<DUP>^<PS2P30>^<PS2P31>^<OR>^<NOT>^<AND>^<POPMODE>^ND^N^<777>^ND^N^<1201>^J^<POPMODE>
 N 8 '^N^<4011> ; N 8: get the date
+N270 ^N^<4012> ; N W 8: get the date (UTC)
 N 9 '^NC^NS^N\^<PSHMODE>^ND^N^<425>^<POPMODE>^NU
 N425 ^H^NA^NL^NM^<423>^Ufv^J^ND^N^<1401>l '^ND^N^<423>'^J^NC^NU^[fb^Jg-1^Jv^Jp1^J^NU
 N423 /* N 9 puts token to match here
@@ -68,7 +69,7 @@ N347 ^NC^NS^N\!ci -u -m'^ND^N^<1103>' "^ND^N^<4002>"^J^NU
 *        Else invoke n1101.
 *        Go to line 1 & turn off indenting before calling each macro
 * n360 & n361 - generate n1100 & n1101 for n362
-N360 ^NC^NS^N\^NM^<1202>^Un1100 ^ND^N^<1401>l '^ND^N^<1202>'^*J^*NC^*NU^*[^*NI^*NU^J^NU
+N360 ^NC^NS^N\^NM^<1202>^U^ND^N^<1407>n1100 ^ND^N^<1401>l '^ND^N^<1202>'^*J^*NC^*NU^*[^*NI^*NU^J^NU
 N361 ^NC^NS^N\^NM^<1201>^Un1101 ^*ND^*N^*<1106>^ND^N^<1401>y '^ND^N^<1202>' '^ND^N^<1201>'^*J^*NU^J^NU
 N362 ^NC^NS^N\^[n523 ^ND^N^<4000>^*NU^J^ND^N^<524>^[fm ^ND^N^<523>^J^NU
 * n367 (^N^Ww) Check in current source with message 1102
@@ -177,5 +178,6 @@ N1403 $C^NU ; override with invocation wildcard (^N^Ws)
 N1404 -wn^NU ; grep options for ^N^W^F
 N1405 ^NU ; Command to run after N206 (^N^W^F) (e.g. |k -E -S^NU, |cat^NU)
 N1406 ^NI^NU ; Change to ^NU for no comments from ^NE / ^NL macros (all languages)
+N1407 q$1^J^NU ; Change to ^NU to stop automatic q$1 by ^N^Wp
 n426 /* N427 & N430 are short-form ^NE / ^NL (all languages)
 N1500 /* 15XX - RESERVED FOR MACRO PROGRAMS (*.qm)

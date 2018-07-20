@@ -10,26 +10,63 @@
  * the input string unchanged - failure will occur when it is used.
  */
 #include <stdio.h>
+#include <errno.h>
 #include <string.h>
 #include <sys/types.h>
+#include <pwd.h>
 #include <stdlib.h>
 #include "prototypes.h"
 void
-tildexpn(char *path)
+tildexpn(char *path, int pthsiz)
 {
   int ln;                          /* I/p string length */
-  char temp[Q_BUFSIZ];               /* Holding buffer */
-  char *hompth;                    /* Pathname of home dir */
+  int tildeln;                     /* Length of tilde part (incl '~') */
+  int homlen;                      /* L.O. expanded HOME path (excl trlg /) */
+  char *hompth = NULL;             /* Pathname of home dir */
+  char *p;
+  char p_saved;
+  struct passwd *pwent;
+
   if (path[0] != '~')
     return;
-  if ((ln = strlen(path)) >= BUFMAX)
+  if ((ln = strlen(path)) >= pthsiz)
     return;                        /* R too big to massage */
-  if (!(hompth = getenv("HOME")))
-    return;                        /* R can't get home pathname */
-  if (strlen(hompth) + ln > BUFMAX)
+
+/* get length of tilde part */
+  for (p = path + 1, tildeln = 1; *p && *p != '/'; p++, tildeln++)
+    ;
+
+  if (tildeln == 1)
+    hompth = getenv("HOME");       /* Bare ~, use $HOME */
+  else
+  {
+    p_saved = *p;
+    *p = 0;                        /* Null terminate user name in path */
+    setpwent();                    /* Rewind /etc/passwd from last time */
+    do
+    {
+      do
+      {
+        errno = 0;
+        pwent = getpwent();
+      }
+      while (pwent == NULL && errno == EINTR);
+      if (errno || !pwent)
+        break;
+      if (!strcmp(path + 1, pwent->pw_name))
+      {
+        hompth = pwent->pw_dir;
+        break;
+      }                            /* if (!strcmp(path + 1, pwent->pw_name) */
+    }
+    while (pwent);
+    *p = p_saved;                  /* Restore slash or NUL */
+  }                                /* if (tildeln == 1) else */
+  if (!hompth)
+    return;
+  if ((homlen = strlen(hompth)) + ln > pthsiz)
     return;                        /* R not room for full pathname */
-  strcpy(temp, path + 1);          /* Take copy of rest of path */
-  strcpy(path, hompth);            /* Copy in home path */
-  strcat(path, temp);              /* Append original remainder */
+  memmove(path + homlen, path + tildeln, ln - tildeln + 1);
+  memcpy(path, hompth, homlen);    /* Copy in home path */
   return;                          /* Finished */
 }
