@@ -1,4 +1,4 @@
-fd y /* C macros that differ from default FTN ones
+fd y /* C macros
 N202 ^NC^NS^N\q ^ND^N^<4003>/c.qm^J^NU
 N203 ^NC^NS^N\u ^ND^N^<4003>/c.qm^J^NU
 t3 36 81
@@ -15,7 +15,7 @@ N421 ^NBb ^@^NBb^N^<421>
 N422 ^NOb^Z^NB2^NS^T^I^I^NB2^I^@^E/*  */^Y^Y^Y^NU
 * n207 Run GNU indent then invoke N1 for final polish.
 *      Requires runindent from command_line_tools
-N207 ^NC^NS^N\^ND^N^<1001>fm-dw^Js^J!runindent "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^ND^N^<1011>^ND^N1s^J^NU
+N207 ^NC^NS^N\^ND^N^<1001>fm-dw^Js^J!runindent "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^ND^N1s^J^ND^N^<1011>^NU
 * n 1   "beautify" C source. Comments are aligned on cc36 or one space
 *       after source end if the line is too long, or if the comment is
 *       too long then it's aligned to finish on cc80. If neither can be
@@ -23,17 +23,12 @@ N207 ^NC^NS^N\^ND^N^<1001>fm-dw^Js^J!runindent "^ND^N^<4002>"^Jq '^ND^N^<4002>'^
 *       sets up tab b to the current file pos'n and tab c to be cc2...
 N 1 '^NC^NS^N\t3 36 81^N^<415>'
 N 6 '^H^O^NA^N^<420>^NOa^Z^N^<420> ;Continue comment nxt lin
-N415 ^J^ND^N^<4000>^NM^<403>^Ufb^J^NFbo y^Ji1^Jx^NOc^[^ND^N^<404>o n^Jy ' * /*' ' *',,,,1^Jg tb^Jfm ^ND^N^<403>^J^NU
-*      a) if "case" found at cc 1, look for next
-*      b) remember where cursor is, move to line start (i.e.indent)
-*      c) if we are not now before remembered position, ^L white space
-*      d) look for next
-N403 !! SCRATCH - used by ^N0,
+N415 ^J^ND^N^<1002>fb^Jo y^Ji1^Jx^NOc^[^ND^N^<404>o n^Jy ' * /*' ' *',,,,1^J^ND^N^<1012>^NU
 * n404: Main loop on lines. Remember cursor pos'n (so we can detect if
 *       we get back to line start, move to comment start, next line if
 *       now at end, backup to delimiter, jump off to submacro if now at
 *       line start.
-N404 ^[m-^J^NC^NU^NOa^O^NA^N^<414>^B^NPa^N^<407>^N^<405>
+N404 ^[m-^J^NC^NU^NOd^O^NA^N^<414>^B^NPd^N^<407>^N^<405>
 * n414 - line has no trailing comment but check for it being just /*
 N414 ^H^NG/^NS^N^<404>^X^NG*^NS^N^<404>^H^N^<405>
 * n407: Enter a different submacro if not past tab 2. Otherwise, check

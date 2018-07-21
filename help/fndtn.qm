@@ -139,6 +139,7 @@ N775 ^<S1X>^<SXGE>^NU ^N^<775>
 N774 ^<S1X>^<SXGE>^NU^<PSH 1>^<PSH 5>^<A1>^<DUP>^<POP 5>^<SUB>^<SLT>^NS^NL^<PS0>^<POP 5>^<POPN>^ND^N^<7005>^N^@
 N773 ^NFZ^<PSHTAB Z>^NC^NS^<S1>^NU ;Push current line number
 N1001 ^NC^NS^N\^[^NFa^ND^N^<4000>^NM^<1021>^[^NU ; Env save #1
+N1002 ^NC^NS^N\^[^NFb^ND^N^<4000>^NM^<1022>^[^NU ; Env save #2
 * N1011 - restore environment (line number and mode setting) as stored by N1001
 *         the ALU program is to guard against the case where the current line
 *         number stored in tab a is now beyond the end of the file.
@@ -161,7 +162,9 @@ N1001 ^NC^NS^N\^[^NFa^ND^N^<4000>^NM^<1021>^[^NU ; Env save #1
 * POPN    ; throw away diff that we tested
 * POP 0   : restore contents of memory location 0
 N1011 ^NC^NS^N\^<PSH 0>^<SFPT>^<PSHTAB a>^<PSHNBLN>^<A1>^<DUP>^<POP 0>^<SUB>^<SLT>^NL^<PSH 0>^<POPTAB a>^<POPN>^<POP 0>g ta^Jfm^ND^N^<1021>^J^NU ; Env restore #1
+N1012 ^NC^NS^N\^<PSH 0>^<SFPT>^<PSHTAB b>^<PSHNBLN>^<A1>^<DUP>^<POP 0>^<SUB>^<SLT>^NL^<PSH 0>^<POPTAB b>^<POPN>^<POP 0>g tb^Jfm^ND^N^<1022>^J^NU ; Env restore #2
 N1021 !!SCRATCH - USED BY ENV DUMP #1
+N1022 !!SCRATCH - USED BY ENV DUMP #2
 N1200 /* 12XX - USED AS SCRATCH SPACE AND FOR OTHER FORMER KEYBOARD INTERNAL MACROS
 N1201 /* 1201 - REPLACES ^N<
 N1202 /* 1202 - REPLACES ^N>

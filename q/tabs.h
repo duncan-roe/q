@@ -27,7 +27,8 @@
 
 struct tabs
 {
-  enum {UNDEFINED, CHRPOS, LINENUM} tabtyp;
+  enum
+  { UNDEFINED, CHRPOS, LINENUM } tabtyp;
   long value;
 };                                 /* struct tabs */
 
