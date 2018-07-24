@@ -103,6 +103,7 @@ unsigned long fmode;
 unsigned long zmode;
 bool zmode_valid = false;
 char FPformat[40];
+char Iformat[40];
 char DTformat[256];
 long lintot = 0;
 long ptrpos = 0;
@@ -657,6 +658,7 @@ init_alu(void)
 
 /* Set up initial floating point format */
   strcpy(FPformat, "%g");
+  strcpy(Iformat, "%ld");
 
 /* Set up initial date format */
   strcpy(DTformat, "%F %T %z");

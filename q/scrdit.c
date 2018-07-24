@@ -1143,6 +1143,11 @@ p1905:
         macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
         break;
 
+
+      case 04013:                  /* Return integer format */
+        snprintf(tbuf, sizeof tbuf, "%s", Iformat);
+        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+        break;
       default:
         found = false;
         break;
@@ -1152,7 +1157,7 @@ p1905:
  */
     if ((thisch & 017000) == 07000)
     {
-      snprintf(tbuf, sizeof tbuf, "%ld", ALU_memory[thisch & 0777]);
+      snprintf(tbuf, sizeof tbuf, Iformat, ALU_memory[thisch & 0777]);
       macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
       found = true;
     }                              /* if ((thisch & 017000) == 07000) */

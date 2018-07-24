@@ -1,5 +1,5 @@
 "q -l" to insert "fm +l" command before reading file
-New active pseudo to format output of integers (e.g. as hex / octal)
+DONE: New active pseudo to format output of integers (e.g. as hex / octal)
 Search up directory tree for .qrc
 Use .qrc associated with file to edit
 Do Delete properly (not as an edit)
@@ -9,7 +9,6 @@ Give some kind of acknowledgement to ^NF (& ^NO?)
 -H option to give invocation help
 Can test if a macro is defined: n4007 x; ^ND^N^<4007>
 Can set actual amount for "1 line forward / back" half-page / full-page
-DONE: Re-check whether cmd.c needs to put command buffer in quotes
 Properly reinstate output optimisation (old hack removed as "quick fix")
  needs select() /poll()
  needs nanosleep when outputting chars
@@ -20,7 +19,6 @@ INTERNALS
 	STARTED Have a bool enum for logicals
 	STARTED: Fix runindent label squashes
 	More GIVE_UP macros - use error_exit as standard label
-	DONE: Use GNU tilde expansion function
 	STARTED: rework asg2 blocks (including xistcs.c)
 	STARTED: Use meaningful names instead of logtemp &c.
 	STARTED Tidy scmnrd.c in particular

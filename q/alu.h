@@ -2,7 +2,7 @@
 #ifndef ALU_H
 #define ALU_H
 /*
- * Copyright (C) 2014,2016 Duncan Roe
+ * Copyright (C) 2014,2016,2018 Duncan Roe
  *
  * This header file contains items relating to support for the ALU
  * (Arithmetic and Logic Unit) a.k.a. the Reverse Polish Calculator
@@ -24,7 +24,7 @@
 typedef struct alu_opcode
 {
   char *name;
-  bool (*func)(char **err);
+  bool (*func) (char **err);
   char *description;
 } alu_opcode;                      /* typedef struct alu_opcode */
 
@@ -63,6 +63,7 @@ extern int num_alu_opcode_table_entries;
 extern int *alu_table_index;
 extern bool alu_macros_only;       /* N-- lstmac & typmac only show n7000+ */
 extern char FPformat[40];          /* Floating-point format */
+extern char Iformat[40];           /* Integer format */
 extern char DTformat[256];         /* Date format (can be really huge) */
 extern scrbuf5 *last_Curr;         /* Line that scrdit is working on */
 

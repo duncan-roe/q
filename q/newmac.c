@@ -140,7 +140,7 @@ newmac()
     if (
       (!verb || verb > TOPMAC || (verb >= FIRST_PSEUDO && verb <= LAST_PSEUDO))
       && (verb & 07000) != 07000 && verb != 04007 && (verb & 013000) != 013000
-      && verb != 04010)
+      && verb != 04010 && verb != 04013)
     {
       fprintf(stderr, "Macro %o is reserved or out of range", (int)verb);
       GIVE_UP;
@@ -214,7 +214,11 @@ newmac()
         gettab(buf[1], false, &ALU_memory[idx], false)))
       {
         if (oldval && !BRIEF && WARN_NONZERO_MEMORY)
-          printf("Warning - value was previously %ld\r\n", oldval);
+        {
+          printf("%s", "Warning - value was previously ");
+          printf(Iformat, oldval);
+          printf("\r\n");
+        }                     /* if (oldval && !BRIEF && WARN_NONZERO_MEMORY) */
         return 1;                  /* All chars parsed */
       }
       if (*endptr && !(oldcom->toklen == 2 &&
@@ -243,9 +247,8 @@ newmac()
         }
         return 1;                  /* OK */
       }                            /* if (!*endptr) */
-          fprintf(stderr, "Illegal character '%c' in number \"%s\"", *endptr,
-            buf);
-          GIVE_UP;
+      fprintf(stderr, "Illegal character '%c' in number \"%s\"", *endptr, buf);
+      GIVE_UP;
     }                              /* if (verb < 010000) else */
   }                                /* if (verb & 07000 == 07000) */
 
@@ -268,11 +271,23 @@ newmac()
     {
       fprintf(stderr, "%s", "Format string too long");
       GIVE_UP;
-    }                              /* if (mcchrs > sizeof FPformat -1) */
+    }                              /* if (mcchrs > sizeof DTformat -1) */
     strncpy(DTformat, buf, mcchrs);
     DTformat[mcchrs] = 0;
     return 1;
   }                                /* if (verb == 04010) */
+/* Defining integer format? */
+  if (verb == 04013)
+  {
+    if (mcchrs > sizeof Iformat - 1)
+    {
+      fprintf(stderr, "%s", "Format string too long");
+      GIVE_UP;
+    }                              /* if (mcchrs > sizeof Iformat -1) */
+    strncpy(Iformat, buf, mcchrs);
+    Iformat[mcchrs] = 0;
+    return 1;
+  }                                /* if (verb == 04013) */
 
 /* Advise user if an existing macro being overwritten */
   if (scmacs[verb] && (curmac < 0 || !BRIEF))
