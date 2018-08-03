@@ -31,23 +31,26 @@ cmd(char *mybuf)
   retry:
     if (waitpid(pid, &status, WUNTRACED) == -1)
     {
-      perror("waitpid");
       if (errno == EINTR)
         goto retry;
+      perror("waitpid");
       status = errno;
     }                              /* if(waitpid(pid,&status,WUNTRACED)==-1) */
     else
     {
       if (WIFSIGNALED(status))
-        printf("\"%s\" terminted with signal %d\n", mybuf, WTERMSIG(status));
+        fprintf(stderr, "\"%s\" terminted with signal %d\n", mybuf,
+          WTERMSIG(status));
       else if (WIFEXITED(status))
       {
         if (WEXITSTATUS(status))
-          printf("\"%s\" exited with status %d\n", mybuf, WEXITSTATUS(status));
+          fprintf(stderr, "\"%s\" exited with status %d\n", mybuf,
+            WEXITSTATUS(status));
       }
       else if (WIFSTOPPED(status))
       {
-        printf("\"%s\" stopped with signal %d\n", mybuf, WSTOPSIG(status));
+        fprintf(stderr, "\"%s\" stopped with signal %d\n", mybuf,
+          WSTOPSIG(status));
         goto retry;
       }
       else

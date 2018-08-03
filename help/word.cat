@@ -1,0 +1,57 @@
+  ++ W O R D . Q M   M A C R O   C A T A L O G U E ++
+
+ Macro   Oct  Context  Action
+ =====   ===  =======  ======
+ ^N^A    001  Command  Make file fit inside tab 2 (See note 1)
+ ^N^I    011  Command  Right-justify text file line width (See note 1)
+ ^N^WW   327  Command* Strip WORD doc to something readable - part 1 of 2
+                         (See note 2)
+ ^N^Ww   367  Command  Strip WORD doc to something readable - part 2 of 2
+                         (See note 2)
+
+* - Q must have been invoked in BINARY mode (q -b)
+
+ NOTES
+ =====
+
+1. The ^N^A / ^N^I suite
+   === ==== = ==== =====
+
+^N^A adjusts text files to any desired width, not splitting any words and
+putting as many words as will go into each line. Email quoting is actioned in
+that lines which start "> " are left alone. Blank lines are preserved, to
+maintain paragraphs. Lines that start with a space also start paragraphs.
+
+^N^A does not try to justify on the right. After using ^N^A, use ^N^I to do
+that. Be aware that multiple spaces may confuse ^N^A, so in any subsequent edit
+it would be prudent to "y '  ' ' '" repeatedly until there are no double-spaces
+left.
+
+Before invoking ^N^A, set tab 2 to 1st column that should not ordinarily contain
+text. word.qm defaults tab 2 to 81, for an 80-column result. For ^N^A, the value
+of tab 1 is immaterial (word.qm sets it to 1), but if you plan to use ^N^I next,
+you might as well set it to what you want.
+
+Before invoking ^N^I, set tab 1 to the shortest line that is to be expanded to
+fill up to tab 2. Tab 2 should be set the same as it was for ^N^A.
+
+word.qm defaults to brief macro display (FB-brief command), otherwise there
+would be rather a lot of output from ^N^A / ^N^I.
+ If ^N^A is run on a file that does not need any changes, the file will remain
+unmodified.
+
+2. The ^N^WW / ^N^Ww suite
+   === ===== = ===== =====
+
+These macros attempt to reduce an old-style Microsoft WORD (.doc) file to plain
+ASCII. ^N^WW should be used in a binary edit of the file ("q -b {file}") which
+should then be saved for re-edit in regular mode ("q {file}") and ^N^Ww can be
+used.
+
+^N^WW removes almost all control caharacters and ^N^Ww wraps any resultant long
+lines (which is how Word renders paragraphs). If you type a few spaces before
+issuing ^N^Ww, then each paragraph will start with those spaces.
+
+These macros should work for any file containing a mixture of plain text and
+control characters. Unfortunately, .docx and .pdf files do not qualify in this
+regard.

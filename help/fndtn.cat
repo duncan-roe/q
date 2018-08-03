@@ -95,7 +95,9 @@ Macros can use the following macros to perform common functions
  =====   ==== =======  ======
   522         Command  define VCS options (for RCS, Git &c.)
  1001    a    Command  Dump context (mode & line #)
+ 1002    b    Command  Dump context (mode & line #)
  1011    a    Command  Restore context (mode & line #)
+ 1012    b    Command  Restore context (mode & line #)
  1401         Command  Define to be ^NU for l & y instead of fl & fy
                          (for ^N^Wp, ^N^Wq & ^N9)
 
