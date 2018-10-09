@@ -17,5 +17,5 @@ verb providing it does not contain quoted parts or quote pairs. Thus, for
 instance, "P23" will be interpreted as "P 23" - in fact , the latter will
 replace the former on the screen after newline is keyed.
  Numbers can start with a leading plus (+) sign as well as minus (-). This has
-special significance if the number if a line number - key 'H L#' for more
+special significance if the number is a line number - key 'H L#' for more
 details.
