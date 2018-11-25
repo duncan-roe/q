@@ -1,5 +1,0 @@
-  <> N U L L - I G N O R E D <>
-
-The null (^@) character is ignored by Q, except if it immediately follows ^P.
-It can be useful therefore as a padding character in screenedit macros, to pad
-a sequence out to 2 or 4 characters.

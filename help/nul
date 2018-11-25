@@ -1,0 +1,8 @@
+  <> N U L L - I G N O R E D <>
+
+The NUL (^@) character is ignored by Q, except if it immediately follows ^N or
+^P. Thus it can be used as a padding character in q macros, to pad a sequence
+out to 2 or 4 characters.
+ ^N^@ is only valid within a macro, where it causes the macro to "loop" (resume
+execution at start of macro).
+ ^P^@ inserts a literal NUL. Use with caution.

@@ -1,6 +1,6 @@
   ++ I N V O K I N G   Q ++
 
-Usage: q [-Vbdemnoqtv] [-i <macro definition>] [+<n> file] [file[:<n>]]...
+Usage: q [-AVbdemnoqtv] [-i <macro definition>] [+<n> file] [file[:<n>]]...
 
 <file> arguments are processed sequentially, by use of q's Q-QUIT command with
 no argument; or may be accessed out of sequence by "Q $<number>". The current

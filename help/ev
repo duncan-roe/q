@@ -5,9 +5,9 @@ Q acts on the following environment variables:-
 1. SHELL determines what shell is used to implement the "!" command.
    Default if absent: /bin/sh
 2. Q_HELP_DIR says where the help files are.
-   Default if absent: /usr/local/lib/q
+   Default if absent: /usr/local/share/q
 3. Q_MACRO_DIR says where the standard Q macros are.
    Default if absent: same as help dir. Q is distributed that way
 4. Q_HELP_CMD is the command to use to display help files.
    Default if absent: use PAGER environment variable.
-   Default if neither PAGER nor Q_HELP_CMD in environment: "more"
+   Default if neither PAGER nor Q_HELP_CMD in environment: "less"

@@ -6,10 +6,10 @@ defined below:
 GENERICS:-
                                                              EXAMPLE
 For this file, no parameter                                  H
-For a Q command, 1st letter of command                       H A
+For a Q command, 1st letter of command (1st 2 if starts F)   H A
 For a screenedit control character, "C-" <char>              H C-A
       [special cases: ESC for ESCAPE, DEL for DELETE,        H DEL
-                      C-M for C/R, NULL for NULL      ]      H C-M
+                      C-M for C/R, NUL for NUL        ]      H C-M
 For a terminal characteristic, "X-" <char>                   H X-A
 For a pseudo macro, "CN-"<char>                              H CN-A
       [special cases: type 'H PM' for details]               H CN-LHB
@@ -21,3 +21,5 @@ Indent mode: IM         Screenedit macros: SM   Invoking Q IQ
 ASCII chars: AS         Running in a pipe: QP
 Arithmetic & Logic Unit: ALU
 Foundation macro catalogue FNDTN.CAT
+Word macro catalogue WORD.CAT
+View macro definition file directly (may contain documentation) e.g. TCL.QM

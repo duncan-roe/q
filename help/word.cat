@@ -35,7 +35,7 @@ you might as well set it to what you want.
 Before invoking ^N^I, set tab 1 to the shortest line that is to be expanded to
 fill up to tab 2. Tab 2 should be set the same as it was for ^N^A.
 
-word.qm defaults to brief macro display (FB-brief command), otherwise there
+word.qm defaults to brief macro display (FB-FBRIEF command), otherwise there
 would be rather a lot of output from ^N^A / ^N^I.
  If ^N^A is run on a file that does not need any changes, the file will remain
 unmodified.

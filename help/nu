@@ -70,7 +70,7 @@ quote, key ^G'. ^G goes to the end of the line if the character is not found.
  ^F gets you to the next 'word'
  ^B gets you back to the start of this 'word' or the previous one if you were
 already at the start of this one. Also relevant are the following:
- H DY		     H C-G		 H C-H		     H C-Z
- H C-F		     H C-B
+ H C-B		     H C-F		 H C-G		     H C-H
+ H C-Z
  H SC /* The complete list of control characters
  The continuation of the Guide is still in preparation
