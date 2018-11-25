@@ -1,5 +1,11 @@
+2 active pseudos to run a shell command and receive stdout/stderr (backtick)
+ e.g. if n4014 & n4015
+ n4014 {shell command} or n4015 {shell command}
+ ^ND^N^<4014> returns stdout (minus final Nl)
+ ^ND^N^<4015> returns stderr (minus final Nl)
+ If defined as n4014, error in cmd => error in macro
+ If defined as n4015, command status returned in X (0=good), macro continues
 "q -l" to insert "fm +l" command before reading file
-DONE: New active pseudo to format output of integers (e.g. as hex / octal)
 Search up directory tree for .qrc
 Use .qrc associated with file to edit
 Do Delete properly (not as an edit)
@@ -18,7 +24,7 @@ Properly reinstate output optimisation (old hack removed as "quick fix")
 INTERNALS
 	STARTED Have a bool enum for logicals
 	STARTED: Fix runindent label squashes
-	More GIVE_UP macros - use error_exit as standard label
+	STARTED: More GIVE_UP macros - use error_exit as standard label
 	STARTED: rework asg2 blocks (including xistcs.c)
 	STARTED: Use meaningful names instead of logtemp &c.
 	STARTED Tidy scmnrd.c in particular
@@ -26,5 +32,5 @@ INTERNALS
 	use stdint types
 Show what arguments Q started with (?)
 STARTED: Catalogue of useful macros
-New pseudomacro to replace "/*" with arbitrary seq: #, // &c
+New pseudomacro to replace "/*" with arbitrary seq: #, // &c (i.e. for ^O)
 FQVERSN opcode to push Q version to F
