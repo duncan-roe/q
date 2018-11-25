@@ -1,0 +1,133 @@
+.\"
+.\" q manual page.
+.\" Copyright (c) 2018 Duncan Roe
+.\"
+.\" Original author: Duncan Roe
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2, or (at your option)
+.\" any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; see the file COPYING.  If not, write to
+.\" the Free Software Foundation, 59 Temple Place - Suite 330,
+.\" Boston, MA 02111-1307, USA.
+.\"
+.TH Q 1 "Nov 11 2018" "Misc commands" "Linux Programmer's Manual"
+.SH NAME
+q \- line-orientated mostly WYSIWYG editor with a powerful macro facility
+.SH SYNOPSIS
+\f3q\f1 [\f3-AVbdemnoqt\f1] [\f3-i\f2 initial_macro\f1] [\f3+\f2line# file\f1]
+[\f2file\f1[\f3:\f2line#\f1] [...]]
+.br
+\f2command\f1 [...] \f3| q \f1[\f3-bdntv\f1]\f3 -i\f2 initial_macro \f3|\f2
+command\f1 [...]
+.SH DESCRIPTION
+\f3q\f1 is a command-driven line-oriented editor in which almost all the control
+characters perform some editing function.
+More complex functions are provided by macros.
+.br
+\f3q\f1 is always either in \f2edit mode\f1 or \f2 command mode\f1. In edit
+mode, q is editing a line from the current file;
+in command mode, q is building up the next command to execute.
+Full editing is available in both modes.
+.br
+\f3q\f1 commands all abbreviate to 1 character except those starting \f3f\f1
+which abbreviate to 2.
+Command arguments are delineated by space or comma, with a pair of commas
+denoting an empty argument.
+Those commands that take the rest of the line as input treat any spaces
+following the first as part of the argument.
+A single quote turns off comma and space recognition until a matching single
+quote or end of line.
+Inside quoted text, a pair of quotes is interpreted as a single literal quote.
+.br
+\f3q\f1 commands are case-insensitive, as are \f3q\f1 \f3help\f1 topics.
+The documentation generally refers to commands in upper case,
+in the form \f2command abbreviation\f3-\f2full command name\f1
+as in \f3H\f1-\f3HELP\f1 below.
+.PP
+\f3Startup file\f1
+.RS 3
+When \f3q\f1 starts, it reads commands from a startup file before accepting user
+input.
+These commands typically load macros and may set some modes (see \f3H FM\f1).
+.br
+\f3q\f1 first looks in the current working directory for a file named
+\f3.qrc\f1.
+If not found, it tries to open \f3~/.qrc\f1.
+If that also fails then it reads the file \f3qrc\f1 in 
+\f3/usr/local/etc\f1 or whatever was configured at build time.
+.RE
+.PP
+\f3Command massaging\f1
+.RS 3
+Provided it has no quoted parts, \f3q\f1 will split off the first argument to a
+command from the command if it can
+(i.e. without the user needing to type the intervening space or comma).
+It can do this for any command if the argument starts with a non-alphabetic
+character and for all instances of the \f3!\f1 (shell) command.
+For example, the command "p23" (print 23 lines) will be interpreted
+(and displayed) as "p 23".
+.RE
+.PP
+\f3Running q in a pipe\f1
+.RS 3
+When running in a pipe, \f3q\f1 accumulates data from stdin until end of file
+before doing anything else.
+On exit, \f3q\f1 writes the edited file to stdout.
+The mandatory \f3-i\f1 command should not try to save the file.
+stdin and / or stdout may be redirected from / to a file rather than a pipe:
+the rule is that stdin and stdout must either both be a tty or both not be.
+.RE
+.SH OPTIONS
+To see a description of all options, start \f3q\f1 and enter \f3H IQ\f1.
+.SH ENVIRONMENT VARIABLES
+	
+.br
+\f2Q_ETC_DIR\f1
+.RS 3
+Directory containing the system \f3qrc\f1 file.
+Default: as set at build time, otherwise \f3/usr/local/etc\f1.
+.RE
+.PP
+\f2Q_HELP_CMD\f1 or \f2PAGER\f1
+.RS 3
+The pager used by \f3H\f1-\f3HELP\f1 to display help files.
+Default: as set at build time, otherwise \f3less\f1.
+.RE
+.PP
+\f2Q_HELP_DIR\f1
+.RS 3
+Directory containig help files and macros.
+Default: as set at build time, otherwise \f3/usr/local/share/q\f1.
+.RE
+.PP
+\f2Q_MACRO_DIR\f1
+.RS 3
+Separate directory for system macros.
+Default: directory containig help files.
+.RE
+.PP
+\f2SHELL\f1
+.RS 3
+Shell used to implement the \f3!\f1 (shell) command.
+Default: as set at build time, otherwise \f3/bin/sh\f1.
+.RE
+.PP
+.SH SEE ALSO
+Most of Q's documentation is in the form of help files, accessed from within Q
+by the \f3H\f1-\f3HELP\f1 command.
+.br
+There are sample startup files, README files &c. in the Documentation directory.
+.SH REPORTING BUGS
+If you find a bug, please raise an issue at
+https://github.com/duncan-roe/q/issues.
+.SH AUTHOR
+Written by Duncan Roe
