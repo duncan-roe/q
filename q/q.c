@@ -1542,9 +1542,9 @@ p1022:
     ERR1025("Error in filename");
   if (!getlin(true, false))
     REREAD_CMD;                    /* J line # u/s */
-  setptr(oldcom->decval);          /* Get ready to write */
   if (!get_opt_lines2count() || !eolok())
     REREAD_CMD;
+  setptr(oldcom->decval);          /* Get ready to write */
   wrtnum = count;
   rdwr = O_WRONLY + O_CREAT;
   if (!s_b_w_common_write())
