@@ -4,9 +4,15 @@
 Q offers autoconf-style configurability without actually using autoconf.
 
 The file "config.mak" sets default locations and features. To change from these,
-either edit that file or supply values to *make*, e.g.:
+either edit that file or supply values to *make*, e.g. for Suse Linux:
 
- make PREFIX=/usr HELP_CMD="less -X" install
+ make MANDIR=/usr/local/man install
+
+The defaults in "config.mak" are fine for Red Hat systems (tested under Fedora).
+They are also fine for Debian systems (tested under Ubuntu 18.04). For Slackware
+systems, there is a SlackBuild inside
+https://github.com/duncan-roe/SlackBuilds/archive/v1/SlackBuilds-1.tar.gz, which
+may eventually migrate to https://slackbuilds.org/.
 
 Additionally, items listed under the Features heading may be changed at (q) run
 time by environment variables which are the item name prepended by Q_, e.g.

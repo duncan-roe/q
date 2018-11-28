@@ -4,7 +4,7 @@ Editor source is in q; macros and help files are in help.
 
 Both these directories have .qrc files. You may like to copy one of them to your
 home or current directory so Q runs with an extended macro set: they are
-available from DOCDIR after "make install" as dot_qrc in the relevant directory.
+available from DOCDIR after "make install" as q_dot_qrc and help_dot_qrc.
 
 For most programming tasks, q/.qrc is a good starting point. It loads the
 Foundation plus C macro sets. help/.qrc loads Foundation plus Word macro sets,
