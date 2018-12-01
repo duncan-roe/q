@@ -1,3 +1,4 @@
+man page for Q macros [ q_macros(5) ]
 2 active pseudos to run a shell command and receive stdout/stderr (backtick)
  e.g. if n4014 & n4015
  n4014 {shell command} or n4015 {shell command}
