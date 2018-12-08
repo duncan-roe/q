@@ -43,7 +43,7 @@
 #define ERR1025(x) do {fprintf(stderr, "%s", (x)); REREAD_CMD;} while (0)
 #define READ_NEXT_COMMAND goto p1004
 #define ERRRTN(x) do {fprintf(stderr, "%s", (x)); return false;} while (0)
-#define PIPE_NAME "qpipeXXXXXX"
+#define PIPE_NAME "/tmp/qpipeXXXXXX"
 
 /* Typedefs */
 
@@ -683,11 +683,10 @@ display_opcodes(void)
   printf("\r\n"
     "\t Instructions to Access Tabs\r\n"
     "\t ============ == ====== ====\r\n"
-    "\t (x is a tab ID; type of tab is not examined)\r\n"
     "PSHTAB x Push value of tab x to R\r\n"
+    "\t (x is a tab ID; type of tab is not examined)\r\n"
     "POPTAB x Pop R to set value of tab x;\r\n"
-    "                  set tab type to file or cursor pos'n"
-    " as set by SCPT / SFPT\r\n"
+    "\t (x is a tab ID; type of tab is from last SCPT / SFPT)\r\n"
     "\r\n"
     "\t Memory Reference Instructions\r\n"
     "\t ====== ========= ============\r\n"

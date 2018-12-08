@@ -19,7 +19,7 @@
 .\" the Free Software Foundation, 59 Temple Place - Suite 330,
 .\" Boston, MA 02111-1307, USA.
 .\"
-.TH Q 1 "Nov 11 2018" "Misc commands" "Linux Programmer's Manual"
+.TH Q 1 "Dec 6 2018" "q-54" "Linux Programmer's Manual"
 .SH NAME
 q \- line-orientated mostly WYSIWYG editor with a powerful macro facility
 .SH SYNOPSIS
@@ -34,8 +34,8 @@ characters perform some editing function.
 More complex functions are provided by macros.
 .br
 \f3q\f1 is always either in \f2edit mode\f1 or \f2 command mode\f1. In edit
-mode, q is editing a line from the current file;
-in command mode, q is building up the next command to execute.
+mode, \f3q\f1 is editing a line from the current file;
+in command mode, \f3q\f1 is building up the next command to execute.
 Full editing is available in both modes.
 .br
 \f3q\f1 commands all abbreviate to 1 character except those starting \f3f\f1
@@ -52,10 +52,15 @@ Inside quoted text, a pair of quotes is interpreted as a single literal quote.
 The documentation generally refers to commands in upper case,
 in the form \f2command abbreviation\f3-\f2full command name\f1
 as in \f3H\f1-\f3HELP\f1 below.
+.br
+When showing file contents, \fBq\fR always displays line numbers. After the last
+line of a file, \fBq\fR displays \fBE - O - F\fR (\fIE\fRnd \fIO\fRf \fIF\fRile)
+in lieu of a line number.
 .PP
 \f3Startup file\f1
 .RS 3
-When \f3q\f1 starts, it reads commands from a startup file before accepting user
+On starting, unless the \fB-n\fR option was given,
+\fBq\fR reads commands from a startup file before accepting user
 input.
 These commands typically load macros and may set some modes (see \f3H FM\f1).
 .br
@@ -64,6 +69,13 @@ These commands typically load macros and may set some modes (see \f3H FM\f1).
 If not found, it tries to open \f3~/.qrc\f1.
 If that also fails then it reads the file \f3qrc\f1 in 
 \f3/usr/local/etc\f1 or whatever was configured at build time.
+.RE
+.PP
+\f3Line number\f1
+.RS 3
+If there is a \f2line#\f1 associated with a \fIfile\fR argument,
+\f3q\f1 positions to that line and does a \f3V-VIEW\f1 command
+before accepting user input.
 .RE
 .PP
 \f3Command massaging\f1
@@ -77,17 +89,76 @@ For example, the command "p23" (print 23 lines) will be interpreted
 (and displayed) as "p 23".
 .RE
 .PP
+\fBInitial Macro\fR
+.RS 3
+On starting, if the \fB-i\fR\ \&\fIinitial_macro\fR option was given,
+\fBq\fR constructs and obeys an \fIimmediate\ \&macro\fR from the argument of \fB-i\fR
+(see \fBq_macros(5)\fR).
+This runs after the first \fBfile\fR has been loaded.
+.RE
+.PP
 \f3Running q in a pipe\f1
 .RS 3
 When running in a pipe, \f3q\f1 accumulates data from stdin until end of file
 before doing anything else.
 On exit, \f3q\f1 writes the edited file to stdout.
-The mandatory \f3-i\f1 command should not try to save the file.
+The mandatory \f3-i\f1 \fIinitial_macro\fR should not try to save the file.
 stdin and / or stdout may be redirected from / to a file rather than a pipe:
 the rule is that stdin and stdout must either both be a tty or both not be.
+.br
+Running in a pipe automatically asserts the \fB-o\fR option (work \fIO\fRffline:
+\fBq\fR automatically issues \fBS-SAVE\fR and \fBQ-QUIT\fR commands
+when it would otherwise prompt for user input).
+.br
+Running in a pipe also asserts the \fB-q\fR option (run \fIQ\fRuietly: stdout is
+discarded (by redirection to \fB/dev/null\fR)).
+This discarded output can be made visible by giving the \fB-v\fR option
+(run \fIV\fRerbosely: stdout is instead redirected to stderr).
 .RE
 .SH OPTIONS
 To see a description of all options, start \f3q\f1 and enter \f3H IQ\f1.
+Commonly used options include:
+.TP
+.BI \-A
+causes \fBq\fR to output the currently supported ALU (and FPU) opcodes.
+If \fB-A\fR is the only command-line argument, \fBq\fR then exits.
+\fBq\ \&-A\fR also works inside \fBq\fR.
+.TP
+.BI \-V
+causes \fBq\fR to output its version number.
+If \fB-V\fR is the only command-line argument, \fBq\fR then exits.
+\fBq\ \&-V\fR also works inside \fBq\fR.
+.br
+\fBq\fR has a floating point version number.
+Only development versions of \fBq\fR are non-integral.
+.TP
+.BI \-b
+makes \fBq\fR run in Binary mode.
+This cannot be changed for the session.
+Files are read with no tab expansion or other character conversion.
+The division into "lines" is somewhat arbitrary,
+but a new line is always started following \fB^J\fR.
+By default, binary edits are done in Fixed Length mode: from inside \fBq\fR see
+\fBH\ \&FM\fR for more information.
+.TP
+.BI \-i " initial_macro"
+see \fBInitial Macro\fR above.
+.TP
+.BI \-n
+see \fBStartup file\fR above.
+.TP
+.BI \-o
+see \fBRunning q in a pipe\fR above.
+.TP
+.BI \-q
+see \fBRunning q in a pipe\fR above.
+.TP
+.BI \-v
+see \fBRunning q in a pipe\fR above.
+
+.SH EXAMPLES
+xxx
+
 .SH ENVIRONMENT VARIABLES
 	
 .br
@@ -122,12 +193,17 @@ Default: as set at build time, otherwise \f3/bin/sh\f1.
 .RE
 .PP
 .SH SEE ALSO
-Most of Q's documentation is in the form of help files, accessed from within Q
+\fBq_macros(5)\fR
+.br
+Much of \fBq\fR's documentation is in the form of help files,
+accessed from within \fBq\fR
 by the \f3H\f1-\f3HELP\f1 command.
 .br
 There are sample startup files, README files &c. in the Documentation directory.
 .SH REPORTING BUGS
 If you find a bug, please raise an issue at
+.nf
 https://github.com/duncan-roe/q/issues.
+.fi
 .SH AUTHOR
 Written by Duncan Roe

@@ -1,4 +1,5 @@
 man page for Q macros [ q_macros(5) ]
+man page for Q opcodes [ q_opcodes(5) ]
 2 active pseudos to run a shell command and receive stdout/stderr (backtick)
  e.g. if n4014 & n4015
  n4014 {shell command} or n4015 {shell command}
@@ -35,3 +36,4 @@ Show what arguments Q started with (?)
 STARTED: Catalogue of useful macros
 New pseudomacro to replace "/*" with arbitrary seq: #, // &c (i.e. for ^O)
 FQVERSN opcode to push Q version to F
+STARTED: Retire ^NY (tab subtraction)
