@@ -12,6 +12,7 @@
 #include "typedefs.h"
 #include "pushable_values.h"
 #include "tabsiz.h"
+#include "q_version.h"
 
 /* **************************** Static Functions **************************** */
 
@@ -192,6 +193,18 @@ inpf(char **err)
     return false;
   fs[++fsidx] = fval;
   rs[++rsidx] = len;
+  return true;
+}                                  /* inpf() */
+
+static bool
+fqversn(char **err)
+{
+  if (fsidx >= stack_size - 1)
+  {
+    *err = "FP register stack overflow";
+    return false;
+  }                                /* if (fsidx >= stack_size - 1) */
+  fs[++fsidx] = Q_VERSION;
   return true;
 }                                  /* inpf() */
 
@@ -1094,6 +1107,7 @@ alu_opcode opcode_defs[] = {
   OPCODE(fsqrt, "F = sqrt(F)"),
   OPCODE(inpf, "Read next number in line, push value to F & length to R"),
   CAPTION("(leaves cursor on 1st char of number)"),
+  OPCODE(fqversn, "Push Q version to F"),
   CAPTION(""),
   CAPTION("Immediate Data Instructions"),
   CAPTION("========= ==== ============"),

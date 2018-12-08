@@ -35,5 +35,5 @@ INTERNALS
 Show what arguments Q started with (?)
 STARTED: Catalogue of useful macros
 New pseudomacro to replace "/*" with arbitrary seq: #, // &c (i.e. for ^O)
-FQVERSN opcode to push Q version to F
+DONE: FQVERSN opcode to push Q version to F
 STARTED: Retire ^NY (tab subtraction)
