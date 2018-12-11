@@ -1537,18 +1537,27 @@ p1036:
  * W - WRITEFILE
  */
 p1022:
-  if (!get_file_arg() || nofile)
-    ERR1025("Error in filename");
-  if (!getlin(true, false))
-    REREAD_CMD;                    /* J line # u/s */
-  if (!get_opt_lines2count() || !eolok())
-    REREAD_CMD;
-  setptr(oldcom->decval);          /* Get ready to write */
-  wrtnum = count;
-  rdwr = O_WRONLY + O_CREAT;
-  if (!s_b_w_common_write())
-    REREAD_CMD;
-  READ_NEXT_COMMAND;
+  {
+    long line_number_saved;
+
+    if (!get_file_arg() || nofile)
+      ERR1025("Error in filename");
+    if (!getlin(true, false))
+      REREAD_CMD;                  /* J line # u/s */
+
+/* Can't do setptr here because that breaks relative line numbering. */
+/* But ... must save returned decimal number before calling scrdtk again */
+
+    line_number_saved = oldcom->decval;
+    if (!get_opt_lines2count() || !eolok())
+      REREAD_CMD;
+    setptr(line_number_saved);     /* Get ready to write */
+    wrtnum = count;
+    rdwr = O_WRONLY + O_CREAT;
+    if (!s_b_w_common_write())
+      REREAD_CMD;
+    READ_NEXT_COMMAND;
+  }
 /*
  * E - Enter
  */
