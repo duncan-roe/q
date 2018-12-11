@@ -20,14 +20,17 @@
 .\" Boston, MA 02111-1307, USA.
 .\"
 .TH Q 1 "Dec 6 2018" "q-54" "Linux Programmer's Manual"
+
 .SH NAME
 q \- line-orientated mostly WYSIWYG editor with a powerful macro facility
+
 .SH SYNOPSIS
 \f3q\f1 [\f3-AVbdemnoqt\f1] [\f3-i\f2 initial_macro\f1] [\f3+\f2line# file\f1]
 [\f2file\f1[\f3:\f2line#\f1] [...]]
 .br
 \f2command\f1 [...] \f3| q \f1[\f3-bdntv\f1]\f3 -i\f2 initial_macro \f3|\f2
 command\f1 [...]
+
 .SH DESCRIPTION
 \f3q\f1 is a command-driven line-oriented editor in which almost all the control
 characters perform some editing function.
@@ -92,8 +95,8 @@ For example, the command "p23" (print 23 lines) will be interpreted
 \fBInitial Macro\fR
 .RS 3
 On starting, if the \fB-i\fR\ \&\fIinitial_macro\fR option was given,
-\fBq\fR constructs and obeys an \fIimmediate\ \&macro\fR from the argument of \fB-i\fR
-(see \fBq_macros(5)\fR).
+\fBq\fR constructs and obeys an \fIimmediate\ \&macro\fR
+from the argument of \fB-i\fR (see \fBq_macros(5)\fR).
 This runs after the first \fBfile\fR has been loaded.
 .RE
 .PP
@@ -115,8 +118,9 @@ discarded (by redirection to \fB/dev/null\fR)).
 This discarded output can be made visible by giving the \fB-v\fR option
 (run \fIV\fRerbosely: stdout is instead redirected to stderr).
 .RE
+
 .SH OPTIONS
-To see a description of all options, start \f3q\f1 and enter \f3H IQ\f1.
+To see a description of all options, start \f3q\f1 and enter \f3H\ \&IQ\f1.
 Commonly used options include:
 .TP
 .BI \-A
@@ -156,9 +160,6 @@ see \fBRunning q in a pipe\fR above.
 .BI \-v
 see \fBRunning q in a pipe\fR above.
 
-.SH EXAMPLES
-xxx
-
 .SH ENVIRONMENT VARIABLES
 	
 .br
@@ -192,8 +193,72 @@ Shell used to implement the \f3!\f1 (shell) command.
 Default: as set at build time, otherwise \f3/bin/sh\f1.
 .RE
 .PP
+
+.SH EXAMPLES
+	
+.br
+.B Paginate through loaded macros from shell command prompt
+.br
+(i.e. command to run in a separate window from the one running \fBq\fR)
+.RS 3
+The \fBq\fR command \fBn\ \&\-\fR lists out all loaded macros.
+The line below captures this output and pipes it into \fBless\fR.
+The command should be issued with the same current working directory as \fBq\fR
+so as to pick up the correct \fIStartup file\fR.
+.RE
+.nf
+cat /dev/null | q -v -i n,-^J 2>&1 | q -i fl,:^J^NC^NU^[d,1,-,-2^Ja^J^[d,-1^Jy,^P^M,,^J | less
+.fi
+.RS 3
+The pipelene contains two invocations of \fBq\fR:
+.RS 3
+1.\ \&Run with the \fB-v\fR option
+so output from \fBq\fR commands goes to stderr;
+issue the \fBn,-\fR command; redirect stderr back into the stdout pipe.
+.br
+2.\ \&Trim off unwanted leading lines:
+everything before the first line that has a colon surrounded by spaces
+(i.e. token delimiters); trim off the unwanted trailing line
+(in fact an internally generated \fBfq\fR command);
+remove Cr (\fB^M\fR) characters.
+.RE
+Any need for shell quoting is obviated
+by using \fBq\fR's \fIcomma\fR delimiter in commands.
+The sequence \fB^NC^NU\fR guards against there being no defined macros -
+see q_macros(5).
+The above line is expanded for clarity:
+the canonical (minimum length) version is:
+.RE
+.nf
+cat /dev/null|q -vin-^J 2>&1|q -ifl:^J^NC^NU^[d1,-,-2^Ja^J^[d-1^Jy,^P^M^J|less
+.fi
+.PP
+.B Change what the space macro does
+.RS 3
+The foundation macro set defines the space macro (\fB^N\fIspace\fR)
+to run \fBmake\fR.
+This \fBq\fR invocation sequence redefines the space macro to run
+\fBtail\fR to output only the last line (i.e. without line numbering):
+.RE
+.nf
+q -i 'n 040,! tail -n1 ^*ND^*N^*<4002>^*J^J'
+.fi
+.RS 3
+The immediate macro definition has to be quoted,
+since it contains the shell metacharacters space and angle brackets.
+The definition of the space macro contains escaped carats (\fB^*\fR)
+because the defined immediate macro will issue the N-NEWMACRO command
+to redefine the space macro:
+.RE
+.nf
+n 040,! tail -n1 ^ND^N^<4002>^J
+.fi
+.RS 3
+(The sequence \fB^N^<4002>\fR retrieves the name of the current edit file).
+.RE
+
 .SH SEE ALSO
-\fBq_macros(5)\fR
+q_macros(5), q_opcodes(5)
 .br
 Much of \fBq\fR's documentation is in the form of help files,
 accessed from within \fBq\fR
