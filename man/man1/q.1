@@ -193,8 +193,111 @@ With the default macro set loaded, Tab expansion is Off.
 .BI \-v
 see \fBRunning q in a pipe\fR above.
 
+.SH CONTROL KEYS
+(\fB^A\fR stands for \fBCtrl-A\fR, and so on)
+.TP
+.BI DEL
+Delete character before cursor
+.TP
+.BI ENTER
+Accept current (file or command) line
+.TP
+.BI ESC
+Abandon edit of current line, and terminate editing command if line from file
+.TP
+.BI ^A
+Append excess of previous line to curent line, cursor to EOL
+.TP
+.BI ^B
+Cursor back to start of word, previous word if at word start
+.TP
+.BI ^C
+(Interrupt)
+.TP
+.BI ^D
+Delete character under cursor
+.TP
+.BI ^E
+Toggle Inserting
+.TP
+.BI ^F
+Cursor forward to start of next word
+.TP
+.BI ^G char
+Cursor forward to next instance of \fIchar\fR, EOL if none such
+.TP
+.BI ^H
+Cursor back to start of line or indent point if indenting.
+(Remember as "Home" key)
+.TP
+.BI ^I
+Insert spaces up to next tab position, 1 space if past last pos'n (as set by
+\fBT-TABSET\fR)
+.TP
+.BI ^J
+Same as \fBENTER\fR
+.TP
+.BI ^K
+Delete character under cursor and all characters following
+.TP
+.BI ^L
+Delete character before cursor and
+all chacters back to start of line.
+If indenting, only delete back to the indent point
+or if at the indent point then delete the indent
+.TP
+.BI ^M
+Same as \fBENTER\fR
+.TP
+.BI ^N char
+Start executing the \fIchar\fR macro
+.TP
+.BI ^O
+Cursor forward to character following next "\fB/* \fR" sequence,
+EOL if none such.
+(For modifying C comments)
+.TP
+.BI ^P char
+\fIchar\fR is entered into the line as-is
+.TP
+.BI ^Q
+Line from cursor onwards goes to lower-case
+.TP
+.BI ^R
+"Recover" line to its maximum-ever length.
+In a file, that is the maximum length of the current line;
+but in a command that is the maximum length since \fBq\fR started
+(including commands from macros)
+.TP
+.BI ^S
+Line from cursor onwards goes to upper-case
+.TP
+.BI ^T
+Split line: character under cursor becomes 1st character of new line
+(after any indent)
+.TP
+.BI ^U
+Delete all characters in line
+.TP
+.BI ^V
+Re-draw line
+.TP
+.BI ^W char
+\fBchar\fR is entered into the line with parity on (+ 0200)
+.TP
+.BI ^X
+Cursor forward 1 character
+.TP
+.BI ^Y
+Cursor back 1 character (but never into the indent zone)
+.TP
+.BI ^Z
+Cursor to EOL
+.TP
+.BI ^^
+Repeat last \fB^G\fR\fIchar\fR
+
 .SH ENVIRONMENT VARIABLES
-	
 .br
 \f2Q_ETC_DIR\f1
 .RS 3
