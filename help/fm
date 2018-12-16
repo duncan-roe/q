@@ -1,5 +1,10 @@
                         \/ F M - M O D E \/
 
+FM by itself resets all "modes" (see below) to their compile-time defaults,
+subject to confirmation.
+
+"FM -" lists the current settings. Otherwise:
+
 Sets various "switches" or "modes". The entire mode word may be given in octal,
 or individual switches may be (un)set mnemonically. Use + to set ,- to unset.
 Not all defaults are - (0) initially.
@@ -57,7 +62,7 @@ position is 0, they are at 8, 16, 24 &c.: i.e. multiples of 8). The tab mode on
 reading expands these to spaces. The tab mode on writing compresses multiple
 spaces to tabs assuming the above tab settings. On writing, if an actual tab
 character is found in a line, compression stops for the rest of that line.
-The assumed tab spacing can be varied (currently by x;t <n>;x).
+The assumed tab spacing can be varied (by x;t <n>;x or ALU opcode ^<POPTBSZ>).
 Mode l expands and compresses *leading* tabs only
 (conversion stops as soon as any non-tab is found).
 +t forces -l and vice versa.

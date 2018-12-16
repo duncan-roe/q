@@ -208,7 +208,7 @@ Accept current (file or command) line
 Abandon edit of current line, and terminate editing command if line from file
 .TP
 .BI ^A
-Append excess of previous line to curent line, cursor to EOL
+Append excess of previous line to current line, cursor to EOL
 .TP
 .BI ^B
 Cursor back to start of word, previous word if at word start
@@ -244,7 +244,7 @@ Delete character under cursor and all characters following
 .TP
 .BI ^L
 Delete character before cursor and
-all chacters back to start of line.
+all characters back to start of line.
 If indenting, only delete back to the indent point
 or if at the indent point then delete the indent
 .TP
@@ -311,7 +311,7 @@ a sequence of alphanumeric or underscore characters.
 Any other character is regarded as a \fItoken_delimiter\fR.
 The \fBFT-FTOKENCHAR\fR command can remove characters from the
 token delimiter table, e.g. if a programming language allows \fB'$'\fR
-in variable names, the command \fBFT\ \&$\fR will accomodate this.
+in variable names, the command \fBFT\ \&$\fR will accommodate this.
 .RE
 .TP
 .BI A-APPEND
@@ -396,7 +396,7 @@ Join together lines from the given line number,
 and enter edit mode on the joined line
 .TP
 .BI L-LOCATE
-Locate first ocurrence of given string
+Locate first occurrence of given string
 .TP
 .BI M-MODIFY
 Enter edit mode starting at the given line number
@@ -442,12 +442,12 @@ up to 1 screenful or the number (each side) given by a second argument
 Write lines from the file to another file
 .TP
 .BI X-XISTICS
-Enters a command subprocessor with editing control keys disabled.
+Enters a command sub-processor with editing control keys disabled.
 The only still-useful commands are \fBT\fR (to set assumed tab width in files)
 and \fBX\fR (to exit back to the normal \fBq\fR command line)
 .TP
 .BI Y-YCHANGEALL
-Change every ocurrence of one given string to another. Extra arguments can limit
+Change every occurrence of one given string to another. Extra arguments can limit
 the range where this happens
 .TP
 .BI Z-ZENDUSE
@@ -476,7 +476,7 @@ Default: as set at build time, otherwise \f3/usr/local/share/q\f1.
 \f2Q_MACRO_DIR\f1
 .RS 3
 Separate directory for system macros.
-Default: directory containig help files.
+Default: directory containing help files.
 .RE
 .PP
 \f2SHELL\f1
