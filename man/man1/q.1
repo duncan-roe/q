@@ -22,7 +22,7 @@
 .TH Q 1 "Dec 6 2018" "q-54" "Linux Programmer's Manual"
 
 .SH NAME
-q \- line-orientated mostly WYSIWYG editor with a powerful macro facility
+q \- line-oriented mostly WYSIWYG editor with a powerful macro facility
 
 .SH SYNOPSIS
 \f3q\f1 [\f3-AVbdemnoqt\f1] [\f3-i\f2 initial_macro\f1] [\f3+\f2line# file\f1]
@@ -57,8 +57,11 @@ The documentation generally refers to commands in upper case,
 in the form \f2command abbreviation\f3-\f2full command name\f1
 as in \f3H\f1-\f3HELP\f1 below.
 .br
-When showing file contents, \fBq\fR always displays line numbers. After the last
-line of a file, \fBq\fR displays \fBE - O - F\fR (\fIE\fRnd \fIO\fRf \fIF\fRile)
+\fBq\fR always displays line numbers when showing file contents.
+If a line is longer than the screen is wide, subsequent parts are displayed with
+a part number (starting at 2) instead of a line number.
+After the last line of a file,
+\fBq\fR displays \fBE - O - F\fR (\fIE\fRnd \fIO\fRf \fIF\fRile)
 in lieu of a line number.
 .PP
 \f3Startup file\f1
@@ -66,7 +69,7 @@ in lieu of a line number.
 On starting, unless the \fB-n\fR option was given,
 \fBq\fR reads commands from a startup file before accepting user
 input.
-These commands typically load macros and may set some modes (see \f3H FM\f1).
+These commands typically load macros and may set some modes (see \f3H\ \&FM\f1).
 .br
 \f3q\f1 first looks in the current working directory for a file named
 \f3.qrc\f1.
@@ -124,9 +127,8 @@ This discarded output can be made visible by giving the \fB-v\fR option
 To see a description of all options, start \f3q\f1 and enter \f3H\ \&IQ\f1.
 .br
 In the summary below,
-the descriptions of options that are toggles assumes \fBq\fR's default behaviour
+the descriptions of options that are toggles assume \fBq\fR's default behaviour
 has not been altered by a \fIStartup file\fR:
-
 .TP
 .BI \-A
 causes \fBq\fR to output the currently supported ALU (and FPU) opcodes.
@@ -296,6 +298,160 @@ Cursor to EOL
 .TP
 .BI ^^
 Repeat last \fB^G\fR\fIchar\fR
+
+.SH Q COMMANDS
+In this section:
+.RS 3
+A \fIboolean_argument\fR is one of
+\fByes\fR, \fBno\fR, \fBon\fR, \fBoff\fR, \fBtrue\fR,
+\fBfalse\fR or unique abbreviations of these.
+.br
+A \fItoken\fR is, by default,
+a sequence of alphanumeric or underscore characters.
+Any other character is regarded as a \fItoken_delimiter\fR.
+The \fBFT-FTOKENCHAR\fR command can remove characters from the
+token delimiter table, e.g. if a programming language allows \fB'$'\fR
+in variable names, the command \fBFT\ \&$\fR will accomodate this.
+.RE
+.TP
+.BI A-APPEND
+Enter edit mode, appending lines to the file
+.TP
+.BI B-BACKUP
+Save the file, keeping a backup copy named \fIfile\fR.bu
+.TP
+.BI C-COPY
+Copy lines in the file (to somewhere else in the file)
+.TP
+.BI D-DELETE
+Delete lines in file
+.TP
+.BI E-ENTER
+Insert contents of another file to the file,
+to appear before the current line
+.TP
+.BI FB-FBRIEF
+Macros will run in "brief" mode:
+individual commands will not appear but
+the displayed line number will update periodically,
+if the macro runs for more than about 200mS
+.TP
+.BI FC-FCASEINDEPEND
+String matches will be case independent.
+\fBFC\fR may be given a \fIboolean_argument\fR. Otherwise it is a toggle
+.TP
+.BI FD-FDEVNULL
+Suppresses output by redirecting standard output to /dev/null.
+Accepts a \fIboolean_argument\fR. Default is \fBfalse\fR.
+Only allowed inside \fBU-USE\fR files (q.v.)
+.TP
+.BI FF-FFNOWRAP
+Suppress display of subsequent parts of long lines.
+See \fBDESCRIPTION above\fR
+.TP
+.BI FI-FIMMEDIATE_MACRO
+Define a macro for immediate execution
+.TP
+.BI FL-FLOCATE
+Locate a string as a \fItoken\fR. See \fBL-LOCATE\fR below
+.TP
+.BI FM-FMODE
+Sets, displays or resets \fBq\fR's mode switches
+.TP
+.BI FN-FNONE
+Macros will run in "none" mode: nothing is output until the macro finishes.
+.TP
+.BI FO-FORGET
+Forget the last D-DELETE command. Implied by any subsequent change to the file
+.TP
+.BI FT-FTOKENCHAR
+Remove a character from the token delimiter table,
+as discussed at the start of this section
+.TP
+.BI FV-FVERBOSE
+Macros will run in "verbose" mode:
+display is as if characters had been typed at the keyboard
+.TP
+.BI FX-FXCHANGE
+Exchange the functions of a pair of control keys.
+Only affects keyboard input (not macros or \fBU-Use\fR files)
+.TP
+.BI FY-FYCHANGEALL
+Like \fBY-YCHANGEALL\fR except the string to be replaced is searched for as a
+\fItoken\fR
+.TP
+.BI G-GOTO
+Change the file position to the specified line number
+.TP
+.BI H-HELP
+Give help on the given subject (or on \fBq\fR if none).
+Can be used to display other files in the help directory
+(e.g. system macro files (*.qm) and macro catalogues (*.cat))
+.TP
+.BI I-INSERT
+Enter edit mode, inserting lines at the given line number
+.TP
+.BI J-JOIN
+Join together lines from the given line number,
+and enter edit mode on the joined line
+.TP
+.BI L-LOCATE
+Locate first ocurrence of given string
+.TP
+.BI M-MODIFY
+Enter edit mode starting at the given line number
+.TP
+.BI N-NEWMACRO
+Define a (new) macro. See q_macros(5)
+.TP
+.BI O-ONOFFINDENT
+Enter or leave indent mode dependent on the supplied \fIboolean_argument\fR.
+Acts as a toggle if no argument
+.TP
+.BI P-PRINT
+Print lines of the file starting from the current file position, which moves
+forward by the number of lines printed
+.TP
+.BI Q-QUIT
+Stop editing the current file (except \fBq -A\fR and \fBq -V\fR which act as
+per \fBOPTIONS\fR above).
+With no arguments, start editing the next \fIfile\fR, exit if none.
+Accepts another file as an argument,
+or \fB$\fR\fIn\fR, where \fIn\fR is an index into the \fIfile\fR arguments on
+the shell command line
+.TP
+.BI R-REPOSITION
+Move lines in the file to somewhere else in the file
+.TP
+.BI S-SAVE
+Save the file.
+During the save process,
+a temporary backup (called \fIfile\fR.tm) is kept in case of a catastrophe
+.TP
+.BI T-TABSET
+Set tab positions for use by \fB^I\fR
+.TP
+.BI U-USEFILE
+Take commands from the given file
+.TP
+.BI V-VIEW
+Print lines each side of the current line number,
+up to 1 screenful or the number (each side) given by a second argument
+.TP
+.BI W-WRITEFILE
+Write lines from the file to another file
+.TP
+.BI X-XISTICS
+Enters a command subprocessor with editing control keys disabled.
+The only still-useful commands are \fBT\fR (to set assumed tab width in files)
+and \fBX\fR (to exit back to the normal \fBq\fR command line)
+.TP
+.BI Y-YCHANGEALL
+Change every ocurrence of one given string to another. Extra arguments can limit
+the range where this happens
+.TP
+.BI Z-ZENDUSE
+Return from a \fBU-USE\fR file. Implied by hitting EOF
 
 .SH ENVIRONMENT VARIABLES
 .br
