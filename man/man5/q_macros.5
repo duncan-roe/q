@@ -1,0 +1,394 @@
+.TH Q_MACROS 5 "04 Dec 2018" q-54 "q"
+.SH NAME
+Q macros - the Q macro facility
+.SH DESCRIPTION
+A \fBq\fR macro replaces its 2-character \fIinvocation sequence\fR with
+the contents of the macro,
+as originally defined by the \fBN-NEWMACRO\fR command.
+.br
+The sequence to invoke a macro is
+.B ^N
+.I macro_id
+where
+.I macro_id
+is a single character represented as any of:
+.br
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+itself (except carat). Example:\ \&\fB7\fR (the digit '7', macro 55)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+A control character (caret\ \&+\ \&character).
+Example:\ \&\fB^A\fR (Control-A, macro 1)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fB^*\fR (an actual carat).
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+carat\ \&angle-brackets\ \&octal.
+Example:\ \&\fB^<204>\fR (parity-high Control-D,
+macro 0204 (132)). Macro characters are 16 bits wide,
+so the octal value may range from 0 to 177777
+.SH PSEUDOMACROS
+Pseudomacros provide control and test facilities inside macros.
+They fall into 3 groups:
+.TP
+.B 1.\ \&Basic Pseudomacros
+These are the macros in rows 1 and 3 of Table\ \&1 below.
+Some of these pseudomacros are available from the keyboard,
+e.g. \fB^NO1\fR or \fB^No1\fR will set tab 1 to the current cursor position
+(\fBO\fR=0117, \fBo\fR=0157).
+.RS 3
+.TP
+.B Macro-writing considerations
+The convention when writing macros is to code the pseudomacro Id in upper-case.
+.br
+Macros that conditionally skip will skip 2 characters: enough room for
+\fB^N\fR\fImacro_id\fR.
+The \fB^NL\fR unconditional 4-character skip allows for
+\fB^ND^N\fR\fImacro_id\fR.
+See \fBMACROS\ \&AS\ \&SUBROUTINES\fR below.
+.TP
+.B List of Basic Pseudomacros
+.RS 3
+.TP
+.BI ^N@
+Jump to start of current macro
+.TP
+.BI ^NA
+Skip unless at end of line
+.TP
+.BI ^NB tab_id
+Skip unless before tab \fItab_id\fR (see \fBTAB\ \&IDS\fR below)
+.TP
+.BI ^NC
+Skip unless editing a command line
+.TP
+.BI ^ND
+Call next macro. See \fBMACROS\ \&AS\ \&SUBROUTINES\fR below
+.TP
+.BI ^NE
+Force inserting off (since \fB^E\fR is a toggle)
+.TP
+.BI ^NF tab_id
+Remember File position in tab \fItab_id\fR (see \fBTAB\ \&IDS\fR below)
+.TP
+.BI ^NG char
+Skip unless \fIchar\fR is under the cursor
+.TP
+.BI ^NI
+Cause macro to skip on returning. See \fBMACROS\ \&AS\ \&SUBROUTINES\fR below
+.TP
+.BI ^NJ char
+Jump forward in macro by \fIchar\fR characters.
+\fIchar\fR is treated as a 2's complement signed 16-bit quantity.
+.br
+This test demonstrates the result of jumping forward 6:
+.nf
+> fi ^NJ^<006>0123456789
+> 6789
+.fi
+.TP
+.BI ^NL
+Unconditional 4-character skip. See \fBMACROS\ \&AS\ \&SUBROUTINES\fR below
+.TP
+.BI ^NM macro_id
+Defines macro \fImacro_id\fR to be the current (file or command) line.
+When defining macros below 04000,
+\fB^NM\fR will add \fB^NU\fR to the macro definition,
+so the newly-defined macro is callable.
+\fB^NM\fR can also define ALU & FPU memory locations.
+.TP
+.BI ^NN tab_id
+Change the file position to the value of tab \fItab_id\fR
+(see \fBTAB\ \&IDS\fR below)
+.TP
+.BI ^NO tab_id
+Remember cursor position in tab \fItab_id\fR (see \fBTAB\ \&IDS\fR below)
+.TP
+.BI ^NP tab_id
+skip unless after tab \fItab_id\fR (see \fBTAB\ \&IDS\fR below)
+.TP
+.BI ^NR tab_id
+Move cursor to character position \fItab_id\fR (see \fBTAB\ \&IDS\fR below)
+.TP
+.BI ^NS
+Unconditional skip
+.TP
+.BI ^NT
+Trust the user to use \fB^NN\fR\fItab_id\fR to change the File Position while
+editing a line from the file.
+The user mast change the line number back before accepting the line to avoid
+undefined behaviour
+.TP
+.BI ^NU
+Return from macro. See \fBMACROS\ \&AS\ \&SUBROUTINES\fR below
+.TP
+.BI ^NX
+Exit macro. See \fBMACROS\ \&AS\ \&SUBROUTINES\fR below
+.TP
+.BI ^N[ tab_id
+Skip unless file position is before the value of tab \fItab_id\fR
+(see \fBTAB\ \&IDS\fR below)
+.TP
+.B ^N\\\\
+Force an error and ring the terminal bell.
+See \fBMACROS\ \&AS\ \&SUBROUTINES\fR below
+.TP
+.BI ^N] tab_id
+Skip unless file position is after the value of tab \fItab_id\fR
+(see \fBTAB\ \&IDS\fR below)
+.RE
+.RE
+.TP
+.B 2.\ \&Active pseudomacros
+These all return a string when invoked. \fBq\fR uses some of them internally
+(e.g. \fBq\fR uses ^<4010> to format the date / time returned by \fB^N^<4011>\fR
+and \fB^N^<4012>\fR)
+.RS 3
+.TP
+.B Macro-writing considerations
+For these macros to return, \fB^ND\fR is required.
+However \fB^NU\fR should not be added when redefining them -
+\fBq\fR implements a \fB^NU\fR automatically.
+.TP
+.B List of Active Pseudomacros
+.RS 3
+.TP
+.BI ^N^<4000>
+Expands to the current \fBFM-FMODE\fR setting, in octal.
+Modes are further described in q(1).
+.TP
+.BI ^N^<4001>
+Helper pseudomacro for Foundation macro \fB^N^V\fR (view next screenful)
+.TP
+.BI ^N^<4002>
+Expands to the pathname of the current file.
+If there is not yet any pathname associated with the current file,
+\fBq\fR will force a \fB^NX\fR instead of \fB^NU\fR at macro end
+.RE
+.RE
+.SH MACROS AS SUBROUTINES
+\fBq\fR has a macro call stack, which most of the supplied macros use.
+To use the call stack, a macro must finish with the \fB^NU\fR pseudomacro,
+which will resume execution in the calling macro following the 
+\fB^N\fR\fImacro_id\fR sequence that invoked the finishing macro.
+In the calling macro, that sequence must have been immediately preceded by the
+\fB^ND\fR pseudomacro, to push a link on the macro call stack.
+.br
+When the documentation refers to \fIcalling\fR a macro,
+it means \fB^ND^N\fR\fImacro_id\fR. \fIJumping\fR to a macro means simply
+\fB^N\fR\fImacro_id\fR.
+.br
+The \fB^NL\fR pseudomacro is provided to allow conditional calling of macros.
+\fB^NL\fR skips 4 characters, exactly enough for \fB^ND^N\fR\fImacro_id\fR.
+.br
+Like pseudomacros, called macros can skip on return (usually conditionally).
+The \fB^NI\fR pseudomacro achieves this:
+it increments the newest link on the macro call stack by 2.
+.br
+The \fB^NX\fR pseudomacro acts as if the invoking macro had run off its end
+without a \fB^NU\fR.
+The macro stack is unwound back to the last \fBU-USE\fR file or the keyboard.
+.br
+The \fB^N\\\fR pseudomacro forces an error. The macro stack and \fBU-USE\fR file
+stack are both rewound back to the keyboard.
+(If \fBQ\fR was invoked with \fB-o\fR or is in a pipe,
+\fBq\fR will save and quit).
+(\fB^N\\\fR is undefined and guaranteed to remain so).
+.SH TAB IDS
+\fBq\fR has 80 tabs, starting at tab 1. \fBT-TABSET\fR sets tabs starting at 1.
+Pseudomacros and the ALU can set any tab. A tab can be in one of 3 states:
+.TP
+1.\ \&Character number in line
+.TP
+2.\ \&Line number in file
+.TP
+3.\ \&Unset
+
+.RE
+It is an error to use a tab inappropriately.
+.br
+For a list of tab IDs, start \fBq\fR and enter \fBH AS\fR.
+.SH TABLES
+.RE
+.B Table\ \&1.\ \&Macro id map
+.br
+(\fIooo\fR is a 3-digit octal number)
+.TS
+allbox tab(:);
+ltB ltB.
+T{
+Range (octal)
+T}:T{
+Description
+T}
+.T&
+lt lt.
+T{
+000
+T}:T{
+The ^@ pseudomacro
+T}
+T{
+001-077
+T}:T{
+Available for definition. Many of these are defined by the supplied macro sets,
+but there are gaps
+T}
+T{
+100-177
+T}:T{
+not user-definable: this is the pseudomacro namespace. (Immediate macros do
+define some of this range however)
+T}
+T{
+200-3777
+T}:T{
+Available for definition. Some of these are defined by the supplied macro sets
+T}
+T{
+4000-4013
+T}:T{
+The currently implemented active pseudomacros
+T}
+T{
+4200-4777
+T}:T{
+the ALU opcodes (some room for expansion). Start point is q-revision dependent
+T}
+T{
+5\fIooo\fR
+T}:T{
+Implement \fB^<PSH\ \&\fIooo\fB>\fR
+T}
+T{
+6\fIooo\fR
+T}:T{
+Implement \fB^<POP\ \&\fIooo\fB>\fR
+T}
+T{
+7\fIooo\fR
+T}:T{
+ALU long integer memory locations.
+Use \fBn\ \&7\fIooo\fR or \fB^<POP \&\fIooo\fB>\fR to set,
+and \fB^N^<7\fIooo\fB>\fR or \fB^<PSH\ \&\fIooo\fB>\fR to get.
+(Macros would usually use \fB^ND^N^<7\fIooo\fB>\fR)
+T}
+T{
+10000-10777
+T}:T{
+(Reserved)
+T}
+T{
+11\fIooo\fR
+T}:T{
+Implement \fB^<PSHF\ \&\fIooo\fB>\fR
+T}
+T{
+12\fIooo\fR
+T}:T{
+Implement \fB^<POPF\ \&\fIooo\fB>\fR
+T}
+T{
+13\fIooo\fR
+T}:T{
+FPU double memory locations.
+Use \fBn\ \&13\fIooo\fR or \fB^<POPF \&\fIooo\fB>\fR to set,
+and \fB^N^<13\fIooo\fB>\fR or \fB^<PSHF\ \&\fIooo\fB>\fR to get.
+(Macros would usually use \fB^ND^N^<13\fIooo\fB>\fR)
+T}
+.TE
+
+.SH EXAMPLES
+	
+.br
+.B Paginate through loaded macros from shell command prompt
+.br
+(i.e. command to run in a separate window from the one running \fBq\fR)
+.RS 3
+The \fBq\fR command \fBn\ \&\-\fR lists out all loaded macros.
+The line below captures this output and pipes it into \fBless\fR.
+The command should be issued with the same current working directory as \fBq\fR
+so as to pick up the correct \fIStartup file\fR.
+.RE
+.nf
+cat /dev/null | q -v -i n,-^J 2>&1 | q -i fl,:^J^NC^NU^[d,1,-,-2^Ja^J^[d,-1^Jy,^P^M,,^J | less
+.fi
+.RS 3
+The pipeline contains two invocations of \fBq\fR:
+.RS 3
+1.\ \&Run with the \fB-v\fR option
+so output from \fBq\fR commands goes to stderr;
+issue the \fBn,-\fR command; redirect stderr back into the stdout pipe.
+.br
+2.\ \&Trim off unwanted leading lines:
+everything before the first line that has a colon surrounded by spaces
+(i.e. token delimiters); trim off the unwanted trailing line
+(in fact an internally generated \fBfq\fR command);
+remove Cr (\fB^M\fR) characters.
+.RE
+Any need for shell quoting is obviated
+by using \fBq\fR's \fIcomma\fR delimiter in commands.
+The sequence \fB^NC^NU\fR guards against there being no defined macros.
+The above line is expanded for clarity:
+the canonical (minimum length) version is:
+.RE
+.nf
+cat /dev/null|q -vin-^J 2>&1|q -ifl:^J^NC^NU^[d1,-,-2^Ja^J^[d-1^Jy,^P^M^J|less
+.fi
+.PP
+.B Change what the space macro does
+.RS 3
+The foundation macro set defines the space macro (\fB^N\fIspace\fR)
+to run \fBmake\fR.
+This \fBq\fR invocation sequence redefines the space macro to run
+\fBtail\fR to output only the last line (i.e. without line numbering):
+.RE
+.nf
+q -i 'n 040,! tail -n1 ^*ND^*N^*<4002>^*J^J'
+.fi
+.RS 3
+The immediate macro definition has to be quoted,
+since it contains the shell metacharacters space and angle brackets.
+The definition of the space macro contains escaped carats (\fB^*\fR)
+because the defined immediate macro will issue the \fBN-NEWMACRO\fR command
+to redefine the space macro:
+.RE
+.nf
+n 040,! tail -n1 ^ND^N^<4002>^J
+.fi
+.RS 3
+(The sequence \fB^N^<4002>\fR retrieves the name of the current edit file).
+.RE

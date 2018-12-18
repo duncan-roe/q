@@ -64,6 +64,28 @@ macdef(unsigned int mcnum, unsigned char *buff, int buflen, bool appnu)
     fprintf(stderr, "%s. %s (strtol)", strerror(errno), (char *)buff);
     goto r_false;
   }                                /* if (mcnum >= 07000 && mcnum <= 07777) */
+
+/* Do the FPU macros here */
+  if (mcnum >= 013000 && mcnum <= 013777)
+  {
+    int idx = mcnum & 0777;
+    char *endptr;
+
+    errno = 0;
+    buff[buflen] = 0;
+    FPU_memory[idx] = strtod((char *)buff, &endptr);
+    if (errno)
+    {
+      fprintf(stderr, "%s. %s (strtod)", strerror(errno), (char *)buff);
+      goto r_false;
+    }                              /* if (errno) */
+    if (!*endptr)
+      goto r_true;
+    fprintf(stderr, "Illegal character '%c' in number \"%s\"", *endptr,
+      (char *)buff);
+    goto r_false;
+  }                                /* if (mcnum >= 013000 && mcnum <= 013777) */
+
   for (i = 0; i < buflen; i++)
     xbuf[i] = buff[i];
   return macdefw(mcnum, xbuf, buflen, appnu);

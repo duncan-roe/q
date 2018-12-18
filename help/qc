@@ -6,10 +6,11 @@ A-Append lines    B-Backup file     C-Copy lines      D-Delete lines
 E-Enter file      F-(Fanout)        FB-Brief macro    FC-Case independence
 FD-Disable output FF-no line wrap   FI-immediate macro
 FL-Locate token   FM-Set/display MODE                 FN-No macro o/p
-FO-FOrget delete  FT-undefine Token delimiter         FV-Verbose macro
-FX-eXchange keys  FY-Token Y        G-Goto line       H-Help
-I-Insert lines    J-Join lines      L-Locate string   M-Modify line(s)
-N-New macro       O-indent mOde     P-Print line(s)   Q-Quit
-R-Reposition lines                  S-Save file       T-Tabset
-U-Use file        V-View            W-Write file      X-characteristics
-Y-Change all str1 str2              Z-end use file    !-do shell command
+FO-FOrget delete  FQ-Force Quit     FT-undefine Token delimiter
+FV-Verbose macro  FX-eXchange keys  FY-Token Y        G-Goto line
+H-Help            I-Insert lines    J-Join lines      L-Locate string
+M-Modify line(s)  N-New macro       O-indent mOde     P-Print line(s)
+Q-Quit            R-Reposition lines                  S-Save file
+T-Tabset          U-Use file        V-View            W-Write file
+X-characteristics Y-Change all str1 str2              Z-end use file
+!-do shell command

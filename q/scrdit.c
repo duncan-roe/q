@@ -351,7 +351,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
       if (lstvld)
         indent_string = Prev->bdata;
       else
-        indent_string = sindnt(); /* Sets ndntch & forces lstvld to be true */
+        indent_string = sindnt();  /* Sets ndntch & forces lstvld to be true */
       if (ndntch > 0)
       {
         for (i = ndntch, p = indent_string; i > 0; i--)
@@ -1679,12 +1679,13 @@ p7614:mcposn = mcposn + 2;         /* Skip 2 ... */
  * ^NM - Make Macro from current line
  */
 p7615:
-  if (curmac < 0)
-    goto p1908;                    /* J keybd pseudo */
+  if (curmac > 0)
+  {
 /* Must be 1 more char in macro */
-  if (scmacs[curmac]->mcsize == mcposn)
-    BOL_OR_EOL;
-p1908:gmacr = true;                /* We are defining a macro */
+    if (scmacs[curmac]->mcsize == mcposn)
+      BOL_OR_EOL;
+  }                                /* if (curmac > 0) */
+  gmacr = true;                    /* We are defining a macro */
   goto p1902;                      /* Get macro ID */
 /*
  * ^NG - obey if Got next ch
@@ -1722,12 +1723,13 @@ p1601:
     SKIP2MACCH;                    /* Skip if mismatch */
   RAWNEXTCHR;
 /*
- * P1903 - Come here with macro to define. All characters are legal
- *         except the pseudomacros...
+ * P1903 - Come here with macro to define.
+ *         Verify char is a definable macro...
  */
 p1903:
   if ((thisch < 0200 && thisch > 077) ||
-    (thisch > TOPMAC && thisch < 07000) || thisch > 07777)
+    (thisch > TOPMAC && thisch < 07000) ||
+    (thisch > 07777 && thisch < 013000) || thisch > 13777)
   {
     err = "";
     fprintf(stderr, "\r\n^NM cannot define macro %o", thisch);

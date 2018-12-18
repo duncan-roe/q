@@ -20,17 +20,14 @@
 .\" Boston, MA 02111-1307, USA.
 .\"
 .TH Q 1 "Dec 6 2018" "q-54" "Linux Programmer's Manual"
-
 .SH NAME
 q \- line-oriented mostly WYSIWYG editor with a powerful macro facility
-
 .SH SYNOPSIS
 \f3q\f1 [\f3-AVbdemnoqt\f1] [\f3-i\f2 initial_macro\f1] [\f3+\f2line# file\f1]
 [\f2file\f1[\f3:\f2line#\f1] [...]]
 .br
 \f2command\f1 [...] \f3| q \f1[\f3-bdntv\f1]\f3 -i\f2 initial_macro \f3|\f2
 command\f1 [...]
-
 .SH DESCRIPTION
 \f3q\f1 is a command-driven line-oriented editor in which almost all the control
 keys perform some editing function.
@@ -69,7 +66,8 @@ in lieu of a line number.
 On starting, unless the \fB-n\fR option was given,
 \fBq\fR reads commands from a startup file before accepting user
 input.
-These commands typically load macros and may set some modes (see \f3H\ \&FM\f1).
+These commands typically load macros and may set some modes
+(see \fBMODES\fR below).
 .br
 \f3q\f1 first looks in the current working directory for a file named
 \f3.qrc\f1.
@@ -122,7 +120,6 @@ discarded (by redirection to \fB/dev/null\fR)).
 This discarded output can be made visible by giving the \fB-v\fR option
 (run \fIV\fRerbosely: stdout is instead redirected to stderr).
 .RE
-
 .SH OPTIONS
 To see a description of all options, start \f3q\f1 and enter \f3H\ \&IQ\f1.
 .br
@@ -149,8 +146,8 @@ This cannot be changed for the session.
 Files are read with no tab expansion or other character conversion.
 The division into "lines" is somewhat arbitrary,
 but a new line is always started following \fB^J\fR.
-By default, binary edits are done in Fixed Length mode: from inside \fBq\fR see
-\fBH\ \&FM\fR for more information.
+By default, binary edits are done in Fixed Length mode:
+see \fBMODES\fR\ below.
 .TP
 .BI \-d
 Do not perform DOS end-of-line translations (\fBCrLf=>Nl)\fR when reading files.
@@ -194,7 +191,6 @@ With the default macro set loaded, Tab expansion is Off.
 .TP
 .BI \-v
 see \fBRunning q in a pipe\fR above.
-
 .SH CONTROL KEYS
 (\fB^A\fR stands for \fBCtrl-A\fR, and so on)
 .TP
@@ -298,7 +294,6 @@ Cursor to EOL
 .TP
 .BI ^^
 Repeat last \fB^G\fR\fIchar\fR
-
 .SH Q COMMANDS
 In this section:
 .RS 3
@@ -356,13 +351,20 @@ Define a macro for immediate execution
 Locate a string as a \fItoken\fR. See \fBL-LOCATE\fR below
 .TP
 .BI FM-FMODE
-Sets, displays or resets \fBq\fR's mode switches
+Sets, displays or resets \fBq\fR's mode switches. See \fBMODES\fR below
 .TP
 .BI FN-FNONE
 Macros will run in "none" mode: nothing is output until the macro finishes.
 .TP
 .BI FO-FORGET
 Forget the last D-DELETE command. Implied by any subsequent change to the file
+.TP
+.BI FQ-FQUIT
+With an argument: same as \fBQ-QUIT\fR.
+.br
+Otherwsie: stop editing the current file and exit
+(ignore extra \fIfile\fR arguments).
+Also exit \fBq\fR if in a macro.
 .TP
 .BI FT-FTOKENCHAR
 Remove a character from the token delimiter table,
@@ -418,7 +420,10 @@ per \fBOPTIONS\fR above).
 With no arguments, start editing the next \fIfile\fR, exit if none.
 Accepts another file as an argument,
 or \fB$\fR\fIn\fR, where \fIn\fR is an index into the \fIfile\fR arguments on
-the shell command line
+the shell command line.
+.br
+With no arguments and inside a macro,
+return from that macro unless mode \fB+q\fR is asserted (\fBq\fR exits)
 .TP
 .BI R-REPOSITION
 Move lines in the file to somewhere else in the file
@@ -447,12 +452,15 @@ The only still-useful commands are \fBT\fR (to set assumed tab width in files)
 and \fBX\fR (to exit back to the normal \fBq\fR command line)
 .TP
 .BI Y-YCHANGEALL
-Change every occurrence of one given string to another. Extra arguments can limit
-the range where this happens
+Change every occurrence of one given string to another.
+Extra arguments can limit the range where this happens
 .TP
 .BI Z-ZENDUSE
 Return from a \fBU-USE\fR file. Implied by hitting EOF
-
+.SH MODES
+\fBq\fR runs with various "switches" or "modes". For example,
+the \fBtr\fR mode governs whether or not to expand tabs to spaces on reading.
+For a full list, start \fBq\fR and enter \fBH FM\fR.
 .SH ENVIRONMENT VARIABLES
 .br
 \f2Q_ETC_DIR\f1
@@ -485,7 +493,6 @@ Shell used to implement the \f3!\f1 (shell) command.
 Default: as set at build time, otherwise \f3/bin/sh\f1.
 .RE
 .PP
-
 .SH SEE ALSO
 q_macros(5), q_opcodes(5)
 .br

@@ -26,7 +26,7 @@ cp --preserve=timestamps q/.qrc $(DESTDIR)$(DOCDIR)/q/q_dot_qrc && \
 cp --preserve=timestamps help/.qrc $(DESTDIR)$(DOCDIR)/q/help_dot_qrc && \
 cp --preserve=timestamps INSTALL LICENSE README $(DESTDIR)$(DOCDIR)/q/ && \
 for i in man/man*; do mkdir -p $(DESTDIR)$(MANDIR)/$$(basename $$i) &&\
-cp --preserve=timestamps $$i/* $(DESTDIR)$(MANDIR)/$$(basename $$i); done
+cp --preserve=timestamps $$i/*.? $(DESTDIR)$(MANDIR)/$$(basename $$i); done
 
 install_etc:
 	mkdir -p $(DESTDIR)$(ETC_DIR) && cp -a etc/* $(DESTDIR)$(ETC_DIR)
@@ -38,4 +38,4 @@ rmdir $(DESTDIR)$(HELP_DIR); \
 rm -r $(DESTDIR)$(DOCDIR)/q/; \
 for i in etc/*; do rm $(DESTDIR)$(ETC_DIR)/$$(basename $$i); done; \
 for i in man/man*; do j=$(DESTDIR)$(MANDIR)/$$(basename $$i); \
-for k in $$i/*;do rm $$j/$$(basename $$k); done; done
+for k in $$i/*.?;do rm $$j/$$(basename $$k); done; done
