@@ -197,10 +197,42 @@ Helper pseudomacro for Foundation macro \fB^N^V\fR (view next screenful)
 Expands to the pathname of the current file.
 If there is not yet any pathname associated with the current file,
 \fBq\fR will force a \fB^NX\fR instead of \fB^NU\fR at macro end
+.TP
+.BI ^N^<4003>
+Expands to the directory containing HELP files and system macros. No trailing /
+.TP
+.BI ^N^<4004>
+Helper pseudomacro for Foundation macro \fB^N^Q\fR (view previous screenful)
+.TP
+.BI ^N^<4005>
+Returns screen width
+.TP
+.BI ^N^<4006>
+Returns screen height
+.TP
+.BI ^N^<4007>
+Returns format in effect for displaying FPU memory locations.
+\fBN-NEWMACRO\fR can re-define
+.TP
+.BI ^N^<4010>
+Returns format in effect for displaying current time.
+\fBN-NEWMACRO\fR can re-define
+.TP
+.BI ^N^<4011>
+Returns the current local time as formatted by \fB^N^<4010>\fR
+.TP
+.BI ^N^<4012>
+Returns the current UTC time as formatted by \fB^N^<4010>\fR
+.TP
+.BI ^N^<4013>
+Returns format in effect for displaying ALU memory locations.
+\fBN-NEWMACRO\fR can re-define.
+ALU memory locations are stored as longs,
+so the format should always contain an 'l' (ell)
 .RE
 .RE
 .SH MACROS AS SUBROUTINES
-\fBq\fR has a macro call stack, which most of the supplied macros use.
+\fBq\fR has a macro call stack, which most of the system macros use.
 To use the call stack, a macro must finish with the \fB^NU\fR pseudomacro,
 which will resume execution in the calling macro following the 
 \fB^N\fR\fImacro_id\fR sequence that invoked the finishing macro.
@@ -264,7 +296,7 @@ T}
 T{
 001-077
 T}:T{
-Available for definition. Many of these are defined by the supplied macro sets,
+Available for definition. Many of these are defined by the system macro sets,
 but there are gaps
 T}
 T{
@@ -276,7 +308,7 @@ T}
 T{
 200-3777
 T}:T{
-Available for definition. Some of these are defined by the supplied macro sets
+Available for definition. Some of these are defined by the system macro sets
 T}
 T{
 4000-4013
@@ -286,7 +318,8 @@ T}
 T{
 4200-4777
 T}:T{
-the ALU opcodes (some room for expansion). Start point is q-revision dependent
+the ALU opcodes (with some room for expansion).
+Start point is q-revision dependent
 T}
 T{
 5\fIooo\fR
@@ -392,3 +425,5 @@ n 040,! tail -n1 ^ND^N^<4002>^J
 .RS 3
 (The sequence \fB^N^<4002>\fR retrieves the name of the current edit file).
 .RE
+.SH SEE ALSO
+q(1), strtol(3), strtoul(3), strtod(3)
