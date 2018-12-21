@@ -22,7 +22,7 @@ is a single character represented as any of:
 .sp -1
 .IP \(bu 2.3
 .\}
-itself (except carat). Example:\ \&\fB7\fR (the digit '7', macro 55)
+itself (except caret). Example:\ \&\fB7\fR (the digit '7', macro 55)
 .RE
 .sp
 .RS 4
@@ -45,7 +45,7 @@ Example:\ \&\fB^A\fR (Control-A, macro 1)
 .sp -1
 .IP \(bu 2.3
 .\}
-\fB^*\fR (an actual carat).
+\fB^*\fR (an actual caret).
 .RE
 .sp
 .RS 4
@@ -56,7 +56,7 @@ Example:\ \&\fB^A\fR (Control-A, macro 1)
 .sp -1
 .IP \(bu 2.3
 .\}
-carat\ \&angle-brackets\ \&octal.
+caret\ \&angle-brackets\ \&octal.
 Example:\ \&\fB^<204>\fR (parity-high Control-D,
 macro 0204 (132)). Macro characters are 16 bits wide,
 so the octal value may range from 0 to 177777
@@ -236,7 +236,7 @@ so the format should always contain an 'l' (ell)
 as the \fIALU\fR (Arithmetic and Logic Unit)
 although strictly speaking the ALU is only part of any computer.
 .br
-The ALU gives rise to 2 claases of pseudomacros: data reference and program
+The ALU gives rise to 2 classes of pseudomacros: data reference and program
 instruction (ALU opcode). These are describe below and in q_opcodes(5).
 .RS 3
 .TP
@@ -244,13 +244,36 @@ instruction (ALU opcode). These are describe below and in q_opcodes(5).
 The ALU has 2 sets of data memory locations: one for long integer and one
 for double floating point, see \fBTable\ \&1\fR below. These behave exactly as
 modifiable active pseudomacros (macros should use \fB^ND\fR, do not code
-\fB^NU\fR). For integers,
-\fBq\fR first tries to read the input as a signed quantity using \fBstrol(3)\fR.
+\fB^NU\fR).
+.br
+ALU opcodes are coded as \fB^N^<\fR\fIopcode\fR\fB>\fR where \fIopcode\fR
+is alphanumeric starting alphabetic, e.g \fBA1\fR: \fB^N^<A1>\fR adds 1 to
+register \fBR\fR.
+\fBq\fR translates \fB^N^<\fR\fIopcode\fR\fB>\fR to \fB^N^<4\fR\fIooo\fR\fB>\fR
+where \fIooo\fR may vary from one \fBq\fR revision to another.
+\fB^ND\fR and \fB^NU\fR are both implemented by \fBq\fR.
+The convention that has been used is to always code in upper-case.
+.TP
+.B Data Reference Pseudomacros
+.RS 3
+.TP
+.B Integer: n7000 - n7777
+When setting these with \fBN_NEWMACRO\fR or \fB^NM\fR\fImacro_id\fR,
+\fBq\fR first gives the macro definition to
+\fBstrtol(3)\fR to convert as a signed quantity.
 If this gets the error "Numerical result out of range" then \fBq\fR tries
-\fBstrtoul(3)\fR which may succeed for octal or hexadecimal input formats
-(but will still fail for decimal numbers greater than 9223372036854775807
-(64-bit q) or
+\fBstrtoul(3)\fR which may succeed for octal or hexadecimal input formats.
+\fBq\fR disallows decimal numbers greater than 9223372036854775807
+(64-bit q) or 2147483647 (32-bit q): they would convert as unsigned longs but
+would subsequently display as negative numbers.
+.TP
+.B Float: n13000 - n13777
+When setting these with \fBN_NEWMACRO\fR or \fB^NM\fR\fImacro_id\fR,
+\fBq\fR gives the macro definition to \fBstrtod(3)\fR.
 .RE
+.TP
+.B ALU Opcode Pseudomacros
+See \fBalu_opcodes(5)\fR
 .SH MACROS AS SUBROUTINES
 \fBq\fR has a macro call stack, which most of the system macros use.
 To use the call stack, a macro must finish with the \fB^NU\fR pseudomacro,
@@ -440,8 +463,8 @@ q -i 'n 040,! tail -n1 ^*ND^*N^*<4002>^*J^J'
 .fi
 .RS 3
 The immediate macro definition has to be quoted,
-since it contains the shell metacharacters space and angle brackets.
-The definition of the space macro contains escaped carats (\fB^*\fR)
+since it contains the shell meta-characters space and angle brackets.
+The definition of the space macro contains escaped carets (\fB^*\fR)
 because the defined immediate macro will issue the \fBN-NEWMACRO\fR command
 to redefine the space macro:
 .RE

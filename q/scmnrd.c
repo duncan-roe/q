@@ -13,6 +13,7 @@
  * Leaves READTOKEN ready to read 1st param
  */
 #include <stdio.h>
+#include <ctype.h>
 #include <memory.h>
 #include <string.h>
 #include <unistd.h>
