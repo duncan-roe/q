@@ -230,6 +230,26 @@ Returns format in effect for displaying ALU memory locations.
 ALU memory locations are stored as longs,
 so the format should always contain an 'l' (ell)
 .RE
+.TP
+.B 3.\ \&ALU macros
+\fBq\fR has within it a virtual run machine which the documentation refers to
+as the \fIALU\fR (Arithmetic and Logic Unit)
+although strictly speaking the ALU is only part of any computer.
+.br
+The ALU gives rise to 2 claases of pseudomacros: data reference and program
+instruction (ALU opcode). These are describe below and in q_opcodes(5).
+.RS 3
+.TP
+.B Macro-writing considerations
+The ALU has 2 sets of data memory locations: one for long integer and one
+for double floating point, see \fBTable\ \&1\fR below. These behave exactly as
+modifiable active pseudomacros (macros should use \fB^ND\fR, do not code
+\fB^NU\fR). For integers,
+\fBq\fR first tries to read the input as a signed quantity using \fBstrol(3)\fR.
+If this gets the error "Numerical result out of range" then \fBq\fR tries
+\fBstrtoul(3)\fR which may succeed for octal or hexadecimal input formats
+(but will still fail for decimal numbers greater than 9223372036854775807
+(64-bit q) or
 .RE
 .SH MACROS AS SUBROUTINES
 \fBq\fR has a macro call stack, which most of the system macros use.
@@ -324,18 +344,21 @@ T}
 T{
 5\fIooo\fR
 T}:T{
-Implement \fB^<PSH\ \&\fIooo\fB>\fR
+Implement \fB^<PSH\ \&\fIooo\fB>\fR.
+Treat these as Reserved
 T}
 T{
 6\fIooo\fR
 T}:T{
-Implement \fB^<POP\ \&\fIooo\fB>\fR
+Implement \fB^<POP\ \&\fIooo\fB>\fR.
+Treat these as Reserved
 T}
 T{
 7\fIooo\fR
 T}:T{
 ALU long integer memory locations.
-Use \fBn\ \&7\fIooo\fR or \fB^<POP \&\fIooo\fB>\fR to set,
+Use \fBn\ \&7\fIooo\fR, \fB^NM7\fR\fIooo\fR
+or \fB^<POP \&\fIooo\fB>\fR to set,
 and \fB^N^<7\fIooo\fB>\fR or \fB^<PSH\ \&\fIooo\fB>\fR to get.
 (Macros would usually use \fB^ND^N^<7\fIooo\fB>\fR)
 T}
@@ -347,18 +370,21 @@ T}
 T{
 11\fIooo\fR
 T}:T{
-Implement \fB^<PSHF\ \&\fIooo\fB>\fR
+Implement \fB^<PSHF\ \&\fIooo\fB>\fR.
+Treat these as Reserved
 T}
 T{
 12\fIooo\fR
 T}:T{
-Implement \fB^<POPF\ \&\fIooo\fB>\fR
+Implement \fB^<POPF\ \&\fIooo\fB>\fR.
+Treat these as Reserved
 T}
 T{
 13\fIooo\fR
 T}:T{
 FPU double memory locations.
-Use \fBn\ \&13\fIooo\fR or \fB^<POPF \&\fIooo\fB>\fR to set,
+Use \fBn\ \&13\fIooo\fR, \fB^NM13\fR\fIooo\fR
+or \fB^<POPF \&\fIooo\fB>\fR to set,
 and \fB^N^<13\fIooo\fB>\fR or \fB^<PSHF\ \&\fIooo\fB>\fR to get.
 (Macros would usually use \fB^ND^N^<13\fIooo\fB>\fR)
 T}

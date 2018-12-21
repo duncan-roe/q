@@ -169,6 +169,8 @@ newmac()
     long oldval = ALU_memory[idx];
     double oldfpval = FPU_memory[idx];
     char *strbuf = buf;
+    unsigned long ulong_result;    /* Guard against ULONG_MAX on error */
+    long long_result;              /* Guard against LONG_MAX on error */
 
 /* Parse out token from supplied buffer to allow slash star comments */
     scrdtk(5, 0, 0, &aluscrbuf);
@@ -187,27 +189,36 @@ newmac()
     errno = 0;
     if (verb < 010000)
     {
-      ALU_memory[idx] = strtol(strbuf, &endptr, 0);
-      if (errno)
+      long_result = strtol(strbuf, &endptr, 0);
+      if (!errno)
+        ALU_memory[idx] = long_result;
+      else
       {
         if (errno == ERANGE)
         {
-/* Attempt unsigned Hex or Octal entry */
-          char *q = buf;
+/* Attempt unsigned Hex or Octal entry. */
+          char *q = strbuf;
 
-          while (*q == ' ')
+          while (isspace(*q))
             q++;
           if (*q == '0')
           {
             errno = 0;
-            *(unsigned long *)(&ALU_memory[idx]) = strtoul(strbuf, &endptr, 0);
+            ulong_result = strtoul(strbuf, &endptr, 0);
+            if (errno)
+            {
+              fprintf(stderr, "%s. %s (strtoul)", strerror(errno), buf);
+              GIVE_UP;
+            }                      /* if (errno) */
+            else
+              *(unsigned long *)(&ALU_memory[idx]) = ulong_result;
           }                        /* if (*q == '0') */
         }                          /* if (errno == ERANGE) */
-        if (errno)
-        {
-          fprintf(stderr, "%s. %s (strtol)", strerror(errno), buf);
-          GIVE_UP;
-        }                          /* if (errno) */
+      }                            /* if (!errno) else */
+      if (errno)
+      {
+        fprintf(stderr, "%s. %s (strtol)", strerror(errno), buf);
+        GIVE_UP;
       }                            /* if (errno) */
       if (!*endptr || (oldcom->toklen == 2 &&
         toupper((unsigned char)buf[0]) == 'T' &&

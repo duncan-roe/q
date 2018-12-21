@@ -22,6 +22,8 @@ macdef(unsigned int mcnum, unsigned char *buff, int buflen, bool appnu)
   int i;                           /* Scratch */
   unsigned short xbuf[Q_BUFSIZ];
   unsigned char saved_end = buff[buflen];
+  unsigned long ulong_result;      /* Guard against ULONG_MAX on error */
+  long long_result;                /* Guard against ULONG_MAX on error */
 
 /* Do the ALU macros here */
   if (mcnum >= 07000 && mcnum <= 07777)
@@ -31,9 +33,10 @@ macdef(unsigned int mcnum, unsigned char *buff, int buflen, bool appnu)
 
     errno = 0;
     buff[buflen] = 0;
-    ALU_memory[idx] = strtol((char *)buff, &endptr, 0);
+    long_result = strtol((char *)buff, &endptr, 0);
     if (!errno)
     {
+      ALU_memory[idx] = long_result;
     check_endptr:
       if (!*endptr)
         goto r_true;
@@ -50,15 +53,19 @@ macdef(unsigned int mcnum, unsigned char *buff, int buflen, bool appnu)
     {
       char *q = (char *)buff;
 
-      while (*q == ' ')
+      while (isspace(*q))
         q++;
       if (*q == '0')
       {
         errno = 0;
-        *(unsigned long *)(&ALU_memory[idx]) =
-          strtoul((char *)buff, &endptr, 0);
+        ulong_result = strtoul((char *)buff, &endptr, 0);
         if (!errno)
+        {
+          *(unsigned long *)(&ALU_memory[idx]) = ulong_result;
           goto check_endptr;
+        }                          /* if (!errno) */
+        fprintf(stderr, "%s. %s (strtoul)", strerror(errno), (char *)buff);
+        goto r_false;
       }                            /* if (*q == '0') */
     }                              /* if (errno == ERANGE) */
     fprintf(stderr, "%s. %s (strtol)", strerror(errno), (char *)buff);
