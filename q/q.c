@@ -252,15 +252,7 @@ do_stat_symlink(void)
     towner = statbuf.st_uid;
   }                                /* if (!stat(buf, &statbuf)) */
   else
-  {
-    if (!tmask)
-    {
-      tmask = umask(0);            /* Get current umask */
-      umask(tmask);                /* Reinstate umask */
-    }                              /* if (!tmask) */
-    tmode = ~tmask & 0666;         /* Assume no execute on new file */
     tgroup = towner = 0;
-  }                                /* if (!stat(buf, &statbuf)) else */
   if (!lstat(buf, &statbuf) && S_ISLNK(statbuf.st_mode) && errno != ELOOP)
     for (;;)
     {
@@ -771,6 +763,9 @@ main(int xargc, char **xargv)
   dfltmode = 01212005;             /* +e +m +* +tr +dr +i +a */
   end_seq = normal_end_sequence;
   init_alu();
+  tmask = umask(0);                /* Get current umask */
+  umask(tmask);                    /* Reinstate umask */
+  tmode = ~tmask & 0666;           /* Assume no execute on new file */
 /* Pick up any option arguments and set cmd_state if more args follow */
   while ((i = getopt(argc, argv, "AVbdei:mnoqtv")) != -1)
     switch (i)
