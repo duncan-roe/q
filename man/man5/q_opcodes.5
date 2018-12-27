@@ -8,8 +8,168 @@ Q opcodes - the Q ALU opcodes
 Start \fBq\fR and enter \fBH ALU\fR
 .br
 .TP
-.B List of opcodes
+.B Getting a list of the opcodes
 .br
 Enter \fBq\ \&-A\fR at the shell prompt or from within \fBq\fR to get a list.
 From the shell prompt the output may be fed into a pager,
-e.g. \fBq -A | less -X\fR
+e.g. \fBq -A | less -X\fR.
+The list in this man page is from \fBq\fR version 54
+.SH LIST OF OPCODES
+.nf
+
+	 Instructions to Access Tabs
+	 ============ == ====== ====
+PSHTAB x Push value of tab x to R
+	 (x is a tab ID; type of tab is not examined)
+POPTAB x Pop R to set value of tab x;
+	 (x is a tab ID; type of tab is from last SCPT / SFPT)
+
+	 Memory Reference Instructions
+	 ====== ========= ============
+PSH  xxx  Push contents of N7xxx to R
+POP  xxx  Pop R to define N7xxx
+PSHF xxx  Push contents of N13xxx to F
+POPF xxx  Pop F to define N13xxx
+	 
+	 Skip Instructions
+	 ==== ============
+NOP	 Do nothing
+SKP	 Unconditional skip
+SEQ	 Skip if R is zero
+SNE	 Skip if R is not zero
+SGE	 Skip if R is greater than or equal to zero
+SLE	 Skip if R is less than or equal to zero
+SGT	 Skip if R is greater than zero
+SLT	 Skip if R is less than zero
+SFEQ	 Skip if F is zero
+SFNE	 Skip if F is not zero
+SFGE	 Skip if F is greater than or equal to zero
+SFLE	 Skip if F is less than or equal to zero
+SFGT	 Skip if F is greater than zero
+SFLT	 Skip if F is less than zero
+	 
+	 Instructions that Modify R
+	 ============ ==== ====== =
+NOT	 Bitwise Invert
+TC	 Negate (2's complement)
+A1	 R = R + 1
+A2	 R = R + 2
+S2	 R = R - 2
+S1	 R = R - 1
+LS	 R = R << 1
+RSS	 R = R >> 1 (signed)
+RSU	 R = R >> 1 (unsigned)
+POPN	 Pop R to nowhere (value is discarded)
+DUP	 Push a copy of R
+INP	 Read next integer in line, push value & length
+	 (leaves cursor on 1st char of number)
+PSHMODE	 Push mode (as per n4000) to R
+POPMODE	 Pop R to set mode (as per n4000)
+PSHCRS	 Push cursor position to R (zero-based)
+PSHLNLN	 Push line length to R
+PSHNBLN	 Push number of lines in file to R (i.e. # read so far)
+PSHLNNB	 Push line number to R (same as ^NF / PSHTAB)
+PSHTBSZ	 Push number of spaces between tabstops in file to R
+POPTBSZ	 Pop R to number of spaces between tabstops in file
+	 
+	 Instructions that Modify F
+	 ============ ==== ====== =
+TCF	 Negate (2's complement)
+POPNF	 Pop F to nowhere (value is discarded)
+DUPF	 Push a copy of F
+FRND	 F = rint(F)
+FFLOOR	 F = floor(F)
+FCEIL	 F = ceil(F)
+FSIN	 F = sin(F)
+FCOS	 F = cos(F)
+FTAN	 F = tan(F)
+FLOG	 F = log(F)
+FEXP	 F = exp(F)
+FSQRT	 F = sqrt(F)
+INPF	 Read next number in line, push value to F & length to R
+	 (leaves cursor on 1st char of number)
+FQVERSN	 Push Q version to F
+	 
+	 Immediate Data Instructions
+	 ========= ==== ============
+PS0	 Push constant 0 to R
+PS1	 Push constant 1 to R
+PS2	 Push constant 2 to R
+PS4	 Push constant 4 to R
+PS8	 Push constant 8 to R
+PS16	 Push constant 16 to R
+PS32	 Push constant 32 to R
+PS64	 Push constant 64 to R
+PS128	 Push constant 128 to R
+PS256	 Push constant 256 to R
+PS512	 Push constant 512 to R
+PS1024	 Push constant 1024 to R
+PS2048	 Push constant 2048 to R
+PS4096	 Push constant 4096 to R
+PS8192	 Push constant 8192 to R
+PS2P14	 Push constant 16384 (2**14) to R
+PS2P15	 Push constant 32768 (2**15) to R
+PS2P16	 Push constant 65536 (2**16) to R
+PS2P17	 Push constant 131072 (2**17) to R
+PS2P18	 Push constant 262144 (2**18) to R
+PS2P19	 Push constant 524288 (2**19) to R
+PS2P20	 Push constant 1048576 (2**20) to R
+PS2P21	 Push constant 2097152 (2**21) to R
+PS2P22	 Push constant 4194304 (2**22) to R
+PS2P23	 Push constant 8388608 (2**23) to R
+PS2P24	 Push constant 16777216 (2**24) to R
+PS2P25	 Push constant 33554432 (2**25) to R
+PS2P26	 Push constant 67108864 (2**26) to R
+PS2P27	 Push constant 134217728 (2**27) to R
+PS2P28	 Push constant 268435456 (2**28) to R
+PS2P29	 Push constant 536870912 (2**29) to R
+PS2P30	 Push constant 1073741824 (2**30) to R
+PS2P31	 Push constant 2147483648 (2**31) to R
+	 
+	 Instructions with 2 operands
+	 ============ ==== = ========
+	 (These have the same effect as:-
+	     pop A; pop B; push A {instr} B (or FP equivalents)
+	 except attempted divide by zero leaves the registers unchanged)
+ADD	 Add
+SUB	 Subtract
+MPY	 Multiply
+DIV	 Divide
+MOD	 Modulus
+AND	 Bitwise AND
+OR	 Bitwise OR
+XOR	 Bitwise EXCLUSIVE OR
+ADDF	 Add F
+SUBF	 Subtract F
+MPYF	 Multiply F
+DIVF	 Divide F
+	 
+	 FP (double) <==> Integer (long)
+	 == ======== ==== ======= ======
+POPFR	 Pop F; push (long) to R
+POPRF	 Pop R; push (double) to F
+	 
+	 Index Register Instructions
+	 ===== ======== ============
+INDX	 Index next PSH[F] or POP[F]
+PSHX	 Push contents of X to R
+POPX	 Pop R to define value of X
+SXEQ	 Skip if X is zero
+SXNE	 Skip if X is not zero
+SXGE	 Skip if X is greater than or equal to zero
+SXLE	 Skip if X is less than or equal to zero
+SXGT	 Skip if X is greater than zero
+SXLT	 Skip if X is less than zero
+A1X	 X = X + 1
+A2X	 X = X + 2
+S2X	 X = X - 2
+S1X	 X = X - 1
+	 
+	 Control Instructions
+	 ======= ============
+DMP	 Dump Registers
+RST	 Reset Registers to initial state
+ZAM	 Zeroise All Memory
+SCPT	 Store Cursor Position Tabs (initial setting, also after RST)
+SFPT	 Store File Position Tabs
+.fi

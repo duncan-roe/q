@@ -7,6 +7,7 @@ man page for Q opcodes [ q_opcodes(5) ]
  ^ND^N^<4015> returns stderr (minus final Nl)
  If defined as n4014, error in cmd => error in macro
  If defined as n4015, command status returned in X (0=good), macro continues
+New basic pseudo ^NW<macro id> return length of macro in R; -1 if undefined
 "q -l" to insert "fm +l" command before reading file
 Search up directory tree for .qrc
 Use .qrc associated with file to edit
@@ -15,7 +16,7 @@ ALU is always 64-bit (?)
 cater for >4G lines in L & Y
 Give some kind of acknowledgement to ^NF (& ^NO?)
 -H option to give invocation help
-Can test if a macro is defined: n4007 x; ^ND^N^<4007>
+OBSOLETED BY ^NW Can test if a macro is defined: n4007 x; ^ND^N^<4007>
 Can set actual amount for "1 line forward / back" half-page / full-page
 Properly reinstate output optimisation (old hack removed as "quick fix")
  needs select() /poll()
