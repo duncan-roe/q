@@ -1,9 +1,9 @@
-  ++ S C R E E N E D I T   M A C R O S ++
+  ++ Q   M A C R O S ++
 
 As the name implies, these are pre-defined strings of characters which may be
-input to Q by calling up the macro. Macros are called by keying control-N
+input to Q by invoking the macro. Macros are invoked by keying control-N
 followed by the <macro name>, which can be any character except the 64
-characters in the range @ - DEL. These are reserved to identify "pseudo macros"
+characters in the range @ - DEL. These are reserved to identify "pseudomacros"
 q.v. To key a character in the alternate character set (with high parity
 usually), precede it with ^W, since Q asserts ISTRIP (only input the least
 significant 7 bits of each character). There are currently just under 2000
@@ -15,12 +15,11 @@ Examples of macros can be seen by entering the command "h fndtn.qm" which lists
 the file fndtn.qm as long as macros and help files are in the same directory
 (which is the installation default). Most of the macros in that file do not in
 fact fall into the category of simple macros as defined above - they usually
-contain '^N' followed by an upper-case letter, which is a call to a
-pseudo-macro. Available pseudos can be listed by typing 'H PM'. They add
-considerable extra power to the macro facility by, for example, conditionally
-obeying part of a macro, testing such things as whether the cursor is at
-end-of-line; implementing a subroutine call/return stack, complete with
-alternate returns; and so on.
+contain '^N' followed by an upper-case letter, which is a call to a pseudomacro.
+Available pseudos can be listed by typing 'H PM'. They add considerable extra
+power to the macro facility by, for example, conditionally obeying part of a
+macro, testing such things as whether the cursor is at end-of-line; implementing
+a subroutine call/return stack, complete with alternate returns; and so on.
  Note that as alluded to above, ^P/^C and ^W have precedence over ^N, i.e. to
 invoke the macro ^P you have to input ^N^P^P because the first ^P just gets the
 editor ready for what's coming next. Similarly ^N^W^A invokes the macro

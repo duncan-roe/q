@@ -246,13 +246,13 @@ for double floating point, see \fBTable\ \&1\fR below. These behave exactly as
 modifiable active pseudomacros (macros should use \fB^ND\fR, do not code
 \fB^NU\fR).
 .br
-ALU opcodes are coded as \fB^N^<\fR\fIopcode\fR\fB>\fR where \fIopcode\fR
-is alphanumeric starting alphabetic, e.g \fBA1\fR: \fB^N^<A1>\fR adds 1 to
+ALU opcodes are coded as \fB^<\fR\fIopcode\fR\fB>\fR where \fIopcode\fR
+is alphanumeric starting alphabetic, e.g \fBA1\fR: \fB^<A1>\fR adds 1 to
 register \fBR\fR.
-\fBq\fR translates \fB^N^<\fR\fIopcode\fR\fB>\fR to \fB^N^<4\fR\fIooo\fR\fB>\fR
+\fBq\fR translates \fB^<\fR\fIopcode\fR\fB>\fR to \fB^N^<4\fR\fIooo\fR\fB>\fR
 where \fIooo\fR may vary from one \fBq\fR revision to another.
 \fB^ND\fR and \fB^NU\fR are both implemented by \fBq\fR.
-The convention that has been used is to always code in upper-case.
+The convention that has been used is to always code opcodes in upper-case.
 .TP
 .B Data Reference Pseudomacros
 .RS 3
@@ -274,6 +274,84 @@ When setting these with \fBN_NEWMACRO\fR or \fB^NM\fR\fImacro_id\fR,
 .TP
 .B ALU Opcode Pseudomacros
 See \fBalu_opcodes(5)\fR
+.SH DEFINING MACROS
+.br
+There are 3 ways of defining macros:
+.TP
+.B 1.\ \&N-NEWMACRO command
+.br
+The \fBN-NEWMACRO\fR command is the principal means of defining macros.
+It is well-described by its \fIhelp\fR, reproduced below:
+.RE
+.RS -7
+.nf
+  \/ N - N E W M A C R O \/
+ Defines a new q macro, writes current macro definitions to a file or displays
+them.
+ Formats
+ NEWMACRO <macro id>,<macro body>
+ NEWMACRO -  <file>                /* Type or list to file all macros
+ NEWMACRO -- <file>                /* Type or list to file ALU macros only
+ Parameters
+ <macro id>   identification of the macro to be defined. The macros that can be
+              defined are the control chars except NUL, the next 32 characters
+              (i.e. 040 ' ' up to 077 '?') and anything from 0200 to 03777.
+              (the gap of 64 allows pseudo-macros to be invoked as upper or
+              lower case). The control characters are identified as their
+              either-case equivalents, e.g. "N A ..." defines the control-A
+              macro, as does "n a ...". "n A ..." follows the suggested macro-
+              writing convention that control characters are shown in upper-
+              case, and Q commands in lower.
+
+              The next 32 macros may be identified as themselves, except for
+              minus ('-'), which can be identified by '@'. Quotes are required
+              for macros so specified, if they contain comma or space.
+              Macros 01 - 077 may also identified by their 2-digit octal ASCII
+              value, e.g. "n ',' ..." & "n54 ..." both define the comma macro.
+
+              All other macros must be identified using 3 or more octal digits.
+              Quoting is not required and must not be used in the bodies of
+              macros so identified (but it is required with 2-digit octal ID).
+              This (long octal) format is also available for normal characters,
+              e.g. "n001 ..." also defines the control-A macro,
+              but now "..." must not be quoted.
+
+              Macro zero (NUL) may not be defined by N-NEWMACRO because ^N^@
+              inside a macro has the special meaning of "restart the current
+              macro". This is particularly useful for FI-FIMMEDIATE_MACRO where
+              the macro is otherwise inaccessible (its macro number lies in the
+              pseudo-macro range), but any macro may use ^N^@ (or ^N^<0>) to
+              re-invoke itself.
+
+ <macro body> The definition. If the <macro-id> was specified as 1 or 2
+              characters, this will need to be quoted if it contains comma or
+              space. Otherwise it is read as raw text and should not be quoted.
+              Control characters can be represented by '^' followed by the
+              upper case equivalent, which is the preferred method although
+              they can be entered directly, following '^P'. '^' is entered as
+              '^*' and rubout as '^?' i.e. exactly the same conventions as on
+              output ('^' only shows as '^*' if "fm +*" is asserted).
+              Also just as on output,
+              characters 0200 onwards are entered as "^<3+ -digit octal>".
+              This format is also available for normal characters,
+              e.g. "n001 ^<054> defines the control-A macro to be a comma.
+
+ <file>       File to accept macro definitions, which will be written in a
+              format suitable for re-input using U-USE. Optional - if omitted,
+              macro definitions are displayed at the terminal.
+.fi
+.RE
+.TP
+.BI 2.\ \&^NM macro_id
+.br
+This is described under \fBList of Basic Pseudomacros\fR above.
+.TP
+.B 3.\ \&FI-FIMMEDIATE_MACRO command
+.br
+\fBFI\fR takes a macro body as its sole argument.
+This macro body is read as raw text as for \fBN-NEWMACRO\fR with a long octal
+\fImacro_id\fR.
+The macro is obeyed straight away.
 .SH MACROS AS SUBROUTINES
 \fBq\fR has a macro call stack, which most of the system macros use.
 To use the call stack, a macro must finish with the \fB^NU\fR pseudomacro,
@@ -316,6 +394,36 @@ Pseudomacros and the ALU can set any tab. A tab can be in one of 3 states:
 It is an error to use a tab inappropriately.
 .br
 For a list of tab IDs, start \fBq\fR and enter \fBH AS\fR.
+.SH KEYBOARD MACROS
+kkk
+.SH COMMENTS
+xxx
+.SH MACRO-WRITING GUIDELINES
+These are the guidelines that have been adhered to in the creation of the
+system macro sets that are distributed with \fBq\fR.
+.TP
+.BI Casing
+The simple rule is: if a case-independent item is a \fBq\fR command then put it
+in lower-case, otherwise put it in upper-case.
+In other words, show control characters,
+basic pseudomacros and ALU opcodes in upper-case
+(e.g. \fB^A\fR, \fB^NA\fR & \fB^<A1>\fR).
+Also when a \fItab_id\fR is used as a line number,
+show the \fBT\fR in upper-case
+(\fItab_id\fRs themselves are case-sensitive so \fBg\ \&Ta\fR and
+\fBg\ \&TA\fR refer to different tabs).
+.TP
+.B Always code as a subroutine
+yyy
+.TP
+.B Error out on surprises
+bbb
+.TP
+.B Annotate well
+zzz
+.TP
+.B There is a macro debugger
+ddd
 .SH TABLES
 .RE
 .B Table\ \&1.\ \&Macro id map
@@ -380,8 +488,8 @@ T{
 7\fIooo\fR
 T}:T{
 ALU long integer memory locations.
-Use \fBn\ \&7\fIooo\fR, \fB^NM7\fR\fIooo\fR
-or \fB^<POP \&\fIooo\fB>\fR to set,
+Use \fBN\ \&7\fIooo\fR, \fB^NM^<7\fR\fIooo\fB>\fR
+or \fB^<POP\ \&\fIooo\fB>\fR to set,
 and \fB^N^<7\fIooo\fB>\fR or \fB^<PSH\ \&\fIooo\fB>\fR to get.
 (Macros would usually use \fB^ND^N^<7\fIooo\fB>\fR)
 T}
@@ -406,8 +514,8 @@ T{
 13\fIooo\fR
 T}:T{
 FPU double memory locations.
-Use \fBn\ \&13\fIooo\fR, \fB^NM13\fR\fIooo\fR
-or \fB^<POPF \&\fIooo\fB>\fR to set,
+Use \fBN\ \&13\fIooo\fR, \fB^NM^<13\fR\fIooo\fB>\fR
+or \fB^<POPF\ \&\fIooo\fB>\fR to set,
 and \fB^N^<13\fIooo\fB>\fR or \fB^<PSHF\ \&\fIooo\fB>\fR to get.
 (Macros would usually use \fB^ND^N^<13\fIooo\fB>\fR)
 T}
@@ -475,4 +583,4 @@ n 040,! tail -n1 ^ND^N^<4002>^J
 (The sequence \fB^N^<4002>\fR retrieves the name of the current edit file).
 .RE
 .SH SEE ALSO
-q(1), strtol(3), strtoul(3), strtod(3)
+q(1), strtol(3), strtoul(3), strtod(3), q_opcodes(5)

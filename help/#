@@ -14,11 +14,11 @@ For a terminal characteristic, "X-" <char>                   H X-A
 For a pseudo macro, "CN-"<char>                              H CN-A
       [special cases: type 'H PM' for details]               H CN-LHB
 SPECIFICS:-
-Command syntax: CS      File position: FPOS     Cursor position: CP
-Q COMMANDS: QC          SCREENEDIT CONTROL CHARACTERS: SC
-Line no. argument: L#   # of lines argument: #L Pseudo macros: PM
-Indent mode: IM         Screenedit macros: SM   Invoking Q IQ
-ASCII chars: AS         Running in a pipe: QP
+Command Syntax: CS      File POSition: FPOS     Cursor Position: CP
+Q Commands: QC          Screenedit control Characters: SC
+Line no. argument: L#   # of lines argument: #L PseudoMacros: PM
+Indent Mode: IM         Q Macros: QM            Invoking Q IQ
+ASCII chars: AS         running Q in a Pipe: QP
 Arithmetic & Logic Unit: ALU
 Foundation macro catalogue FNDTN.CAT
 Word macro catalogue WORD.CAT

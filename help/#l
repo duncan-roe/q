@@ -8,12 +8,12 @@ than 1 means 'do it for that # of lines starting at the specified line'. A
 larger number than the number of lines to the end of the file may be specified
 in which case a message is output when end-of-file is reached, the command then
 terminating normally.
- Another format is available, but will be found to be of use chiefly within
-screenedit macros. Rather than giving a decimal number, give the letter 'T'
-followed by a single character identifying one of the 80 possible tab positions
-(these are listed under the ASCII reference table - H AS for details). Then the
-value in that tab becomes the numeric argument. Thus you could Locate a string
-between the positions defined by tabs 1 & 2 by a command of the form:
+ Another format is available, but will be found to be of use chiefly within q
+macros. Rather than giving a decimal number, give the letter 'T' followed by a
+single character identifying one of the 80 possible tab positions (these are
+listed under the ASCII reference table - H AS for details). Then the value in
+that tab becomes the numeric argument. Thus you could Locate a string between
+the positions defined by tabs 1 & 2 by a command of the form:
  L <string>,,,T1,T2
  -TO format
  It is also usually possible, when a real # of lines is being specified (i.e.

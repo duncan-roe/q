@@ -1,13 +1,13 @@
   \/ N - N E W M A C R O \/
- Defines a new screenedit macro, or writes current macro definitions to a file,
-or displays them.
+ Defines a new q macro, writes current macro definitions to a file or displays
+them.
  Formats
  NEWMACRO <macro id>,<macro body>
- NEWMACRO -  <treename>            /* Type or list to file all macros
- NEWMACRO -- <treename>            /* Type or list to file ALU macros only
+ NEWMACRO -  <file>                /* Type or list to file all macros
+ NEWMACRO -- <file>                /* Type or list to file ALU macros only
  Parameters
  <macro id>   identification of the macro to be defined. The macros that can be
-              defined are the control chars except NULL, the next 32 characters
+              defined are the control chars except NUL, the next 32 characters
               (i.e. 040 ' ' up to 077 '?') and anything from 0200 to 03777.
               (the gap of 64 allows pseudo-macros to be invoked as upper or
               lower case). The control characters are identified as their
@@ -29,7 +29,7 @@ or displays them.
               e.g. "n001 ..." also defines the control-A macro,
               but now "..." must not be quoted.
 
-              Macro zero (NULL) may not be defined by N-NEWMACRO because ^N^@
+              Macro zero (NUL) may not be defined by N-NEWMACRO because ^N^@
               inside a macro has the special meaning of "restart the current
               macro". This is particularly useful for FI-FIMMEDIATE_MACRO where
               the macro is otherwise inaccessible (its macro number lies in the
@@ -49,6 +49,6 @@ or displays them.
               This format is also available for normal characters,
               e.g. "n001 ^<054> defines the control-A macro to be a comma.
 
- <treename>   Treename to accept macro definitions, which will be written in a
+ <file>       File to accept macro definitions, which will be written in a
               format suitable for re-input using U-USE. Optional - if omitted,
               macro definitions are displayed at the terminal.

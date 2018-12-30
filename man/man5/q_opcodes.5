@@ -14,6 +14,114 @@ Enter \fBq\ \&-A\fR at the shell prompt or from within \fBq\fR to get a list.
 From the shell prompt the output may be fed into a pager,
 e.g. \fBq -A | less -X\fR.
 The list in this man page is from \fBq\fR version 54
+.SH EXAMPLES
+The line below is from the foundation macro set, fndtn.qm.
+It posts a reminder if run in a development version of \fBq\fR:
+.br
+	
+.br
+.nf
+fi ^<FQVERSN>^<DUPF>^<FRND>^<SUBF>^<SFEQ>^NL^<POPNF>^NU^<POPNF>!echo -e REMINDER: This is a development Q \\r >&2^J
+.fi
+.TP
+.B Detailed explanation
+.TP
+.BI fi
+Define an immediate macro.
+'All characters from the first caret onward are read as a macro,
+'to be obeyed as soon as it is defined.
+See \fBq_macros(5)\fR
+.TP
+.B FQVERSN
+Push \fBq\fR version to the \fIF\fR register stack.
+This is integral for a release version of \fBq\fR
+.TP
+.B DUPF
+Push a copy to \fIF\fR
+.TP
+.BI FRND
+Round \fIF\fR to nearest integer
+.TP
+.BI SUBF
+Subtract the pushed copy of \fIF\fR from \fIF\fR
+(removes one entry from the stack)
+.TP
+.BI SFEQ
+Skip next 2 macro characters if \fIF\fR is zero.
+This will be the case if the originally pushed \fBq\fR version was integral,
+because integer arithmetic performed in floating point hardware is exact
+(up to the capacity of the mantissa)
+.TP
+.BI ^NL
+Skip next 4 macro characters.
+Reverses the sense of the preceding \fBSFEQ\fR in that the next 4 characters
+\fIare\fR obeyed if \fIF\fR was zero
+.TP
+.BI POPNF
+Throw away (\fBPOP\fR to \fBN\fRowhere) the \fIF\fR register,
+to leave the register stack as it was before this macro started
+.TP
+.BI ^NU
+Return from this macro.
+\fBq\fR version was integral, nothing to do
+.TP
+.BI POPNF
+This is the first instruction to obey if \fBSFEQ\fR did not skip.
+As on the skip branch, restore the \fIF\fR stack to how it was
+.TP
+.B !echo -e REMINDER: This is a development Q \\\r >&2^J
+Issue the warning command. Some points of interest:
+.RS 7
+.br
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+macro relies on \fBq\fR to massage \fB!echo\fR to "\fB!\ \%echo\fR"
+.RE
+.br
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+need to use \fBecho -e\fR to output a carriage return (\fB\\r\fR)
+since the terminal will be in raw mode
+.RE
+.br
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+need to use \fB>&2\fR to send output to \fBstderr\fR
+since \fBfd y\fR at the head of \fBfndtn.qm\fR will have sent \fBstdout\fR
+to \fB/dev/null\fR
+.RE
+.br
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+need \fB^J\fR (newline) at the end to actually have the command obeyed
 .SH LIST OF OPCODES
 .nf
 
@@ -173,3 +281,5 @@ ZAM	 Zeroise All Memory
 SCPT	 Store Cursor Position Tabs (initial setting, also after RST)
 SFPT	 Store File Position Tabs
 .fi
+.SH SEE ALSO
+q(1), q_macros(5)
