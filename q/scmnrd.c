@@ -163,12 +163,12 @@ scmnrd()
 /* Check if user is trying to ^C out from keybd input */
         if (!cntrlc || USING_FILE || curmac >= 0)
           continue;                /* J not to quit */
-        oldcom->bdata[0] = 'K';
+        oldcom->bdata[0] = '!';
         oldcom->bcurs = 1;
         oldcom->bchars = 1;
-        verb = 'K';
+        verb = '!';
         cntrlc = false;            /* ^C noted */
-        goto p1003;                /* J back in - simulate K */
+        goto p1003;                /* J back in - simulate ! */
       }                            /* if (oldcom->toktyp != nortok) */
       printf("Null command verb not allowed");
       rerdcm();
