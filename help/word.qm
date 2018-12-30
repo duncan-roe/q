@@ -17,8 +17,8 @@ N707 ^NP2^Y^@^NOA^<PSHTAB A>^<PSHTAB 2>^<SUB>^<SEQ>^<S1>^<POPTAB C>^J^NC^NU^NA^N
 N702 ^Z^Y^NP2^H^F^F^N^<704> ;New line:- first see if not too long
 N703 ^[J-2,1,32000^J^NRA^E ^E^F^N^<704> ;We know 1st wd will fit
 N704 ^NA^NS^Y^@^NP2^N^<705>^NA^N^<707>^F^F^N^@ ;Work along line
-* n705: This word doesn't fit. If it's the only word on the line, leave as_is.
-*       Otherwise, split line at preceding word boundary.
+# n705: This word doesn't fit. If it's the only word on the line, leave as_is.
+#       Otherwise, split line at preceding word boundary.
 N705 ^B^NP1^NS^N^<701>^?^T^N^<702>
 N706 ^NA^NS^N^<710>^J^NC^NU^N^@ ;Accept extra blank lines until non blank
 N710 ^NG>^N^<700>^N^<702> ;Leave lines starting "> " alone also

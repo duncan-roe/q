@@ -2,10 +2,10 @@ FD Y /* Tcl & expect macros
 o y
 ft_
 fm-t -s -l
-* Set up for indent amount / file tab spacing of 2 (my preference)
-* See c_brkts.qm for how to change this
+# Set up for indent amount / file tab spacing of 2 (my preference)
+# See c_brkts.qm for how to change this
 fi ^<PS2>^<POPTBSZ>
-*
+#
 N061 ^NC^NS^N\n2000 (gdb) ^*NU^J^ND^N^<1270>^NU
 N062 ^NC^NS^N\n2000 \r\n>^*NU^J^ND^N^<1267>^NU
 N063 ^NC^NS^N\n2000 [$#] ^*NU^J^ND^N^<1276>^NU
@@ -23,60 +23,60 @@ N Y '^NE^H^NA^NS^N^<405>^L# ^NU Tcl comment
 N202 ^NC^NS^N\q ^ND^N^<4003>/tcl.qm^J^NU
 N220 ^NC^NS^N\u ^ND^N^<4003>/tcl.qm^J^NU
 N405 ^Z^X^NB2^I^@;# ^NU
-* N 0   "beautify" Tcl source. Currently consists solely of pulling back
-*       comments to cc1. Uses ENV DUMP #2. Sets up tab c to be cc2...
+# N 0   "beautify" Tcl source. Currently consists solely of pulling back
+#       comments to cc1. Uses ENV DUMP #2. Sets up tab c to be cc2...
 N 0 '^NC^NS^N\^ND^N^<1002>fb^Jo y^Ji1^JX^NOc^[^ND^N^<404>^ND^N^<1012>^NU
-* n404: Main loop on lines. If we have a comment and it doesn't start in cc1
-*       then pull it back.
+# n404: Main loop on lines. If we have a comment and it doesn't start in cc1
+#       then pull it back.
 N404 ^[m-^J^NC^NU^NG#^NS^N^@^NBc^N^@^L^J^N^@
-* n405: Do a ^O equivalent for Tcl. If line starts '#', look for 1st non-space
-*       following; else look for a ";#" pair then look for non-space
+# n405: Do a ^O equivalent for Tcl. If line starts '#', look for 1st non-space
+#       following; else look for a ";#" pair then look for non-space
 N407 ^NOx^H^NG#^N^<406>^NRx^G;^NA^NU^X^NA^NU^NG#^N^<406>^N^<405>
 N406 ^X^NA^NU^NG ^N^@^NU
-* n341: (^N^Wa) - Remove 1 (one) parenthesised expression from each global statement
-*       (e.g. after a global replacement of a scalar with an array element)
+# n341: (^N^Wa) - Remove 1 (one) parenthesised expression from each global statement
+#       (e.g. after a global replacement of a scalar with an array element)
 N341 ^NC^NS^N\^NFag1^J^ND^N^<410>g ta^J^NU
 N410 fl global^J^NC^NU^G(^NA^NS^N^<411>^J^N^@
 N411 ^NG)^NL^D^N^@X^D^J^N^<410>
 N205 ^NC^N\^NFa^J^[g ta^Jm-1^J^NG}^NS^N\^X^K^Jm-2^J^NU ; Strip comment from trlg "}"
-* N207 (^N^W^G) convert current line to exp_send / expect pair
+# N207 (^N^W^G) convert current line to exp_send / expect pair
 N207 ^NC^N\^NE^E^Hexp_send {^Z};exp_send \r^Texpect ^ND^N^<2001>^ND^N^<2000>^ND^N^<2002>^J^NU
 N2000 (gdb) ^NU
 N2001 {^NU
 N2002 }^NU
-* n212 - Put a box around the current block of comments. Can invoke from last
-*        line in modify mode or just after in command mode.
-* TABS USED
-*
-* a - line# after last line
-* b - line# of first line
-* c - maximum line length (pos'n of space before #)
-*
-* MACROS DEFINED
-*
-* n212, n677 down to n670
-*
+# n212 - Put a box around the current block of comments. Can invoke from last
+#        line in modify mode or just after in command mode.
+# TABS USED
+#
+# a - line# after last line
+# b - line# of first line
+# c - maximum line length (pos'n of space before #)
+#
+# MACROS DEFINED
+#
+# n212, n677 down to n670
+#
 N212 ^[^NFam-1^J^ND^N^<677>^N\^NOc^J^ND^N^<676>^[^NFb^ND^N^<675>^ND^N^<673>i ta^J^ND^N^<672>^H^L^J^[i tb^J^ND^N^<672>^H^L^J^[g ta^Jg+2^J^NU
-* n677 - Return if non-comment-line else incremented return (all in modify mode)
-* n670   If line doesn't end " #" then make it do so.
-*        Indent mode assumed.
+# n677 - Return if non-comment-line else incremented return (all in modify mode)
+# n670   If line doesn't end " #" then make it do so.
+#        Indent mode assumed.
 N677 ^NG#^NS^NU^NI^Z^Y^NG#^NS^N^<670>^Y^NG ^NU^X^E ^Y^E^NU
 N670 ^NG ^NS^Z ^Z#^Y^Y^NU
-* n676 - Modify lines back up the file, advancing tab c to max line length.
-*        Return in edit mode when non-comment line found, positioned in the
-*        non-comment line
+# n676 - Modify lines back up the file, advancing tab c to max line length.
+#        Return in edit mode when non-comment line found, positioned in the
+#        non-comment line
 N676 m-2^J^ND^N^<677>^NU^NPc^NS^NL^NOc^@^J^N^@
-* n675 - Modify each comment line to push its trailing # out to the maximum
-*        length
+# n675 - Modify each comment line to push its trailing # out to the maximum
+#        length
 N675 ^N[a^NS^NUm-^J^Z^B^Y^E^ND^N^<674>^J^N^@
-* n674 - pad line out for n675
+# n674 - pad line out for n675
 N674 ^NBc^NS^NU ^N^@
-* n673 - Construct a #---# line of the right lenght, put in n672
+# n673 - Construct a #---# line of the right lenght, put in n672
 N673 i ta^J#  #^B^Y^E^ND^N^<671>^H^L^NM^<672>^[^NU
-* n671 - fill line with minuses
+# n671 - fill line with minuses
 N671 ^NBc^NS^NU-^N^@
-* n231 (^N^W^Y) split a window command to 1 option/line
+# n231 (^N^W^Y) split a window command to 1 option/line
 N231 ^NC^N\^G-^NE^E\^T^E^ND^N^I^ND^N^<667>^J^NU
 N667 ^G-^NA^NU^NE^E\^T^N^@
-* n333 (^N^W[) fix up eval set
+# n333 (^N^W[) fix up eval set
 N333 ^[g-1^Jfl eval,1^J^NC^N\^ND^N^K^G\^NA^N\[s^Eet ^G)^X]^Jfl eval^J^NU

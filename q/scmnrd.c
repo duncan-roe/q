@@ -148,7 +148,7 @@ scmnrd()
     {
       if (curmac < 0 || !BRIEF)
       {
-/* If we got an "empty" line from a U-USE file, it has already been shown */
+/* If we got an "empty" line from a U-USE file, it has already been shown. */
 /* "empty" includes slash-star comment lines */
         if(!(USING_FILE && oldcom->toktyp == eoltok))
           disply(oldcom, false);
@@ -175,6 +175,10 @@ scmnrd()
       return;
     }
     verb = buf[0];
+    if (verb == '#')
+      verb = ASTRSK;
+    if (verb == ASTRSK)
+      goto p1109;                  /* J # comment - display */
 
 /* Check out non-alpha's... */
     if (!(verb >= 'A' && verb <= 'Z')) /* Verb non-alpha */
@@ -254,7 +258,7 @@ scmnrd()
   p1003:
     (void)scrdtk(5, 0, 0, oldcom); /* Reset command buffer */
     scrdtk(1, (unsigned char *)buf, BUFMAX, oldcom);
-    if (oldcom->toklen > 12)       /* Verb too long */
+    if (oldcom->toklen > 12 && verb != ASTRSK) /* Verb too long */
     {
       if (want_disply)
         disply(oldcom, true);      /* Display the command */
