@@ -37,7 +37,7 @@ static char *cmtabl[52] = {        /* Table of commands in full */
   "HELP",
   "INSERT",
   "JOIN",
-  "KILLFORNOW",
+  "",
   "LOCATE",
   "MODIFY",
   "NEWMACRO",
@@ -147,7 +147,12 @@ scmnrd()
     if (oldcom->toktyp != nortok)  /* We have to display */
     {
       if (curmac < 0 || !BRIEF)
-        disply(oldcom, false);
+      {
+/* If we got an "empty" line from a U-USE file, it has already been shown */
+/* "empty" includes slash-star comment lines */
+        if(!(USING_FILE && oldcom->toktyp == eoltok))
+          disply(oldcom, false);
+      }
       if (oldcom->toktyp == eoltok) /* Empty line */
       {
         if (!cmsplt)               /* No valid data in line */
