@@ -13,7 +13,6 @@
  * Leaves READTOKEN ready to read 1st param
  */
 #include <stdio.h>
-#include <ctype.h>
 #include <memory.h>
 #include <string.h>
 #include <unistd.h>
@@ -201,13 +200,13 @@ scmnrd()
     if (oldcom->toklen == 1)
       goto p1109;                  /* Can't massage 1-char verb */
     for (i = 0;; i++)
-      if (!isspace(oldcom->bdata[i]))
+      if (oldcom->bdata[i] != SPACE)
         break;                     /* Find start of command */
 /*
  * SCRDTK leaves cursor just after token delimiter or at e.o.l.
  */
     k = oldcom->bdata[oldcom->bcurs - 1];
-    if (isspace(k) || k == COMMA)
+    if (k == SPACE || k == COMMA)
       oldcom->bcurs--;             /* If was after delimiter */
 
 /* If lengths are unequal (implying quotes somewhere), don't attempt

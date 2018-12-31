@@ -5,7 +5,6 @@
  */
 #include <stdio.h>
 #include <errno.h>
-#include <ctype.h>
 #include <limits.h>
 #include "prototypes.h"
 int scrdtk                         /* errno is int, so we are */
@@ -61,7 +60,7 @@ int scrdtk                         /* errno is int, so we are */
           {
             if (tbegin < 0)        /* Looking for token start */
             {
-              if (isspace(chr))    /* Another space */
+              if (chr == SPACE)    /* Another SPACE */
                 continue;          /* Keep looking for token start */
               if (chr == COMMA)
               {
@@ -125,7 +124,7 @@ int scrdtk                         /* errno is int, so we are */
               }                    /* if(littxt) */
               else
               {
-                if (isspace(chr))
+                if (chr == SPACE)
                   break;           /* End of token */
                 if (chr == COMMA)
                 {
