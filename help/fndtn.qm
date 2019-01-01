@@ -62,8 +62,6 @@ N225 ^NC^NS^N\!ci -d -t- "^ND^N^<4002>"^J!rcs -U "^ND^N^<4002>"^J!co -M "^ND^N^<
 N230 ^NC^NS^N\^ND^N^<4002>^[!echo "^P^[]0;"^ND^N^<4002>"^P^G"^J^NU ; Set xterm title to file (stuff at front guards against sending bad Ec seq when no file)
 N232 ^NC^N\^NE^Z^ND^N^<1201>^J^NC^NU^N^@ ;Append ^N^<1201> to lines
 N241 ^NC^NS^N\^NM^<1201>^U^ND^N^<506>^NU ; NW! delete lines found by L
-N265 ^NC^NS^N\^NE^H^NA^NS^N\^NOI^ND^N^<365>^Y^N^<511> ;Decr. SPZ ^<365>
-N266 ^NC^NS^N\^NE^H^NA^NS^N\^NOI^ND^N^<366>^Y^N^<507> ;Decimal inc ^<366>
 # n347 (^N^Wg) Check in current source with message 1103
 N347 ^NC^NS^N\!ci -u -m'^ND^N^<1103>' "^ND^N^<4002>"^J^NU
 # n362 - (^N^Wr) Multi-file replacer. If N1100 returns at once, got to next file.
@@ -97,20 +95,7 @@ N1070 /* 107X - DEFAULT VALUES FOR VARIOUS MACROS
 # n372 (^N^Wz) - set up N N to globally uppercase its line contents
 N372 ^NC^NS^N\n016 ^*NM^*<526>^*Uq $1^*J^*ND^*N^*<526>^*ND^*N^*<360>^*ND^*N^*<526>^*H^*S^*ND^*N^*<361>^*ND^*N^*<362>^*NU^J^NU
 N526 !!! SCRATCH - DEFINED BY OTHER MACROS !!!
-N507 ^NG9^NS^N^<503>^ND^N^<510>^N^<507>^NU
-N510 0^Y^NPI^NS^NL^Y^NU^@^NI^E1^NM^<366>^U^NU
-N511 ^NG0^N^<512>^NG10^Y^NG21^Y^NG32^Y^NG43^Y^NG54^Y^NG65^Y^N^<513>
-N512 ^NPI^NL^U^NU^@9^Y^Y^N^<511>
-N513 ^NG ^N^<512>^NG76^Y^NG87^Y^NG98^Y^NM^<365>^U^NI^NU
-N300 ^NC^NS^N\^NE^H^NA^NS^N\^NOI^ND^N^<366>^Y^N^<501> ;Inc HEX ^<366>
-N501 ^NGF^NS^N^<502>^ND^N^<510>^N^<501>^NU
-N502 ^NGEF^Y^NGDE^Y^NGCD^Y^NGBC^Y^NGAB^Y^NG9A^Y^N^<503>
-N503 ^NG89^Y^NG78^Y^NG67^Y^NG56^Y^NG45^Y^NG34^Y^NG23^Y^NG12^Y^NG01^Y^NG 1^Y^NM^<366>^U^NU
-N304 ^NC^NS^N\^NE^H^NA^NS^N\^NOI^ND^N^<366>^Y^N^<505> ;Inc OCT ^<366>
-N505 ^NG7^NS^N^<503>^ND^N^<510>^N^<505>^NU
 N506 ^ND^N^<1201>^J^NC^NU^[D-1^J^N^<506>
-N365 0^NU ;Put required iteration count here & use <265>
-N366 1^NU ;Put initial value&format here & use <266>, <300>, <304>
 N514 ^NC^NS^[^@^G;^NA^NL^D^T^N^<514>^J^NU
 N522 ^NU ; RCSDIFF options for Ctl-N &
 # N777 - Draw ruler of length ^N^<7000>. Sets up initial values then calls N776
