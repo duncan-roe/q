@@ -369,7 +369,11 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
         ndntch = ndntch + 1;
       }
       if (Curr->bcurs < ndntch)
-        Curr->bcurs = ndntch;
+      {
+/* Leave the cursor if came here from [F]L */
+        if (verb != 'L' && verb != 'l')
+          Curr->bcurs = ndntch;
+      }                            /* if (Curr->bcurs < ndntch) */
     }                              /* if !(Curr->bchars) else */
   }                                /* if (INDENT) */
   else
