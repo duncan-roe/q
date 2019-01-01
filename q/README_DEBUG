@@ -2,6 +2,10 @@ When debugging Q, I find it easiest to have gdb running in 1 terminal session
 with all of q's input and output going to and coming from another. Also I use
 "ggo" from the "command_line_tools" repository adjacent to that for Q.
 
+For the benefit of anyone who doesn't have command_line_tools installed, there
+is a copy of ggo in the help files directory. You can symlink or copy this into
+your PATH, or substitute e.g. /usr/local/share/q/ggo into the template below.
+
 In the session that is to act as Q's display, do the following:
 
 > 22:10:13$ ps
@@ -58,7 +62,7 @@ display session: it will have no effect on Q but it WILL terminate sleep.
 When you have finished debugging, enter ^C in the Q display window to obtain the
 shell prompt again:
 
-> 13:05:42$ sleep 10000
+> 13:05:42$ sleep 1000000
 >
 > Type H for help
 > Noted screen dimensions 177 x 71
