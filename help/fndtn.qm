@@ -31,8 +31,8 @@ N Z '^Z^B^S^J^NU
 N ^ '^NC^NL^J^[^NS^NL^ND^N^^^[M-2,32000^J^NU ;Back up 1 line when modifying
 N _ ^P^M^NU
 N $ '^NE^E^X^NA^NU ^N^@ ;Space between each char from cursor onwards
-N & '^NC^NS^N\!rcsdiff ^ND^N^<522> "^ND^N^<4002>"|k -E^J^NU
-N246 ^NC^NS^N\!git diff ^ND^N^<522> -- "^ND^N^<4002>"^J^NU ;NW&
+N & '^NC^NS^N\!rcsdiff ^ND^N^<522> "^ND^N^<4002>"|less -EX^J^NU
+N246 ^NC^NS^N\!git diff ^ND^N^<522> -- "^ND^N^<4002>"^J^NU ; ^N^W&
 N * '!/bin/ls -l "^ND^N^<4002>"^J^NU
 N ( '^NC^NS^N\^NFa!co^ND^N^<1301> -l "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^NNa^NU
 N ) '^NC^NS^N\^NFas^J!ci^ND^N^<1302> -u "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^NNa^NU
@@ -48,7 +48,7 @@ N423 /* N 9 puts token to match here
 N ; '^NC^NS^N\^H^NE^NM ^N^<514>
 N < '^NC^NS^N\g-1^Jv^J^NU
 N > '^NC^NS^N\g+1^Jv^J^NU
-N201 ^A^J^NC^NU^[^N^<201> ;Repeat last LOCATE till no more found
+N201 ^NC^NS^N\^A^J^NC^NU^[^N^@ ;(^N^W^A) repeat last LOCATE till no more found
 # n206 - (^N^W^F) search current file for all occurrences of command line.
 #        grep options in n1404; pipe-into command in n1405
 N206 ^NC^NS^N\^NM^<1202>^U!grep ^ND^N^<1404> -- '^ND^N^<1202>' "^ND^N^<4002>"^ND^N^<1405>^J^NU
@@ -99,14 +99,15 @@ N506 ^ND^N^<1201>^J^NC^NU^[D-1^J^N^<506>
 N514 ^NC^NS^[^@^G;^NA^NL^D^T^N^<514>^J^NU
 N522 ^NU ; RCSDIFF options for Ctl-N &
 # N777 - Draw ruler of length ^N^<7000>. Sets up initial values then calls N776
-#        To fit the screen exactly, N7000 should be 8 less than screen width (as returned by N4005)
+#        To fit the screen exactly, N7000 should be 8 less than screen width
+#        (as returned by N4005)
 #   Memory locations:-
 #   N7000 - ruler width
 #   N7001 - constant 10
 #   N7002 - constant 100
 #   N7003 - constant 1000
 #   N7004 - How many spaces to put before next 10's marker
-#   N7005 - How many 10's markers left to do or Value of next single digit
+#   N7005 - How many 10's markers left to do or value of next single digit
 #   N7006 - Value of next 10's marker
 # N776 If more markers to do, increment marker value.
 #      Work out how many spaces before next marker: there are only 8 after the initial '*'
@@ -165,7 +166,7 @@ N1401 f^NU ; Define to be ^NU for l & y instead of fl & fy (^N^Wp, ^N^Wq & ^N9)
 N1402 s^J^ND^N^<1107>^NU ; Override with "b", &c. as required
 N1403 $C^NU ; override with invocation wildcard (^N^Ws)
 N1404 -wn^NU ; grep options for ^N^W^F
-N1405 ^NU ; Command to run after N206 (^N^W^F) (e.g. |k -E -S^NU, |cat^NU)
+N1405 ^NU ; Command to run after N206 (^N^W^F) (e.g. |less -ESX^NU, |cat^NU)
 N1406 ^NI^NU ; Change to ^NU for no comments from ^NE / ^NL macros (all languages)
 N1407 q$1^J^NU ; Change to ^NU to stop automatic q$1 by ^N^Wp
 n426 /* N427 & N430 are short-form ^NE / ^NL (all languages)

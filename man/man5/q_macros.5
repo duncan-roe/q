@@ -394,10 +394,31 @@ Pseudomacros and the ALU can set any tab. A tab can be in one of 3 states:
 It is an error to use a tab inappropriately.
 .br
 For a list of tab IDs, start \fBq\fR and enter \fBH AS\fR.
-.SH KEYBOARD MACROS
-kkk
+.SH KEYBOARD-ACCESSIBLE MACROS
+\fIKeyboard-accessible macros\fR are those macros which can be invoked from the
+keyboard without recourse to the FI-FIMMEDIATE_MACRO command.
+These are the macros in row 2 of Table\ \&1 (^A - ?) and the first 0200 (128)
+macros in row 4 (parity-high NUL - parity-high DEL). The parity-high macros
+are invoked by keying the sequence \fB^N^W\fR\fImacro_meta_id\fR
+where \fImacro_meta_id\fR *is* case-sensitive.
 .SH COMMENTS
-xxx
+.TP
+.B Whole lines
+The whole line is a comment if its first non-space character is '\fB#\fR'.
+('\fB*\fR' also works, for backward compatibility with some old macros).
+.TP
+.B Trailing comments
+The sequence '\fB/*\fR' starts a comment anywhere in a command line.
+It need not have spaces on eiher side.
+Exception: '\fB/*\fR' is not recognised when reading raw text (e.g by
+N-NEWMACRO with a long octal \fImacro_id\fR).
+.TP
+.B Trailing comments in macros
+Most macros terminate explicitly, by returning, jumping to another macro, or
+looping. Any text placed after this termination will never be obeyed,
+so can act as a comment.
+These comments are then visible when listing macro contents by \fBq\fR's
+\fBN -\fR command, as in the first entry in \fBEXAMPLES\fR below.
 .SH MACRO-WRITING GUIDELINES
 These are the guidelines that have been adhered to in the creation of the
 system macro sets that are distributed with \fBq\fR.
@@ -414,16 +435,171 @@ show the \fBT\fR in upper-case
 \fBg\ \&TA\fR refer to different tabs).
 .TP
 .B Always code as a subroutine
-yyy
+Rather than letting a macro terminate by running off the end,
+always code \fB^NU\fR.
+No harm is done if the macro was not invoked by another macro,
+but \fB^NU\fR makes that possible in the future.
 .TP
-.B Error out on surprises
-bbb
+.B Keyboard-accessible macros should check context
+Many macros are designed to be invoked when \fBq\fR is in a particular mode,
+be that command mode or file mode.
+To guard against accidental invocation in the wrong mode,
+keyboard-accessible macros should start with the sequence \fB^NC^NS^N\\\fR
+(error out if not in command mode) or the opposite \fB^NC^N\\\fR.
+.br
+\fB^N\\\fR (signal error) is also appropriate when unexpected things happen,
+e.g. \fB^G\fR\fIchar\fR ends up at end of line (as determined by \fB^NA\fR)
+because \fIchar\fR was not found on the line.
 .TP
 .B Annotate well
-zzz
+.RS 7
+.TP
+.B Put trailing macro comments in keyboard-accessible macros
+Providing a keyboard-accessible macro is not too long,
+a trailing comment can remind the macro author and inform others what the macro
+does.
+Longer and/or more complex macros can benefit from whole-line comments in the
+macro definition file.
+This is well-illustrated by this excerpt from \fBfndtn.qm\fR (starts line 51):
+.RS -14
+.nf
+N201 ^NC^NS^N\\^A^J^NC^NU^[^N^@ ;(^N^W^A) repeat last LOCATE till no more found
+# n206 - (^N^W^F) search current file for all occurrences of command line.
+#        grep options in n1404; pipe-into command in n1405
+N206 ^NC^NS^N\\^NM^<1202>^U!grep ^ND^N^<1404> -- '^ND^N^<1202>' "^ND^N^<4002>"^ND^N^<1405>^J^NU
+.fi
+.RE
+.RS 7
+Several points to note in the above:
+.br
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Insert the invoking key sequence for a macro above 0177
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+N201 has an inline explanatory comment because it is a short macro,
+but n206 is long so has a whole-line explanatory comment.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The second comment line to n206 highlights called macros that may usefully be
+re-defined.
+The two highlighted macros start off as:
+.RS -25
+.nf
+1404 -wn^NU ; grep options for ^N^W^F
+1405 ^NU ; Command to run after N206 (^N^W^F) (e.g. |less -ESX^NU, |cat^NU)
+.fi
+.RE
+(the above 2 lines show how macros are displayed from the first item in
+\fBEXAMPLES\fR below (starting \fBcat\ \&/dev/null\fR).
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+System macros generally start inline macro comments with a semicolon (\fB;\fR).
+There is nothing special about this character:
+it is only there to make the comment stand out better to the user.
+.RE
+.RE
+.TP
+.B Have a table of memory location use
+\fBq\fR doesn't have symbolic names for memory locations so it is usually
+helpful to document them in comments.
+.br
+As an example,
+the foundation macro set defines the \fB^N7\fR macro to draw a 2-line
+ruler to fill the screen width exactly.
+\fB^N7\fR is used in lieu of the \fIEnter\fR key after completing the entry of a
+command, e.g. to modify line 42 with a ruler,
+keying \fBm42^N7\fR in an 80-column xterm would produce something like:
+.RS -14
+.nf
+> *             1         2         3         4         5         6         7
+> *    123456789012345678901234567890123456789012345678901234567890123456789012
+  m 42
+    42 Don't Panic
+.fi
+.RE
+.RS 7
+\fB^N7\fR has inserted 2 comment lines:
+a series of right-justified 10's markers followed by a series of units.
+\fB^N7\fR does some initialisation then calls \fB^N^<777>\fR which is
+annotated thusly:
+.RE
+.RS -14
+.nf
+# N777 - Draw ruler of length ^N^<7000>. Sets up initial values then calls N776
+#        To fit the screen exactly, N7000 should be 8 less than screen width
+#        (as returned by N4005)
+#   Memory locations:-
+#   N7000 - ruler width
+#   N7001 - constant 10
+#   N7002 - constant 100
+#   N7003 - constant 1000
+#   N7004 - How many spaces to put before next 10's marker
+#   N7005 - How many 10's markers left to do or value of next single digit
+#   N7006 - Value of next 10's marker
+.fi
+.RE
+.RS 7
+In the memory location table above, N7000 refers to memory location 0,
+accessed by \fB^<PSH\ \&0>\fR, and so on.
+.RE
+.RE
+.TP
+.B Consider using q -n in pipes
+\fBq\fR's \fB-i\fR argument is compulsory in a pipe,
+which equates to having to write an immediate macro.
+Using \fBq\ \&-n\fR can help to ensure consistent results,
+because all the mode settings will be the defaults as documented by
+\fBH\ \&FM\fR issued from within \fBq\fR.
+.br
+Often, \fBq\fR running in a pipe will not use any of the system macros anyway,
+and if it does then it is safer to U-USE them as part of the \fB-i\fR
+immediate macro.
+.TP
+.B Only 1 keyboard-accessible macro per macro suite
+When a macro calls other macros which themselves can't be usefully invoked
+directly by the user, define these macros to be outside of the
+keyboard-accessible range.
+This saves room in the keyboard-accessible range and avoids the possibility
+that the user might invoke one of these macros by mistake. These
+internally-called macros typically don't check for e.g. edit / command mode:
+that is the job of the entry-level macro (that the user invokes).
 .TP
 .B There is a macro debugger
-ddd
+\fBq works in conjunction with \fBgdb\fR\fR to provide a macro debugger.
+The process is described in the file
+\fBREADME_DEBUG_MACROS\fR in the Documentation directory.
 .SH TABLES
 .RE
 .B Table\ \&1.\ \&Macro id map
@@ -533,17 +709,22 @@ The line below captures this output and pipes it into \fBless\fR.
 The command should be issued with the same current working directory as \fBq\fR
 so as to pick up the correct \fIStartup file\fR.
 .RE
+.RS -7
 .nf
-cat /dev/null | q -v -i n,-^J 2>&1 | q -i fl,:^J^NC^NU^[d,1,-,-2^Ja^J^[d,-1^Jy,^P^M,,^J | less
+cat /dev/null | q -v -i n,-^J 2>&1 | q -n -i fl,:^J^NC^NU^[d,1,-,-2^Ja^J^[d,-1^Jy,^P^M,,^J | less
 .fi
+.RE
 .RS 3
 The pipeline contains two invocations of \fBq\fR:
-.RS 3
-1.\ \&Run with the \fB-v\fR option
+.TP
+.B 1.
+Run with the \fB-v\fR option
 so output from \fBq\fR commands goes to stderr;
 issue the \fBn,-\fR command; redirect stderr back into the stdout pipe.
-.br
-2.\ \&Trim off unwanted leading lines:
+.TP
+.B 2.
+Run with the \fB-n\fR option as discussed in \fBMACRO-WRITING GUIDELINES\fR
+above; trim off unwanted leading lines:
 everything before the first line that has a colon surrounded by spaces
 (i.e. token delimiters); trim off the unwanted trailing line
 (in fact an internally generated \fBfq\fR command);
@@ -555,9 +736,11 @@ The sequence \fB^NC^NU\fR guards against there being no defined macros.
 The above line is expanded for clarity:
 the canonical (minimum length) version is:
 .RE
+.RS -7
 .nf
-cat /dev/null|q -vin-^J 2>&1|q -ifl:^J^NC^NU^[d1,-,-2^Ja^J^[d-1^Jy,^P^M^J|less
+cat /dev/null|q -vin-^J 2>&1|q -nifl:^J^NC^NU^[d1,-,-2^Ja^J^[d-1^Jy,^P^M^J|less
 .fi
+.RE
 .PP
 .B Change what the space macro does
 .RS 3
@@ -566,9 +749,11 @@ to run \fBmake\fR.
 This \fBq\fR invocation sequence redefines the space macro to run
 \fBtail\fR to output only the last line (i.e. without line numbering):
 .RE
+.RS -7
 .nf
 q -i 'n 040,! tail -n1 ^*ND^*N^*<4002>^*J^J'
 .fi
+.RE
 .RS 3
 The immediate macro definition has to be quoted,
 since it contains the shell meta-characters space and angle brackets.
