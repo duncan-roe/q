@@ -5,31 +5,38 @@ This README describes how to debug Q macros using gdb.
 I originally planned to incorporate a macro debugger inside Q, but have shelved
 that in favour of using gdb.
 
-The example that follows debugs the ^N^A macro in ../help/word.qm. This is the
-macro that aligns text to fit inside tab 2. It starts the most complex macro
-program in the Q distribution.
+The example that follows debugs the ^N^A macro in the word.qm system macro set.
+This is the macro that aligns text to fit inside tab 2.
+It starts the most complex macro program in the Q distribution.
 
 PREPARATION
 ===========
 
 Be sure to have read and become familiar README_DEBUG before reading on.
 In addition to the 2 terminal sessions mentioned there, you will likely want
-a session where you can peruse the currently loaded macro table. But in
-general you won't need another terminal session in which to examine source.
+a session where you can peruse the currently loaded macro table.
+In general you won't need another terminal session in which to examine source.
+In fact, these instructions work when source is not available.
+But if you plan to do advanced stuff, like set a watchpoint on th ALU R
+register, then you will want source.
+You might want an extra terminal window where you can browse word.qm,
+e.g. for the comments therein.
 
-To get a current macro table: issue the ggo command below. In the session where
-Q is running, use the Newmacro command to dump the table in a file, e.g. "n- t5"
-to create a file called "t5" in the directory where you are running gdb
-(usually this one). You can dump the macro table to any file you like of course,
-but the following narrative assumes you used t5.
-In the 3rd session, enter "less t5" and you have the macro table. (You might
-prefer "less t5 ../help/word.qm" since there are extra comments in word.qm).
+To get a current macro table: follow the instructions in the q_macros man page,
+except changed to:
+cat /dev/null|q -nviu,'^ND^N^<4003>'/wordmacs^Jn-^J (then 2>&1... as before).
 
-The ^N^A macro is defined on the line starting "N A ..." in word.qm.
-It shows up in t5 as macro 1 on line 1 starting "n 001 ...".
-The gdb session always reports macros by number, as they are listed in t5.
+The ^N^A macro is defined on the line starting "N A ..." in word.qm,
+and shows up as line 1 in the macro table (macro ^A).
+The gdb session always reports macros by octal number, so ^A becomes 01.
 
-The file ./macro_debug_sample exercises the ^N^A macro suite.
+ggo comes with command_line_tools but if you don't have that then there is a
+copy in ${prefix}/share/q, where {prefix} is usually /usr/local or /usr.
+The template assumes ggo is in the PATH.
+
+The file ${prefix}/share/q/macro_debug_sample exercises the ^N^A macro suite.
+If you have write access to macro_debug_sample, it would be preferable to
+make a copy and work on that.
 Either "export j=macro_debug_sample" before running ggo or enter
 "q macro_debug_sample" in the Q session.
 (If you are interested in some other file, use that file instead).
@@ -57,15 +64,15 @@ This is what you would hope to see after typing ^N^A.
 In the gdb window, since the previous gdb command was "c" (short for "continue")
 you can now touch <Enter> to continue on to the next macro.
 Observe the next message "starting macro$2 = 01001". This corresponds to the
-macro code
-  n 001 ^NC^NS^N\^ND^N^<1001>
-at the start of t5.
+^N^<1001> in
+  ^A : ^NC^NS^N\^ND^N^<1001>
+in line 1 of the macro table.
 
 For those unfamiliar with Q macro coding: ^N^<1001> is a jump to macro 1001.
 The ^ND immediately before it pushes a link to Q's macro stack so that the 1001
 macro (hereinafter referred to as N1001) can return to the next character in
-N001. It does this using the sequence ^NU.
-N and U are what is called "pseudomacros": they are invoked with ^N as if they
+the ^A macro. It does this using the sequence ^NU.
+D and U are what is called "pseudomacros": they are invoked with ^N as if they
 were macros but perform some function implemented in Q's code instead.
 The pseudomacro name "D" stands for "Down" and "U" stands for "Up" (c/w Call /
 Return).
@@ -73,12 +80,10 @@ For more information about pseudomacros, enter the Q command "h pm", but NOT NOW
 - you're in he middle of debugging a macro ;)
 
 In the debug window, touch <Enter> to continue on to the next macro. You see
-N001 being resumed. This tells you that N1001 or some macro it jumped to has
-issued ^NU.
+macro 01 (^A) being resumed.
+This tells you that N1001 or some macro it jumped to has issued ^NU.
 
-Before moving on, take a look at the definition of N1001: in the "less t5"
-screen, the search sequence "/^n 1001" will get you to it (that's uparrow
-small-n, not Control-N).
+Before moving on, take a look at the definition of N1001 in the macro table.
 Observe that N1001 called N4000 but gdb didn't tell us that. Macros in the low
 04000's are what is called "active pseudomacros" or "active pseodos". Their
 actions are also documented in "h pm" (NOT NOW...:).
@@ -93,8 +98,8 @@ might want to debug them, but that's outside the scope of this README.
 MAIN DEBUG LOOP
 ==== ===== ====
 
-Again touch <Enter> in the debug window. You see N701 starting:
-  n 701 ^J^NC^NU^NA^N^<706>^NG>^N^<700>^N^<702> ;Leave lines starting "> " alone
+Again touch <Enter> in the gdb window. You see N701 starting:
+  701 ^J^NC^NU^NA^N^<706>^NG>^N^<700>^N^<702> ;Leave lines starting "> " alone
 N701 has an inline comment (it's part of the macro but never gets executed due
 to the unconditional jump to N702 before it).
 
@@ -110,7 +115,7 @@ line is left unaltered, as we will see next.
 N702 sets the cursor position according to whether line length is more than
 desired maximum (as determined by putting cursor at last character in line and
 seeing whether it is past tab 2).
-  n 702 ^Z^Y^NP2^H^F^F^N^<704>
+  702 ^Z^Y^NP2^H^F^F^N^<704> ;New line:- first see if not too long
   ^NP2 obeys next 2 chars iff cursor is past tab 2 as it will be
 On a short line, it leaves the cursor at line end (after the last character).
 On a long line, it leaves the cursor on the first character of the 3rd word in
@@ -119,7 +124,7 @@ end (^F[word forward] has no effect at line end (unlike ^X[character forward]
 which adds a space)).
 
 N702 now jumps to N704, which is a looping macro
-  n 704 ^NA^NS^Y^@^NP2^N^<705>^NA^N^<707>^F^F^N^@
+  704 ^NA^NS^Y^@^NP2^N^<705>^NA^N^<707>^F^F^N^@ ;Work along line
   The jump to macro zero (^@) at macro end is a jump to the current macro.
     It could be coded as ^N^<704> but that would have to be changed if the macro
     were to be renumbered whereas ^N^@ would keep working as before.
@@ -129,7 +134,7 @@ program wants it on the preceding space).
 If the cursor is now after tab 2, jump to N705.
 
 <Enter> indeed shows a jump to N705
-  n 705 ^B^NP1^NS^N^<701>^?^T^N^<702>
+  705 ^B^NP1^NS^N^<701>^?^T^N^<702>
   N001 set tab 1 to 1 so ^NP1 is true unless cursor is at line start
 N705 is entered when the cursor was past tab 2. It either splits the line at the
 preceding word boundary or, if there is only a single word in the line, lets the
@@ -138,7 +143,7 @@ After ^B[word back] cursor is at line start: ^NP1[cursor past tab 1] is false
 so don'r obey ^NS[skip 2] and jump no N701.
 
 <Enter> confirms jump to N701
-  n 701 ^J^NC^NU^NA^N^<706>^NG>^N^<700>^N^<702>
+  701 ^J^NC^NU^NA^N^<706>^NG>^N^<700>^N^<702> ;Leave lines starting "> " alone
 
 <Enter> again to execute N701. Observe line 1 appears in the Q window, owing to
 the ^J at the start of N701.
@@ -158,12 +163,12 @@ COMMAND TEMPLATES
 export my_pty as the tty as in README_DEBUG
 export j as the file to edit (if you have one)(e.g. export j=macro_debug_sample)
 export k as the rc file with which q should start
-  (defaults to ../help/.qrc which eventually loads ../help/word.qm).
-n- t5
-less t5 ../help/word.qm
+  (defaults to .qrc which is OK if .qrc eventually loads word.qm).
+cat /dev/null|q -nviu,'^ND^N^<4003>'/wordmacs^Jn-^J 2>&1|
+q -nifl:^J^NC^NU^[d1,-,-2^Ja^J^[d-1^Jy,^P^M^J|less
 sleep 100000
 
-ggo q -a "-n -iu,${k:-../help/.qrc}^Jfv^Jfm+v^J $j </dev/pts/$my_pty \
+ggo $(type -p q) -a "-n -iu,${k:-.qrc}^Jfv^Jfm+v^J $j </dev/pts/$my_pty \
   >/dev/pts/$my_pty 2>&1" "set max-value-size sizeof (struct scrbuf5)" \
   b\ scrdit.c:1003 commands silent "echo starting macro" p/o\ thisch end \
   "cond 2 (thisch < 0101 || thisch > 0132) && thisch < 04000 && thisch != 255" \

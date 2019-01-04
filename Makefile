@@ -25,6 +25,7 @@ cp --preserve=timestamps q/README* q/TODO $(DESTDIR)$(DOCDIR)/q/ && \
 cp --preserve=timestamps q/.qrc $(DESTDIR)$(DOCDIR)/q/q_dot_qrc && \
 cp --preserve=timestamps help/.qrc $(DESTDIR)$(DOCDIR)/q/help_dot_qrc && \
 cp --preserve=timestamps INSTALL LICENSE README $(DESTDIR)$(DOCDIR)/q/ && \
+cp --preserve=timestamps q/macro_debug_sample   $(DESTDIR)$(DOCDIR)/q/ && \
 for i in man/man*; do mkdir -p $(DESTDIR)$(MANDIR)/$$(basename $$i) &&\
 cp --preserve=timestamps $$i/*.? $(DESTDIR)$(MANDIR)/$$(basename $$i); done
 
