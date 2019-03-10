@@ -38,13 +38,18 @@
 
 #define GETNEXTCHR goto getnextchr
 #define BOL_OR_EOL goto bol_or_eol
-#define RAWNEXTCHR goto rawnextchr
 #define ERR_IF_MAC goto err_if_mac
 #define SOUNDALARM goto soundalarm
 #define TABOORANGE goto taboorange
 #define SKIP2MACCH goto skip2macch
 #define NORMALCHAR goto normalchar
 #define RANOFF_END goto ranoff_end
+#define CHECK_HAS_MACCH(x) \
+  do { if (curmac > 0 && mcposn > scmacs[curmac]->mcsize - x) RANOFF_END; } \
+  while(0)
+#define GET_FOLLOWING_CHAR goto get_following_char
+#define TEST_TAB goto test_tab
+#define CHECK_MACRO_END goto check_macro_end
 
 /* Externals that are not in any header */
 
@@ -222,7 +227,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
   char *err = NULL;                /* Point to error text */
   char tbuf[256];                  /* Scratch */
   int i, j, k, l = 0, m = 0;       /* Scratch variables */
-  int gotoch;                      /* Char of last ^G */
+  int gotoch = -1;                 /* Char of last ^G */
   long i4;                         /* Scratch */
   long olen;                       /* Original line length */
   struct tms tloc;                 /* Junk from TIMES */
@@ -240,13 +245,16 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
  *                                  addr)
  * in_cmd - => in command mode
  */
-  bool contp, nseen, glast, gpseu = false, gposn = false;
-  bool gwrit = false, gcurs = false, gtest = false, gpast = false;
-  bool gdiff = false, gmacr = false, fornj;
+  bool contp = false, cntrlw = false, nseen = false, glast = false;
+  bool gpseu = false, gposn;
+  bool gwrit, gcurs, gtest, gpast;
+  bool gmacr, fornj = false;
+  bool gwthr = false;              /* WheTHeR macro exists or length */
 /*
  * LOCAL LOGICAL VARIABLES:
  * ========================
  *
+ * cntrlw - true if ^W seen
  * contp  - true if last char ^P (nxt ch not special)
  * instmp - Holds actual value of INSERT whilst tabbing.
  * nseen  - If ^N last char so expect macro name
@@ -257,8 +265,8 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
  * gcurs  - This pseudo macro deals with screen cursor
  * gtest  - This pseudo macro tests screen cursor position
  * gpast  - This pseudo macro tests screen cursor position past tab
- * gdiff  - This pseudo macro is actually ^NY (not ^NF)
  * gmacr  - This pseudo macro is actually ^NM (not ^NG)
+ * gwthr  - This pseudo macro is actually ^NW (not ^NG)
  *
  *   Validate cursor &c
  */
@@ -313,15 +321,9 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
   insert = false;
   pchars = pchrs;
   mxchrs = Curr->bchars;
-  nseen = false;
-  glast = false;
-  fornj = false;
   last_Curr = Curr;
   if (pchars)
     strcpy((char *)prompt, (char *)prmpt); /* Move prompt to common area */
-  contp = false;
-  cntrlw = false;
-  gotoch = -1;                     /* No ^G yet */
 /*
  * Normally we do no REFRSH if in an scmac, but if BRIEF is on
  * we here refresh the prompt only (if editing a line)
@@ -380,7 +382,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
     ndntch = 0;                    /* Not indenting, so no indent chars */
 
   mctrst = false;
-rawnextchr:
+getnextchr:
   if (curmac < 0)
     refrsh(Curr);                  /* Display prompt etc */
   if (curmac >= 0)
@@ -534,11 +536,7 @@ p10065:
   }                                /* if (j != k) */
   Curr->bcurs = k;                 /* Step cursor back */
   Curr->bchars = j;                /* Reduce # of chars */
-getnextchr:
-/* Get another character if one available */
-  if (curmac < 0 && !USING_FILE && !kbd5())
-    refrsh(Curr);
-  RAWNEXTCHR;
+  GETNEXTCHR;
 bol_or_eol:
   err = "Ran off beginning or end of line";
 err_if_mac:
@@ -550,6 +548,7 @@ err_if_mac:
     notmac(true);
   }
 soundalarm:
+  fornj = gpseu = glast = false;
   putchar('\a');                   /* O/p BEL since error */
   mctrst = false;                  /* User no longer trusted */
   GETNEXTCHR;                      /* End rubout */
@@ -982,7 +981,7 @@ p7736:
  * ^N - expaNd macro
  */
 p7716:nseen = true;
-  RAWNEXTCHR;
+  GETNEXTCHR;
 /*
  * P1502 - We have the macro char. May be a real macro or a pseudo
  * if we already in a macro. May also be DEL if user has changed
@@ -1001,7 +1000,7 @@ p1905:
   nseen = false;
   contp = false;
   if (thisch == (unsigned char)'\377') /* BRKPT starting macro */
-    RAWNEXTCHR;                    /* High parity rubout */
+    GETNEXTCHR;                    /* High parity rubout */
 /* Recognise ESC  if not in a macro */
   if (thisch == ESC && curmac < 0)
   {
@@ -1274,338 +1273,179 @@ p1905:
     mcposn = 0;                    /* Got the macro */
     curmac = thisch;
   }                                /* if (!thisch && curmac > 0) else */
-  RAWNEXTCHR;
+  GETNEXTCHR;
 p1503:
   if (thisch == 0177)
-    RAWNEXTCHR;                    /* J rubout */
+    GETNEXTCHR;                    /* J rubout */
 /*
  * Look for a pseudo macro. Some are only legal if in a macro
  */
-  verb = thisch;
-  if (verb >= 'a' && verb <= 'z')
-    verb &= 0337;                  /* Upper case letter */
+  verb = toupper(thisch);
   if (curmac < 0)
   {
 /* We are not in a macro. Check whether this pseudo is allowed from the
  * keyboard... */
-    for (c = "EORFNMY"; *c; c++)
+    for (c = "EORFNMW"; *c; c++)
       if (*c == verb)
         break;
     if (*c == 0)
       SOUNDALARM;                  /* This pseudo not allowed */
   }                                /* if (curmac < 0) */
+/* Clear all possibly relevant booleans here, rather than higgelty-piggelty
+ * all over the place */
+  gposn = gwrit = gcurs = gtest = gpast = gmacr = gwthr = false;
+
   switch (thisch & 037)
   {                                /* Try for a pseudo u/c or l/c */
-    case 1:
-      goto p7601;
-    case 2:
-      goto p7602;
-    case 3:
-      goto p7603;
+    case 1:                        /* ^NA - Obey if at EOL */
+      CHECK_HAS_MACCH(2);
+      if (Curr->bcurs == Curr->bchars)
+        GETNEXTCHR;                /* J at EOL */
+    skip2macch:
+      CHECK_HAS_MACCH(2);
+      mcposn += 2;                 /* Skip 2 */
+      GETNEXTCHR;
+
+    case 2:                        /* ^NB - obey if Before spec'd tab */
+      gcurs = true;
+      TEST_TAB;
+
+    case 3:                        /* ^NC - obey if in Command processor */
+      CHECK_HAS_MACCH(2);
+      if (!in_cmd)
+        SKIP2MACCH;
+      GETNEXTCHR;
+
     case 4:
       goto p7604;
-    case 5:
-      goto p7605;
-    case 6:
-      goto p7606;
-    case 7:
-      goto p7607;
-    case 9:
-      goto p7611;
-    case 10:
-      goto p7612;
-    case 12:
-      goto p7614;
-    case 13:
-      goto p7615;
-    case 14:
-      goto p7616;
-    case 15:
-      goto p7617;
-    case 16:
-      goto p7620;
-    case 18:
-      goto p7622;
-    case 19:
-      goto p7623;
-    case 20:
-      goto p7624;
+
+    case 5:                        /* ^NE - reset insErt mode (^E) */
+      insert = false;
+      if (curmac < 0)
+        refrsh(Curr);              /* Close gap */
+      GETNEXTCHR;
+
+    case 6:                        /* ^NF - set spec'd tab to File position */
+      gwrit = true;
+      CHECK_MACRO_END;
+
+    case 7:                        /* ^NG - obey if Got next ch */
+      CHECK_HAS_MACCH(3);          /* Need another char + something to obey */
+    get_following_char:
+      glast = gpseu = true;        /* So we will come back */
+      GETNEXTCHR;
+
+    case 9:             /* ^NI - Increment link (to make macro a conditional) */
+/* Error if < 2 chars left in macro, because it can't then do a ^NU */
+      if (mcposn > scmacs[curmac]->mcsize - 2)
+      {
+      ranoff_end:
+        err = "^NA, ^NB, ^NC &c. too near macro end";
+        ERR_IF_MAC;
+      }
+      if (mcnxfr == MCDTUM)
+        GETNEXTCHR;                /* No-op if stack empty */
+      l = curmac;                  /* Save current macro BRKPT ^NI invoked */
+      m = mcposn;                  /* Save current macro position */
+      goto p1706;                  /* Do a dummy UP */
+
+    case 10:                       /* ^NJ long (signed) Jump */
+      CHECK_HAS_MACCH(1);          /* Must be 1 more char in macro */
+      fornj = true;                /* Indicate ^N^J */
+      GET_FOLLOWING_CHAR;          /* Get jump length */
+
+    case 12:                       /* ^NL - Long skip */
+      mcposn += 2;                 /* Skip 2 ... */
+      SKIP2MACCH;                  /* ... skip 2 more */
+
+    case 13:                       /* ^NM - make Macro from current line */
+      if (curmac > 0)
+        CHECK_HAS_MACCH(1);        /* Must be 1 more char in macro */
+      gmacr = true;                /* We are defining a macro */
+      GET_FOLLOWING_CHAR;          /* Get macro ID */
+
+    case 14:                       /* ^NN - positioN file to spec'd tab */
+      CHECK_MACRO_END;
+
+    case 15:                       /* ^NO set spec'd tab to cursOr position */
+      gwrit = gcurs = true;
+      CHECK_MACRO_END;
+
+    case 16:                       /* ^NP - obey if Past spec'd tab */
+      gpast = gcurs = true;
+      TEST_TAB;
+
+    case 18:                       /* ^NR - move cursoR to spec'd tab */
+      gcurs = true;
+      CHECK_MACRO_END;
+
+    case 19:                 /* ^NS - unconditional Skip (reverse obey sense) */
+      SKIP2MACCH;
+
+    case 20:         /* ^NT - Trust user to change file pointer during modify */
+      mctrst = true;
+      GETNEXTCHR;
+
     case 21:
       goto p7625;
-    case 24:
-      goto p7630;
-    case 25:
-      goto p7631;
-    case 27:
-      goto p7633;
-    case 29:
-      goto p7635;
+
+    case 23:              /* ^NW Whether macro exists or length (pushes to R) */
+      CHECK_HAS_MACCH(1);
+      break;
+
+    case 24:                       /* ^NX - eXit from macro */
+      notmac(false);
+      GETNEXTCHR;
+
+    case 27:                       /* ^N[ - Obey if file before spec'd tab */
+      TEST_TAB;                    /* !past !curs */
+
+    case 29:                       /* ^N] - Obey if file past spec'd tab */
+      gpast = true;
+      TEST_TAB;
   }
 /* ^NH is not a pseudo */
 /* ^NK is not a pseudo */
 /* ^NQ is not a pseudo */
 /* ^NV is not a pseudo */
-/* ^NW is not a pseudo */
+/* ^NY is not a pseudo */
 /* ^NZ is not a pseudo */
-/* ^N\ is not a pseudo */
+/* ^N\ is not a pseudo and never will be (it gets used to signal error) */
   if (curmac >= 0)
   {
     printf("\r\nCalling undefined pseudo-macro \"%c\". ", thisch);
     notmac(true);
   }
   SOUNDALARM;
-/*
- * ^NI - Increment link (to make macro a conditional)
- */
-p7611:
-/* Error if < 2 chars left in macro, because it can't then do a ^NU */
-  if (mcposn > scmacs[curmac]->mcsize - 2)
-  {
-  ranoff_end:
-    err = "^NI, ^NB &c. too near macro end";
-    ERR_IF_MAC;
-  }
-  if (mcnxfr == MCDTUM)
-    RAWNEXTCHR;                    /* No-op if stack empty */
-  l = curmac;                      /* Save current macro BRKPT ^NI invoked */
-  m = mcposn;                      /* Save current macro position */
-  goto p1706;                      /* Do a dummy UP */
-/*
- * ^NO,^NR,^NF,^NN - Remember or move to cursor or file position
- * ^NY - Get difference between 2 tabs to a third tab
- */
-p7617:gwrit = true;                /* (^NO) We are writing to a tab */
-p1709:gcurs = true;                /* Distinguish from file posn */
-p1710:gtest = false;               /* Not B or P */
-  if (curmac < 0)
-    goto p1716;                    /* J keybd pseudo */
-/* Error if was last character in the macro */
-  if (mcposn >= scmacs[curmac]->mcsize)
-  {
-    err = "^NO &c. too near macro end";
-    ERR_IF_MAC;
-  }
-p1716:gposn = true;                /* Distinguish from ^G */
-  goto p1707;                      /* Get tab # */
-p7622:gwrit = false;               /* (^NR) move cursor, don't set tab */
-  goto p1709;                      /* Join ^NO */
-p7606:gdiff = false;               /* (^NF) set tab to file position */
-p1808:gwrit = true;                /* (^NY joins here) */
-p1711:gcurs = false;               /* We are file, not cursor */
-  goto p1710;                      /* Join ^NO */
-p7616:gwrit = false;               /* (^NN) Position file, don't write tab */
-  goto p1711;                      /* Join ^NF */
-p7631:gdiff = true;                /* (^NY) we are YDIFF */
-  goto p1808;                      /* Join ^NF */
-/*
- * P1708 - Come back here with THISCH set equal to the tab code.
- *        1->tab 1 ... D->tab 20
- */
-p1708:
-  if (thisch == '-')
-    i = 79;
-  else
-    i = thisch - '1';              /* Get TABS array subscript */
-  if (i < 0 || i >= NUM_TABS)
-    TABOORANGE;
-  if (gtest)
-    goto p1718;                    /* J test pos'n */
-  if (gwrit)
-    goto p1712;                    /* J remember current pos'n */
-  i4 = tabs[i].value;
-  if (i4 < 0)
-    TABOORANGE;                    /* J certainly too low */
-  if (!gcurs)
-    goto p1713;                    /* J file positioner */
-  if (i4 > BUFMAX)
-    TABOORANGE;                    /* J too big for a cursor value */
-  i = i4;
-  if (i > Curr->bchars)
-    TABOORANGE;                    /* J trying to pos'n off end of line */
-  Curr->bcurs = i;                 /* Set cursor position */
-  GETNEXTCHR;                      /* End ^NR - may want to REFRSH */
-/*
- * ^NB - Obey if Before spec'd tab
- */
-p7602:
-  gpast = false;                   /* We are B, not P. */
-p1717:
-  gcurs = true;                    /* We are testing cursor position */
-p1813:
+
+/* ^NB, ^NP, ^N[ & ^N] test if cursor / file position before/after tab */
+test_tab:
+  CHECK_HAS_MACCH(3);              /* Err if not tabid + 2 chars */
   gtest = true;                    /* We are a position tester */
-/* Err if not tabid + 2 chars */
-  if (mcposn > scmacs[curmac]->mcsize - 3)
-    RANOFF_END;
-  goto p1716;                      /* Get tab # */
-p1718:
-  if (tabs[i].tabtyp == UNDEFINED)
-  {
-    err = "^NB &c. testing undefined tab";
-    ERR_IF_MAC;
-  }
-  if (gpast)
-    goto p1719;                    /* J on if not a B */
-  if (!gcurs)
-    goto p1814;                    /* J actually ^N[ */
-  if (tabs[i].tabtyp == LINENUM)
-  {
-  p17181:
-    err = "^NB/^NP testing filepos tab";
-    ERR_IF_MAC;
-  }
-  if (Curr->bcurs < tabs[i].value)
-    RAWNEXTCHR;
-  SKIP2MACCH;
-p1814:
-  if (tabs[i].tabtyp == CHRPOS)
-  {
-  p1841:
-    err = "^N[/^N] testing chrpos tab";
-    ERR_IF_MAC;
-  }
-  if (ptrpos < tabs[i].value)
-    RAWNEXTCHR;
-  SKIP2MACCH;
-/*
- * ^NP - obey if Past spec'd tab
- */
-p7620:gpast = true;                /* We are in fact P */
-  goto p1717;
-p1719:if (!gcurs)
-    goto p1815;                    /* J actually ^N] */
-  if (tabs[i].tabtyp == LINENUM)
-    goto p17181;
-  if (Curr->bcurs > tabs[i].value)
-    RAWNEXTCHR;
-  SKIP2MACCH;
-p1815:
-  if (tabs[i].tabtyp == CHRPOS)
-    goto p1841;
-  if (ptrpos > tabs[i].value)
-    RAWNEXTCHR;
-  SKIP2MACCH;
-/*
- * ^N[ - Obey if file pos'n before specified tab
- */
-p7633:gpast = false;               /* We are [, not ] */
-p1812:gcurs = false;               /* We are testing file pos'n */
-  goto p1813;                      /* Join cursor testers */
-/*
- * ^N] - Obey if file pos'n past specified tab
- */
-p7635:gpast = true;                /* We are ], not [ */
-  goto p1812;                      /* Join ^N[ */
-/*
- * P1713 - ^NN continuing
- */
-p1713:
-  if (!in_cmd && !mctrst) /* Not trusted to change file pos'n while modifying */
-    BOL_OR_EOL;
-/* Eof */
-  if (i4 > lintot + 1 && !(deferd &&
-    (dfread(i4 - lintot, NULL), i4 <= lintot + 1)))
-    BOL_OR_EOL;
-  setptr(i4);                      /* Position the file */
-  RAWNEXTCHR;                      /* Finish ^NN */
-/*
- * P1712 - Remember file or cursor position
- */
-p1712:if (gcurs)
-    goto p1714;                    /* J is cursor pos'n */
-  if (gdiff)
-    goto p1809;                    /* ^NY splits off here */
-  tabs[i].value = ptrpos;
-  tabs[i].tabtyp = LINENUM;
-  RAWNEXTCHR;
-p1714:
-  tabs[i].value = Curr->bcurs;     /* ^NO */
-  tabs[i].tabtyp = CHRPOS;
-  RAWNEXTCHR;
-/*
- * P1809 - ^NY continuing
- */
-p1809:
-  if (i > 77)
-    TABOORANGE;                    /* J above max for a result */
-  if (tabs[i].tabtyp == UNDEFINED || tabs[i].tabtyp != tabs[i + 1].tabtyp ||
-    tabs[i].value >= tabs[i + 1].value)
-  {
-    err = "^NY tab type / value error";
-    ERR_IF_MAC;
-  }
-  tabs[i + 2].value = tabs[i + 1].value - tabs[i].value; /* Set result */
-  tabs[i + 2].tabtyp = tabs[i].tabtyp;
-/*
- * Slightly awful hack - user percieves cursor tabs as 1-based but they
- * are stored zero-based. To maintain the deception, we must subtract 1
- * from the result if dealing with cursor tabs...
- */
-  if (tabs[i].tabtyp == CHRPOS)
-    tabs[i + 2].value--;
-  RAWNEXTCHR;
-/*
- * ^NA - Obey if at EOL
- */
-p7601:
-  if (mcposn > scmacs[curmac]->mcsize - 2)
-    RANOFF_END;
-/* J could skip off e.o. mac */
-  if (Curr->bcurs == Curr->bchars)
-    RAWNEXTCHR;
-/* J at EOL */
-skip2macch:
-  mcposn = mcposn + 2;             /* Skip 2 */
-  if (mcposn > scmacs[curmac]->mcsize)
-    RANOFF_END;                    /* J skipped off e.o. mac */
-  RAWNEXTCHR;
-/*
- * ^NC - Obey if in command processor
- */
-p7603:
-  if (mcposn > scmacs[curmac]->mcsize - 2)
-    BOL_OR_EOL;
-/* J could skip off e.o. mac */
-  if (!in_cmd)
-    SKIP2MACCH;
-  RAWNEXTCHR;
-/*
- * ^NX - eXit from macro
- */
-p7630:
-  notmac(false);
-  GETNEXTCHR;
-/*
- * ^NT - Trust user if he wants to change file pointer during modify
- */
-p7624:mctrst = true;
-  RAWNEXTCHR;
-/*
- * ^NS - Unconditional skip (reverse obey sense)
- */
-p7623:
-  SKIP2MACCH;
-/*
- * ^NE - Reset insErt mode (^E) to OFF
- */
-p7605:insert = false;
-  if (curmac < 0)
-    refrsh(Curr);                  /* Close gap */
-  RAWNEXTCHR;
+
+/* ^NO,^NR,^NF,^NN - Remember or move to cursor or file position */
+check_macro_end:
+  CHECK_HAS_MACCH(1);             /* Error if was last character in the macro */
+  gposn = true;                    /* Distinguish from ^G */
+  GET_FOLLOWING_CHAR;              /* Get tab # */
 /*
  * ^NU - Up from a macro s/r
  */
 p7625:
 /* Treat as exit if stack empty */
   if (mcnxfr == MCDTUM)
-    goto p7630;
-/*
- * Look for stack corruption
- */
+  {
+    notmac(false);
+    GETNEXTCHR;
+  }                                /* if (mcnxfr == MCDTUM) */
 /*
  * P1706 - I joins here
  */
 p1706:
   mcnxfr--;                        /* Previous stack entry */
+/*
+ * Look for stack corruption
+ */
   i = mcstck[mcnxfr].mcprev;       /* Macro # */
   j = mcstck[mcnxfr].mcposn;       /* Macro position */
   if (i < 0 || i > TOPMAC || !scmacs[i] || j > scmacs[i]->mcsize || j < 0)
@@ -1623,7 +1463,7 @@ p1706:
   mcposn = j;                      /* Accept the popped values */
 
 /* If the frame we just freed was created by U-use, we must reinstate it. */
-/* Only z-enduse can free this frame. */
+/* Only z-enduse (possibly implied by u-usefile EOF) can free this frame. */
 /* Arrange that ^NI becomes a no-op, otherwise revert to the command source */
 /* (which can't be a macro). */
   if (mcstck[mcnxfr].u_use)
@@ -1640,84 +1480,127 @@ p1706:
   }                                /* if (mcstck[mcnxfr+1].u_use) */
   else if (verb == 'I')
     goto p7604;
-  RAWNEXTCHR;
+  GETNEXTCHR;
 /*
  * ^ND - go Down a level ( a macro as a subroutine)
  */
 p7604:
-/* Error if < 2 chars left in macro */
-  if (mcposn > scmacs[curmac]->mcsize - 2)
-    BOL_OR_EOL;
+  CHECK_HAS_MACCH(2);              /* Error if < 2 chars left in macro */
   if (MCLMIT == mcnxfr)
   {
     err = "Macro stack depth limit exceeded";
     ERR_IF_MAC;
   }
   mcstck[mcnxfr].mcprev = curmac;
+
 /* Return addr after following macro */
   mcstck[mcnxfr].mcposn = mcposn + 2;
   mcstck[mcnxfr].u_use = false;
   mcnxfr++;                        /* Up stack pointer */
+
   if (verb == 'I')
   {
 /* Restore next macro in stack */
     curmac = l;
     mcposn = m;
   }
-  RAWNEXTCHR;
-/*
- * ^NJ long (signed) jump
- */
-p7612:
-/* Must be 1 more char in macro */
-  if (mcposn >= scmacs[curmac]->mcsize)
-    RANOFF_END;
-  fornj = true;                    /* Indicate ^N^J */
-  goto p1902;                      /* Get jump length */
-/*
- * ^NL - Long skip
- */
-p7614:mcposn = mcposn + 2;         /* Skip 2 ... */
-  SKIP2MACCH;                      /* ... skip 2 more */
-/*
- * ^NM - Make Macro from current line
- */
-p7615:
-  if (curmac > 0)
-  {
-/* Must be 1 more char in macro */
-    if (scmacs[curmac]->mcsize == mcposn)
-      BOL_OR_EOL;
-  }                                /* if (curmac > 0) */
-  gmacr = true;                    /* We are defining a macro */
-  goto p1902;                      /* Get macro ID */
-/*
- * ^NG - obey if Got next ch
- */
-p7607:
-/* J not another char + something to obey */
-  if (scmacs[curmac]->mcsize - mcposn < 3)
-    RANOFF_END;
-  gmacr = false;                   /* We are not defining a macro */
-p1902:gposn = false;               /* We are not a file or curs posn */
-p1707:glast = true;                /* So we will come back */
-  gpseu = true;                    /* So we will come back */
-  RAWNEXTCHR;
+  GETNEXTCHR;
 /*
  * P1601 - Come here with ^NG char
  */
 p1601:
+  gpseu = false;
   if (fornj)
   {
     fornj = false;
     mcposn += thisch;              /* Do the jump */
     if (mcposn >= 0 && mcposn < scmacs[curmac]->mcsize)
-      RAWNEXTCHR;
+      GETNEXTCHR;
     err = "^NJ off macro end or start";
     ERR_IF_MAC;
   }
   if (gposn)
-    goto p1708;                    /* J in fact for a positioner */
+  {                                /* Tab code in thisch. 1->tab 1 ... */
+    if (thisch == '-')
+      i = 79;
+    else
+      i = thisch - '1';            /* Get TABS array subscript */
+    if (i < 0 || i >= NUM_TABS)
+      TABOORANGE;                  /* This jumps: gtest may be set */
+    if (gtest)
+    {
+      err = NULL;
+      if (tabs[i].tabtyp == UNDEFINED)
+        err = "^NB &c. testing undefined tab";
+      else
+      {
+        if (gcurs)
+        {
+          if (tabs[i].tabtyp == LINENUM)
+            err = "^NB/^NP testing filepos tab";
+        }                          /* if (gcurs) */
+        else
+        {
+          if (tabs[i].tabtyp == CHRPOS)
+            err = "^N[/^N] testing chrpos tab";
+        }                          /* if (gcurs) else */
+      }                            /* if (tabs[i].tabtyp == UNDEFINED) else */
+      if (err)
+        ERR_IF_MAC;
+      if (gpast)
+      {
+        if (!gcurs)
+        {
+          if (ptrpos > tabs[i].value)
+            GETNEXTCHR;
+          SKIP2MACCH;
+        }                          /* if (!gcurs) */
+        if (Curr->bcurs > tabs[i].value)
+          GETNEXTCHR;
+        SKIP2MACCH;
+      }                            /* if (gpast) */
+      if (!gcurs)                  /* if (gpast) else */
+      {
+        if (ptrpos < tabs[i].value)
+          GETNEXTCHR;
+        SKIP2MACCH;
+      }                            /* if (!gcurs) */
+      if (Curr->bcurs < tabs[i].value)
+        GETNEXTCHR;
+      SKIP2MACCH;
+    }                              /* if (gtest) */
+    if (gwrit)                     /* Remember file or cursor position */
+    {
+      if (!gcurs)
+      {
+        tabs[i].value = ptrpos;
+        tabs[i].tabtyp = LINENUM;
+        GETNEXTCHR;
+      }                            /* if (!gcurs) */
+      tabs[i].value = Curr->bcurs; /* ^NO */
+      tabs[i].tabtyp = CHRPOS;
+      GETNEXTCHR;
+    }                              /* if (gwrit) */
+    i4 = tabs[i].value;
+    if (i4 < 0)
+      TABOORANGE;                  /* J certainly too low */
+    if (!gcurs)
+    {                              /* ^NN */
+/* Trusted to change file pos'n while modifying? */
+      if (!in_cmd && !mctrst)
+        BOL_OR_EOL;
+/* EOF? */
+      if (i4 > lintot + 1 && !(deferd &&
+        (dfread(i4 - lintot, NULL), i4 <= lintot + 1)))
+        BOL_OR_EOL;
+      setptr(i4);                  /* Position the file */
+      GETNEXTCHR;                  /* Finish ^NN */
+    }                              /* if (!gcurs) */
+    if (i4 > Curr->bchars)
+      TABOORANGE;                  /* J trying to pos'n off end of line */
+    Curr->bcurs = i4;              /* Set cursor position */
+    GETNEXTCHR;                    /* End ^NR - may want to REFRSH */
+  }                                /* if (gposn) */
   if (gmacr)
     goto p1903;                    /* J in fact defining a macro */
   if (Curr->bcurs == Curr->bchars)
@@ -1725,7 +1608,7 @@ p1601:
   if (Curr->bdata[Curr->bcurs] != thisch &&
     !(thisch == SPACE && isspace(Curr->bdata[Curr->bcurs]) && MATCH_ANY_WHSP))
     SKIP2MACCH;                    /* Skip if mismatch */
-  RAWNEXTCHR;
+  GETNEXTCHR;
 /*
  * P1903 - Come here with macro to define.
  *         Verify char is a definable macro...
@@ -1744,7 +1627,7 @@ p1903:
     BOL_OR_EOL;                    /* Trying to define null macro */
 /* Define the macro. Report if some problem... */
   if (macdef((int)thisch, Curr->bdata, (int)Curr->bchars, true))
-    RAWNEXTCHR;
+    GETNEXTCHR;
   if (curmac >= 0)
     notmac(true);
   SOUNDALARM;                      /* Report failure */

@@ -1,6 +1,6 @@
 /* E X E C _ A L U _ O P C O D E . C
  *
- * Copyright (C) 2014-2017 Duncan Roe
+ * Copyright (C) 2014-2017,2019 Duncan Roe
  */
 
 /* Headers */
@@ -206,7 +206,7 @@ fqversn(char **err)
   }                                /* if (fsidx >= stack_size - 1) */
   fs[++fsidx] = Q_VERSION;
   return true;
-}                                  /* inpf() */
+}                                  /* fqversn() */
 
 static bool
 nop(char **err)

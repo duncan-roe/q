@@ -32,14 +32,14 @@ for ^NA. Special cases: ^N\ 'H CN-BSLSH'; ^N[ 'H CN-LHB'; ^N] 'H CN-RHB'
 
 Unless specified otherwise, pseudos cannot be called directly from the command
 source because, for instance, you can see if you're at the end of a line or in
-a command. Certain unconditional macros are of use however and are allowed, as
-detailed above.
+a command. Those unconditional macros flagged ** in the table are allowed.
 
 There is a second group of pseudo-macros, tentatively named "Active Pseudos"
 which returns dynamic (ie changing, dependent on the environment) informaion.
 Because these occupy the second bank (octal 4000 to octal 7777), none may be
 invoked from the keyboard directly. But the standard FNDTN.QM macro set gives
-access to N4002 (current edit file) via the ^N^P^P macro.
+access to N4002 (current edit file) via the ^N^P^P macro. The FI command allows
+keyboard access to any of them.
 
 N4000  expands to the current FMODE setting, in octal. Macros may save this then
        amend any FMODE setting, or Brief/None/Verbose, Indent, FF, & FC as

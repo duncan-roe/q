@@ -3,7 +3,7 @@
 /* S C R N E D I T
  *
  * Copyright (C) 1981, 2011 D. C. Roe
- * Copyright (C) 2014,2015 Duncan Roe
+ * Copyright (C) 2014,2015,2019 Duncan Roe
  *
  * Universal Statements for Screenedit Subsystem Segments
  */
@@ -18,7 +18,7 @@ unsigned char rtchrs,backsp,cachrs[PRSIZ];
 int cursr,scurs,pchars,icurs,crscnt,rtcnt;
 int cacnt,tabcnt,cdone,partno,mxchrs;
 bool insert,rfrsh,endlin;
-bool bspace,cntrlw;
+bool bspace;
 double delay;
 /*
  * screen - What's on the screen now
@@ -48,6 +48,5 @@ double delay;
  * partno - Part # of line being displayed (for DISPLY)
  * mxchrs - Max # chars ever in line (for ^R)
  * backsp - Value of 2 backspaces. Variable for terminals that use ^Y
- * cntrlw - true if ^W seen
  */
  #endif
