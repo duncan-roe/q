@@ -477,6 +477,54 @@ sxlt(char **err)
 }                                  /* sxlt() */
 
 static bool
+sqeq(char **err)
+{
+  if (qreg == 0)
+    alu_skip = true;
+  return true;
+}                                  /* seq() */
+
+static bool
+sqne(char **err)
+{
+  if (qreg != 0)
+    alu_skip = true;
+  return true;
+}                                  /* sqne() */
+
+static bool
+sqge(char **err)
+{
+  if (qreg >= 0)
+    alu_skip = true;
+  return true;
+}                                  /* sqge() */
+
+static bool
+sqle(char **err)
+{
+  if (qreg <= 0)
+    alu_skip = true;
+  return true;
+}                                  /* sqle() */
+
+static bool
+sqgt(char **err)
+{
+  if (qreg > 0)
+    alu_skip = true;
+  return true;
+}                                  /* sqgt() */
+
+static bool
+sqlt(char **err)
+{
+  if (qreg < 0)
+    alu_skip = true;
+  return true;
+}                                  /* sqlt() */
+
+static bool
 a1x(char **err)
 {
   xreg++;
@@ -606,6 +654,12 @@ pshx(char **err)
 {
   return push(xreg, err);
 }                                  /* pshx() */
+
+static bool
+pshq(char **err)
+{
+  return push(qreg, err);
+}                                  /* pshq() */
 
 static bool
 popx(char **err)
@@ -1184,10 +1238,20 @@ alu_opcode opcode_defs[] = {
   OPCODE(s2x, "X = X - 2"),
   OPCODE(s1x, "X = X - 1"),
   CAPTION(""),
+  CAPTION("Q Result Register Instructions"),
+  CAPTION("= ====== ======== ============"),
+  OPCODE(pshq, "Push contents of Q to R"),
+  OPCODE(sqeq, "Skip if Q is zero"),
+  OPCODE(sqne, "Skip if Q is not zero"),
+  OPCODE(sqge, "Skip if Q is greater than or equal to zero"),
+  OPCODE(sqle, "Skip if Q is less than or equal to zero"),
+  OPCODE(sqgt, "Skip if Q is greater than zero"),
+  OPCODE(sqlt, "Skip if Q is less than zero"),
+  CAPTION(""),
   CAPTION("Control Instructions"),
   CAPTION("======= ============"),
   OPCODE(dmp, "Dump Registers"),
-  OPCODE(rst, "Reset Registers to initial state"),
+  OPCODE(rst, "Reset Registers to initial state (except Q)"),
   OPCODE(zam, "Zeroise All Memory"),
   OPCODE(scpt, "Store Cursor Position Tabs (initial setting, also after RST)"),
   OPCODE(sfpt, "Store File Position Tabs"),

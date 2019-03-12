@@ -2,7 +2,7 @@
  *
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2002,2007,2012-2018 Duncan Roe
+ * Copyright (C) 2002,2007,2012-2019 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -90,6 +90,7 @@ int stack_size = 16;               /* Register stack initial depth */
 long *rs = NULL;                   /* The register stack */
 double *fs = NULL;                 /* The FP register stack */
 long xreg = 0;                     /* Index Register */
+long qreg = 0;                     /* Q Result Register */
 int rsidx = -1;                    /* No current register yet */
 int fsidx = -1;                    /* No current FP register yet */
 bool index_next = false;
@@ -751,7 +752,7 @@ main(int xargc, char **xargv)
   bool verbose_flag = false;       /* -v seen */
   command_state cmd_state = TRY_INITIAL_COMMAND;
   qrc_state e_state = LOCAL;
-  bool fullv = false;              /* Fulll VIEW wanted */
+  bool fullv = false;              /* Full VIEW wanted */
   q_yesno answer;
   char *initial_command = NULL;
   bool P, Q;                      /* For determining whether we are in a pipe */
@@ -1920,7 +1921,7 @@ p1104:
     }
     sprmpt(ptrpos - 1);
     pdsply(curr, prmpt, pchrs);
-    if (cntrlc || kbd5())          /* User wants out */
+    if (cntrlc || (i > 1 && kbd5())) /* User wants out */
     {
       newlin();
       puts(" *** keyboard interrupt *** \r");

@@ -1010,8 +1010,10 @@ p1905:
 /* ESC legal from another macro */
   if (thisch <= LAST_PSEUDO && thisch >= FIRST_PSEUDO)
     goto p1503;                    /* J a pseudo probably */
-/* Look for a keyboard interrupt if chaining. We can fully deal with it
- * unless in U-USE, but we must abandon macro chaining */
+
+/* Look for SIGINT seen if chaining.
+ * We can fully deal with it unless in U-USE,
+ * but we must abandon macro chaining */
   if (curmac >= 0 && cntrlc)       /* Keyboard interrupt */
   {
     if (!USING_FILE)
@@ -1019,6 +1021,7 @@ p1905:
     err = "Interrupt";
     ERR_IF_MAC;
   }
+
 /* Check for out of range or active pseudo macro */
   if (thisch > TOPMAC)
   {
@@ -1391,7 +1394,8 @@ p1503:
 
     case 23:              /* ^NW Whether macro exists or length (pushes to R) */
       CHECK_HAS_MACCH(1);
-      break;
+      gwthr = true;
+      GET_FOLLOWING_CHAR;          /* Get macro ID */
 
     case 24:                       /* ^NX - eXit from macro */
       notmac(false);
@@ -1601,19 +1605,9 @@ p1601:
     Curr->bcurs = i4;              /* Set cursor position */
     GETNEXTCHR;                    /* End ^NR - may want to REFRSH */
   }                                /* if (gposn) */
+
   if (gmacr)
-    goto p1903;                    /* J in fact defining a macro */
-  if (Curr->bcurs == Curr->bchars)
-    SKIP2MACCH;                    /* Skip if at eol */
-  if (Curr->bdata[Curr->bcurs] != thisch &&
-    !(thisch == SPACE && isspace(Curr->bdata[Curr->bcurs]) && MATCH_ANY_WHSP))
-    SKIP2MACCH;                    /* Skip if mismatch */
-  GETNEXTCHR;
-/*
- * P1903 - Come here with macro to define.
- *         Verify char is a definable macro...
- */
-p1903:
+  {
   if ((thisch < 0200 && thisch > 077) ||
     (thisch > TOPMAC && thisch < 07000) ||
     (thisch > 07777 && thisch < 013000) || thisch > 13777)
@@ -1631,6 +1625,30 @@ p1903:
   if (curmac >= 0)
     notmac(true);
   SOUNDALARM;                      /* Report failure */
+  }                                /* if (gmacr) */
+
+  if (gwthr)
+  {
+    qreg = 0;                      /* Default response: length N/A */
+    if (thisch <= 0)              /* No such macros */
+      qreg = -1;
+    else if (thisch <= TOPMAC)
+    {
+      if (scmacs[thisch])
+        qreg = scmacs[thisch]->maclen;
+      else
+        qreg = -1;
+    }                              /* else if (thisch <= TOPMAC) */
+    GETNEXTCHR;
+  }                                /* if (gwthr) */
+
+/* Must be ^NG if we get here */
+  if (Curr->bcurs == Curr->bchars)
+    BOL_OR_EOL;               /* Trying to test off end of line (undefined) */
+  if (Curr->bdata[Curr->bcurs] != thisch &&
+    !(thisch == SPACE && isspace(Curr->bdata[Curr->bcurs]) && MATCH_ANY_WHSP))
+    SKIP2MACCH;                    /* Skip if mismatch */
+  GETNEXTCHR;
 /*
  * ^W - Next char not special but Without parity
  */

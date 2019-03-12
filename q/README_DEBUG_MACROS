@@ -163,15 +163,15 @@ COMMAND TEMPLATES
 export my_pty as the tty as in README_DEBUG
 export j as the file to edit (if you have one)(e.g. export j=macro_debug_sample)
 export k as the rc file with which q should start
-  (defaults to .qrc which is OK if .qrc eventually loads word.qm).
+  (defaults to .qrc: next line assumes .qrc eventually loads word.qm).
 cat /dev/null|q -nviu,'^ND^N^<4003>'/wordmacs^Jn-^J 2>&1|
 q -nifl:^J^NC^NU^[d1,-,-2^Ja^J^[d-1^Jy,^P^M^J|less
 sleep 100000
 
 ggo $(type -p q) -a "-n -iu,${k:-.qrc}^Jfv^Jfm+v^J $j </dev/pts/$my_pty \
   >/dev/pts/$my_pty 2>&1" "set max-value-size sizeof (struct scrbuf5)" \
-  b\ scrdit.c:1001 commands silent "echo starting macro" p/o\ thisch end \
+  b\ scrdit.c:1002 commands silent "echo starting macro" p/o\ thisch end \
   "cond 2 (thisch < 0101 || thisch > 0132) && thisch < 04000 && thisch != 255" \
-  b\ scrdit.c:1461 commands silent "echo resuming macro" p/o\ i end \
-  'cond 3 verb != '"'I' && (curmac < FIRST_PSEUDO || curmac > LAST_PSEUDO)" \
-  b\ scrdit.c:1347 commands silent "echo ^NI invoked\\n" end c
+  b\ scrdit.c:1351 commands silent "echo ^NI invoked\\n" end \
+  b\ scrdit.c:1466 commands silent "echo resuming macro" p/o\ i end \
+  'cond 4 verb != '"'I' && (curmac < FIRST_PSEUDO || curmac > LAST_PSEUDO)" c

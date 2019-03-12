@@ -51,6 +51,7 @@ extern int f_stack_size;
 extern long *rs;                   /* Register stack */
 extern double *fs;                 /* FP register stack */
 extern long xreg;                  /* Index Register */
+extern long qreg;                  /* Q Result Register */
 extern int rsidx;                  /* Index of current register */
 extern int fsidx;                  /* Index of current FP register */
 extern bool index_next;            /* Next PSH or POP is indexed */

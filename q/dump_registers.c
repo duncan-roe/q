@@ -1,6 +1,6 @@
 /* D U M P _ R E G I S T E R S . C
  *
- * Copyright (C) 2014,2017 Duncan Roe
+ * Copyright (C) 2014,2017,2019 Duncan Roe
  */
 #include <stdio.h>
 #include "alu.h"
@@ -36,4 +36,5 @@ dump_registers(bool append_newline)
       fprintf(stderr, "%.17e\r\n", fs[i]);
   }                                /* if (fsidx < 0) else */
   fprintf(stderr, "X = %ld%s", xreg, append_newline ? "\r\n" : "");
+  fprintf(stderr, "Q = %ld%s", qreg, append_newline ? "\r\n" : "");
 }                                  /* dump_registers()  */
