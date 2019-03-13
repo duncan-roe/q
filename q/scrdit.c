@@ -1608,43 +1608,42 @@ p1601:
 
   if (gmacr)
   {
-  if ((thisch < 0200 && thisch > 077) ||
-    (thisch > TOPMAC && thisch < 07000) ||
-    (thisch > 07777 && thisch < 013000) || thisch > 13777)
-  {
-    err = "";
-    fprintf(stderr, "\r\n^NM cannot define macro %o", thisch);
-    newlin();
-    ERR_IF_MAC;
-  }                                /* if ((thisch < 0200 && ... )) */
-  if (Curr->bchars == 0)
-    BOL_OR_EOL;                    /* Trying to define null macro */
+    if ((thisch < 0200 && thisch > 077) ||
+      (thisch > TOPMAC && thisch < 07000) ||
+      (thisch > 07777 && thisch < 013000) || thisch > 13777)
+    {
+      err = "";
+      fprintf(stderr, "\r\n^NM cannot define macro %o", thisch);
+      newlin();
+      ERR_IF_MAC;
+    }                              /* if ((thisch < 0200 && ... )) */
+    if (Curr->bchars == 0)
+      BOL_OR_EOL;                  /* Trying to define null macro */
 /* Define the macro. Report if some problem... */
-  if (macdef((int)thisch, Curr->bdata, (int)Curr->bchars, true))
-    GETNEXTCHR;
-  if (curmac >= 0)
-    notmac(true);
-  SOUNDALARM;                      /* Report failure */
+    if (macdef((int)thisch, Curr->bdata, (int)Curr->bchars, true))
+      GETNEXTCHR;
+    if (curmac >= 0)
+      notmac(true);
+    SOUNDALARM;                    /* Report failure */
   }                                /* if (gmacr) */
 
   if (gwthr)
   {
-    qreg = 0;                      /* Default response: length N/A */
-    if (thisch <= 0)              /* No such macros */
-      qreg = -1;
-    else if (thisch <= TOPMAC)
+    qreg = -1;                     /* Default response: no such macro */
+    if (thisch > 0)                /* could be a macro */
     {
-      if (scmacs[thisch])
-        qreg = scmacs[thisch]->maclen;
-      else
-        qreg = -1;
-    }                              /* else if (thisch <= TOPMAC) */
+      if (thisch <= TOPMAC)
+      {
+        if (scmacs[thisch])
+          qreg = scmacs[thisch]->maclen;
+      }                            /* if (thisch <= TOPMAC) */
+    }                              /* if (thisch > 0) */
     GETNEXTCHR;
   }                                /* if (gwthr) */
 
 /* Must be ^NG if we get here */
   if (Curr->bcurs == Curr->bchars)
-    BOL_OR_EOL;               /* Trying to test off end of line (undefined) */
+    SKIP2MACCH;                    /* Skip if at eol */
   if (Curr->bdata[Curr->bcurs] != thisch &&
     !(thisch == SPACE && isspace(Curr->bdata[Curr->bcurs]) && MATCH_ANY_WHSP))
     SKIP2MACCH;                    /* Skip if mismatch */

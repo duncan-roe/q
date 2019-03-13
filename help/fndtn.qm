@@ -1,7 +1,7 @@
 fd y /* H FNDTN.CAT for extra info on these...
 fm-t +s -* +#
 t7 36 81
-fi ^<FQVERSN>^<DUPF>^<FRND>^<SUBF>^<SFEQ>^NL^<POPNF>^NU^<POPNF>!echo -e REMINDER: This is a development Q \\r >&2^J
+fi ^<FQVERSN>^<DUPF>^<FRND>^<SUBF>^<SFEQ>^NL^<POPNF>^NU^<POPNF>!echo -e REMINDER: This is Q version ^<FQVERSN>^<POPF 0>^ND^N^<13000>^<ZAM> \(Development\)\\r >&2^J
 o n
 N B '^NC^NS^N\A^J^[V1^J^NU "BOTTOM"
 N C '^N^P^P ;N P replacement when ^P is interrupt character. Call by ^N^C^C
