@@ -1067,8 +1067,8 @@ p1905:
             i = row5 / 2 - 1;
         }
 
-        sprintf(tbuf, "%d", i);
-        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+        j = snprintf(tbuf, sizeof tbuf, "%d", i);
+        macdef(64, (unsigned char *)tbuf, j, true);
         break;
 
       case 04002:                  /* Return curent edit file */
@@ -1191,7 +1191,7 @@ p1905:
     }                              /* else if (j == 06000) */
     else if (j == 013000)
     {
-      i = sprintf(tbuf, FPformat, FPU_memory[thisch & 0777]);
+      i = snprintf(tbuf, sizeof tbuf, FPformat, FPU_memory[thisch & 0777]);
       macdef(64, (unsigned char *)tbuf, i, true);
       found = true;
     }                              /* if (j == 013000) */
@@ -1670,14 +1670,14 @@ p1601:
           }                        /* if (thisch == "ABP[]CDUGSLJITX"[i]) */
         }                          /* for (i = 14; i >= 0; i--) */
       }                            /* if (qreg ...) */
-    }                 /* if (thisch >= FIRST_PSEUDO && thisch <= LAST_PSEUDO) */
+    }            /* else if (thisch >= FIRST_PSEUDO && thisch <= LAST_PSEUDO) */
 
 /* Test for a regular macro */
     else if (thisch <= TOPMAC)
     {
       if (scmacs[thisch])
         qreg = scmacs[thisch]->maclen;
-    }                              /* if (thisch <= TOPMAC) */
+    }                              /* else if (thisch <= TOPMAC) */
 
 /* Test for an active pseudo: range from "h pm". */
 /* Return lengths for some of them */
@@ -1725,7 +1725,21 @@ p1601:
           break;
 
       }                            /* switch (thisch) */
-    }                              /* if (thisch >= 04000 && thisch <= 04013) */
+    }                         /* else if (thisch >= 04000 && thisch <= 04013) */
+
+/* ALU opcode? */
+    else if (thisch >= FIRST_ALU_OP &&
+      thisch < FIRST_ALU_OP + num_ops + NUM_TABS * 2)
+      qreg = 0;
+
+/* Other ALU pseudos */
+    j = thisch & 017000;
+    if (j == 07000)
+      qreg = snprintf(NULL, 0, Iformat, ALU_memory[thisch & 0777]);
+    else if (j == 05000 || j == 06000 || j == 011000 || j == 012000)
+      qreg = 0;
+    else if (j == 013000)
+      qreg = snprintf(NULL, 0, FPformat, FPU_memory[thisch & 0777]);
 
     GETNEXTCHR;
   }                                /* if (gwthr) */

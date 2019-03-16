@@ -39,6 +39,8 @@ showmac(int i)
     ch = p->data[k];
     if (ctl_n_pending)
     {
+      unsigned short ch017000 = ch & 017000;
+
       ctl_n_pending = false;
       if (ch >= FIRST_ALU_OP && ch < FIRST_ALU_OP + num_ops)
       {
@@ -51,26 +53,26 @@ showmac(int i)
         printf("^<%s>", tbuf);
         continue;
       }             /* if (ch >= FIRST_ALU_OP && ch < FIRST_ALU_OP + num_ops) */
-      else if ((ch & 017000) == 05000)
+      else if (ch017000 == 05000)
       {
         printf("^<PSH %o>", ch & 0777);
         continue;
-      }                            /* else if ((ch & 017000) == 05000) */
-      else if ((ch & 017000) == 06000)
+      }                            /* else if (ch017000 == 05000) */
+      else if (ch017000 == 06000)
       {
         printf("^<POP %o>", ch & 0777);
         continue;
-      }                            /* else if ((ch & 017000) == 06000) */
-      else if ((ch & 017000) == 011000)
+      }                            /* else if (ch017000 == 06000) */
+      else if (ch017000 == 011000)
       {
         printf("^<PSHF %o>", ch & 0777);
         continue;
-      }                            /* else if ((ch & 017000) == 011000) */
-      else if ((ch & 017000) == 012000)
+      }                            /* else if (ch017000 == 011000) */
+      else if (ch017000 == 012000)
       {
         printf("^<POPF %o>", ch & 0777);
         continue;
-      }                            /* else if ((ch & 017000) == 012000) */
+      }                            /* else if (ch017000 == 012000) */
       else if (ch >= FIRST_ALU_OP + num_ops &&
         ch < FIRST_ALU_OP + num_ops + NUM_TABS * 2)
       {

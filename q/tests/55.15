@@ -1,0 +1,14 @@
+# fd y
+n204 ^NC^NS^N\^<PSHQ>^<POP 0>!echo ^ND^N^<7000> >&2^J^<PS0>^<POP 0>^NU
+* These all test the result in the Q register from ^N^W<macro id>.
+* Item tested should be obvious and is not listed separately
+*                                                      ; Expected result
+fi ^NW^<4177>^N^<204>                                  ; -1
+fi ^NW^<4200>^N^<204>                                  ; 0 (1st ALU opcode)
+fi ^<PS2P26>^<POP 42>^NW^<7042>^N^<204>                ; 8 (67108864 in dflt fmt)
+fi ^<PS2>^<POPRF>^<FSQRT>^<POPF 42>^NW^<13042>^N^<204> ; 7 (sqrt(2) default fmt)
+fi ^NW^<5042>^N^<204>                                  ; 0
+fi ^NW^<6042>^N^<204>                                  ; 0
+fi ^NW^<10042>^N^<204>                                 ; -1
+fi ^NW^<11042>^N^<204>                                 ; 0
+fi ^NW^<12042>^N^<204>                                 ; 0
