@@ -73,6 +73,7 @@ char c1in5(bool *eof_encountered);
 int cmd(char *buf);
 bool pop_stdin(void);
 void devnull_stdout(void);
+void visbel(void);
 
 /* Global variables */
 

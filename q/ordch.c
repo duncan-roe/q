@@ -1,7 +1,7 @@
 /* O R D C H
  *
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2012,2014,2017 Duncan Roe
+ * Copyright (C) 2012,2014,2017,2019 Duncan Roe
  *
  * This routine processes a normal chr (or a special that was preceded
  * by ^C), overwriting/inserting as appropriate.
@@ -64,8 +64,9 @@ ordch(unsigned char chr, scrbuf5 *scbuf)
   {
     if (scbuf->bchars == scbuf->bmxch)
     {
-      fprintf(stderr, "\a%s",
+      fprintf(stderr, "%s",
         curmac >= 0 ? "\r\nNo room in line for insert" : "");
+      visbel();
       mctrst = false;
       cmover = true;               /* Warn notmac in case input from U-use */
       notmac(true);                /* Want macro diagnostics */

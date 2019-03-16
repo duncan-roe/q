@@ -548,7 +548,7 @@ err_if_mac:
   }
 soundalarm:
   fornj = gpseu = glast = false;
-  putchar('\a');                   /* O/p BEL since error */
+  visbel();                        /* O/p BEL since error */
   mctrst = false;                  /* User no longer trusted */
   GETNEXTCHR;                      /* End rubout */
 taboorange:
@@ -824,7 +824,8 @@ p7712:
   if ((k = Curr->bchars) != olen && !in_cmd && fmode & 0400)
   {
   p2101:
-    fprintf(stderr, "\007\r\nLine length must not change in FIXED LENGTH mode");
+    fprintf(stderr, "\r\nLine length must not change in FIXED LENGTH mode");
+    visbel();
     newlin();
     GETNEXTCHR;
   }

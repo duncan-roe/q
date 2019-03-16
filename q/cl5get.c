@@ -1,6 +1,6 @@
 /* C L 5 G E T
  *
- * Copyright (C) 2012,2013 Duncan Roe
+ * Copyright (C) 2012,2013,2019 Duncan Roe
  *
  * Assembles characters in buf,
  * echoing them and performing erase & kill processing,
@@ -72,7 +72,7 @@ cl5get(char *buf, int bufcap, bool action_eof, bool read_macros)
     }
     if (nchars == bufcap)
     {
-      putchar('\a');               /* Bell */
+      visbel();                    /* Bell */
       continue;
     }
     if (!USING_FILE)

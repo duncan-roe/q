@@ -1,13 +1,13 @@
 /* S H O W M A C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2012,2014 Duncan Roe
+ * Copyright (C) 2012,2014,2019 Duncan Roe
  *
  * This routine expands the body of a macro to standard output.
  */
 #include <stdio.h>
 #include <ctype.h>
-#include "typedefs.h"
+#include "prototypes.h"
 #include "macros.h"
 #include "fmode.h"
 #include "tabs.h"
@@ -24,12 +24,14 @@ showmac(int i)
   p = scmacs[i];
   if (!p)
   {                                /* Eh? called to expand null macro */
-    printf("\a !! SHOWMAC called to print null macro %03o !!\r\n", i);
+    fprintf(stderr, "!! SHOWMAC called to print null macro %03o !!\r\n", i);
+    visbel();
     return;
   }
   if (!(l = p->mcsize))
   {
-    printf("\a !! INTERNAL ERROR - macro %03o has zero length !!\r\n", i);
+    fprintf(stderr, "!! INTERNAL ERROR - macro %03o has zero length !!\r\n", i);
+    visbel();
     return;
   }
   for (k = 0; k < l; k++)
