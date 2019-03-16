@@ -1,7 +1,7 @@
 /* G E T L I N */
 /*
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012,2014,2018 Duncan Roe
+ * Copyright (C) 2012,2014,2018,2019 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -18,6 +18,7 @@
  * so false must be zero and true must be 1
  */
 #include <stdio.h>
+#include <ctype.h>
 #include <limits.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -51,13 +52,13 @@ getlin(bool reperr, bool eofok)
   {
     if (trytab(zbuf, oldcom))
       goto p1005;                  /* J was a Tx (ok) */
-    if (oldcom->toklen == 3 && ((zbuf[0] & 0337) == 'E') &&
-      ((zbuf[1] & 0337) == 'O') && ((zbuf[2] & 0337) == 'F'))
+    if (oldcom->toklen == 3 && (toupper(zbuf[0]) == 'E') &&
+      (toupper(zbuf[1]) == 'O') && (toupper(zbuf[2]) == 'F'))
     {
       if (deferd)
         dfread(LONG_MAX, NULL);    /* Get real lintot */
       oldcom->decval = lintot + 1;
-    }                        /* if(oldcom->toklen==3&&((zbuf[0]&0337)=='E'... */
+    }               /* if (oldcom->toklen == 3 && toupper(zbuf[0]) == 'E' ... */
     else
     {
       strcpy(ermess, "bad decimal line #");

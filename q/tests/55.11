@@ -1,4 +1,5 @@
 * ggo q -a "-n </dev/pts/$my_pty >/dev/pts/$my_pty 2>&1" "set max-value-size sizeof (struct scrbuf5)" b\ scrdit.c:1299 c
-*                                               ; Item(s) tested         ; Expected result
-fi fm-i^Jn3777 ^*<POPTAB ->^Jn-^J^NX            ; # last ALU instruction ; Called mac <= 4777
-fi !rm -f t5^J!touch t5^Jq t5^Ja^J123456789^NG9 ; ^NG at EOL             ; BOL_OR_EOL
+*                                                       ; Item(s) tested         ; Expected result
+fi fm-i^Jn3777 ^*<POPTAB ->^Jn-^J^NX                    ; # last ALU instruction ; Called mac <= 4777
+fi !rm -f t5^J!touch t5^Jq t5^Ja^J1234^NG9^N\^J^[s^J^NX ; ^NG at EOL             ; 1234
+fi !rm -f t5^J!touch t5^Jq t5^Ja^J123456789             ; EOF in edit mode       ; 123...

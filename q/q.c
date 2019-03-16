@@ -182,12 +182,12 @@ get_answer(void)
   }                                /* if (oldcom->toktyp != nortok) */
   if (!eolok())
     return Q_UNREC;
-  switch (buf[0] & 0337)
+  switch (toupper(buf[0]))
   {
     case 'O':
-      if ((buf[1] & 0337) == 'N')
+      if (toupper(buf[1]) == 'N')
         return Q_YES;
-      if ((buf[1] & 0337) == 'F')
+      if (toupper(buf[1]) == 'F')
         return Q_NO;
       break;
     case 'Y':

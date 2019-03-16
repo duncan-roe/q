@@ -393,8 +393,7 @@ getnextchr:
       notmac(false);
       GETNEXTCHR;
     }                              /* if (mcposn >= scmacs[curmac]->mcsize) */
-    thisch = scmacs[curmac]->data[mcposn];
-    mcposn = mcposn + 1;
+    thisch = scmacs[curmac]->data[mcposn++];
   }                                /* if (curmac >= 0) */
   else
   {
@@ -402,14 +401,14 @@ getnextchr:
 
     thisch = c1in5(&eof_encountered); /* Read 1 char */
     if (eof_encountered)
-    {
+    {                              /* c1in5 will have returned '\r' */
       if (in_cmd && Curr->bchars == 0 && USING_FILE)
       {
         Curr->bdata[0] = 'z';
         Curr->bchars = 1;
       }                            /* if (in_cmd && ...) */
       else
-        thisch = c1in5(NULL);
+        pop_stdin();
     }                              /* if (eof_encountered) */
 /*
  * FX command implementation - replace char read by one from the
@@ -555,7 +554,8 @@ soundalarm:
 taboorange:
   if (curmac >= 0)
   {
-    printf("\r\nTab ID %c or value in that tab out of range. ", thisch);
+    fprintf(stderr, "\r\nTab ID %c or value in that tab out of range. ",
+      thisch);
     notmac(true);
   }
   SOUNDALARM;
@@ -824,7 +824,7 @@ p7712:
   if ((k = Curr->bchars) != olen && !in_cmd && fmode & 0400)
   {
   p2101:
-    printf("\007\r\nLine length must not change in FIXED LENGTH mode");
+    fprintf(stderr, "\007\r\nLine length must not change in FIXED LENGTH mode");
     newlin();
     GETNEXTCHR;
   }
@@ -924,7 +924,8 @@ p7717:
 p1407:
   Curr->bcurs = j;                 /* Set cursor to E.O.L. */
   GETNEXTCHR;                      /* End ^O here */
-p1409:k = k + 1;
+p1409:
+  k++;
 p14091:
   k++;
   if (k >= j)
@@ -942,14 +943,16 @@ p7726:
 /*
  * ^G - Goto next character
  */
-p7707:glast = true;
+p7707:
+  glast = true;
   gpseu = false;                   /* Not in pseudo macro */
   GETNEXTCHR;                      /* Will be back shortly */
 /*
  * P1518 - We are back continuing ^G but now we have the char to look
  * for.
  */
-p1518:glast = false;
+p1518:
+  glast = false;
   if (gpseu)
     goto p1601;                    /* J on if actually for pseudomac */
 p1804:
@@ -980,7 +983,8 @@ p7736:
 /*
  * ^N - expaNd macro
  */
-p7716:nseen = true;
+p7716:
+  nseen = true;
   GETNEXTCHR;
 /*
  * P1502 - We have the macro char. May be a real macro or a pseudo
@@ -995,7 +999,10 @@ p1502:
     GETNEXTCHR;
   }
   if (thisch == '\27')
-    goto p7727;                    /* J is ^W */
+  {
+    cntrlw = contp = true;
+    GETNEXTCHR;
+  }                                /* if (thisch == '\27') */
 p1905:
   nseen = false;
   contp = false;
@@ -1009,7 +1016,7 @@ p1905:
   }                                /* if (thisch == ESC && curmac < 0) */
 /* ESC legal from another macro */
   if (thisch <= LAST_PSEUDO && thisch >= FIRST_PSEUDO)
-    goto p1503;                    /* J a pseudo probably */
+    goto p1503;                    /* J a pseudo or rubout */
 
 /* Look for SIGINT seen if chaining.
  * We can fully deal with it unless in U-USE,
@@ -1029,8 +1036,8 @@ p1905:
     switch (thisch)
     {
       case 04000:                  /* Return mode */
-        sprintf(tbuf, "%lo", zmode_valid ? zmode : fmode);
-        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+        i = snprintf(tbuf, sizeof tbuf, "%lo", zmode_valid ? zmode : fmode);
+        macdef(64, (unsigned char *)tbuf, i, true);
         break;
 
       case 04001:                  /* Return screen height - 1 */
@@ -1109,50 +1116,49 @@ p1905:
             j = row5 / 2 - 1;
         }
 
-        snprintf(tbuf, sizeof tbuf, "%d", j);
-        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+        i = snprintf(tbuf, sizeof tbuf, "%d", j);
+        macdef(64, (unsigned char *)tbuf, i, true);
         break;
 
       case 04005:                  /* Return screen width */
-        snprintf(tbuf, sizeof tbuf, "%u", col5);
-        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+        i = snprintf(tbuf, sizeof tbuf, "%u", col5);
+        macdef(64, (unsigned char *)tbuf, i, true);
         break;
 
       case 04006:                  /* Return screen height */
-        snprintf(tbuf, sizeof tbuf, "%u", row5);
-        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+        i = snprintf(tbuf, sizeof tbuf, "%u", row5);
+        macdef(64, (unsigned char *)tbuf, i, true);
         break;
 
       case 04007:                  /* Return floating point format */
-        snprintf(tbuf, sizeof tbuf, "%s", FPformat);
-        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+        i = snprintf(tbuf, sizeof tbuf, "%s", FPformat);
+        macdef(64, (unsigned char *)tbuf, i, true);
         break;
 
       case 04010:                  /* Return date format */
-        snprintf(tbuf, sizeof tbuf, "%s", DTformat);
-        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+        i = snprintf(tbuf, sizeof tbuf, "%s", DTformat);
+        macdef(64, (unsigned char *)tbuf, i, true);
         break;
 
       case 04011:                  /* Return date */
       {
         time_t t = time(NULL);
-        strftime(tbuf, sizeof tbuf, DTformat, localtime(&t));
+        i = strftime(tbuf, sizeof tbuf, DTformat, localtime(&t));
       }
-        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+        macdef(64, (unsigned char *)tbuf, i, true);
         break;
 
       case 04012:                  /* Return UTC date */
       {
         time_t t = time(NULL);
-        strftime(tbuf, sizeof tbuf, DTformat, gmtime(&t));
+        i = strftime(tbuf, sizeof tbuf, DTformat, gmtime(&t));
       }
-        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+        macdef(64, (unsigned char *)tbuf, i, true);
         break;
 
-
       case 04013:                  /* Return integer format */
-        snprintf(tbuf, sizeof tbuf, "%s", Iformat);
-        macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+        i = snprintf(tbuf, sizeof tbuf, "%s", Iformat);
+        macdef(64, (unsigned char *)tbuf, i, true);
         break;
       default:
         found = false;
@@ -1161,46 +1167,47 @@ p1905:
 /*
  * Deal with ALU memory and tab access pseudos
  */
-    if ((thisch & 017000) == 07000)
+    j = thisch & 017000;
+    if (j == 07000)
     {
-      snprintf(tbuf, sizeof tbuf, Iformat, ALU_memory[thisch & 0777]);
-      macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+      i = snprintf(tbuf, sizeof tbuf, Iformat, ALU_memory[thisch & 0777]);
+      macdef(64, (unsigned char *)tbuf, i, true);
       found = true;
-    }                              /* if ((thisch & 017000) == 07000) */
-    else if ((thisch & 017000) == 05000)
+    }                              /* if (j == 07000) */
+    else if (j == 05000)
     {
       if (get_effective_address(thisch & 0777) &&
         push_register(ALU_memory[effaddr]))
         GETNEXTCHR;
       SOUNDALARM;
-    }                              /* else if ((thisch & 017000) == 05000) */
-    else if ((thisch & 017000) == 06000)
+    }                              /* else if (j == 05000) */
+    else if (j == 06000)
     {
       if (get_effective_address(thisch & 0777) &&
         pop_register(&ALU_memory[effaddr]))
         GETNEXTCHR;
       SOUNDALARM;
-    }                              /* else if ((thisch & 017000) == 06000) */
-    else if ((thisch & 017000) == 013000)
+    }                              /* else if (j == 06000) */
+    else if (j == 013000)
     {
-      sprintf(tbuf, FPformat, FPU_memory[thisch & 0777]);
-      macdef(64, (unsigned char *)tbuf, (int)strlen(tbuf), true);
+      i = sprintf(tbuf, FPformat, FPU_memory[thisch & 0777]);
+      macdef(64, (unsigned char *)tbuf, i, true);
       found = true;
-    }                              /* if ((thisch & 017000) == 013000) */
-    else if ((thisch & 017000) == 011000)
+    }                              /* if (j == 013000) */
+    else if (j == 011000)
     {
       if (get_effective_address(thisch & 0777) &&
         push_fp_register(FPU_memory[effaddr]))
         GETNEXTCHR;
       SOUNDALARM;
-    }                              /* else if ((thisch & 017000) == 011000) */
-    else if ((thisch & 017000) == 012000)
+    }                              /* else if (j == 011000) */
+    else if (j == 012000)
     {
       if (get_effective_address(thisch & 0777) &&
         pop_fp_register(&FPU_memory[effaddr]))
         GETNEXTCHR;
       SOUNDALARM;
-    }                              /* else if ((thisch & 017000) == 012000) */
+    }                              /* else if (j == 012000) */
     else if (thisch >= FIRST_ALU_OP + num_ops &&
       thisch < FIRST_ALU_OP + num_ops + NUM_TABS * 2)
     {
@@ -1268,7 +1275,7 @@ p1905:
     {
       if (curmac >= 0)
       {
-        printf("\r\nCalling undefined macro ^<%03o>. ", thisch);
+        fprintf(stderr, "\r\nCalling undefined macro ^<%03o>. ", thisch);
         notmac(true);
       }
       SOUNDALARM;
@@ -1417,7 +1424,7 @@ p1503:
 /* ^N\ is not a pseudo and never will be (it gets used to signal error) */
   if (curmac >= 0)
   {
-    printf("\r\nCalling undefined pseudo-macro \"%c\". ", thisch);
+    fprintf(stderr, "\r\nCalling undefined pseudo-macro \"%c\". ", thisch);
     notmac(true);
   }
   SOUNDALARM;
@@ -1454,7 +1461,7 @@ p1706:
   j = mcstck[mcnxfr].mcposn;       /* Macro position */
   if (i < 0 || i > TOPMAC || !scmacs[i] || j > scmacs[i]->mcsize || j < 0)
   {
-    printf("\r\nReturn macro ^<%o>out of range or empty. ", i);
+    fprintf(stderr, "\r\nReturn macro ^<%o>out of range or empty. ", i);
     notmac(true);
     SOUNDALARM;
   }
@@ -1619,6 +1626,7 @@ p1601:
     }                              /* if ((thisch < 0200 && ... )) */
     if (Curr->bchars == 0)
       BOL_OR_EOL;                  /* Trying to define null macro */
+
 /* Define the macro. Report if some problem... */
     if (macdef((int)thisch, Curr->bdata, (int)Curr->bchars, true))
       GETNEXTCHR;
@@ -1630,14 +1638,94 @@ p1601:
   if (gwthr)
   {
     qreg = -1;                     /* Default response: no such macro */
-    if (thisch > 0)                /* could be a macro */
+    if (thisch < 0)
+      ;                            /* Can't be a macro */
+    else if (thisch == 0 && curmac > 0)
+      qreg = 0;                    /* ^N^@ legal in a macro */
+
+/* Regular pseodomacros. Force thisch to upper case */
+    else if (thisch >= FIRST_PSEUDO && thisch <= LAST_PSEUDO)
     {
-      if (thisch <= TOPMAC)
+      thisch = toupper(thisch);
+
+/* Test for pseudo that is always legal (i.e.from keyboard) */
+      for (i = 6; i >= 0; i--)     /* There are 7 of them */
       {
-        if (scmacs[thisch])
-          qreg = scmacs[thisch]->maclen;
-      }                            /* if (thisch <= TOPMAC) */
-    }                              /* if (thisch > 0) */
+        if (thisch == "EORFNMW"[i])
+        {
+          qreg = 0;
+          break;
+        }                          /* if (thisch == "EORFNMW"[i]) */
+      }                            /* for (i = 6; i >= 0; i--) */
+/* Test for pseudos that are legal in macros */
+      if (qreg && curmac > 0)
+      {
+        for (i = 14; i >= 0; i--)  /* 15 of them (from "h pm") */
+        {
+          if (thisch == "ABP[]CDUGSLJITX"[i])
+          {
+            qreg = 0;
+            break;
+          }                        /* if (thisch == "ABP[]CDUGSLJITX"[i]) */
+        }                          /* for (i = 14; i >= 0; i--) */
+      }                            /* if (qreg ...) */
+    }                 /* if (thisch >= FIRST_PSEUDO && thisch <= LAST_PSEUDO) */
+
+/* Test for a regular macro */
+    else if (thisch <= TOPMAC)
+    {
+      if (scmacs[thisch])
+        qreg = scmacs[thisch]->maclen;
+    }                              /* if (thisch <= TOPMAC) */
+
+/* Test for an active pseudo: range from "h pm". */
+/* Return lengths for some of them */
+    else if (thisch >= 04000 && thisch <= 04013)
+    {
+      qreg = 0;
+      switch (thisch)
+      {
+        case 04000:                /* Mode */
+          qreg = snprintf(NULL, 0, "%lo", zmode_valid ? zmode : fmode);
+          break;
+
+        case 04002:                /* Curent edit file */
+          qreg = strlen(pcnta);
+          break;
+
+        case 04003:                /* HELP dir (for macros usually) */
+          qreg = strlen(macro_dir);
+          break;
+
+        case 04007:                /* Floating point format */
+          qreg = snprintf(NULL, 0, "%s", FPformat);
+          break;
+
+        case 04010:                /* Date format */
+          qreg = snprintf(NULL, 0, "%s", DTformat);
+          break;
+
+        case 04011:                /* Date */
+        {
+          time_t t = time(NULL);
+          qreg = strftime(tbuf, sizeof tbuf, DTformat, localtime(&t));
+        }
+          break;
+
+        case 04012:                /* UTC date */
+        {
+          time_t t = time(NULL);
+          qreg = strftime(tbuf, sizeof tbuf, DTformat, gmtime(&t));
+        }
+          break;
+
+        case 04013:                /* Integer format */
+          qreg = snprintf(NULL, 0, "%s", Iformat);
+          break;
+
+      }                            /* switch (thisch) */
+    }                              /* if (thisch >= 04000 && thisch <= 04013) */
+
     GETNEXTCHR;
   }                                /* if (gwthr) */
 
@@ -1649,9 +1737,10 @@ p1601:
     SKIP2MACCH;                    /* Skip if mismatch */
   GETNEXTCHR;
 /*
- * ^W - Next char not special but Without parity
+ * ^W - Next char not special but With parity bit on
  */
-p7727:cntrlw = true;
+p7727:
+  cntrlw = true;
   contp = true;
   GETNEXTCHR;
 /*
@@ -1668,7 +1757,7 @@ asg2l:switch (l)
     case 1204:
       goto p1204;
     default:
-      printf("Assigned Goto failure, l = %d\r\n", l);
+      fprintf(stderr, "Assigned Goto failure, l = %d\r\n", l);
       verb = 'J';                  /* Let user... */
       return;                      /* ... salvage his edit. */
   }

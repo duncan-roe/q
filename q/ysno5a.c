@@ -1,7 +1,7 @@
 /* Y S N O 5 A
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012,2013 Duncan Roe
+ * Copyright (C) 2012,2013,2019 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -9,9 +9,11 @@
  * Project started 1980.
  */
 #include <stdio.h>
+#include <ctype.h>
 #include <string.h>
 #include <sys/types.h>
 #include "prototypes.h"
+#include "macros.h"
 #include "c1in.h"
 
 bool
@@ -33,14 +35,20 @@ p10:
     return 1;
   }                                /* if (offline) */
 /* Build a command line, forcing to upper case. BEL if it fills up */
-  cl5get(comlin, 3, false, false); /* YES is longest string */
-/* Force upper case */
+/* If run off end of u-use file, clean up and re-prompt */
+  if (!cl5get(comlin, 3, true, false)) /* YES is longest string */
+  {
+    pop_stdin();
+    if (curmac > 0)
+      notmac(false);
+    newlin();
+    goto p10;
+  }
   for (p = comlin - 1;;)
   {
     if (!*++p)
       break;
-    if (*p >= 'a' && *p <= 'z')
-      *p &= 0337;
+    *p = toupper(*p);
   }
   if (!(i = strlen(comlin)))
   {
