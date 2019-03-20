@@ -50,6 +50,7 @@
 #define GET_FOLLOWING_CHAR goto get_following_char
 #define TEST_TAB goto test_tab
 #define CHECK_MACRO_END goto check_macro_end
+#define LEAVE_SCRDIT goto leave_scrdit
 
 /* Externals that are not in any header */
 
@@ -226,13 +227,13 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
   char *c;                         /* Scratch */
   char *err = NULL;                /* Point to error text */
   char tbuf[256];                  /* Scratch */
-  int i, j, k, l = 0, m = 0;       /* Scratch variables */
+  int i, j, k, h = 0, m = 0;       /* Scratch variables */
   int gotoch = -1;                 /* Char of last ^G */
   long i4;                         /* Scratch */
   long olen;                       /* Original line length */
   struct tms tloc;                 /* Junk from TIMES */
   long timnow;                     /* Time from TIMES */
-  short thisch;                    /* Character being processed */
+  unsigned short thisch;           /* Character being processed */
   unsigned char *indent_string = NULL;
 /*
  * PARAMETERS:-
@@ -316,9 +317,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
 /*
  * Initialise common variables &c
  */
-  endlin = false;
-  modlin = false;
-  insert = false;
+  insert = modlin = endlin = false;
   pchars = pchrs;
   mxchrs = Curr->bchars;
   last_Curr = Curr;
@@ -422,64 +421,245 @@ getnextchr:
     goto p1802;                    /* J ^P last char */
   if (nseen)
     goto p1502;                    /* J expecting macro name */
-  if (glast)
-    goto p1518;                    /* J in middle of ^G */
-  if (thisch == 0177)
-    goto p10065;                   /* J it was a rubout */
-  if (thisch & 0200)
-    NORMALCHAR;                    /* J parity-high */
+  if (glast)                       /* In middle of ^G */
+  {
+    glast = false;
+    if (gpseu)
+      goto p1601;                  /* J on if actually for pseudomac */
+  p1804:
+/* Search the rest of the line AFTER the current character */
+    i = Curr->bchars - Curr->bcurs - 1; /* # chars to search */
+    p = &Curr->bdata[Curr->bcurs]; /* Point to cursor char */
+    for (; i > 0; i--)
+    {
+      p++;
+      if (*p == thisch || (thisch == SPACE && isspace(*p) && MATCH_ANY_WHSP))
+        break;
+    }                              /* for (; i > 0; i--) */
+    if (i >= 0)
+      Curr->bcurs = Curr->bchars - i; /* Guard against -ve i */
+    gotoch = thisch;               /* Remember char for ^^ */
+    GETNEXTCHR;                    /* Finish ^G */
+  }                                /* if (glast) */
+  if (thisch == 0177)              /* DEL - Delete char before cursor */
+  {
+    if (!Curr->bcurs)
+      BOL_OR_EOL;                  /* Error if at line start */
+
+/* If at indent point,decrement INDENT */
+    if (INDENT && Curr->bcurs == ndntch)
+      ndntch--;
+
+/* Move cursor back 1 and become ^D */
+    Curr->bcurs--;
+    thisch = 4;
+  }                                /* if (thisch == 0177) */
   if (thisch >= SPACE)
     NORMALCHAR;                    /* J not a control */
   verb = thisch + 0100;            /* 'J' for ^J, &c. */
   switch (thisch)
   {
-    case 0:
+    case 0:                        /* NUL - (ignored) */
       GETNEXTCHR;
-    case 1:
-      goto p7701;
-    case 2:
-      goto p7702;
-    case 4:
-      goto p7704;
-    case 5:
-      goto p7705;
-    case 6:
-      goto p7706;
-    case 7:
-      goto p7707;
 
-    case 8:
-/* ^H - Home */
+    case 1:                        /* ^A - Again/Append */
+/*
+ * If more info in previous line than current, append previous excess
+ * to current, then in either case move cursor to follow last char
+ */
+      i = ndntch;                  /* In case we SINDNT */
+      if (!lstvld)
+        sindnt();                  /* Get previous line valid */
+      ndntch = i;
+      if (Curr->bchars < Prev->bchars)
+      {
+/*
+ * We have to move chars from the previous line
+ */
+        modlin = true;             /* Line has been changed */
+        memcpy((char *)&Curr->bdata[Curr->bchars],
+          (char *)&Prev->bdata[Curr->bchars],
+          (size_t)(Prev->bchars - Curr->bchars));
+        Curr->bchars = Prev->bchars; /* Extend length of line */
+        if (mxchrs < Curr->bchars)
+          mxchrs = Curr->bchars;
+      }                            /* if (Curr->bchars < Prev->bchars) */
+      Curr->bcurs = Curr->bchars;  /* Put cursor at end */
+      GETNEXTCHR;                  /* Finish ^A */
+
+    case 2:                        /* ^B - Word back */
+/*
+ * Go back to the start of this word or back to the start of the
+ * previous word if at the start of this one. Words are delimited by any
+ * white space. Error if no backwards movement possible.
+ */
+      i = INDENT ? ndntch : 0;     /* S.O.L. if no indenting */
+      k = Curr->bcurs - i;         /* k - running available movement */
+/* Note k can be -ve, after ^NR to move before the indent point */
+      if (k <= 0)
+        BOL_OR_EOL;                /* J start of line (error) */
+/* Check whether at word start. If so, back up to a non-space (or line
+ * start)... */
+      p = &Curr->bdata[Curr->bcurs];
+/* Reduce movement available, B none left; B found non-space */
+      if (isspace(*(p - 1)))
+        for (;;)
+          if (!--k || !isspace(*--p))
+            break;
+/* We may now be back at line start. If not, move cursor back until the
+ * preceding character is space. This may now be the case already, so
+ * check the value of the preceding character first... */
+      if (k)
+        for (;;)
+          if (isspace(*--p) || !--k)
+            break;
+      Curr->bcurs = i + k;         /* Start of line + room */
+      GETNEXTCHR;                  /* Finish ^B */
+
+    case 4:                        /* ^D - Right hand rubout */
+      if (Curr->bcurs == Curr->bchars)
+      {
+        err = "^D at EOL";
+        ERR_IF_MAC;
+      }
+      k = Curr->bcurs++;           /* Get past char to erase */
+      modlin = true;               /* Line has been changed */
+      j = Curr->bchars - 1;        /* How many chars there will be */
+      if (j != k)
+        memmove(Curr->bdata + k, Curr->bdata + k + 1, j - k);
+      Curr->bcurs = k;             /* Step cursor back */
+      Curr->bchars = j;            /* Reduce # of chars */
+      GETNEXTCHR;
+
+    case 5:                        /* ^E - Enter/Leave insert mode */
+      insert = !insert;
+      GETNEXTCHR;                  /* End insert */
+
+    case 6:                        /* ^F - Forward to start next word */
+      k = Curr->bchars - Curr->bcurs; /* k - how far we can move forward */
+/* If on non-space, move forward to space, unless at EOL now... */
+      p = &Curr->bdata[Curr->bcurs];
+/* Ensure we're pointing at a space (or we were). Always reduces k,
+ * unless at EOL to start with... */
+      if (k < 0)
+      {
+        fprintf(stderr, "Internal error: k=%d\r\n", k);
+        notmac(true);
+        SOUNDALARM;
+      }
+      if (k)
+        for (;;)
+          if (!--k || isspace(*p++))
+            break;
+/* Reduce k further if not now pointing at a non-space... */
+      if (k)
+        for (;;)
+          if (!isspace(*p++) || !--k)
+            break;
+      Curr->bcurs = Curr->bchars - k;
+      GETNEXTCHR;
+
+    case 7:                        /* ^G - Goto next character */
+      glast = true;
+      gpseu = false;               /* Not in pseudo macro */
+      GETNEXTCHR;                  /* Will be back shortly */
+
+    case 8:                        /* ^H - Home */
       Curr->bcurs = INDENT ? ndntch : 0; /* Reset cursor */
       GETNEXTCHR;
 
-    case 9:
-      goto p7711;
+    case 9:                        /* ^I - Insert a tab */
+/*
+ * Insert enough spaces to get to next tab posn if there is one, otherwise
+ * insert 1 space. Once inserted, there is no remembrance that this was a tab -
+ * spaces may be individually deleted etc.
+ */
+      modlin = true;               /* Line has been changed */
+      for (i = 0; i < tabcnt; i++) /* Find 1st tab past where we are */
+        if (Curr->bcurs < tabs[i].value && tabs[i].tabtyp == CHRPOS)
+          break;                   /* Tab found */
+      if (i == tabcnt)             /* Force 1 space if drop thro' */
+        j = 1;                     /* Insert 1 space */
+      else
+        j = tabs[i].value - Curr->bcurs; /* # spaces */
+/*
+ * See how many spaces we actually have room for
+ */
+      i = Curr->bchars;
+      h = Curr->bmxch - i;         /* # there is room for */
+      if (h > 0)                   /* Some room */
+      {
+        p = &Curr->bdata[i];       /* 1 past last char to pick up */
+        m = i - Curr->bcurs;       /* # chars to move up */
+        if (h > j)
+          h = j;                   /* # spaces to insert */
+        i = i + h;                 /* New length */
+        q = &Curr->bdata[i];       /* 1 past last char to set down */
+/* Do the right-hand overlapping move */
+        for (; m > 0; m--)
+          *--q = *--p;
+/* Move in spaces */
+        p = &Curr->bdata[Curr->bcurs];
+        for (m = h; m > 0; m--)
+          *p++ = SPACE;
+/*
+ * Adjust buffer and other variables ...
+ */
+        if (INDENT && Curr->bcurs == ndntch) /* Indenting and at indent point */
+          ndntch = ndntch + h;
+        Curr->bcurs = Curr->bcurs + h; /* New cursor */
+        Curr->bchars = i;
+        if (mxchrs < i)
+          mxchrs = i;
+        if (j == h)                /* Tab inserted successfully */
+          GETNEXTCHR;
+      }                            /* if (h > 0) */
+      err = "Line full";
+      ERR_IF_MAC;
+
+    case 13:                       /* drop thru: treat Cr as Nl */
+
     case 10:
       goto p7712;
+
     case 11:
       goto p7713;
     case 12:
       goto p7714;
-    case 13:
-      goto p7712;                  /* Treat Cr as Nl */
     case 14:
       goto p7716;
     case 15:
       goto p7717;
 
     case 3:                        /* drop thru */
-    case 16:
-/* ^P (or ^C) - next char not special */
+
+    case 16:                       /* ^P (or ^C) - next char not special */
       contp = true;
       GETNEXTCHR;
 
-    case 17:
-      goto p7721;
+    case 19:                       /* drop thru: ^S - Lower -> upper */
+
+    case 17:                       /* ^Q - Rest of line upper -> lower */
+    {
+      int (*cvt) (int);
+
+      if (verb == 'S')
+        cvt = toupper;
+      else
+        cvt = tolower;
+      k = Curr->bchars;
+      j = Curr->bcurs;
+      p = &Curr->bdata[j];
+      k = k - j;                   /* # to do */
+      modlin = k > 0;              /* Line changed if any chars to do */
+      for (; k > 0; k--, p++)
+        *p = cvt(*p);
+      GETNEXTCHR;                  /* Finished ^Q */
+    }
+
     case 18:
       goto p7722;
-    case 19:
-      goto p7723;
+
     case 20:
       goto p7724;
 
@@ -497,45 +677,42 @@ getnextchr:
       goto p7727;
     case 24:
       goto p7730;
-    case 25:
-      goto p7731;
-    case 26:
-      goto p7732;
-    case 27:
-      goto p7733;
+
+    case 25:                       /* ^Y - Cursor back 1 */
+      k = Curr->bcurs;             /* Not allowed into indent area however */
+      i = INDENT ? ndntch : 0;
+      if (k == i)                  /* At start or indent already */
+        BOL_OR_EOL;
+      Curr->bcurs--;
+      GETNEXTCHR;                  /* Finish ^Y */
+
+    case 26:                       /* ^Z - Go to end current line */
+      Curr->bcurs = Curr->bchars;
+      GETNEXTCHR;                  /* Finish ^Z */
+
+    case 27:                       /* ESC - Abandon */
+      LEAVE_SCRDIT;                /* Simply exit */
+
     case 30:
       goto p7736;
   }
-  NORMALCHAR;                      /* Not special control */
+/*
+ * Non-special character
+ */
+normalchar:
+  ordch(thisch, Curr);             /* Insert or replace as appropriate */
+  modlin = true;                   /* Line has been changed */
+  contp = false;
+  GETNEXTCHR;                      /* Finish */
 p1802:
   if (cntrlw)
+  {
     thisch |= 0200;                /* Set parity following ^W */
-  cntrlw = false;
+    cntrlw = false;
+  }                                /* if (cntrlw) */
   if (nseen)
     goto p1905;                    /* Treat as macro char if ^N Prev */
   NORMALCHAR;                      /* Treat as ordinary character */
-/*
- * DEL - Deletes char before cursor
- */
-p10065:
-  k = Curr->bcurs - 1;
-  if (k < 0)
-    BOL_OR_EOL;                    /* J at start lin (error) */
-  modlin = true;                   /* Line has been changed */
-/* If at indent point,decrement INDENT */
-  if (INDENT && k + 1 == ndntch)
-    ndntch--;
-  j = Curr->bchars - 1;            /* How many chars there will be */
-  if (j != k)
-  {
-    q = &Curr->bdata[k];           /* Where chars to move to */
-    p = q + 1;                     /* Where chars to come from */
-    for (i = j - k; i > 0; i--)
-      *q++ = *p++;                 /* Move chars back */
-  }                                /* if (j != k) */
-  Curr->bcurs = k;                 /* Step cursor back */
-  Curr->bchars = j;                /* Reduce # of chars */
-  GETNEXTCHR;
 bol_or_eol:
   err = "Ran off beginning or end of line";
 err_if_mac:
@@ -559,162 +736,6 @@ taboorange:
     notmac(true);
   }
   SOUNDALARM;
-/*
- * Non-special character
- */
-normalchar:
-  ordch(thisch, Curr);             /* Insert or replace as appropriate */
-  modlin = true;                   /* Line has been changed */
-  contp = false;
-  GETNEXTCHR;                      /* Finish */
-/*
- * ^A - Again/Append
- * If more info in previous line than current, append previous excess
- * to current, then in either case move cursor to follow last char
- */
-p7701:i = ndntch;                  /* In case we  SINDNT */
-  if (!lstvld)
-    sindnt();                      /* Get previous line valid */
-  ndntch = i;
-  if (Curr->bchars >= Prev->bchars)
-    goto p1029;
-/* J append only */
-/*
- * We have to move chars from the previous line
- */
-  modlin = true;                   /* Line has been changed */
-  memcpy((char *)&Curr->bdata[Curr->bchars],
-    (char *)&Prev->bdata[Curr->bchars], (size_t)(Prev->bchars - Curr->bchars));
-  Curr->bchars = Prev->bchars;     /* Extend length of line */
-  if (mxchrs < Curr->bchars)
-    mxchrs = Curr->bchars;
-/* For ^R */
-p1029:
-  Curr->bcurs = Curr->bchars;      /* Put cursor at end */
-  GETNEXTCHR;                      /* Finish ^A */
-/*
- * ^B - Go back to the start of this word or back to the start of the
- * previous word if at the start of this one. Words are delimited by
- * spaces only. Error if no backwards movement possible.
- * N.B. unlike D.G., we stop on the first character of the word.
- */
-p7702:i = 0;                       /* S.O.L. if no indenting */
-  if (INDENT)
-    i = ndntch;
-  k = Curr->bcurs - i;             /* K - running available movement */
-/* Note k can be -ve, if he used ^NR to move before the indent point */
-  if (k <= 0)
-    BOL_OR_EOL;                    /* J start of line (error) */
-/* Check whether at word start. If so, back up to a non-space (or line
- * start)... */
-  p = &Curr->bdata[Curr->bcurs];
-/* Reduce movement available, B none left; B found non-space */
-  if (isspace(*(p - 1)))
-    for (;;)
-      if (!--k || !isspace(*--p))
-        break;
-/* We may now be back at line start. If not, move cursor back until the
- * preceding character is space. This may now be the case already, so
- * check the value of the preceding character first... */
-  if (k)
-    for (;;)
-      if (isspace(*--p) || !--k)
-        break;
-  Curr->bcurs = i + k;             /* Start of line + room */
-  GETNEXTCHR;                      /* Finish ^B */
-/*
- * ^E - Enter/Leave insert mode
- */
-p7705:insert = !insert;
-  GETNEXTCHR;                      /* End insert */
-/*
- * ^F - Forward to start next word. If at e.o.l., no-op;
- * if on last word, stop at e.o.l.
- */
-p7706:
-  k = Curr->bchars - Curr->bcurs;  /* K - how far we can move forward */
-/* If on non-space, move forward to space, unless at EOL now... */
-  p = &Curr->bdata[Curr->bcurs];
-/* Ensure we're pointing at a space (or we were). Always reduces K,
- * unless at EOL to start with... */
-  if (k < 0)
-  {
-    fprintf(stderr, "Internal error: k=%d\r\n", k);
-    notmac(true);
-    SOUNDALARM;
-  }
-  if (k)
-    for (;;)
-      if (!--k || isspace(*p++))
-        break;
-/* Reduce K further if not now pointing at a non-space... */
-  if (k)
-    for (;;)
-      if (!isspace(*p++) || !--k)
-        break;
-  Curr->bcurs = Curr->bchars - k;
-  GETNEXTCHR;                      /* Refresh or read */
-/*
- * ^I - Insert a tab. We insert enough spaces to get to next tab
- * posn. if there is one, otherwise insert 1 space. once inserted,
- * there is no remembrance that this was a tab - spaces may be
- * individually deleted etc.
- */
-p7711:
-  modlin = true;                   /* Line has been changed */
-  if (tabcnt == 0)
-    goto p1038;                    /* If no tabs, force 1 space */
-/*
- * Find 1st tab past where we are
- */
-  for (i = 0; i < tabcnt; i++)
-    if (Curr->bcurs < tabs[i].value && tabs[i].tabtyp == CHRPOS)
-      goto p1040;                  /* J found 1 */
-/* Force 1 space if drop thro' */
-p1038:j = 1;                       /* Insert 1 space */
-  goto p1042;
-p1040:
-  j = tabs[i].value - Curr->bcurs; /* # spaces */
-/*
- * See how many spaces we actually have room for
- */
-p1042:
-  i = Curr->bchars;
-  l = Curr->bmxch - i;             /* # there is room for */
-  if (l == 0)                      /* no room at all */
-  {
-  q1023:
-    err = "Line full";
-    ERR_IF_MAC;
-  }
-  p = &Curr->bdata[i];             /* 1 past last char to pick up */
-  m = i - Curr->bcurs;             /* # chars to move up */
-  if (l > j)
-    l = j;                         /* # spaces to insert */
-  i = i + l;                       /* New length */
-  q = &Curr->bdata[i];             /* 1 past last char to set down */
-/* Do the right-hand overlapping move */
-  for (; m > 0; m--)
-    *--q = *--p;
-/* Move in spaces */
-  p = &Curr->bdata[Curr->bcurs];
-  for (m = l; m > 0; m--)
-    *p++ = SPACE;
-/*
- * Adjust buffer and other variables ...
- */
-  if (!INDENT)
-    goto p2001;                    /* J no indent to look after */
-  if (Curr->bcurs == ndntch)
-    ndntch = ndntch + l;           /* Up indent if were at strt */
-p2001:
-  Curr->bcurs = Curr->bcurs + l;   /* New cursor */
-  Curr->bchars = i;
-  if (mxchrs < i)
-    mxchrs = i;
-  if (j != l)
-    goto q1023;                    /* Bell if wasn't room for whole tab */
-  GETNEXTCHR;                      /* Refresh or read */
 /*
  * ^K - Kill
  */
@@ -744,19 +765,19 @@ p7714:
       k = k - ndntch;
       j = ndntch;
     }                              /* if (INDENT) */
-    l = Curr->bchars - k;          /* Set new line length */
-    Curr->bchars = l;
+    h = Curr->bchars - k;          /* Set new line length */
+    Curr->bchars = h;
     Curr->bcurs = j;
     q = &Curr->bdata[j];           /* Dest'n 1st movedown char */
-    if (l != j)
+    if (h != j)
     {
 /* Do overlapping left hand move */
-      for (m = l - j; m > 0; m--)
+      for (m = h - j; m > 0; m--)
         *q++ = *p++;
-    }                              /* if (l != j) */
+    }                              /* if (h != j) */
   }                                /* if (k) */
   if (verb == 'T')
-    goto p1201;                    /* Return if end of ^T */
+    LEAVE_SCRDIT;                  /* Return if end of ^T */
   GETNEXTCHR;                      /* Finish ^L */
 /*
  * ^T - Split line. Return 1st part of line in previous buffer then
@@ -783,7 +804,7 @@ p1048:
   Prev->bdata[k] = '\0';           /* Null terminate */
   Prev->bcurs = 0;
   if (verb == 'J')
-    goto p1201;                    /* Finish if was n/l */
+    LEAVE_SCRDIT;                  /* Finish if was n/l */
   goto p7714;                      /* Move down r/h chars & finish */
 /*
  * ^X - Move cursor 1 forward. If at end, force a space
@@ -799,23 +820,6 @@ p7730:
   modlin = true;                   /* Line has been changed */
   GETNEXTCHR;                      /* Finish ^X */
 /*
- * ^Y - Cursor back 1
- * Not allowed into indent area however
- */
-p7731:
-  k = Curr->bcurs;
-  i = 0;
-  if (INDENT)
-    i = ndntch;
-  if (k == i)
-    BOL_OR_EOL;                    /* J strt alrdy */
-  Curr->bcurs--;
-  GETNEXTCHR;                      /* Finish ^Y */
-/*
- * ESC - Abandon
- */
-p7733:goto p1201;                  /* Simply exit */
-/*
  * End of line
  */
 p7712:
@@ -830,60 +834,6 @@ p7712:
     GETNEXTCHR;
   }
   goto p1048;                      /* Move chars to Prev */
-/*
- * ^Z - Go to end current line but ignore previous 1
- */
-p7732:
-  Curr->bcurs = Curr->bchars;
-  GETNEXTCHR;                      /* Finish ^Z */
-/*
- * ^Q - Rest of line upper -> lower
- */
-p7721:
-  l = 1204;
-p1207:
-  k = Curr->bchars;
-  j = Curr->bcurs;
-  p = &Curr->bdata[j];
-  k = k - j;                       /* # to do */
-  if (k == 0)
-    GETNEXTCHR;                    /* J out at end of line */
-  modlin = true;                   /* Line has been changed */
-  goto asg2l;                      /* Do the conversion */
-p1204:
-  for (; k > 0; k--)
-  {
-    if (*p >= 'A' && *p <= 'Z')
-      *p += 040;
-    p++;
-  }
-  GETNEXTCHR;                      /* Finished ^Q */
-/*
- * ^S - Lower -> upper
- */
-p7723:
-  l = 1206;
-  goto p1207;
-p1206:                             /* Convert lower -> upper */
-  for (; k > 0; k--)
-  {
-    if (*p >= 'a' && *p <= 'z')
-      *p -= 040;
-    p++;
-  }
-  GETNEXTCHR;                      /* Finished ^S */
-/*
- * ^D - Right hand rubout
- */
-p7704:
-  if (Curr->bcurs == Curr->bchars)
-  {
-    err = "^D at EOL";
-    ERR_IF_MAC;
-  }
-/* BEL if at EOL */
-  Curr->bcurs++;                   /* Get past char to erase */
-  goto p10065;                     /* Do an ordinary rubout */
 /*
  * ^R - Reveal all of line
  *
@@ -942,35 +892,6 @@ p7726:
   newlin();
   GETNEXTCHR;                      /* Finish ^V */
 /*
- * ^G - Goto next character
- */
-p7707:
-  glast = true;
-  gpseu = false;                   /* Not in pseudo macro */
-  GETNEXTCHR;                      /* Will be back shortly */
-/*
- * P1518 - We are back continuing ^G but now we have the char to look
- * for.
- */
-p1518:
-  glast = false;
-  if (gpseu)
-    goto p1601;                    /* J on if actually for pseudomac */
-p1804:
-/* Search the rest of the line AFTER the current character */
-  i = Curr->bchars - Curr->bcurs - 1; /* # chars to search */
-  p = &Curr->bdata[Curr->bcurs];   /* Point to cursor char */
-  for (; i > 0; i--)
-  {
-    p++;
-    if (*p == thisch || (thisch == SPACE && isspace(*p) && MATCH_ANY_WHSP))
-      break;
-  }                                /* for (; i > 0; i--) */
-  if (i >= 0)
-    Curr->bcurs = Curr->bchars - i; /* Guard against -ve i */
-  gotoch = thisch;                 /* Remember char for ^^ */
-  GETNEXTCHR;                      /* Finish ^G */
-/*
  * ^^ - repeat ^G
  */
 p7736:
@@ -1013,7 +934,7 @@ p1905:
   if (thisch == ESC && curmac < 0)
   {
     verb = '[';                    /* For benefit of mainline */
-    goto p7733;                    /* Join normal ESC */
+    LEAVE_SCRDIT;                  /* Same as normal ESC */
   }                                /* if (thisch == ESC && curmac < 0) */
 /* ESC legal from another macro */
   if (thisch <= LAST_PSEUDO && thisch >= FIRST_PSEUDO)
@@ -1307,7 +1228,7 @@ p1503:
   gposn = gwrit = gcurs = gtest = gpast = gmacr = gwthr = false;
 
   switch (thisch & 037)
-  {                                /* Try for a pseudo u/c or l/c */
+  {                                /* Try for a pseudo u/c or h/c */
     case 1:                        /* ^NA - Obey if at EOL */
       CHECK_HAS_MACCH(2);
       if (Curr->bcurs == Curr->bchars)
@@ -1356,7 +1277,7 @@ p1503:
       }
       if (mcnxfr == MCDTUM)
         GETNEXTCHR;                /* No-op if stack empty */
-      l = curmac;                  /* Save current macro BRKPT ^NI invoked */
+      h = curmac;                  /* Save current macro BRKPT ^NI invoked */
       m = mcposn;                  /* Save current macro position */
       goto p1706;                  /* Do a dummy UP */
 
@@ -1484,7 +1405,7 @@ p1706:
     if (verb == 'I')
     {
 /* Restore macro that issued ^NI */
-      curmac = l;
+      curmac = h;
       mcposn = m;
     }
     else
@@ -1513,7 +1434,7 @@ p7604:
   if (verb == 'I')
   {
 /* Restore next macro in stack */
-    curmac = l;
+    curmac = h;
     mcposn = m;
   }
   GETNEXTCHR;
@@ -1761,19 +1682,8 @@ p7727:
 /*
  * P1201 - Exit sequence. Reinstate XON if req'd...
  */
-p1201:
+leave_scrdit:
   if (!(USING_FILE || nodup))
     duplx5(true);                  /* enable XOFF */
   return;
-asg2l:switch (l)
-  {
-    case 1206:
-      goto p1206;
-    case 1204:
-      goto p1204;
-    default:
-      fprintf(stderr, "Assigned Goto failure, l = %d\r\n", l);
-      verb = 'J';                  /* Let user... */
-      return;                      /* ... salvage his edit. */
-  }
 }
