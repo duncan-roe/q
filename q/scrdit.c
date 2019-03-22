@@ -617,15 +617,81 @@ getnextchr:
       err = "Line full";
       ERR_IF_MAC;
 
-    case 13:                       /* drop thru: treat Cr as Nl */
+    case 13:                       /* ^M - End of line */
+      verb = 'J';                  /* Treat as Nl: drop thru to ^J */
 
-    case 10:
-      goto p7712;
+    case 10:                       /* ^J - End of line: drop thru to ^T */
+      k = Curr->bchars;
 
-    case 11:
-      goto p7713;
-    case 12:
-      goto p7714;
+    case 20:                       /* ^T - Split line */
+      if (verb == 'T')             /* If not a drop-thru */
+      {
+        k = Curr->bcurs;
+        modlin = modlin || (k < Curr->bchars); /* modlin unless ^T at EOL */
+      }                            /* if (verb == 'T') */
+
+/* Disallow length change in FIXED LENGTH mode, when editing the file */
+      if (Curr->bchars != olen && !in_cmd && fmode & 0400)
+      {
+        fprintf(stderr, "\r\nLine length must not change in FIXED LENGTH mode");
+        visbel();
+        newlin();
+        GETNEXTCHR;
+      }
+
+/* Copy 1st part (^T) or all (^J) of line to previous buffer */
+      memcpy((char *)Prev->bdata, (char *)Curr->bdata, (size_t)k);
+      Prev->bchars = k;
+      Prev->bdata[k] = '\0';       /* Null terminate */
+      Prev->bcurs = 0;
+      lstvld = true;               /* Last line now valid */
+
+      if (verb == 'J')
+        LEAVE_SCRDIT;              /* Finish if was n/l else drop thru to ^L */
+
+    case 12:                       /* ^L - Left hand kill */
+/*
+ * If indenting and at the indent point kill the indent, otherwise
+ * kill back to the indent point only.
+ * ^T obeys this code with some modification.
+ */
+
+/* Move down the rest of the line then return immediately if ^T.
+ * Caller [q] must check verb for what to do vis the workfile */
+      k = Curr->bcurs;
+      if (k)
+      {
+        p = &Curr->bdata[k];       /* 1st char to be moved down */
+        if (verb == 'L')
+          modlin = true;           /* ^T makes its own decision */
+        j = 0;                     /* Eventual cursor pos if not indenting */
+        if (INDENT)
+        {
+          if (verb == 'L' && k == ndntch)
+            ndntch = 0;            /* Kill indent if at indenting point */
+          k = k - ndntch;
+          j = ndntch;
+        }                          /* if (INDENT) */
+        h = Curr->bchars - k;      /* Set new line length */
+        Curr->bchars = h;
+        Curr->bcurs = j;
+        q = &Curr->bdata[j];       /* Dest'n 1st movedown char */
+        if (h != j)
+        {
+/* Do overlapping left hand move */
+          for (m = h - j; m > 0; m--)
+            *q++ = *p++;
+        }                          /* if (h != j) */
+      }                            /* if (k) */
+      if (verb == 'T')
+        LEAVE_SCRDIT;              /* Return if end of ^T */
+      GETNEXTCHR;                  /* Finish ^L */
+
+    case 11:                       /* ^K - Kill */
+      Curr->bchars = Curr->bcurs;
+      modlin = true;               /* Line has been changed */
+      GETNEXTCHR;                  /* Finished ^K */
+
     case 14:
       goto p7716;
     case 15:
@@ -659,9 +725,6 @@ getnextchr:
 
     case 18:
       goto p7722;
-
-    case 20:
-      goto p7724;
 
     case 21:
 /* ^U - Cancel */
@@ -737,76 +800,6 @@ taboorange:
   }
   SOUNDALARM;
 /*
- * ^K - Kill
- */
-p7713:
-  Curr->bchars = Curr->bcurs;
-  modlin = true;                   /* Line has been changed */
-  GETNEXTCHR;                      /* Finished ^K */
-/*
- * ^L - Left hand kill
- * If indenting and at the indent point kill the indent, otherwise
- * kill back to the indent point only.
- ^T obeys this code with some modification.
- */
-p7714:
-  k = Curr->bcurs;
-  if (k)
-  {
-    p = &Curr->bdata[k];           /* 1st char to be moved down */
-    if (verb == 'L')
-      modlin = true;               /* ^T makes its own decision */
-    j = 0;                         /* Eventual cursor pos if not */
-/* indenting */
-    if (INDENT)
-    {
-      if (verb == 'L' && k == ndntch)
-        ndntch = 0;                /* Kill indent if at indenting point */
-      k = k - ndntch;
-      j = ndntch;
-    }                              /* if (INDENT) */
-    h = Curr->bchars - k;          /* Set new line length */
-    Curr->bchars = h;
-    Curr->bcurs = j;
-    q = &Curr->bdata[j];           /* Dest'n 1st movedown char */
-    if (h != j)
-    {
-/* Do overlapping left hand move */
-      for (m = h - j; m > 0; m--)
-        *q++ = *p++;
-    }                              /* if (h != j) */
-  }                                /* if (k) */
-  if (verb == 'T')
-    LEAVE_SCRDIT;                  /* Return if end of ^T */
-  GETNEXTCHR;                      /* Finish ^L */
-/*
- * ^T - Split line. Return 1st part of line in previous buffer then
- * move down the rest, then return. Calling routine must check
- * verb of course.
- */
-p7724:
-/*
- * Move across l/h info
- */
-  k = Curr->bcurs;
-/* J attempt to change file length in Fixed-Length mode */
-  if (Curr->bchars != olen && !in_cmd && fmode & 0400)
-    goto p2101;
-/* If at eol, old line not modified here */
-  modlin = modlin || (k < Curr->bchars);
-p1048:
-  if (k)                           /* If some chars to move */
-  {
-    memcpy((char *)Prev->bdata, (char *)Curr->bdata, (size_t)k);
-    lstvld = true;                 /* Last line now valid */
-  }                                /* if (k) */
-  Prev->bchars = k;
-  Prev->bdata[k] = '\0';           /* Null terminate */
-  Prev->bcurs = 0;
-  if (verb == 'J')
-    LEAVE_SCRDIT;                  /* Finish if was n/l */
-  goto p7714;                      /* Move down r/h chars & finish */
-/*
  * ^X - Move cursor 1 forward. If at end, force a space
  */
 p7730:
@@ -819,21 +812,6 @@ p7730:
   ordch(SPACE, Curr);
   modlin = true;                   /* Line has been changed */
   GETNEXTCHR;                      /* Finish ^X */
-/*
- * End of line
- */
-p7712:
-  verb = 'J';                      /* In case it was 'M' */
-/* Disallow length change in FIXED LENGTH mode, when editing the file */
-  if ((k = Curr->bchars) != olen && !in_cmd && fmode & 0400)
-  {
-  p2101:
-    fprintf(stderr, "\r\nLine length must not change in FIXED LENGTH mode");
-    visbel();
-    newlin();
-    GETNEXTCHR;
-  }
-  goto p1048;                      /* Move chars to Prev */
 /*
  * ^R - Reveal all of line
  *
@@ -1680,7 +1658,7 @@ p7727:
   contp = true;
   GETNEXTCHR;
 /*
- * P1201 - Exit sequence. Reinstate XON if req'd...
+ * leave_scrdit - Exit sequence. Reinstate XON if req'd...
  */
 leave_scrdit:
   if (!(USING_FILE || nodup))
