@@ -54,3 +54,10 @@ Script started on Fri 08 Mar 2019 05:24:53 PM AEDT
 exit
 
 Script done on Fri 08 Mar 2019 05:25:08 PM AEDT
+Script started on Sat 23 Mar 2019 04:32:24 PM AEDT
+16:32:24$ cat $C|grep -w goto|wc -l
+325
+16:32:35$ exit
+exit
+
+Script done on Sat 23 Mar 2019 04:32:39 PM AEDT

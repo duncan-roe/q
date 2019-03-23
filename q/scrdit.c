@@ -64,7 +64,7 @@ scrbuf5 *last_Curr = NULL;
 /* *************************** print_failed_opcode ************************** */
 
 static void
-print_failed_opcode(short thisch)
+print_failed_opcode(unsigned short thisch)
 {
   char *opcd = opcode_defs[alu_table_index[thisch - FIRST_ALU_OP]].name;
 
@@ -418,7 +418,16 @@ getnextchr:
       thisch = fxtabl[thisch];
   }                                /* if (curmac >= 0) else */
   if (contp)
-    goto p1802;                    /* J ^P last char */
+  {
+    if (cntrlw)
+    {
+      thisch |= 0200;              /* Set parity following ^W */
+      cntrlw = false;
+    }                              /* if (cntrlw) */
+    if (nseen)
+      goto p1905;                  /* Treat as macro char if ^N Prev */
+    NORMALCHAR;                    /* Treat as ordinary character */
+  }                                /* if (contp) */
   if (nseen)
     goto p1502;                    /* J expecting macro name */
   if (glast)                       /* In middle of ^G */
@@ -426,7 +435,7 @@ getnextchr:
     glast = false;
     if (gpseu)
       goto p1601;                  /* J on if actually for pseudomac */
-  p1804:
+  ctl_uparrow_joins:
 /* Search the rest of the line AFTER the current character */
     i = Curr->bchars - Curr->bcurs - 1; /* # chars to search */
     p = &Curr->bdata[Curr->bcurs]; /* Point to cursor char */
@@ -441,7 +450,7 @@ getnextchr:
     gotoch = thisch;               /* Remember char for ^^ */
     GETNEXTCHR;                    /* Finish ^G */
   }                                /* if (glast) */
-  if (thisch == 0177)              /* DEL - Delete char before cursor */
+  if (thisch == DEL)               /* Delete char before cursor */
   {
     if (!Curr->bcurs)
       BOL_OR_EOL;                  /* Error if at line start */
@@ -692,10 +701,35 @@ getnextchr:
       modlin = true;               /* Line has been changed */
       GETNEXTCHR;                  /* Finished ^K */
 
-    case 14:
-      goto p7716;
-    case 15:
-      goto p7717;
+    case 14:                       /* ^N - expaNd macro */
+      nseen = true;
+      GETNEXTCHR;
+
+    case 15:                       /* ^O - cOmment modify */
+      k = Curr->bcurs;             /* Cursor pos'n */
+      p = Curr->bdata + k;         /* 1st char to check */
+      i = Curr->bchars - k - 1;    /* Chars to check for "/" */
+      for (; i > 0; i--, k++, p++)
+        if (*p == '/' && *(p + 1) == '*')
+          break;                   /* Found start of comment */
+      if (i > 0)
+      {
+        k++;                       /* Point to '*' */
+        do
+        {
+          k++;
+          if (k >= Curr->bchars)
+            break;
+        }
+        while (Curr->bdata[k] == SPACE);
+        if (k < Curr->bchars)
+        {
+          Curr->bcurs = k;         /* Cursor to 1st comment char */
+          GETNEXTCHR;              /* Finish ^O */
+        }                          /* if (k < Curr->bchars) */
+      }                            /* if (i > 0) */
+      Curr->bcurs = Curr->bchars;  /* Set cursor to E.O.L. */
+      GETNEXTCHR;
 
     case 3:                        /* drop thru */
 
@@ -723,23 +757,52 @@ getnextchr:
       GETNEXTCHR;                  /* Finished ^Q */
     }
 
-    case 18:
-      goto p7722;
+    case 18:                       /* ^R - Reveal all of line */
+/*
+ * Fudge in case recovering from accidental ESC - if no chars typed
+ * reveal max possible BUF chars. BUT,,, don't reveal trailing null
+ * characters, which have never been used...
+ */
+      i = INDENT ? ndntch : 0;
+      if (mxchrs == i)
+      {
+        for (k = Curr->bmxch - 1; k >= i; k--)
+          if (Curr->bdata[k])
+            break;
+        mxchrs = k + 1;
+      }
+      if (Curr->bchars != mxchrs)
+        modlin = true;             /* If characters rescued */
+      Curr->bchars = mxchrs;
+      Curr->bcurs = mxchrs;
+      GETNEXTCHR;                  /* Finish ^R */
 
-    case 21:
-/* ^U - Cancel */
+    case 21:                       /* ^U - Cancel */
       i = INDENT ? ndntch : 0;
       if (Curr->bchars != i)
         modlin = true;             /* Cancel empty line not a mod */
       Curr->bchars = Curr->bcurs = i;
       GETNEXTCHR;                  /* Finish ^U */
 
-    case 22:
-      goto p7726;
-    case 23:
-      goto p7727;
-    case 24:
-      goto p7730;
+    case 22:                      /* re-display line to recoVer from whatever */
+      newlin();
+      GETNEXTCHR;                  /* Finish ^V */
+
+    case 23:                       /* ^W - Next char With parity bit on */
+      cntrlw = true;
+      contp = true;
+      GETNEXTCHR;
+
+    case 24:                       /* ^X - Move cursor 1 forward */
+/* Append space if at EOL */
+      if (Curr->bcurs != Curr->bchars)
+        Curr->bcurs++;             /* Move cursor fwd */
+      else
+      {
+        ordch(SPACE, Curr);
+        modlin = true;             /* Line has been changed */
+      }                            /* If (curr->bcurs != curr->bchars) else */
+      GETNEXTCHR;                  /* Finish ^X */
 
     case 25:                       /* ^Y - Cursor back 1 */
       k = Curr->bcurs;             /* Not allowed into indent area however */
@@ -756,9 +819,15 @@ getnextchr:
     case 27:                       /* ESC - Abandon */
       LEAVE_SCRDIT;                /* Simply exit */
 
-    case 30:
-      goto p7736;
-  }
+    case 30:                       /* ^^ - repeat ^G */
+      if (gotoch == -1)            /* No Prev ^G */
+      {
+        err = "^^ no previous ^G";
+        ERR_IF_MAC;
+      }
+      thisch = gotoch;
+      goto ctl_uparrow_joins;      /* Jump into the middle of ^G */
+  }                                /* switch (thisch) */
 /*
  * Non-special character
  */
@@ -767,15 +836,6 @@ normalchar:
   modlin = true;                   /* Line has been changed */
   contp = false;
   GETNEXTCHR;                      /* Finish */
-p1802:
-  if (cntrlw)
-  {
-    thisch |= 0200;                /* Set parity following ^W */
-    cntrlw = false;
-  }                                /* if (cntrlw) */
-  if (nseen)
-    goto p1905;                    /* Treat as macro char if ^N Prev */
-  NORMALCHAR;                      /* Treat as ordinary character */
 bol_or_eol:
   err = "Ran off beginning or end of line";
 err_if_mac:
@@ -799,101 +859,12 @@ taboorange:
     notmac(true);
   }
   SOUNDALARM;
-/*
- * ^X - Move cursor 1 forward. If at end, force a space
- */
-p7730:
-  k = Curr->bcurs;
-  if (k != Curr->bchars)
-  {
-    Curr->bcurs++;                 /* Move cursor fwd */
-    GETNEXTCHR;                    /* Refresh etc */
-  }                                /* if (k != Curr->bchars) */
-  ordch(SPACE, Curr);
-  modlin = true;                   /* Line has been changed */
-  GETNEXTCHR;                      /* Finish ^X */
-/*
- * ^R - Reveal all of line
- *
- * Fudge in case recovering from accidental ESC - if no chars typed
- * reveal max possible BUF chars. BUT,,, don't reveal trailing null
- * characters, which have never been used...
- */
-p7722:
-  i = INDENT ? ndntch : 0;
-  if (mxchrs == i)
-  {
-    for (k = Curr->bmxch - 1; k >= i; k--)
-      if (Curr->bdata[k])
-        break;
-    mxchrs = k + 1;
-  }
-  if (Curr->bchars != mxchrs)
-    modlin = true;                 /* If characters rescued */
-  Curr->bchars = mxchrs;
-  Curr->bcurs = mxchrs;
-  GETNEXTCHR;                      /* Finish ^R */
-/*
- * ^O - cOmment modify
- */
-p7717:
-  k = Curr->bcurs;                 /* Cursor pos'n */
-  j = Curr->bchars;                /* Saves array accesses */
-  if (k == j)
-    GETNEXTCHR;                    /* J if at E.O.L. already */
-  p = &Curr->bdata[k];             /* 1st char to check */
-  i = j - k - 1;                   /* Chars to check for "/" */
-  for (; i > 0; i--)
-  {
-    if (*p == '/' && *(p + 1) == '*')
-      goto p1409;                  /* J found start of comment */
-    k++;
-    p++;
-  }
-p1407:
-  Curr->bcurs = j;                 /* Set cursor to E.O.L. */
-  GETNEXTCHR;                      /* End ^O here */
-p1409:
-  k++;
-p14091:
-  k++;
-  if (k >= j)
-    goto p1407;
-  if (Curr->bdata[k] == SPACE)
-    goto p14091;                   /* J not 1st sig char */
-  Curr->bcurs = k;                 /* Cursor to 1st comment char */
-  GETNEXTCHR;                      /* Finish ^O */
-/*
- * ^V - recoVer from a broadcast etc.
- */
-p7726:
-  newlin();
-  GETNEXTCHR;                      /* Finish ^V */
-/*
- * ^^ - repeat ^G
- */
-p7736:
-  if (gotoch == -1)                /* No Prev ^G */
-  {
-    err = "^^ no previous ^G";
-    ERR_IF_MAC;
-  }
-  thisch = gotoch;
-  goto p1804;                      /* Join ^G */
-/*
- * ^N - expaNd macro
- */
-p7716:
-  nseen = true;
-  GETNEXTCHR;
-/*
- * P1502 - We have the macro char. May be a real macro or a pseudo
- * if we already in a macro. May also be DEL if user has changed
- * his mind. May be ^P or ^W, in which case we want the character
- * following...
- */
 p1502:
-  if (thisch == '\3' || thisch == '\20') /* ^C or ^P */
+/*
+ * We have a putative macro char. May be ^P or ^W,
+ * in which case we want the character following...
+ */
+  if (thisch == '\20' || thisch == '\3') /* ^P or (if using alt INTR) ^C */
   {
     contp = true;
     GETNEXTCHR;
@@ -904,18 +875,22 @@ p1502:
     GETNEXTCHR;
   }                                /* if (thisch == '\27') */
 p1905:
-  nseen = false;
+/* We have a macro char unless it's DEL or ESC from keybd */
   contp = false;
-  if (thisch == (unsigned char)'\377') /* BRKPT starting macro */
-    GETNEXTCHR;                    /* High parity rubout */
+  if (thisch == 0377)              /* User typed DEL after ^W */
+    GETNEXTCHR;                    /* Undo ^W after ^N */
+  nseen = false;
+  if (thisch == DEL)               /* User typed DEL after ^N */
+    GETNEXTCHR;                    /* Undo ^N */
+
 /* Recognise ESC  if not in a macro */
   if (thisch == ESC && curmac < 0)
   {
     verb = '[';                    /* For benefit of mainline */
     LEAVE_SCRDIT;                  /* Same as normal ESC */
   }                                /* if (thisch == ESC && curmac < 0) */
-/* ESC legal from another macro */
-  if (thisch <= LAST_PSEUDO && thisch >= FIRST_PSEUDO)
+
+  if (thisch <= LAST_PSEUDO && thisch >= FIRST_PSEUDO) /* BRKPT startg macro */
     goto p1503;                    /* J a pseudo or rubout */
 
 /* Look for SIGINT seen if chaining.
@@ -1185,8 +1160,6 @@ p1905:
   }                                /* if (!thisch && curmac > 0) else */
   GETNEXTCHR;
 p1503:
-  if (thisch == 0177)
-    GETNEXTCHR;                    /* J rubout */
 /*
  * Look for a pseudo macro. Some are only legal if in a macro
  */
@@ -1314,7 +1287,7 @@ p1503:
     case 29:                       /* ^N] - Obey if file past spec'd tab */
       gpast = true;
       TEST_TAB;
-  }
+  }                                /* switch (thisch & 037) */
 /* ^NH is not a pseudo */
 /* ^NK is not a pseudo */
 /* ^NQ is not a pseudo */
@@ -1649,13 +1622,6 @@ p1601:
   if (Curr->bdata[Curr->bcurs] != thisch &&
     !(thisch == SPACE && isspace(Curr->bdata[Curr->bcurs]) && MATCH_ANY_WHSP))
     SKIP2MACCH;                    /* Skip if mismatch */
-  GETNEXTCHR;
-/*
- * ^W - Next char not special but With parity bit on
- */
-p7727:
-  cntrlw = true;
-  contp = true;
   GETNEXTCHR;
 /*
  * leave_scrdit - Exit sequence. Reinstate XON if req'd...
