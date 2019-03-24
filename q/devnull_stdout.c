@@ -1,6 +1,6 @@
 /* D E V N U L L _ S T D O U T . C */
 /*
- * Copyright (C) 2012-2014 Duncan Roe
+ * Copyright (C) 2012-2014,2019 Duncan Roe
  *
  * This function switches stdout to /dev/null
  */
@@ -29,21 +29,15 @@ devnull_stdout()
 /* If o/p is to /dev/null, orig_stdout has original fd */
     if (orig_stdout == -1)
     {
-      do
-        orig_stdout = dup(1);
-      while (orig_stdout == -1 && errno == EINTR);
+      SYSCALL(orig_stdout, dup(1));
       if (orig_stdout == -1)
       {
         fprintf(stderr, "\r\n%s. (dup(1))\r\n", strerror(errno));
         refrsh(NULL);
         return;
       }                            /* if (orig_stdout == -1) */
-      do
-        i = close(1);
-      while (i == -1 && errno == EINTR);
-      do
-        i = open("/dev/null", O_RDWR);
-      while (i == -1 && errno == EINTR);
+      SYSCALL(i, close(1));
+      SYSCALL(i, open("/dev/null", O_RDWR));
       if (i == -1)
       {
         fprintf(stderr, "\r\n%s. /dev/null (open)\r\n", strerror(errno));
@@ -55,15 +49,11 @@ devnull_stdout()
 /* Verify we opened fd 1. Attempt to rectify if not */
       if (i != 1)
       {
-        do
-          j = dup2(i, 1);
-        while (j == -1 && errno == EINTR);
+        SYSCALL(j, dup2(i, 1));
         if (j == -1)
         {
           fprintf(stderr, "\r\n%s. (dup2(%d, 1))\r\n", strerror(errno), i);
-          do
-            j = close(i);
-          while (j == -1 && errno == EINTR);
+          SYSCALL(j, close(i));
           restore_stdout();
           return;
         }                          /* if (j == -1) */

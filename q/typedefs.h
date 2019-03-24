@@ -7,6 +7,7 @@
 #define BLKCAP (64-sizeof(void*))  /* Capacity of a data block */
 #define PTHSIZ 256
 #define PTHMAX PTHSIZ-4            /* Allow for .tm */
+#define SYSCALL(x, y) do x = y; while(x == -1 && errno == EINTR)
 
 #define CARAT '^'
 #define SPACE ' '

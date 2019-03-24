@@ -1,7 +1,7 @@
 /* R E S T O R E _ S T D O U T . C
  *
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2012,2013 Duncan Roe
+ * Copyright (C) 2012,2013,2019 Duncan Roe
  *
  * This routine switches output back to the original stdout
  */
@@ -21,9 +21,7 @@ restore_stdout()
   {
     if (stdidx >= 0)
       stdinfo[stdidx].nullstdout = false;
-    do
-      i = dup2(orig_stdout, 1);
-    while (i == -1 && errno == EINTR);
+    SYSCALL(i, dup2(orig_stdout, 1));
     if (i == -1)
     {
       fprintf(stderr, "\r\n%s. (dup2(%d, 1))\r\n", strerror(errno),
@@ -31,9 +29,7 @@ restore_stdout()
     }                              /* if (i == -1) */
     else
     {
-      do
-        i = close(orig_stdout);
-      while (i == -1 && errno == EINTR);
+      SYSCALL(i, close(orig_stdout));
       orig_stdout = -1;
     }                              /* if (i == -1) else */
   }                                /* if (orig_stdout != -1) */

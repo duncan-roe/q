@@ -1,7 +1,7 @@
 /* C 1 I N 5 . C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2012-2014 Duncan Roe
+ * Copyright (C) 2012-2014,2019 Duncan Roe
  *
  * This routine gets the next character from standard input. If we
  * hit EOF on a file, revert to the TTY
@@ -52,9 +52,7 @@ c1in5(bool *eof_encountered)
         return end_seq[simulate_q_idx++];
       }                            /* if (simulate_q) */
 
-      do
-        s = read(STDIN5FD, buf5, 1);
-      while (s == -1 && errno == EINTR);
+      SYSCALL(s, read(STDIN5FD, buf5, 1));
       if (s == -1)                 /* Some kind of error */
       {
           fprintf(stderr, "%s. fd %d (read)\r\n", strerror(errno), STDIN5FD);

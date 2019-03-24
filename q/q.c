@@ -299,9 +299,7 @@ open_buf(int flags, mode_t mode)
 {
   int retcod;
 
-  do
-    retcod = open(buf, flags, mode);
-  while (retcod == -1 && errno == EINTR);
+  SYSCALL(retcod, open(buf, flags, mode));
   return retcod;
 }                                  /* open_buf() */
 
@@ -312,9 +310,7 @@ my_close(int fd)
 {
   int retcod;
 
-  do
-    retcod = close(fd);
-  while (retcod == -1 && errno == EINTR);
+  SYSCALL(retcod, close(fd));
   return retcod;
 }                                  /* my_close() */
 
@@ -528,9 +524,7 @@ dev_null_stdout(void)
     fprintf(stderr, "%s. fd %d (close)\n", strerror(errno), STDOUT5FD);
     exit(1);
   }                                /* if (my_close (STDOUT5FD)) */
-  do
-    retcod = open("/dev/null", O_WRONLY);
-  while (retcod == -1 && errno == EINTR);
+    SYSCALL(retcod, open("/dev/null", O_WRONLY));
   if (retcod == -1)
   {
     fprintf(stderr, "%s. /dev/null (open)\n", strerror(errno));
@@ -915,9 +909,7 @@ main(int xargc, char **xargv)
 /*
  * Deal with stdout
  */
-    do
-      saved_pipe_stdout = dup(STDOUT5FD);
-    while (saved_pipe_stdout == -1 && errno == EINTR);
+    SYSCALL(saved_pipe_stdout, dup(STDOUT5FD));
     if (saved_pipe_stdout == -1)
     {
       fprintf(stderr, "%s. fd %d (dup)\n", strerror(errno), STDOUT5FD);
@@ -927,9 +919,7 @@ main(int xargc, char **xargv)
 /* If verbose, dup stderr to stdout. Otherwise, stdout is /dev/null */
     if (verbose_flag)
     {
-      do
-        i = dup2(STDERR5FD, STDOUT5FD);
-      while (i == -1 && errno == EINTR);
+      SYSCALL(i, dup2(STDERR5FD, STDOUT5FD));
       if (i == -1)
       {
         fprintf(stderr, "%s. fd %d to fd %d (dup2)\n", strerror(errno),
@@ -959,9 +949,7 @@ main(int xargc, char **xargv)
       ssize_t nc, todo;
       char *write_from;
 
-      do
-        todo = read(STDIN5FD, buf, sizeof buf);
-      while (todo == -1 && errno == EINTR);
+      SYSCALL(todo, read(STDIN5FD, buf, sizeof buf));
       if (todo == -1)
       {
         fprintf(stderr, "%s. stdin (read)", strerror(errno));
@@ -972,9 +960,7 @@ main(int xargc, char **xargv)
       write_from = buf;
       while (todo)
       {
-        do
-          nc = write(pipe_temp_fd, write_from, todo);
-        while (nc == -1 && errno == EINTR);
+        SYSCALL(nc, write(pipe_temp_fd, write_from, todo));
         if (nc == -1)
         {
           fprintf(stderr, "%s. %s (write)\n", strerror(errno), pipe_temp_name);
@@ -1078,9 +1064,7 @@ main(int xargc, char **xargv)
   {
 /* Forge a u-use: push current stdin */
     stdidx = 0;
-    do
-      stdinfo[stdidx].funit = dup(0);
-    while (stdinfo[stdidx].funit == -1 && errno == EINTR);
+    SYSCALL(stdinfo[stdidx].funit, dup(0));
     if (stdinfo[stdidx].funit == -1)
     {
       fprintf(stderr, "\r\n%s. (dup(0))\r\n", strerror(errno));
@@ -1114,9 +1098,7 @@ main(int xargc, char **xargv)
       }                            /* switch (e_state) */
       if (e_state == GIVE_UP)
         break;
-      do
-        i = open_buf(O_RDONLY, 0);
-      while (i == -1 && errno == EINTR);
+      SYSCALL(i, open_buf(O_RDONLY, 0));
       if (i != -1)
         break;
       e_state++;
@@ -1775,9 +1757,7 @@ p1020:
 
 /* Save current stdin */
   stdidx++;
-  do
-    stdinfo[stdidx].funit = dup(0);
-  while (stdinfo[stdidx].funit == -1 && errno == EINTR);
+  SYSCALL(stdinfo[stdidx].funit, dup(0));
   if (stdinfo[stdidx].funit == -1)
   {
     stdidx--;
@@ -1786,14 +1766,10 @@ p1020:
   }                                /* if (stdinfo[stdidx].funit == -1) */
 
 /* Close funit 0 */
-  do
-    i = close(0);
-  while (i == -1 && errno == EINTR);
+  SYSCALL(i, close(0));
 
 /* Open new input source */
-  do
-    i = open_buf(O_RDONLY, 0);
-  while (i == -1 && errno == EINTR);
+  SYSCALL(i, open_buf(O_RDONLY, 0));
   if (i == -1)
   {
     pop_stdin();
@@ -1804,21 +1780,15 @@ p1020:
 /* Verify new input opened on funit 0. Try to rectify if not */
   if (i)
   {
-    do
-      j = dup2(i, 0);
-    while (j == -1 && errno == EINTR);
+    SYSCALL(j, dup2(i, 0));
     if (j == -1)
     {
       fprintf(stderr, "%s.(dup2(%d, 0))", strerror(errno), i);
-      do
-        j = close(i);
-      while (j == -1 && errno == EINTR);
+      SYSCALL(j, close(i));
       pop_stdin();
       REREAD_CMD;
     }                              /* if (j == -1) */
-    do
-      j = close(i);
-    while (j == -1 && errno == EINTR);
+    SYSCALL(j, close(i));
   }                                /* if (i) */
 
 /* If invoked from a macro, suspend that macro */
@@ -2382,9 +2352,7 @@ p1501:
 /* Need to preserve stdout for this */
       if (orig_stdout == -1)
       {
-        do
-          orig_stdout = dup(1);
-        while (orig_stdout == -1 && errno == EINTR);
+        SYSCALL(orig_stdout, dup(1));
       }                            /* if (orig_stdout == -1) */
       if (orig_stdout == -1)
       {
@@ -2395,10 +2363,8 @@ p1501:
       }                            /* if (orig_stdout == -1) */
       else
       {
-        do
-          i = close(1);
-        while (i == -1 && errno == EINTR);
-        i = open_buf(O_WRONLY | O_CREAT | O_TRUNC, 0666);
+        SYSCALL(i, close(1));
+        SYSCALL(i, open_buf(O_WRONLY | O_CREAT | O_TRUNC, 0666));
         if (i == 1)
         {
           lstmac();
