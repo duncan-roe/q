@@ -6,7 +6,7 @@
  * This routine carries out the definition of a macro. Storage is
  * acquired if necessary - if inadequate storage was previously assigned
  * then it is released.
- * The input is an array of unsigned short integers, rather than
+ * The input is an array of uint16_t integers, rather than
  * characters as for MACDEF
  */
 #include <stdio.h>
@@ -16,7 +16,7 @@
 #include "macros.h"
 /* */
 bool
-macdefw(unsigned int mcnum, unsigned short *buff, int buflen, bool appnu)
+macdefw(unsigned int mcnum, uint16_t *buff, int buflen, bool appnu)
 {
   int i, k;                        /* Scratch */
 /*

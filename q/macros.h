@@ -27,7 +27,7 @@ typedef struct
 {
   short mcsize;                    /* # chars in macro */
   short maclen;                    /* # chars macro could hold */
-  unsigned short data[DBGMAC];     /* The macro chars, 16-bit each */
+  uint16_t data[DBGMAC];           /* The macro chars, 16-bit each */
 }
 macro5;
 
@@ -53,6 +53,6 @@ int immnxfr;                       /* Next free slot for an immediate macro */
 
 bool newmac2(bool appnu);
 bool macdef(unsigned int mcnum, uint8_t *buff, int buflen, bool appnu);
-bool macdefw(unsigned int mcnum, unsigned short *buff, int buflen, bool appnu);
+bool macdefw(unsigned int mcnum, uint16_t *buff, int buflen, bool appnu);
 void showmac(int i);
 #endif

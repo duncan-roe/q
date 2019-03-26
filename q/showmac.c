@@ -17,7 +17,7 @@ showmac(int i)
 {
   macro5 *p;                       /* Points to current macro */
   int k, l;                        /* Scratch */
-  unsigned short ch;               /* Character of interest */
+  uint16_t ch;                     /* Character of interest */
   bool ctl_n_pending = false;
   char tbuf[16];
 
@@ -39,7 +39,7 @@ showmac(int i)
     ch = p->data[k];
     if (ctl_n_pending)
     {
-      unsigned short ch017000 = ch & 017000;
+      uint16_t ch017000 = ch & 017000;
 
       ctl_n_pending = false;
       if (ch >= FIRST_ALU_OP && ch < FIRST_ALU_OP + num_ops)

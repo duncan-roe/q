@@ -20,7 +20,7 @@ bool
 macdef(unsigned int mcnum, uint8_t *buff, int buflen, bool appnu)
 {
   int i;                           /* Scratch */
-  unsigned short xbuf[Q_BUFSIZ];
+  uint16_t xbuf[Q_BUFSIZ];
   uint8_t saved_end = buff[buflen];
   unsigned long ulong_result;      /* Guard against ULONG_MAX on error */
   long long_result;                /* Guard against ULONG_MAX on error */

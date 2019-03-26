@@ -23,7 +23,7 @@
 
 /* Static Variables */
 
-static unsigned short xpnsion[Q_BUFSIZ];
+static uint16_t xpnsion[Q_BUFSIZ];
 
 /* ******************************* get_op_idx ******************************* */
 
@@ -58,7 +58,7 @@ get_op_idx(alu_dict_ent * root, char *op)
 /* ******************************* get_opcode ******************************* */
 
 static bool
-get_opcode(char *op, unsigned short *result)
+get_opcode(char *op, uint16_t *result)
 {
   int idx;
 
@@ -78,7 +78,7 @@ get_opcode(char *op, unsigned short *result)
 /* ******************************* get_alu_op ******************************* */
 
 static bool
-get_alu_op(char *mybuf, unsigned short *result, char **endptr)
+get_alu_op(char *mybuf, uint16_t *result, char **endptr)
 {
   long locn;
   char tbuf[16];
@@ -194,7 +194,7 @@ bool
 newmac2(bool appnu)
 {
   int k, m, l;
-  unsigned short thisch;           /* Character being examined */
+  uint16_t thisch;                 /* Character being examined */
   char *bfp;
 
   m = 0;                           /* Accumulates macro size */

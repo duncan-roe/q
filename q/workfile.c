@@ -39,7 +39,7 @@
  * tab expand), and a count of how many records in the first block are deleted.
  *
  * Offset blocks are 1024 bytes in length. Apart from their next & prev
- * pointers, they can be filled with unsigned short offsets. These are the
+ * pointers, they can be filled with uint16_t offsets. These are the
  * distances from the address in the supplementary index block to the record
  * start point.
  *
@@ -71,7 +71,7 @@
 #define NOM_PAGE 8192              /* Largest known pagesize on any system */
 #define FULLPAGES (NOM_PAGE/sizeof(void*)-2)
 
-#define OFF_DIM ((1024-2*sizeof(void*))/sizeof(unsigned short))
+#define OFF_DIM ((1024-2*sizeof(void*))/sizeof(uint16_t))
 
 typedef struct databk
 {
@@ -84,13 +84,13 @@ typedef struct indxbk
   struct indxbk *prev;
   databk *dtaptr;                  /* Or may hold up to 4 chars */
   short blocks;
-  unsigned short chars;            /* Chars in last data block */
+  uint16_t chars;                  /* Chars in last data block */
 } indxbk;
 typedef struct ofstbk
 {
   struct ofstbk *next;
   struct ofstbk *prev;
-  unsigned short offset[OFF_DIM];
+  uint16_t offset[OFF_DIM];
 } ofstbk;
 typedef struct suppbk
 {
@@ -301,7 +301,7 @@ get2(uint8_t *linptr)
  * the group: that is how we append. The address of the offset block found is
  * available to other functions in this compilation unit as xxoffs */
 
-static unsigned short *
+static uint16_t *
 gtofst(indxbk * ix, int offset)
 {
   suppbk *sp;                      /* Scratch */
@@ -354,7 +354,7 @@ gtofst(indxbk * ix, int offset)
       xxoffs = xxoffs->prev;
 
   return xxoffs->offset + offidx;
-}                              /* unsigned short*gtofst(indxbk*ix,int offset) */
+}                                  /* uint16_t*gtofst(indxbk*ix,int offset) */
 
 /* ******************************* splitb ****************************** */
 
@@ -374,7 +374,7 @@ splitb(void)
   indxbk *nix;                     /* New index block */
   suppbk *nsp;                     /* New supp block */
   suppbk *sp;                      /* Old supp block */
-  unsigned short *us;              /* Scratch */
+  uint16_t *us;                    /* Scratch */
   int offidx;                      /* Index of offset in this block */
 
 /* Sanity checks */
@@ -1024,7 +1024,7 @@ insmem(uint8_t *linptr, uint8_t *last)
 {
   indxbk *ix;                      /* Scratch */
   suppbk *sp;                      /* Scratch */
-  unsigned short *us;              /* Scratch */
+  uint16_t *us;                    /* Scratch */
   int auxflg = 0;                  /* If aux pointer started same as main one */
 
 /* See if aux & main pointers are the same */

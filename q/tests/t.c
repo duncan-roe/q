@@ -1,4 +1,4 @@
-/* t.c: test headers for needing to incluse headers */
+/* t.c: test headers for needing to include headers */
 
 /* gcc -Wall -Wstrict-prototypes -Wmissing-prototypes -I .. t.c */
 
