@@ -1,7 +1,7 @@
 /* M A C D E F . C
  *
  * Copyright (C) 1994 Duncan Roe & Associates P/L
- * Copyright (C) 2012-2014,2017 Duncan Roe
+ * Copyright (C) 2012-2014,2017,2019 Duncan Roe
  *
  * This routine carries out the definition of a macro. Most of the work
  * is done by MACDEFW - all we do here is expand to 1 character / short
@@ -17,11 +17,11 @@
 #include "alu.h"
 
 bool
-macdef(unsigned int mcnum, unsigned char *buff, int buflen, bool appnu)
+macdef(unsigned int mcnum, uint8_t *buff, int buflen, bool appnu)
 {
   int i;                           /* Scratch */
   unsigned short xbuf[Q_BUFSIZ];
-  unsigned char saved_end = buff[buflen];
+  uint8_t saved_end = buff[buflen];
   unsigned long ulong_result;      /* Guard against ULONG_MAX on error */
   long long_result;                /* Guard against ULONG_MAX on error */
 

@@ -1,7 +1,7 @@
 /* S E T C R S */
 /*
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012,2018 Duncan Roe
+ * Copyright (C) 2012,2018,2019 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -40,7 +40,7 @@ setcrs(int posn)
   int i, oldcrs, bsp, rtn, fwd, ca;
   int absnum;                      /* # chars for "absolute" pos'n */
   char absbuf[16];                 /* Ec seq for absnum pos'n */
-  unsigned char *p;
+  uint8_t *p;
 /*
  * Here we go!
  */

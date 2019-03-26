@@ -1,8 +1,8 @@
 /* N E W M A C 2
  *
- * Copyright (C) 2012,2014 Duncan Roe
+ * Copyright (C) 2012,2014,2019 Duncan Roe
  *
- * Generates a 16-bit-char macro from the string in buf
+ * Generates a 16-bit-char macro from the string in ubuf
  */
 #include <stdio.h>
 #include <errno.h>
@@ -137,11 +137,11 @@ get_alu_op(char *mybuf, unsigned short *result, char **endptr)
   if (!strncasecmp(mybuf, "PSHTAB ", 7) || !strncasecmp(mybuf, "POPTAB ", 7))
   {
     long tabidx;
-    unsigned char tuch;
+    uint8_t tuch;
 
     if (mybuf[8] == GT)
     {
-      tuch = (unsigned char)mybuf[7];
+      tuch = (uint8_t)mybuf[7];
       *endptr = mybuf + 8;
     }                              /* if (mybuf[8] == GT) */
     else if (!strncmp(mybuf + 7, "^?>", 3))
@@ -160,7 +160,7 @@ get_alu_op(char *mybuf, unsigned short *result, char **endptr)
         ? FIRST_ALU_OP + num_ops + tabidx
         : FIRST_ALU_OP + num_ops + NUM_TABS + tabidx;
       return true;
-    }           /* if (gettab((unsigned char)mybuf[7], false, &tabidx, true)) */
+    }                 /* if (gettab((uint8_t)mybuf[7], false, &tabidx, true)) */
     fprintf(stderr, "\r\n");
     GIVE_UP;
   }                           /* if (!strncasecmp(mybuf, "PSHTAB ", 7) || ... */
@@ -168,7 +168,7 @@ get_alu_op(char *mybuf, unsigned short *result, char **endptr)
 /* Get opcode to tbuf, in upper case, advancing caller's pointer */
   for (i = MAX_OPCODE_LEN, p = tbuf; i > 0; i--, p++, (*endptr)++)
   {
-    *p = toupper((unsigned char)**endptr);
+    *p = toupper((uint8_t)**endptr);
     if (!*p)
     {
       fprintf(stderr, "Macro specification ends mid-opcode\r\n");
@@ -198,7 +198,7 @@ newmac2(bool appnu)
   char *bfp;
 
   m = 0;                           /* Accumulates macro size */
-  for (bfp = buf; *bfp; bfp++)     /* Loop on chars stored */
+  for (bfp = ubuf; *bfp; bfp++)    /* Loop on chars stored */
   {
     if (*bfp != CARAT)
     {
@@ -246,12 +246,12 @@ newmac2(bool appnu)
         xpnsion[m++] = thisch;
         continue;
       }                            /* if (l == GT) */
-      if (bfp > buf && *(bfp - 1) == LT && get_alu_op(bfp, &thisch, &bfp))
+      if (bfp > ubuf && *(bfp - 1) == LT && get_alu_op(bfp, &thisch, &bfp))
       {
         xpnsion[m++] = CTL_N;
         xpnsion[m++] = thisch;
         continue;
-      }                            /* if (bfp > buf && *(bfp - 1) == LT ... */
+      }                            /* if (bfp > ubuf && *(bfp - 1) == LT ... */
       fprintf(stderr, "Bad octal character (%c) in macro definition", l);
       GIVE_UP;
     }                              /* if (thisch == LT) */
@@ -266,7 +266,7 @@ newmac2(bool appnu)
     }                              /* if (thisch == LT) ... else */
 
     xpnsion[m++] = thisch;
-  }                                /* for (bfp = buf; *bfp; bfp++) */
+  }                                /* for (bfp = ubuf; *bfp; bfp++) */
 /* Now try to store macro */
   if (!macdefw(verb, xpnsion, m, appnu))
     GIVE_UP;

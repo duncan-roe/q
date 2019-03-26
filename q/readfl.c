@@ -1,6 +1,6 @@
 /* R D F I L E
  * Copyright (C) 1993,1998 Duncan Roe & Associates P/L
- * Copyright (C) 2005,2012-2014,2017,2018 Duncan Roe
+ * Copyright (C) 2005,2012-2014,2017-2019 Duncan Roe
  *
  * This routine reads in a file, inserting it in the Workfile.
  *
@@ -12,7 +12,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <limits.h>
-#include <stdint.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include "prototypes.h"
@@ -28,16 +27,16 @@ int tabsiz = 8;                    /* How often tabstops are */
 
 static long dcount;                /* # deferred lines read */
 static unsigned long dfmode;       /* Mode at deferred map time */
-static unsigned char *defend;      /* Deferred file end */
-static unsigned char *defpos;      /* Deferred file current address */
-static unsigned char *dfaddr;      /* Deferred file start address */
+static uint8_t *defend;            /* Deferred file end */
+static uint8_t *defpos;            /* Deferred file current address */
+static uint8_t *dfaddr;            /* Deferred file start address */
 static long count;                 /* # of lines read */
-static unsigned char prwfbf[Q_BUFSIZ]; /* I/o buffer */
-static unsigned char *bufpos;      /* Where next char comes from */
-static unsigned char *prvpos;      /* Where last record started */
-static unsigned char *bufend;      /* Current file end addr */
+static uint8_t prwfbf[Q_BUFSIZ];   /* I/o buffer */
+static uint8_t *bufpos;            /* Where next char comes from */
+static uint8_t *prvpos;            /* Where last record started */
+static uint8_t *bufend;            /* Current file end addr */
 static int linpos;         /* Notional 0-based line pos'n (for tab expansion) */
-static unsigned char thisch, prevch;
+static uint8_t thisch, prevch;
 static unsigned long bytes;        /* Unprocessed file bytes in memory */
 static int pbchars;                /* local copy of xxprev->bchars for speed */
 static bool fileio;                /* Whether i/o from file */
@@ -111,7 +110,7 @@ getblk(void)                       /* eof=getblk() */
 static int
 prclin(void)                       /* Build up line; return 1 for eof */
 {
-  unsigned char *pbptr;            /* -> xxprev->bdata[bchars] for speed */
+  uint8_t *pbptr;                  /* -> xxprev->bdata[bchars] for speed */
   int inindent = 040000;           /* Inside indenting w/s, mask matches mode */
 /*  */
   for (pbchars = linpos = 0, pbptr = xxprev->bdata; pbchars < BUFMAX; linpos++)
@@ -281,7 +280,7 @@ readfl()
 /* ******************************* mapfil ****************************** */
 
 void
-mapfil(ino_t inode, off_t size, unsigned char *addr)
+mapfil(ino_t inode, off_t size, uint8_t *addr)
 {
   newmap(inode, size, addr);      /* Tell the Workfile system about this file */
 
@@ -322,7 +321,7 @@ mapfil(ino_t inode, off_t size, unsigned char *addr)
 /* ******************************* memrec ****************************** */
 
 void
-memrec(unsigned char *start, unsigned char *end, unsigned long mode, scrbuf5 *s)
+memrec(uint8_t *start, uint8_t *end, unsigned long mode, scrbuf5 *s)
 {
   lngwrn = false;                  /* This *is* memrec */
   fileio = false;                  /* File already mmap'd */
@@ -334,7 +333,7 @@ memrec(unsigned char *start, unsigned char *end, unsigned long mode, scrbuf5 *s)
   xxmode = mode;                   /* Use supplied mode */
   prclin();                        /* Read line, don't care if eof */
   s->bchars = pbchars;             /* Store how long line is */
-}                                  /* void memrec(unsigned char*start,... */
+}                                  /* void memrec(uint8_t*start,... */
 
 /* ******************************* dfread ****************************** */
 

@@ -1,7 +1,7 @@
 #ifndef TABS_H
 #define TABS_H
 /*
- * Copyright (C) 2014 Duncan Roe
+ * Copyright (C) 2014,2019 Duncan Roe
  *
  * This header file contains items relating to the tabs subsystem
  *
@@ -34,7 +34,7 @@ struct tabs
 
 /* Function prototypes */
 
-bool gettab(unsigned char tabid, bool filpos, long *i4, bool return_index);
+bool gettab(uint8_t tabid, bool filpos, long *i4, bool return_index);
 
 /* External variables */
 

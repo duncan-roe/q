@@ -3,7 +3,7 @@
 /* M A C R O S
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012- 2014, Duncan Roe
+ * Copyright (C) 2012-2014,2019 Duncan Roe
  *
  * Universal statements for segments accessing SCREENEDIT macros
  * */
@@ -52,7 +52,7 @@ int immnxfr;                       /* Next free slot for an immediate macro */
 /* Prototypes */
 
 bool newmac2(bool appnu);
-bool macdef(unsigned int mcnum, unsigned char *buff, int buflen, bool appnu);
+bool macdef(unsigned int mcnum, uint8_t *buff, int buflen, bool appnu);
 bool macdefw(unsigned int mcnum, unsigned short *buff, int buflen, bool appnu);
 void showmac(int i);
 #endif

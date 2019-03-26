@@ -48,7 +48,7 @@ showmac(int i)
         char *r = tbuf;
 
         while (*q)
-          *r++ = toupper((unsigned char)*q++);
+          *r++ = toupper((uint8_t)*q++);
         *r = 0;
         printf("^<%s>", tbuf);
         continue;

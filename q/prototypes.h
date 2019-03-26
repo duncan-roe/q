@@ -12,17 +12,16 @@
 
 /* Function Prototypes */
 
-void memrec(unsigned char *start, unsigned char *end, unsigned long mode,
-  scrbuf5 *a1);
-void mapfil(ino_t inode, off_t size, unsigned char *addr);
+void memrec(uint8_t *start, uint8_t *end, unsigned long mode, scrbuf5 *a1);
+void mapfil(ino_t inode, off_t size, uint8_t *addr);
 void dfread(long num, scrbuf5 *s);
 int ismapd(ino_t inode);
-void newmap(ino_t inode, off_t size, unsigned char *addr);
-bool trytab(unsigned char *zvuf, scrbuf5 *scline);
+void newmap(ino_t inode, off_t size, uint8_t *addr);
+bool trytab(uint8_t *zvuf, scrbuf5 *scline);
 void scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd);
-void insmem(unsigned char *linptr, unsigned char *last);
-void ordch(unsigned char chr, scrbuf5 *scbuf);
-void pdsply(scrbuf5 *buf, unsigned char *prm, int pch);
+void insmem(uint8_t *linptr, uint8_t *last);
+void ordch(uint8_t chr, scrbuf5 *scbuf);
+void pdsply(scrbuf5 *buf, uint8_t *prm, int pch);
 bool getlin(bool reperr, bool eofok);
 bool getnum(bool okzero);
 bool setmode(void);
@@ -31,10 +30,10 @@ int newmac(void);
 bool rdlin(scrbuf5 *a1, bool aux);
 bool ysno5a(char *mess, int key);
 bool kbd5(void);
-bool lsub5a(unsigned char *srchstr, int srchlen, unsigned char *string, \
+bool lsub5a(uint8_t *srchstr, int srchlen, uint8_t *string,
   int first, int len, int *strtpos, int *endpos);
-bool ltok5a(unsigned char *srchstr, int srchlen, unsigned char *string, \
-  int first, int len, int *strtpos, int *endpos, unsigned char *ndel);
+bool ltok5a(uint8_t *srchstr, int srchlen, uint8_t *string,
+  int first, int len, int *strtpos, int *endpos, uint8_t *ndel);
 int do_cmd(void);
 void duplx5(bool enable_IXON);
 void lstmac(void);
@@ -62,15 +61,15 @@ bool cl5get(char *buf, int bufcap, bool action_eof, bool read_macros);
 void readfl(void);
 void writfl(long wrtnum);
 void xlateset(void);
-void showchar(unsigned char c);
+void showchar(uint8_t c);
 void tildexpn(char *path, int pthsiz);
 void setwinsz(int msg);
 void newlin(void);
 void rerdcm(void);
 void xistcs(void);
-unsigned char *sindnt(void);
+uint8_t *sindnt(void);
 char c1in5(bool *eof_encountered);
-int cmd(char *buf);
+int cmd(char *buf, bool backtick);
 bool pop_stdin(void);
 void devnull_stdout(void);
 void visbel(void);

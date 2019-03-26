@@ -28,7 +28,7 @@
   if (!--unused) \
   {if (do_write() <0) goto errlbl; q = fbuf; unused = Q_BUFSIZ;}} while (0)
 
-static unsigned char fbuf[Q_BUFSIZ]; /* I/o buffer */
+static uint8_t fbuf[Q_BUFSIZ];     /* I/o buffer */
 static int unused;                 /* Bytes in f/s buffer */
 static int do_write(void);         /* File writing routine */
 
@@ -37,7 +37,7 @@ writfl(long wrtnum)
 {
   int bytes;
   long todo, count;
-  unsigned char *p, *q, thisch;
+  uint8_t *p, *q, thisch;
   short tabfnd, spacnt, chrpos;
   int inindent;                    /* Inside indenting whitespace */
 /*
@@ -165,7 +165,7 @@ do_write()
 {
   int nc;
   int todo = Q_BUFSIZ - unused;    /* Chars in buffer. Usually Q_BUFSIZ */
-  unsigned char *write_from = fbuf;
+  uint8_t *write_from = fbuf;
 
   while (todo)
   {

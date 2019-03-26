@@ -1,7 +1,7 @@
 /* N E W L I N */
 /*
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012, Duncan Roe
+ * Copyright (C) 2012,2019 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -20,7 +20,7 @@ void
 newlin()
 {
   int i;                           /* Scratch */
-  unsigned char *p;
+  uint8_t *p;
   puts("\r");                      /* CR/NL */
 /* */
   p = screen;

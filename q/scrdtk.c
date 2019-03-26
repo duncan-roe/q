@@ -1,7 +1,7 @@
 /*  S C R D T K
  * Retrieve tokens from screenedit buffers
  * Copyright (C) 1998, Duncan Roe & Associates P/L
- * Copyright (C) 2012,2014 Duncan Roe
+ * Copyright (C) 2012,2014,2019 Duncan Roe
  */
 #include <stdio.h>
 #include <errno.h>
@@ -9,7 +9,7 @@
 #include "prototypes.h"
 int scrdtk                         /* errno is int, so we are */
   (int key,                        /* What to do */
-  unsigned char *buf,              /* Receives token */
+  uint8_t *buf,                    /* Receives token */
   int bufcap,                      /* Capacity of buf */
   scrbuf5 *scline)                 /* Screenedit buffer */
 {
@@ -210,4 +210,4 @@ int scrdtk                         /* errno is int, so we are */
         errno = EINVAL;            /* Bad key */
     }                              /* switch (key) */
   return errno;                    /* Exit */
-}          /* int scrdtk(int key,unsigned char*buf,int bufcap,scrbuf5*scline) */
+}                /* int scrdtk(int key,uint8_t*buf,int bufcap,scrbuf5*scline) */

@@ -20,7 +20,7 @@
 bool
 cl5get(char *buf, int bufcap, bool action_eof, bool read_macros)
 {
-  unsigned char thisch;            /* Character read */
+  uint8_t thisch;                  /* Character read */
   int nchars = 0;                  /* Total chars read */
 /*
  * Loop inputting characters

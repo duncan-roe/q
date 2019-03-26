@@ -1,5 +1,5 @@
 New read-only ALU Y register for return values from Q
-2 active pseudos to run a shell command and receive stdout/stderr (backtick)
+STARTED: 2 active pseudos to run a shell command and receive stdout/stderr (backtick)
  e.g. if n4014 & n4015
  n4014 {shell command} or n4015 {shell command}
  ^ND^N^<4014> returns stdout (minus final Nl)
@@ -24,14 +24,15 @@ Properly reinstate output optimisation (old hack removed as "quick fix")
  get per-char delay from stty baud rate
  reinstate setting per-char delay (useful for testing)
 INTERNALS
-	STARTED Have a bool enum for logicals
+	STARTED: Have a bool enum for logicals
 	STARTED: Fix runindent label squashes
 	STARTED: More GIVE_UP macros - use error_exit as standard label
 	STARTED: rework asg2 blocks (including xistcs.c)
 	STARTED: Use meaningful names instead of logtemp &c.
 	STARTED Tidy scmnrd.c in particular
 	STARTED: Be more careful what goes to stderr / stdin
-	use stdint types
+	STARTED: use stdint types
+	DONE: buf is always a local; utility buffer is ubuf
 Show what arguments Q started with (?)
 STARTED: Catalogue of useful macros
 New pseudomacro to replace "/*" with arbitrary seq: #, // &c (i.e. for ^O)

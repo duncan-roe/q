@@ -23,7 +23,7 @@ char
 c1in5(bool *eof_encountered)
 {
   int s;
-  unsigned char c;
+  uint8_t c;
 
   if (eof_encountered != NULL)
     *eof_encountered = false;
@@ -55,9 +55,9 @@ c1in5(bool *eof_encountered)
       SYSCALL(s, read(STDIN5FD, buf5, 1));
       if (s == -1)                 /* Some kind of error */
       {
-          fprintf(stderr, "%s. fd %d (read)\r\n", strerror(errno), STDIN5FD);
+        fprintf(stderr, "%s. fd %d (read)\r\n", strerror(errno), STDIN5FD);
 /* Get out (atexit() will reset terminal) */
-          exit(1);
+        exit(1);
       }                            /* if (s == -1) */
       if (!s)                      /* EOF from a file (we hope!) */
       {

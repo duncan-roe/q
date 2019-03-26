@@ -1,7 +1,7 @@
 /* S C M N R D
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2012-2014,2016-2018 Duncan Roe
+ * Copyright (C) 2012-2014,2016-2019 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -142,14 +142,14 @@ scmnrd()
     scrdtk(5, 0, 0, oldcom);       /* Init command buffer */
 
 /* Read unmassaged verb */
-    scrdtk(1, (unsigned char *)buf, BUFMAX, oldcom);
+    scrdtk(1, (uint8_t *)ubuf, BUFMAX, oldcom);
     if (oldcom->toktyp != nortok)  /* We have to display */
     {
       if (curmac < 0 || !BRIEF)
       {
 /* If we got an "empty" line from a U-USE file, it has already been shown. */
 /* "empty" includes slash-star comment lines */
-        if(!(USING_FILE && oldcom->toktyp == eoltok))
+        if (!(USING_FILE && oldcom->toktyp == eoltok))
           disply(oldcom, false);
       }
       if (oldcom->toktyp == eoltok) /* Empty line */
@@ -173,7 +173,7 @@ scmnrd()
       rerdcm();
       return;
     }
-    verb = buf[0];
+    verb = ubuf[0];
     if (verb == '#')
       verb = ASTRSK;
     if (verb == ASTRSK)
@@ -232,7 +232,7 @@ scmnrd()
     {
       for (n = 1; n < oldcom->toklen; n++) /* Don't examine 1st char */
       {
-        l = buf[n];
+        l = ubuf[n];
         if (l < 'A')
           goto p1111;              /* J found non-alpha */
         if (l > 'Z')
@@ -256,7 +256,7 @@ scmnrd()
 /* Defer displaying the command owing to a possible Q massage... */
   p1003:
     (void)scrdtk(5, 0, 0, oldcom); /* Reset command buffer */
-    scrdtk(1, (unsigned char *)buf, BUFMAX, oldcom);
+    scrdtk(1, (uint8_t *)ubuf, BUFMAX, oldcom);
     if (oldcom->toklen > 12 && verb != ASTRSK) /* Verb too long */
     {
       if (want_disply)
@@ -265,7 +265,7 @@ scmnrd()
       rerdcm();
       return;
     }
-    i = (buf[0] & 037) - 1;        /* Get 1st char as a subscript */
+    i = (ubuf[0] & 037) - 1;       /* Get 1st char as a subscript */
     if (verb == ASTRSK)            /* Was just an * comment */
     {
       if (want_disply)
@@ -301,20 +301,16 @@ scmnrd()
     }
     fanout = true;
 
-/* Don't rely on memcpy() to do overlapping move */
-    for (i = 1; i < oldcom->toklen; i++)
-      buf[i - 1] = buf[i];
-
-    oldcom->toklen--;              /* Now have removed F & shortened */
-    buf[oldcom->toklen] = '\0';
+    memmove(ubuf, ubuf + 1, --oldcom->toklen); /* Overlapping move */
+    ubuf[oldcom->toklen] = '\0';
     i = 5;                         /* In case not alpha VERB */
-    verb = buf[0];                 /* Get app'n standard verb */
+    verb = ubuf[0];                /* Get app'n standard verb */
     if (verb < 'A' || verb > 'Z')
       goto p1205;                  /* J out of range */
     verb = verb + 040;             /* Make lower case */
     i = (verb & 037) + 25;         /* Get array subscript */
   }
-  if (strncmp(buf, cmtabl[i], oldcom->toklen)) /* Not a abbr'n */
+  if (strncmp(ubuf, cmtabl[i], oldcom->toklen)) /* Not a abbr'n */
   {
   p1205:
     if (want_disply)
@@ -342,9 +338,9 @@ scmnrd()
   if (verb == 'Q')
   {
 /* See if cmd has args */
-    (void)scrdtk(1, (unsigned char *)buf, BUFMAX, oldcom);
+    (void)scrdtk(1, (uint8_t *)ubuf, BUFMAX, oldcom);
 /* No quotes */
-    if (oldcom->toktyp == nortok && optind < argc && buf[0] == '$' &&
+    if (oldcom->toktyp == nortok && optind < argc && ubuf[0] == '$' &&
       oldcom->toklen > 1 && oldcom->bdata[oldcom->tokbeg] == '$')
     {
 /* First check for no more args */
@@ -355,7 +351,7 @@ scmnrd()
         oldcom->bcurs = i;
         oldcom->bdata[k] = SPACE;  /* Remove leading '$' */
 /* Read arg no */
-        (void)scrdtk(1, (unsigned char *)buf, BUFMAX, oldcom);
+        (void)scrdtk(1, (uint8_t *)ubuf, BUFMAX, oldcom);
         oldcom->bdata[k] = '$';    /* Reinstate leading '$' */
         oldcom->tokbeg = k;
         if (oldcom->decok)         /* Ok decimal */

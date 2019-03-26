@@ -1,7 +1,7 @@
 /* X L A T E S E T
  *
  * Copyright (C) 1994 Duncan Roe & Associates P/L
- * Copyright (C) 2012,2014 Duncan Roe
+ * Copyright (C) 2012,2014,2019 Duncan Roe
  *
  * This routine sets up Q's translation table for case (in)dependent L,
  * Y, FL, & FY commands.
@@ -10,7 +10,7 @@
 #include "prototypes.h"
 #include "fmode.h"
 /* */
-unsigned char xlatable[256];
+uint8_t xlatable[256];
 int tbstat;
 void
 xlateset()

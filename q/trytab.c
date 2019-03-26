@@ -1,7 +1,7 @@
 /* T R Y T A B
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012,2014,2018 Duncan Roe
+ * Copyright (C) 2012,2014,2018,2019 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -25,7 +25,7 @@
 #define GIVE_UP goto errlbl
 
 bool
-trytab(unsigned char *zbuf, scrbuf5 *scline)
+trytab(uint8_t *zbuf, scrbuf5 *scline)
 {
   long savlst;                     /* Former value of LSTLIN */
 

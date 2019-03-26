@@ -1,6 +1,6 @@
 /* W O R K F I L E
  *
- * Copyright (C) 2012,2014,2018 Duncan Roe
+ * Copyright (C) 2012,2014,2018,2019 Duncan Roe
  *
  * Dual-mode Workfile System
  * ========= ======== ======
@@ -76,7 +76,7 @@
 typedef struct databk
 {
   struct databk *next;
-  unsigned char data1[BLKCAP];     /* Actually a BPTR when free */
+  uint8_t data1[BLKCAP];           /* Actually a BPTR when free */
 } databk;
 typedef struct indxbk
 {
@@ -96,8 +96,8 @@ typedef struct suppbk
 {
   ofstbk *next;
   ofstbk *prev;
-  unsigned char *filptr;
-  unsigned char *endptr;
+  uint8_t *filptr;
+  uint8_t *endptr;
   unsigned long mode;
   short dlrecs;
 } suppbk;
@@ -111,7 +111,7 @@ typedef struct mapbk
 {
   struct mapbk *next;
   struct mapbk *prev;
-  unsigned char *start;
+  uint8_t *start;
   unsigned long length;
   unsigned long inode;
 } mapbk;
@@ -235,7 +235,7 @@ static void *
 getmem(chainbase *cb, size_t sz, char *desc)
 {
   size_t roomleft;                 /* Amount of "page" left */
-  unsigned char *pg;               /* Addresses "page"-size blocks */
+  uint8_t *pg;                     /* Addresses "page"-size blocks */
 /*  */
   if (cb->next != cb)              /* There are free blocks */
     return qunchn(cb->prev);       /* Use last block */
@@ -270,7 +270,7 @@ getmem(chainbase *cb, size_t sz, char *desc)
  * them as much as possible */
 
 static indxbk *
-get2(unsigned char *linptr)
+get2(uint8_t *linptr)
 {
   indxbk *ix;                      /* Scratch */
   suppbk *sp;                      /* Scratch */
@@ -292,7 +292,7 @@ get2(unsigned char *linptr)
   sp->mode = fmode;                /* Only want low-order bits */
   sp->dlrecs = 0;                  /* No deleted lines */
   return ix;
-}                                 /* static ofstbk*get2(unsigned char*linptr) */
+}                                  /* static ofstbk*get2(uint8_t*linptr) */
 
 /* ******************************* gtofst ****************************** */
 
@@ -614,7 +614,7 @@ void
 inslin(scrbuf5 *a1)
 {
   int i;                           /* Scratch */
-  unsigned char *p;                /* Scratch */
+  uint8_t *p;                      /* Scratch */
   indxbk *ix;                      /* Addr new block */
   databk *dt;                      /* Addr data blocks */
 
@@ -696,7 +696,7 @@ inslin(scrbuf5 *a1)
 bool
 rdlin(scrbuf5 *a1, bool aux)
 {
-  unsigned char *p;                /* Scratch */
+  uint8_t *p;                      /* Scratch */
   int i;                           /* Scratch */
   databk *dt;                      /* Scratch */
   suppbk *sp;                      /* Scratch */
@@ -990,7 +990,7 @@ finitl()
 /* ******************************* newmap ****************************** */
 
 void
-newmap(ino_t inode, off_t size, unsigned char *addr)
+newmap(ino_t inode, off_t size, uint8_t *addr)
 {
   mapbk *mp;                       /* Scratch */
 
@@ -1004,10 +1004,10 @@ newmap(ino_t inode, off_t size, unsigned char *addr)
   mp->length = size;
   qchain(mp, &bmap);
 
-  clrfgt();    /* Empty forgotten chain here once (rather than in insmem()) */
-  mods = true;                   /* File being modified */
+  clrfgt();      /* Empty forgotten chain here once (rather than in insmem()) */
+  mods = true;                     /* File being modified */
   return;
-}                   /* void newmap(ino_t inode,off_t size,unsigned char*addr) */
+}                         /* void newmap(ino_t inode,off_t size,uint8_t*addr) */
 
 /* ******************************* insmem ****************************** */
 
@@ -1020,7 +1020,7 @@ newmap(ino_t inode, off_t size, unsigned char *addr)
  *   question of having to update the "other" pointer above it */
 
 void
-insmem(unsigned char *linptr, unsigned char *last)
+insmem(uint8_t *linptr, uint8_t *last)
 {
   indxbk *ix;                      /* Scratch */
   suppbk *sp;                      /* Scratch */

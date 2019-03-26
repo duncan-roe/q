@@ -1,7 +1,7 @@
 /* G E T N U M */
 /*
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012,2014,2018 Duncan Roe
+ * Copyright (C) 2012,2014,2018,2019 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -25,7 +25,7 @@
 bool
 getnum(bool okzero)
 {
-  unsigned char zbuf[14];
+  uint8_t zbuf[14];
 /* */
   if (scrdtk(2, zbuf, 13, oldcom)) /* Read poss # of lines */
   {

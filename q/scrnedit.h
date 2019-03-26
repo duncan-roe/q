@@ -13,11 +13,11 @@
 #define PRSIZ 16
 #define PRMAX 15
 #define WCHRS (col5 - 1)
-unsigned char screen[SCRMAX],reqd[SCRMAX],prompt[PRSIZ],crsbuf[SCRMAX];
-unsigned char rtchrs,backsp,cachrs[PRSIZ];
-int cursr,scurs,pchars,icurs,crscnt,rtcnt;
-int cacnt,tabcnt,cdone,partno,mxchrs;
-bool insert,rfrsh,endlin;
+uint8_t screen[SCRMAX], reqd[SCRMAX], prompt[PRSIZ], crsbuf[SCRMAX];
+uint8_t rtchrs, backsp, cachrs[PRSIZ];
+int cursr, scurs, pchars, icurs, crscnt, rtcnt;
+int cacnt, tabcnt, cdone, partno, mxchrs;
+bool insert, rfrsh, endlin;
 bool bspace;
 double delay;
 /*
@@ -49,4 +49,4 @@ double delay;
  * mxchrs - Max # chars ever in line (for ^R)
  * backsp - Value of 2 backspaces. Variable for terminals that use ^Y
  */
- #endif
+#endif

@@ -1,7 +1,7 @@
 /* L T O K 5 A
  *
  * Copyright (C) 1993 Duncan Roe & Associates P/L
- * Copyright (C) 2012,2014,2018 Duncan Roe
+ * Copyright (C) 2012,2014,2018,2019 Duncan Roe
  *
  * This routine searches for a string as a token. The search is case
  * independent iff CASDEP is 1.
@@ -24,14 +24,14 @@
 #include "prototypes.h"
 #include "fmode.h"
 /* */
-unsigned char xlatable[256];
+uint8_t xlatable[256];
 int tbstat;
 /* */
 bool
-ltok5a(unsigned char *srchstr, int srchlen, unsigned char *string,
-  int first, int len, int *strtpos, int *endpos, unsigned char *ndel)
+ltok5a(uint8_t *srchstr, int srchlen, uint8_t *string,
+  int first, int len, int *strtpos, int *endpos, uint8_t *ndel)
 {
-  unsigned char cfirst,            /* 1st char to look for, u/c if casind */
+  uint8_t cfirst,                  /* 1st char to look for, u/c if casind */
    *p, *q, *r,                     /* Scratch */
     d;                             /* Putative token delimiter */
   int i, k,                        /* Scratch */

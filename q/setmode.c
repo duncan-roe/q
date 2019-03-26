@@ -1,7 +1,7 @@
 /* S E T M O D E
  *
  * Copyright (C) 1994,1995 Duncan Roe & Associates P/L
- * Copyright (C) 2003,2012,2014,2017,2018 Duncan Roe
+ * Copyright (C) 2003,2012,2014,2017-2019 Duncan Roe
  *
  * This routine manipulates the fmode bit settings
  */
@@ -24,14 +24,14 @@ setmode()
   for (;;)
   {
 /* Read mnemonic or octal */
-    if (scrdtk(1, (unsigned char *)buf, 12, oldcom))
+    if (scrdtk(1, (uint8_t *)ubuf, 12, oldcom))
     {
       perror("setmode - scrdtk");
       putchar('\r');
     bad_arg:
-      printf("Bad argument: %s", buf);
+      printf("Bad argument: %s", ubuf);
       return false;
-    }                         /* if(scrdtk(1,(unsigned char *)buf,12,oldcom)) */
+    }                              /* if(scrdtk(1,(uint8_t *)ubuf,12,oldcom)) */
     switch (oldcom->toktyp)
     {
       case nultok:
@@ -52,7 +52,7 @@ setmode()
         else                       /* Eol, line not empty */
         {
           fmode = result;          /* End of command */
-          return true;                /* Finished command */
+          return true;             /* Finished command */
         }                          /* if(first) else */
       case nortok:
         break;                     /* normal tokens dealt with below */
@@ -183,13 +183,13 @@ setmode()
         continue;
       }                            /* if(oldcom->toklen==1) */
       octok = 0;                   /* No more octal args allowed */
-      switch (buf[1])
+      switch (ubuf[1])
       {
         case 'D':                  /* DOS */
           if (oldcom->toklen == 2)
             u = 3;                 /* Read & write */
           else
-            switch (buf[2])
+            switch (ubuf[2])
             {
               case 'R':
                 u = 1;
@@ -199,7 +199,7 @@ setmode()
                 break;
               default:
                 goto bad_arg;
-            }                      /* else switch(buf[2]) */
+            }                      /* else switch(ubuf[2]) */
           break;
 
 /* fm +t forces fm -l */
@@ -212,7 +212,7 @@ setmode()
           if (oldcom->toklen == 2)
             u = 014;               /* Read & write */
           else
-            switch (buf[2])
+            switch (ubuf[2])
             {
               case 'R':
                 u = 04;
@@ -222,7 +222,7 @@ setmode()
                 break;
               default:
                 goto bad_arg;
-            }                      /* else switch(buf[2]) */
+            }                      /* else switch(ubuf[2]) */
           break;
         case 'S':                  /* Leave trailing Spaces */
           u = 020;
@@ -282,9 +282,9 @@ setmode()
           break;
 
         default:
-          printf("Warning - unrecognised %s ignored\r\n", buf);
+          printf("Warning - unrecognised %s ignored\r\n", ubuf);
           continue;
-      }                            /* switch(buf[1]) */
+      }                            /* switch(ubuf[1]) */
       if (oldcom->minusf)
         result &= ~u;
       else

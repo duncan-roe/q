@@ -31,7 +31,7 @@
 bool
 getlin(bool reperr, bool eofok)
 {
-  unsigned char zbuf[14];
+  uint8_t zbuf[14];
   long wanted;                     /* Lines wanted from dfread */
 /* */
   lstlin = -1;                     /* In case unsuccessful */

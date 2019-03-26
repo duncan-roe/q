@@ -17,7 +17,7 @@
 #include "scrnedit.h"
 
 void
-ordch(unsigned char chr, scrbuf5 *scbuf)
+ordch(uint8_t chr, scrbuf5 *scbuf)
 {
 /*
  * Parameters
@@ -27,7 +27,7 @@ ordch(unsigned char chr, scrbuf5 *scbuf)
  * scbuf  - pointer to the scrnedit buffer
  */
   int i, k;                        /* Scratch */
-  unsigned char *p, *q;
+  uint8_t *p, *q;
   bool done = false;
 /*
  * Apart from SCRDIT on encountering a tab (^I),

@@ -1,6 +1,6 @@
 include ../config.mak
 SRCS = $(wildcard *.c)
-LIBS = -lm
+LIBS = -lm -pthread
 OBJ = $(SRCS:.c=.o)
 CPPFLAGS = $(shell getconf LFS_CFLAGS 2>/dev/null)\
 -DHELP_CMD=\"$(HELP_CMD)\"\

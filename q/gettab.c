@@ -1,7 +1,7 @@
 /* G E T T A B
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012,2014 Duncan Roe
+ * Copyright (C) 2012,2014,2019 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -20,14 +20,14 @@
 #define GIVE_UP goto errlbl
 
 bool
-gettab(unsigned char tabid, bool filpos, long *i4, bool return_index)
+gettab(uint8_t tabid, bool filpos, long *i4, bool return_index)
 {
   int i;                           /* Scratch */
 
   if (tabid == '-')                /* Special case for tab 80 */
     i = 79;
   else
-    i = tabid - '1';                 /* Get a (zero based) subscript */
+    i = tabid - '1';               /* Get a (zero based) subscript */
   if (i < 0 || i >= NUM_TABS)
   {
     fprintf(stderr, "Illegal tab id");

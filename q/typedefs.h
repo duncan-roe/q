@@ -1,6 +1,9 @@
 #ifndef TYPEDEFS_H
 #define TYPEDEFS_H
 
+/* Headers required by this header */
+#include <stdint.h>
+
 /* Macros */
 #define Q_BUFSIZ 65536
 #define BUFMAX Q_BUFSIZ-1
@@ -50,11 +53,11 @@ typedef struct scrbuf5             /* Screenedit buffer */
   bool plusf;                      /* Token started with unquoted leading '+' */
   bool minusf;                     /* Token started with unquoted leading '-' */
   bool nulcma;                     /* If scrdtk sees a COMMA then null token */
-  unsigned char bdata[Q_BUFSIZ];   /* Data for the line */
+  uint8_t bdata[Q_BUFSIZ];         /* Data for the line */
 }
 scrbuf5;
 
 /* Prototype */
 
-int scrdtk(int key, unsigned char *buf, int bufcap, scrbuf5 *scline);
+int scrdtk(int key, uint8_t * buf, int bufcap, scrbuf5 *scline);
 #endif

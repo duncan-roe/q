@@ -1,7 +1,7 @@
 /* R E R D C M
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012-2014 Duncan Roe
+ * Copyright (C) 2012-2014,2019 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -31,7 +31,7 @@ rerdcm()
   bool use_sccmd = false;
 
   int i;                           /* Scratch */
-  unsigned char *p, *q;
+  uint8_t *p, *q;
 
   if (curmac < 0)
     locerr = false;                /* LOCERR irrelevant if ! in scmac */
@@ -55,7 +55,7 @@ rerdcm()
 /* Abandon any macro if undetectable error */
   if (curmac >= 0)
   {
-    notmac(true);                     /* As in SCRDIT */
+    notmac(true);                  /* As in SCRDIT */
     use_sccmd = noRereadIfMacro;
   }                                /* if(curmac>=0) */
 

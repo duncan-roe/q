@@ -1,7 +1,7 @@
 /* N E W M A C
  *
  * Copyright (C) 1981,1999,2011, D. C. Roe
- * Copyright (C) 2012,2014 Duncan Roe
+ * Copyright (C) 2012,2014,2019 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -18,10 +18,12 @@
 #include <malloc.h>
 #include <stdlib.h>
 #include "prototypes.h"
+#include "backtick.h"
 #include "edmast.h"
 #include "macros.h"
 #include "fmode.h"
 #include "tabs.h"
+#include "c1in.h"
 #include "alu.h"
 
 /* Macros */
@@ -33,14 +35,14 @@ double FPU_memory[01000] = { 0 };
 
 /* Static Variables */
 
-static unsigned char alubuf[64];
+static uint8_t alubuf[64];
 static scrbuf5 aluscrbuf;
 
 int
 newmac()
 {
   int mcchrs;                      /* Chars in macro def'n */
-  unsigned char p[14];
+  uint8_t p[14];
 /*
  * Q calls us when it sees the NEWMACRO command. We read the next
  * token off the command line - if it is "-" then return a -ve value
@@ -119,7 +121,7 @@ newmac()
   {
 
 /* Old-style macro def'n - macro text is quoted */
-    if (scrdtk(2, (unsigned char *)buf, BUFMAX, oldcom))
+    if (scrdtk(2, (uint8_t *)ubuf, BUFMAX, oldcom))
     {
       fprintf(stderr, "%s. reading macro text (scrdtk)", strerror(errno));
       GIVE_UP;
@@ -140,12 +142,12 @@ newmac()
     if (
       (!verb || verb > TOPMAC || (verb >= FIRST_PSEUDO && verb <= LAST_PSEUDO))
       && (verb & 07000) != 07000 && verb != 04007 && (verb & 013000) != 013000
-      && verb != 04010 && verb != 04013)
+      && verb != 04010 && !(verb >= 04013 && verb <= 04015))
     {
       fprintf(stderr, "Macro %o is reserved or out of range", (int)verb);
       GIVE_UP;
     }
-    if (scrdtk(4, (unsigned char *)buf, BUFMAX, oldcom))
+    if (scrdtk(4, (uint8_t *)ubuf, BUFMAX, oldcom))
     {
       fprintf(stderr, "%s. reading macro text (scrdtk)", strerror(errno));
       GIVE_UP;
@@ -168,13 +170,13 @@ newmac()
     int idx = verb & 0777;
     long oldval = ALU_memory[idx];
     double oldfpval = FPU_memory[idx];
-    char *strbuf = buf;
+    char *strbuf = ubuf;
     unsigned long ulong_result;    /* Guard against ULONG_MAX on error */
     long long_result;              /* Guard against LONG_MAX on error */
 
 /* Parse out token from supplied buffer to allow slash star comments */
     scrdtk(5, 0, 0, &aluscrbuf);
-    aluscrbuf.bchars = snprintf((char *)aluscrbuf.bdata, BUFMAX, "%s", buf);
+    aluscrbuf.bchars = snprintf((char *)aluscrbuf.bdata, BUFMAX, "%s", ubuf);
     if (aluscrbuf.bchars > 0)
     {
       scrdtk(1, alubuf, sizeof alubuf - 1, &aluscrbuf);
@@ -207,7 +209,7 @@ newmac()
             ulong_result = strtoul(strbuf, &endptr, 0);
             if (errno)
             {
-              fprintf(stderr, "%s. %s (strtoul)", strerror(errno), buf);
+              fprintf(stderr, "%s. %s (strtoul)", strerror(errno), ubuf);
               GIVE_UP;
             }                      /* if (errno) */
             else
@@ -217,12 +219,12 @@ newmac()
       }                            /* if (!errno) else */
       if (errno)
       {
-        fprintf(stderr, "%s. %s (strtol)", strerror(errno), buf);
+        fprintf(stderr, "%s. %s (strtol)", strerror(errno), ubuf);
         GIVE_UP;
       }                            /* if (errno) */
       if (!*endptr || (oldcom->toklen == 2 &&
-        toupper((unsigned char)buf[0]) == 'T' &&
-        gettab(buf[1], false, &ALU_memory[idx], false)))
+        toupper((uint8_t)ubuf[0]) == 'T' &&
+        gettab(ubuf[1], false, &ALU_memory[idx], false)))
       {
         if (oldval && !BRIEF && WARN_NONZERO_MEMORY)
         {
@@ -232,10 +234,9 @@ newmac()
         }                     /* if (oldval && !BRIEF && WARN_NONZERO_MEMORY) */
         return 1;                  /* All chars parsed */
       }
-      if (*endptr && !(oldcom->toklen == 2 &&
-        toupper((unsigned char)buf[0]) == 'T'))
+      if (*endptr && !(oldcom->toklen == 2 && toupper((uint8_t)ubuf[0]) == 'T'))
         fprintf(stderr, "Illegal character '%c' in number \"%s\"", *endptr,
-          buf);
+          ubuf);
       else
         fprintf(stderr, "Invalid number format");
       GIVE_UP;
@@ -245,7 +246,7 @@ newmac()
       FPU_memory[idx] = strtod(strbuf, &endptr);
       if (errno)
       {
-        fprintf(stderr, "%s. %s (strtod)", strerror(errno), buf);
+        fprintf(stderr, "%s. %s (strtod)", strerror(errno), ubuf);
         GIVE_UP;
       }                            /* if (errno) */
       if (!*endptr)
@@ -258,7 +259,7 @@ newmac()
         }
         return 1;                  /* OK */
       }                            /* if (!*endptr) */
-      fprintf(stderr, "Illegal character '%c' in number \"%s\"", *endptr, buf);
+      fprintf(stderr, "Illegal character '%c' in number \"%s\"", *endptr, ubuf);
       GIVE_UP;
     }                              /* if (verb < 010000) else */
   }                                /* if (verb & 07000 == 07000) */
@@ -271,7 +272,7 @@ newmac()
       fprintf(stderr, "%s", "Format string too long");
       GIVE_UP;
     }                              /* if (mcchrs > sizeof FPformat -1) */
-    strncpy(FPformat, buf, mcchrs);
+    strncpy(FPformat, ubuf, mcchrs);
     FPformat[mcchrs] = 0;
     return 1;
   }                                /* if (verb == 04007) */
@@ -283,7 +284,7 @@ newmac()
       fprintf(stderr, "%s", "Format string too long");
       GIVE_UP;
     }                              /* if (mcchrs > sizeof DTformat -1) */
-    strncpy(DTformat, buf, mcchrs);
+    strncpy(DTformat, ubuf, mcchrs);
     DTformat[mcchrs] = 0;
     return 1;
   }                                /* if (verb == 04010) */
@@ -295,10 +296,21 @@ newmac()
       fprintf(stderr, "%s", "Format string too long");
       GIVE_UP;
     }                              /* if (mcchrs > sizeof Iformat -1) */
-    strncpy(Iformat, buf, mcchrs);
+    strncpy(Iformat, ubuf, mcchrs);
     Iformat[mcchrs] = 0;
     return 1;
   }                                /* if (verb == 04013) */
+/* Command output substitution? */
+  if (verb == 04014 || verb == 04015)
+  {
+    scrdtk(4, (uint8_t *)ubuf, BUFMAX, oldcom); /* Get shell command */
+    final5();
+    qreg = cmd(ubuf, true);
+    init5();
+    if (qreg && verb == 04014)
+      GIVE_UP;
+    return 1;
+  }                                /* if (verb == 04014 || verb == 04015) */
 
 /* Advise user if an existing macro being overwritten */
   if (scmacs[verb] && (curmac < 0 || !BRIEF))

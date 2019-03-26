@@ -1,7 +1,7 @@
 /* X I S T C S
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012,2017 Duncan Roe
+ * Copyright (C) 2012,2017,2019 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -36,7 +36,7 @@ void
 xistcs()
 {
   scrbuf5 cmdbuf;
-  unsigned char buf[5], *p = NULL;
+  uint8_t buf[5], *p = NULL;
   int rtn;                         /* Return from subroutines */
   int result = 0;                  /* Returned value */
   int octnum = 0;                  /* Returned value */
