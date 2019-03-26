@@ -52,7 +52,7 @@ int immnxfr;                       /* Next free slot for an immediate macro */
 /* Prototypes */
 
 bool newmac2(bool appnu);
-bool macdef(unsigned int mcnum, uint8_t *buff, int buflen, bool appnu);
-bool macdefw(unsigned int mcnum, uint16_t *buff, int buflen, bool appnu);
+bool macdef(uint32_t mcnum, uint8_t *buff, int buflen, bool appnu);
+bool macdefw(uint32_t mcnum, uint16_t *buff, int buflen, bool appnu);
 void showmac(int i);
 #endif

@@ -17,7 +17,7 @@
 #include "alu.h"
 
 bool
-macdef(unsigned int mcnum, uint8_t *buff, int buflen, bool appnu)
+macdef(uint32_t mcnum, uint8_t *buff, int buflen, bool appnu)
 {
   int i;                           /* Scratch */
   uint16_t xbuf[Q_BUFSIZ];

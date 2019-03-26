@@ -16,7 +16,7 @@
 #include "macros.h"
 /* */
 bool
-macdefw(unsigned int mcnum, uint16_t *buff, int buflen, bool appnu)
+macdefw(uint32_t mcnum, uint16_t *buff, int buflen, bool appnu)
 {
   int i, k;                        /* Scratch */
 /*

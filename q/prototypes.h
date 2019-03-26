@@ -76,7 +76,7 @@ void visbel(void);
 
 /* Global variables */
 
-unsigned int verb;           /*Command Processing - COMANL, ONEOF, NEWMAC &c. */
+uint32_t verb;               /*Command Processing - COMANL, ONEOF, NEWMAC &c. */
 int ndntch;                        /* # of chars to indent */
 bool vt100;                        /* Enable VT100-style curpos */
 bool deferd;                       /* Deferred indexing of mmap'd input file */
@@ -89,7 +89,7 @@ bool mods;                         /* Mods done since last SAVE */
 bool binary;                       /* Q invoked -b */
 int funit;                         /* File i/o ptr */
 char pcnta[256];                   /* Pathname we are editing */
-unsigned int row5, col5;           /* Screen / window geometry */
+uint32_t row5, col5;               /* Screen / window geometry */
 bool cntrlc, seenwinch;
 char *macro_dir;                   /* Where macros are */
 int orig_stdout;                   /* stdout funit at start */
