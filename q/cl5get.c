@@ -29,11 +29,11 @@ cl5get(char *buf, int bufcap, bool action_eof, bool read_macros)
   {
     if (read_macros && curmac >= 0)
     {
-      if (mcposn >= scmacs[curmac]->mcsize)
+      if (mcposn >= scmacs[curmac]->maclen)
       {
         notmac(false);
         continue;
-      }                            /* if (mcposn >= scmacs[curmac]->mcsize) */
+      }                            /* if (mcposn >= scmacs[curmac]->maclen) */
       thisch = scmacs[curmac]->data[mcposn];
       mcposn++;
     }                              /* if (read_macros && curmac >= 0) */

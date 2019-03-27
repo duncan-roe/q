@@ -46,7 +46,7 @@
 #define NORMALCHAR goto normalchar
 #define RANOFF_END goto ranoff_end
 #define CHECK_HAS_MACCH(x) \
-  do { if (curmac > 0 && mcposn > scmacs[curmac]->mcsize - x) RANOFF_END; } \
+  do { if (curmac > 0 && mcposn > scmacs[curmac]->maclen - x) RANOFF_END; } \
   while(0)
 #define GET_FOLLOWING_CHAR goto get_following_char
 #define TEST_TAB goto test_tab
@@ -390,11 +390,11 @@ getnextchr:
   if (curmac >= 0)
   {
 /* Clear expanding if that was last char from macro */
-    if (mcposn >= scmacs[curmac]->mcsize)
+    if (mcposn >= scmacs[curmac]->maclen)
     {
       notmac(false);
       GETNEXTCHR;
-    }                              /* if (mcposn >= scmacs[curmac]->mcsize) */
+    }                              /* if (mcposn >= scmacs[curmac]->maclen) */
     thisch = scmacs[curmac]->data[mcposn++];
   }                                /* if (curmac >= 0) */
   else
@@ -1125,12 +1125,12 @@ p1905:
         {
           alu_skip = false;
           mcposn = mcposn + 2;     /* Skip 2 */
-          if (mcposn > scmacs[curmac]->mcsize)
+          if (mcposn > scmacs[curmac]->maclen)
           {
             print_failed_opcode(thisch);
             err = "ALU skip off macro end";
             ERR_IF_MAC;
-          }                        /* if (mcposn > scmacs[curmac]->mcsize) */
+          }                        /* if (mcposn > scmacs[curmac]->maclen) */
         }                          /* if (alu_skip) */
         GETNEXTCHR;
       }                            /* if (exec_alu_opcode(thisch)) */
@@ -1224,7 +1224,7 @@ p1503:
 
     case 9:             /* ^NI - Increment link (to make macro a conditional) */
 /* Error if < 2 chars left in macro, because it can't then do a ^NU */
-      if (mcposn > scmacs[curmac]->mcsize - 2)
+      if (mcposn > scmacs[curmac]->maclen - 2)
       {
       ranoff_end:
         err = "^NA, ^NB, ^NC &c. too near macro end";
@@ -1336,7 +1336,7 @@ p1706:
  */
   i = mcstck[mcnxfr].mcprev;       /* Macro # */
   j = mcstck[mcnxfr].mcposn;       /* Macro position */
-  if (i < 0 || i > TOPMAC || !scmacs[i] || j > scmacs[i]->mcsize || j < 0)
+  if (i < 0 || i > TOPMAC || !scmacs[i] || j > scmacs[i]->maclen || j < 0)
   {
     fprintf(stderr, "\r\nReturn macro ^<%o>out of range or empty. ", i);
     notmac(true);
@@ -1402,7 +1402,7 @@ p1601:
   {
     fornj = false;
     mcposn += thisch;              /* Do the jump */
-    if (mcposn >= 0 && mcposn < scmacs[curmac]->mcsize)
+    if (mcposn >= 0 && mcposn < scmacs[curmac]->maclen)
       GETNEXTCHR;
     err = "^NJ off macro end or start";
     ERR_IF_MAC;

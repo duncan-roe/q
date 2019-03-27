@@ -16,11 +16,14 @@
 #include "tabs.h"
 #include "alu.h"
 
+/* Static Variables */
+
+static uint16_t xbuf[Q_BUFSIZ];    /* Doesn't need to be on stack */
+
 bool
 macdef(uint32_t mcnum, uint8_t *buff, int buflen, bool appnu)
 {
   int i;                           /* Scratch */
-  uint16_t xbuf[Q_BUFSIZ];
   uint8_t saved_end = buff[buflen];
   unsigned long ulong_result;      /* Guard against ULONG_MAX on error */
   long long_result;                /* Guard against ULONG_MAX on error */

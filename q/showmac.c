@@ -28,7 +28,7 @@ showmac(int i)
     visbel();
     return;
   }
-  if (!(l = p->mcsize))
+  if (!(l = p->maclen))
   {
     fprintf(stderr, "!! INTERNAL ERROR - macro %03o has zero length !!\r\n", i);
     visbel();

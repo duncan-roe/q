@@ -1,4 +1,4 @@
-New read-only ALU Y register for return values from Q
+DONE(Q reg): New read-only ALU Y register for return values from Q
 STARTED: 2 active pseudos to run a shell command and receive stdout/stderr (backtick)
  e.g. if n4014 & n4015
  n4014 {shell command} or n4015 {shell command}

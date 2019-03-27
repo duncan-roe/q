@@ -12,43 +12,74 @@
 #include <stdio.h>
 #include <memory.h>
 #include <stdlib.h>
+#include <sys/user.h>
 #include "prototypes.h"
 #include "macros.h"
-/* */
-bool
-macdefw(uint32_t mcnum, uint16_t *buff, int buflen, bool appnu)
+
+/* Macros */
+
+#define GIVE_UP goto no_memory
+
+/* ******************************** get_scmac ******************************* */
+
+static bool
+get_scmac(uint32_t mcnum)
 {
-  int i, k;                        /* Scratch */
-/*
- * see if macro already defined, and big enough...
- */
-  if (scmacs[mcnum] && scmacs[mcnum]->maclen < buflen + (appnu ? 2 : 0))
+  static uint8_t *hunk;            /* Large malloc'd hunk of memory */
+  static int hunk_left = 0;
+  static size_t s = (sizeof(macro5) + sizeof(int *) - 1) & ~(sizeof(int *) - 1);
+
+  if (hunk_left < sizeof(macro5))
   {
-    free((char *)scmacs[mcnum]);
-    scmacs[mcnum] = NULL;
+    hunk = malloc(PAGE_SIZE);
+    if (!hunk)
+      return false;
+    hunk_left = PAGE_SIZE;
+  }                                /* if (hunk_left < sizeof(macro5)) */
+  scmacs[mcnum] = (macro5 *)hunk;
+  hunk += s;
+  hunk_left -= s;
+  memset(scmacs[mcnum], 0, s);
+  return true;
+}                                  /* bool get_scmac(uint32_t mcnum) */
+
+/* ******************************** macdefw ******************************** */
+
+bool
+macdefw(uint32_t mcnum, uint16_t *buf, int buflen, bool appnu)
+{
+  int i;                           /* Scratch */
+
+/* Round up to a 16-byte multiple for malloc */
+  size_t s = ((buflen + (appnu ? 2 : 0)) * sizeof(uint16_t) + 15) & ~15;
+
+/* Enough space already available? */
+  if (!scmacs[mcnum] && !get_scmac(mcnum))
+    GIVE_UP;
+  if (scmacs[mcnum]->maccap < buflen + (appnu ? 2 : 0) && scmacs[mcnum]->data)
+  {
+    free(scmacs[mcnum]->data);
+    scmacs[mcnum]->data = NULL;
   }
-  if (!scmacs[mcnum])
-  {
-    i = BASEMAC + (buflen + (appnu ? 2 : 0)) * sizeof *buff; /* Bytes req'd */
-/*
- * We always round up to a 16-byte multiple for malloc...
- */
-    k = ((i + 15) >> 4) << 4;      /* Bytes we will ask for */
-    if (!(scmacs[mcnum] = (macro5 *)malloc((size_t)k)))
+
+  if (!scmacs[mcnum]->data)
+  {                                /* Need to get memory for macro */
+    if (!(scmacs[mcnum]->data = malloc(s)))
     {
-      fprintf(stderr, "MALLOC out of memory in MACDEF");
+    no_memory:
+      fprintf(stderr, "MALLOC out of memory in MACDEF\r\n");
       return false;
     }
-/* Store how many chars there is actually room for... */
-    scmacs[mcnum]->maclen = buflen + (k - i) / sizeof *buff + (appnu ? 2 : 0);
+/* Store how many 16-bit chars there is actually room for... */
+    scmacs[mcnum]->maccap = s / sizeof(uint16_t);
   }
   for (i = 0; i < buflen; i++)
-    scmacs[mcnum]->data[i] = buff[i];
+    scmacs[mcnum]->data[i] = buf[i];
   if (appnu)
   {
     scmacs[mcnum]->data[i++] = 016; /* ^N */
     scmacs[mcnum]->data[i++] = 0125; /* U */
   }
-  scmacs[mcnum]->mcsize = i;
+  scmacs[mcnum]->maclen = i;
   return true;
 }
