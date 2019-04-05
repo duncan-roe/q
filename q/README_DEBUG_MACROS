@@ -170,8 +170,8 @@ sleep 100000
 
 ggo $(type -p q) -a "-n -iu,${k:-.qrc}^Jfv^Jfm+v^J $j </dev/pts/$my_pty \
   >/dev/pts/$my_pty 2>&1" "set max-value-size sizeof (struct scrbuf5)" \
-  b\ scrdit.c:893 commands silent "echo starting macro" p/o\ thisch end \
+  b\ scrdit.c:894 commands silent "echo starting macro" p/o\ thisch end \
   "cond 2 (thisch < 0101 || thisch > 0132) && thisch < 04000 && thisch != 255" \
-  b\ scrdit.c:1231 commands silent "echo ^NI invoked\\n" end \
-  b\ scrdit.c:1346 commands silent "echo resuming macro" p/o\ i end \
+  b\ scrdit.c:1241 commands silent "echo ^NI invoked\\n" end \
+  b\ scrdit.c:1356 commands silent "echo resuming macro" p/o\ i end \
   'cond 4 verb != '"'I' && (curmac < FIRST_PSEUDO || curmac > LAST_PSEUDO)" c

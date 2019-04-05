@@ -44,7 +44,7 @@ c1in5(bool *eof_encountered)
         refrsh(NULL);
       }                            /* if(seenwinch) */
 
-/* If simulating fq command for -o cmd line option, do it. */
+/* If simulating fq command for -o cmdline option, do it. */
       if (simulate_q)
       {
 /* Send enough characters to quit out of anything. */

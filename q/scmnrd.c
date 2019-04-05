@@ -337,7 +337,7 @@ scmnrd()
 /* Q COMMAND MASSAGE */
   if (verb == 'Q')
   {
-/* See if cmd has args */
+/* See if command has args */
     (void)scrdtk(1, (uint8_t *)ubuf, BUFMAX, oldcom);
 /* No quotes */
     if (oldcom->toktyp == nortok && optind < argc && ubuf[0] == '$' &&
@@ -373,7 +373,7 @@ scmnrd()
     }
     else if (argno >= 0 && oldcom->toktyp == eoltok &&
       (l = ++argno) + optind < argc)
-    {                              /* No cmd args & more file args */
+    {                              /* No command args & more file args */
     q1001:
       oldcom->bdata[oldcom->bchars++] = SPACE; /* Append a SPACE */
       k = strlen(*(argv + optind + l));

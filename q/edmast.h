@@ -29,6 +29,6 @@ char ubuf[Q_BUFSIZ];               /* Utility buffer for general use */
 unsigned long dfltmode;
 int argc;                          /* Copy of invocation arg */
 char **argv;                       /* Copy of invocation arg */
-int argno;                         /* File # from cmd line (0-based) */
+int argno;                         /* File # from cmdline (0-based) */
 char *sh;                          /* The shell we should use */
 #endif

@@ -1498,17 +1498,35 @@ p1601:
 
   if (gmacr)
   {
+    if (Curr->bchars == 0)
+      BOL_OR_EOL;                  /* Trying to define null macro */
     if ((thisch < 0200 && thisch > 077) ||
       (thisch > TOPMAC && thisch < 07000) ||
       (thisch > 07777 && thisch < 013000) || thisch > 13777)
     {
+/* Implement ^NM for some definable active pseudos */
+
+/* 4014 & 4015 (backtick) */
+      if (thisch == 04014 || thisch == 04015)
+      {
+        Curr->bdata[Curr->bchars] = 0; /* NUL-terminate target */
+        final5();
+        qreg = cmd((char *)Curr->bdata, true);
+        init5();
+        if (qreg && thisch == 04014)
+        {
+          err = (char *)stderrbuf;
+          ERR_IF_MAC;
+        }                          /* if (qreg && thisch == 04014) */
+        GETNEXTCHR;
+      }                            /* if (thisch == 04014 || thisch == 04015) */
+
+/* Error if we get here */
       err = "";
       fprintf(stderr, "\r\n^NM cannot define macro %o", thisch);
       newlin();
       ERR_IF_MAC;
     }                              /* if ((thisch < 0200 && ... )) */
-    if (Curr->bchars == 0)
-      BOL_OR_EOL;                  /* Trying to define null macro */
 
 /* Define the macro. Report if some problem... */
     if (macdef((int)thisch, Curr->bdata, (int)Curr->bchars, true))

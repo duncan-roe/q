@@ -81,7 +81,7 @@ int ndntch;                        /* # of chars to indent */
 bool vt100;                        /* Enable VT100-style curpos */
 bool deferd;                       /* Deferred indexing of mmap'd input file */
 bool locerr;                       /* LOCATE error only - macro can detect */
-bool noRereadIfMacro;              /* Don't re-read cmd if in macro &c */
+bool noRereadIfMacro;              /* Don't re-read command if in macro &c */
 bool forych;   /* PDSPLY only required to do a BRIEF display (for YCHANGEALL) */
 bool lstvld;                       /* "previous" buffer has valid data */
 bool modlin;                       /* This line has actually changed */
