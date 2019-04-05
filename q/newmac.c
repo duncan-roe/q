@@ -303,12 +303,14 @@ newmac()
 /* Command output substitution? */
   if (verb == 04014 || verb == 04015)
   {
-    scrdtk(4, (uint8_t *)ubuf, BUFMAX, oldcom); /* Get shell command */
     final5();
     qreg = cmd(ubuf, true);
     init5();
     if (qreg && verb == 04014)
+    {
+      fprintf(stderr, "%s", stderrbuf);
       GIVE_UP;
+    }                              /* if (qreg && verb == 04014) */
     return 1;
   }                                /* if (verb == 04014 || verb == 04015) */
 

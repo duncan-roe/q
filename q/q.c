@@ -36,6 +36,7 @@
 #include "q_pipe.h"
 #include "alu.h"
 #include "isacharspecial.h"
+#include "backtick.h"
 
 /* Macros */
 
@@ -108,6 +109,8 @@ char Iformat[40];
 char DTformat[256];
 long lintot = 0;
 long ptrpos = 0;
+uint8_t stdoutbuf[Q_BUFSIZ];
+uint8_t stderrbuf[Q_BUFSIZ];
 
 /* Static Variables */
 
@@ -761,6 +764,11 @@ main(int xargc, char **xargv)
   tmask = umask(0);                /* Get current umask */
   umask(tmask);                    /* Reinstate umask */
   tmode = ~tmask & 0666;           /* Assume no execute on new file */
+
+/* Set up for the command substitution macros */
+  macdefw(STDOUT_MACRO_IDX, NULL, 0, true);
+  macdefw(STDERR_MACRO_IDX, NULL, 0, true);
+
 /* Pick up any option arguments and set cmd_state if more args follow */
   while ((i = getopt(argc, argv, "AVbdei:mnoqtv")) != -1)
     switch (i)

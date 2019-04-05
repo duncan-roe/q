@@ -61,8 +61,6 @@ clock_t timlst;
 /* Initialise External Variables */
 
 scrbuf5 *last_Curr = NULL;
-char stdoutbuf[Q_BUFSIZ] = { 0 };
-char stderrbuf[Q_BUFSIZ] = { 0 };
 
 /* *************************** print_failed_opcode ************************** */
 
@@ -73,7 +71,7 @@ print_failed_opcode(uint16_t thisch)
 
   fprintf(stderr, "\r\nFailing opcode: ");
   while (*opcd)
-    putc(toupper(*(uint8_t *) opcd++), stdout);
+    putc(toupper(*(uint8_t *)opcd++), stdout);
 }                                  /* print_failed_opcode) */
 
 /* ************************** get_effective_address ************************* */
@@ -236,7 +234,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
   long olen;                       /* Original line length */
   struct tms tloc;                 /* Junk from TIMES */
   clock_t timnow;                  /* Time from TIMES */
-  uint16_t thisch;           /* Character being processed */
+  uint16_t thisch;                 /* Character being processed */
   uint8_t *indent_string = NULL;
 /*
  * PARAMETERS:-
@@ -916,7 +914,7 @@ p1905:
     {
       case 04000:                  /* Return mode */
         i = snprintf(tbuf, sizeof tbuf, "%lo", zmode_valid ? zmode : fmode);
-        macdef(FIRST_PSEUDO, (uint8_t *) tbuf, i, true);
+        macdef(FIRST_PSEUDO, (uint8_t *)tbuf, i, true);
         break;
 
       case 04001:                  /* Return screen height - 1 */
@@ -946,7 +944,7 @@ p1905:
         }
 
         j = snprintf(tbuf, sizeof tbuf, "%d", i);
-        macdef(FIRST_PSEUDO, (uint8_t *) tbuf, j, true);
+        macdef(FIRST_PSEUDO, (uint8_t *)tbuf, j, true);
         break;
 
       case 04002:                  /* Return curent edit file */
@@ -957,11 +955,11 @@ p1905:
  * filenames)
  */
         i = strlen(pcnta);
-        macdef(FIRST_PSEUDO, (uint8_t *) pcnta, i, i != 0);
+        macdef(FIRST_PSEUDO, (uint8_t *)pcnta, i, i != 0);
         break;
 
       case 04003:                  /* HELP dir (for macros usually) */
-        macdef(FIRST_PSEUDO, (uint8_t *) macro_dir, strlen(macro_dir), true);
+        macdef(FIRST_PSEUDO, (uint8_t *)macro_dir, strlen(macro_dir), true);
         break;
 
       case 04004:                  /* Like 4001 but for going backwards */
@@ -996,27 +994,27 @@ p1905:
         }
 
         i = snprintf(tbuf, sizeof tbuf, "%d", j);
-        macdef(FIRST_PSEUDO, (uint8_t *) tbuf, i, true);
+        macdef(FIRST_PSEUDO, (uint8_t *)tbuf, i, true);
         break;
 
       case 04005:                  /* Return screen width */
         i = snprintf(tbuf, sizeof tbuf, "%u", col5);
-        macdef(FIRST_PSEUDO, (uint8_t *) tbuf, i, true);
+        macdef(FIRST_PSEUDO, (uint8_t *)tbuf, i, true);
         break;
 
       case 04006:                  /* Return screen height */
         i = snprintf(tbuf, sizeof tbuf, "%u", row5);
-        macdef(FIRST_PSEUDO, (uint8_t *) tbuf, i, true);
+        macdef(FIRST_PSEUDO, (uint8_t *)tbuf, i, true);
         break;
 
       case 04007:                  /* Return floating point format */
         i = snprintf(tbuf, sizeof tbuf, "%s", FPformat);
-        macdef(FIRST_PSEUDO, (uint8_t *) tbuf, i, true);
+        macdef(FIRST_PSEUDO, (uint8_t *)tbuf, i, true);
         break;
 
       case 04010:                  /* Return date format */
         i = snprintf(tbuf, sizeof tbuf, "%s", DTformat);
-        macdef(FIRST_PSEUDO, (uint8_t *) tbuf, i, true);
+        macdef(FIRST_PSEUDO, (uint8_t *)tbuf, i, true);
         break;
 
       case 04011:                  /* Return date */
@@ -1024,7 +1022,7 @@ p1905:
         time_t t = time(NULL);
         i = strftime(tbuf, sizeof tbuf, DTformat, localtime(&t));
       }
-        macdef(FIRST_PSEUDO, (uint8_t *) tbuf, i, true);
+        macdef(FIRST_PSEUDO, (uint8_t *)tbuf, i, true);
         break;
 
       case 04012:                  /* Return UTC date */
@@ -1032,13 +1030,21 @@ p1905:
         time_t t = time(NULL);
         i = strftime(tbuf, sizeof tbuf, DTformat, gmtime(&t));
       }
-        macdef(FIRST_PSEUDO, (uint8_t *) tbuf, i, true);
+        macdef(FIRST_PSEUDO, (uint8_t *)tbuf, i, true);
         break;
 
       case 04013:                  /* Return integer format */
         i = snprintf(tbuf, sizeof tbuf, "%s", Iformat);
-        macdef(FIRST_PSEUDO, (uint8_t *) tbuf, i, true);
+        macdef(FIRST_PSEUDO, (uint8_t *)tbuf, i, true);
         break;
+
+      case 04014:                  /* Return stdout from last backtick */
+/* Drop thru */
+      case 04015:                  /* Return stderr from last backtick */
+        curmac = thisch == 04014 ? STDOUT_MACRO_IDX : STDERR_MACRO_IDX;
+        mcposn = 0;
+        GETNEXTCHR;
+
       default:
         found = false;
         break;
@@ -1050,7 +1056,7 @@ p1905:
     if (j == 07000)
     {
       i = snprintf(tbuf, sizeof tbuf, Iformat, ALU_memory[thisch & 0777]);
-      macdef(FIRST_PSEUDO, (uint8_t *) tbuf, i, true);
+      macdef(FIRST_PSEUDO, (uint8_t *)tbuf, i, true);
       found = true;
     }                              /* if (j == 07000) */
     else if (j == 05000)
@@ -1070,7 +1076,7 @@ p1905:
     else if (j == 013000)
     {
       i = snprintf(tbuf, sizeof tbuf, FPformat, FPU_memory[thisch & 0777]);
-      macdef(FIRST_PSEUDO, (uint8_t *) tbuf, i, true);
+      macdef(FIRST_PSEUDO, (uint8_t *)tbuf, i, true);
       found = true;
     }                              /* if (j == 013000) */
     else if (j == 011000)
@@ -1601,11 +1607,11 @@ p1601:
           break;
 
         case 04014:                /* Backtick stdout */
-          qreg = strlen(stdoutbuf);
+          qreg = scmacs[STDOUT_MACRO_IDX]->maclen - 2; /* Strip ^NU */
           break;
 
         case 04015:                /* Backtick stderr */
-          qreg = strlen(stderrbuf);
+          qreg = scmacs[STDERR_MACRO_IDX]->maclen - 2; /* Strip ^NU */
           break;
 
       }                            /* switch (thisch) */

@@ -10,9 +10,6 @@
  */
 #include "typedefs.h"
 #define BUF5MAX 40
-#define STDIN5FD 0
-#define STDOUT5FD 1
-#define STDERR5FD 2
 #ifndef OPEN_MAX
 #  define OPEN_MAX 2048            /* Surely more than anyone would want */
 #endif
@@ -20,7 +17,6 @@
 int buf5len, buf5idx;
 void init5(void), final5(void);
 extern struct termios tio5save, tio5;
-char buf5[BUF5MAX];
 bool size5;                        /* Screen was sized */
 int ttyfd;                         /* fd to do iocltls on */
 int stdidx;

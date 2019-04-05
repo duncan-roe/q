@@ -2,9 +2,11 @@
 #define TYPEDEFS_H
 
 /* Headers required by this header */
+
 #include <stdint.h>
 
-/* Macros */
+/* Macro definitions */
+
 #define Q_BUFSIZ 65536
 #define BUFMAX Q_BUFSIZ-1
 #define BLKCAP (64-sizeof(void*))  /* Capacity of a data block */
@@ -30,7 +32,12 @@
 #define A5DYES 1
 #define A5DNO -1
 
+#define STDIN5FD 0
+#define STDOUT5FD 1
+#define STDERR5FD 2
+
 /* Typedefs */
+
 typedef enum bool
 {
   false,

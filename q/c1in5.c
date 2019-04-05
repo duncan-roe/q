@@ -19,6 +19,8 @@
 char *normal_end_sequence = "\033\033fq\n";
 char *end_seq;
 
+static char buf5[BUF5MAX];
+
 char
 c1in5(bool *eof_encountered)
 {

@@ -27,7 +27,6 @@ get_scmac(uint32_t mcnum)
 {
   static uint8_t *hunk;            /* Large malloc'd hunk of memory */
   static int hunk_left = 0;
-  static size_t s = (sizeof(macro5) + sizeof(int *) - 1) & ~(sizeof(int *) - 1);
 
   if (hunk_left < sizeof(macro5))
   {
@@ -37,9 +36,9 @@ get_scmac(uint32_t mcnum)
     hunk_left = PAGE_SIZE;
   }                                /* if (hunk_left < sizeof(macro5)) */
   scmacs[mcnum] = (macro5 *)hunk;
-  hunk += s;
-  hunk_left -= s;
-  memset(scmacs[mcnum], 0, s);
+  hunk += sizeof(macro5);
+  hunk_left -= sizeof(macro5);
+  memset(scmacs[mcnum], 0, sizeof(macro5));
   return true;
 }                                  /* bool get_scmac(uint32_t mcnum) */
 
