@@ -1,4 +1,4 @@
-.TH Q_MACROS 5 "04 Dec 2018" q-54 "q"
+.TH Q_MACROS 5 "06 Apr 2019" q-54 "q"
 .SH NAME
 Q macros - the Q macro facility
 .SH DESCRIPTION
@@ -125,7 +125,7 @@ Unconditional 4-character skip. See \fBMACROS\ \&AS\ \&SUBROUTINES\fR below
 .TP
 .BI ^NM macro_id
 Defines macro \fImacro_id\fR to be the current (file or command) line.
-When defining macros below 04000,
+When defining macros below 04200,
 \fB^NM\fR will add \fB^NU\fR to the macro definition,
 so the newly-defined macro is callable.
 \fB^NM\fR can also define ALU & FPU memory locations.
@@ -154,6 +154,42 @@ undefined behaviour
 .TP
 .BI ^NU
 Return from macro. See \fBMACROS\ \&AS\ \&SUBROUTINES\fR below
+.TP
+.BI ^NW macro_id
+Sets ALU Q register according to what would be the result of invoking
+\fImacro_id\fR:
+.br
+.RS 11
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Q>0 Calling \fImacro_id\fR will return \fBQ\fR characters
+.RE
+.RS 11
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Q=0 Calling \fImacro_id\fR is allowed and will return zero or more characters
+(number not available)
+.RE
+.RS 11
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Q<0 Calling \fImacro_id\fR will result in an error
+.RE
 .TP
 .BI ^NX
 Exit macro. See \fBMACROS\ \&AS\ \&SUBROUTINES\fR below
@@ -229,6 +265,31 @@ Returns format in effect for displaying ALU memory locations.
 \fBN-NEWMACRO\fR can re-define.
 ALU memory locations are stored as longs,
 so the format should always contain an 'l' (ell)
+.TP
+.BI ^N^<4014>
+Returns stdout from the external command as which this macro
+or \fB^N^<4015>\fR was last defined.
+\fBN-NEWMACRO\fR can re-define.
+\fB^NM^<4014>\fR can re-define.
+When this macro is defined, \fBq\fR calls \fBsystem(3)\fR to execute the
+macro contents as an external command,
+and stores the return code in the ALU Q register.
+If this code is non-zero, the calling macro fails with the stderr text
+output by
+the external command.
+.TP
+.BI ^N^<4015>
+Returns stderr from the external command as which this macro
+or \fB^N^<4014>\fR was last defined.
+\fBN-NEWMACRO\fR can re-define.
+\fB^NM^<4015>\fR can re-define.
+When this macro is defined, \fBq\fR calls \fBsystem(3)\fR to execute the
+macro contents as an external command,
+and stores the return code in the ALU Q register.
+The calling macro then continues.
+It is the user's responsibility to code the calling
+macro to check the Q register for being nonzero
+(e.g. with \fB^<SQEQ>\fR ("skip if no error")).
 .RE
 .TP
 .B 3.\ \&ALU macros
@@ -257,7 +318,7 @@ The convention that has been used is to always code opcodes in upper-case.
 .B Data Reference Pseudomacros
 .RS 3
 .TP
-.B Integer: n7000 - n7777
+.B Long: n7000 - n7777
 When setting these with \fBN_NEWMACRO\fR or \fB^NM\fR\fImacro_id\fR,
 \fBq\fR first gives the macro definition to
 \fBstrtol(3)\fR to convert as a signed quantity.
@@ -267,7 +328,7 @@ If this gets the error "Numerical result out of range" then \fBq\fR tries
 (64-bit q) or 2147483647 (32-bit q): they would convert as unsigned longs but
 would subsequently display as negative numbers.
 .TP
-.B Float: n13000 - n13777
+.B Double: n13000 - n13777
 When setting these with \fBN_NEWMACRO\fR or \fB^NM\fR\fImacro_id\fR,
 \fBq\fR gives the macro definition to \fBstrtod(3)\fR.
 .RE
@@ -355,7 +416,7 @@ The macro is obeyed straight away.
 .SH MACROS AS SUBROUTINES
 \fBq\fR has a macro call stack, which most of the system macros use.
 To use the call stack, a macro must finish with the \fB^NU\fR pseudomacro,
-which will resume execution in the calling macro following the 
+which will resume execution in the calling macro following the
 \fB^N\fR\fImacro_id\fR sequence that invoked the finishing macro.
 In the calling macro, that sequence must have been immediately preceded by the
 \fB^ND\fR pseudomacro, to push a link on the macro call stack.
@@ -770,4 +831,4 @@ n 040,! tail -n1 ^ND^N^<4002>^J
 (The sequence \fB^N^<4002>\fR retrieves the name of the current edit file).
 .RE
 .SH SEE ALSO
-q(1), strtol(3), strtoul(3), strtod(3), q_opcodes(5)
+q(1), strtol(3), strtoul(3), strtod(3), system(3), q_opcodes(5)

@@ -1,4 +1,4 @@
-.TH Q_OPCODES 5 "21 Dec 2018" q-54 "q"
+.TH Q_OPCODES 5 "06 Apr 2019" q-55 "q"
 .SH NAME
 Q opcodes - the Q ALU opcodes
 .SH DESCRIPTION
@@ -13,7 +13,7 @@ Start \fBq\fR and enter \fBH ALU\fR
 Enter \fBq\ \&-A\fR at the shell prompt or from within \fBq\fR to get a list.
 From the shell prompt the output may be fed into a pager,
 e.g. \fBq -A | less -X\fR.
-The list in this man page is from \fBq\fR version 54
+The list in this man page is from \fBq\fR version 55
 .SH EXAMPLES
 The line below is from the foundation macro set, fndtn.qm.
 It posts a reminder if run in a development version of \fBq\fR:
@@ -273,10 +273,20 @@ A2X	 X = X + 2
 S2X	 X = X - 2
 S1X	 X = X - 1
 	 
+	 Q Result Register Instructions
+	 = ====== ======== ============
+PSHQ	 Push contents of Q to R
+SQEQ	 Skip if Q is zero
+SQNE	 Skip if Q is not zero
+SQGE	 Skip if Q is greater than or equal to zero
+SQLE	 Skip if Q is less than or equal to zero
+SQGT	 Skip if Q is greater than zero
+SQLT	 Skip if Q is less than zero
+	 
 	 Control Instructions
 	 ======= ============
 DMP	 Dump Registers
-RST	 Reset Registers to initial state
+RST	 Reset Registers to initial state (except Q)
 ZAM	 Zeroise All Memory
 SCPT	 Store Cursor Position Tabs (initial setting, also after RST)
 SFPT	 Store File Position Tabs

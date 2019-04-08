@@ -1,5 +1,6 @@
 allbox
 alu
+Apr
 AVbdemnoqt
 bdntv
 behaviour
@@ -17,6 +18,7 @@ duncan
 ell
 EOL
 ESC
+ESX
 FBRIEF
 FCASEINDEPEND
 FDEVNULL
@@ -42,6 +44,7 @@ inode
 ltB
 mmap
 NEWMACRO
+nifl
 Nl
 NUL
 ONOFFINDENT
@@ -55,6 +58,7 @@ PSHF
 qrc
 recognised
 screenful
+SQEQ
 stderr
 stdin
 stdout
@@ -65,6 +69,7 @@ TABSET
 USEFILE
 usr
 UTC
+vin
 WRITEFILE
 XISTICS
 YCHANGEALL

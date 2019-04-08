@@ -3,9 +3,11 @@
 Q contains an ALU to enable macros to execute small general-purpose programs.
 The emulated processor is stack-based with 512 integer and 512 real memory
 locations, and direct access to Q's 80 tabs. It has integer and floating point
-register stacks (R & F) currently 16 deep, and an index register (X).
-Instructions can cause a skip of the next 2 charatcters in the invoking macro,
-in the same way as ^NS does.
+register stacks (R & F) currently 16 deep, an index register (X) and a read-only
+results register (Q) (for result codes from the main editor).
+
+Instructions can cause a skip of the next 2 characters in the invoking macro, in
+the same way as ^NS does.
 
 Macros 7000 - 7777 implement the (long) integer memory locations and macros
 13000 to 13777 implement the (double) reals. These macros may be defined using

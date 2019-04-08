@@ -1,8 +1,9 @@
+Q -B to break long lines on token delimiter if length so far > 32(?)K
 Give symbolic names to ALU memory locations e.g. k,0,i^J^<POP i>
  Error if try to rename location
  Error if use same name twice
 DONE(Q reg): New read-only ALU Y register for return values from Q
-STARTED: 2 active pseudos to run a shell command and receive stdout/stderr (backtick)
+DONE: 2 active pseudos to run a shell command and receive stdout/stderr (backtick)
  DONE: e.g. if n4014 & n4015
  DONE: n4014 {shell command} or n4015 {shell command}
  DONE: ^ND^N^<4014> returns stdout (minus final Nl)
@@ -10,8 +11,8 @@ STARTED: 2 active pseudos to run a shell command and receive stdout/stderr (back
  DONE: ^NM^<4014> (or <4015>) as above
  DONE: If defined as n4014, error in cmd => error in macro
  DONE: If defined as n4015, command status returned in Y (0=good), macro continues
- Update HELP
- Update man page(s)
+ DONE: Update HELP
+ DONE: Update man page(s)
 DONE: New basic pseudo ^NW<macro id> return length of macro in Y; -1 if undefined
 "q -l" to insert "fm +l" command before reading file
 Search up directory tree for .qrc

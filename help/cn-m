@@ -1,14 +1,13 @@
   << ^ N M - D E F I N E   M A C R O >>
- Sets the macro indicated by the following character in the macro (which must
-be there and be a valid macro i.d.) to the current line being edited or command
-being input.Works whether in command mode or editing a line. Error sequence
-(bell &c.) if the current line is too big for a macro (64 chars max at JUL
-'81). If there is room for 2 extra chars, ^NU is added to the macro definition,
-so you don't have to do it yourself.
- This very powerful pseudo-macro provides the feedback link from the data you
-are editing back to your editing instructions. Typically you find a line with
-the data you want, throw away the rest of the line, make the macro then ^[
-(ESC) out of the line so it goes back to its original state.
+ Sets the macro indicated by the character following ^NM (which must be there
+if in a macro and must be a valid macro i.d.) to the current line being edited
+or command being input. Works whether in command mode or editing a line. If
+there is room for 2 extra chars, ^NU is added to the macro definition, so you
+don't have to do it yourself.
+ This pseudo-macro provides a feedback link from the data you are editing back
+to your editing instructions. Typically you find a line with the data you want,
+throw away the rest of the line, make the macro then ^[ (ESC) out of the line
+so it goes back to its original state.
  Example: suppose you have 'found' an "FD" line in a COBOL program, and now you
 want to remember the name of the file being defined (to put in the "VALUE OF
 FILE-ID" perhaps). After the L-LOCATE, the cursor will be on the "F" of "FD".

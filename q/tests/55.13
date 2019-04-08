@@ -16,6 +16,6 @@ fi ^NW^<4010>^N^<204>            ; Date format length, default 8
 fi ^NW^<4011>^N^<204>            ; Date length, default 25
 fi ^NW^<4012>^N^<204>            ; UTC Date length, default 25
 fi ^NW^<4013>^N^<204>            ; Integer format length, default 3
-fi ^NW^<4014>^N^<204>            ; First undefined active pseudo, -1
+fi ^NW^<4016>^N^<204>            ; First undefined active pseudo, -1
 fi ^NWo^N^<204>                  ; 0 (test case-insensitivity)
 wofi ^N^<204>                  ; 0 !!Real ^N, test from kbd

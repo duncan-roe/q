@@ -1,0 +1,8 @@
+  << ^ N W - G E T   M A C R O   L E N G T H >>
+ Sets the ALU Q register to the length of the macro indicated by the character
+following ^NW (which must be there if in a macro). If Q becomes -1, calling the
+indicated macro would cause an error. If Q becomes zero, the indicated macro
+must have been a pseudo: calling it is allowed and it may return some
+characters but the Q editor can't determine how many.
+ To see the value of the Q register: FI ^<DMP> will show this as the last item;
+and FI ^<PSHQ>^<POP 0>^ND^N^<7000> will output only the contents of Q.

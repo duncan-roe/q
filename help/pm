@@ -22,7 +22,7 @@ See end of this help for "active pseudomacros" which return dynamic information
 ^NF<tab id>-remember File position \ Remember by 1st / remembers, and the   **
 ^NN<tab id>-set file positioN      / & last chars   / 2nd sets.             **
 ^NM<macro id>-Define macro to be current line or command on screen + ^NU    **
-^WM<macro id>-Set ALU Q-register to:                                        **
+^NW<macro id>-Set ALU Q-register to:                                        **
                                    -1: calling this macro would error
                                     0: calling this macro ok but length N/A
                                length: of macro. Excludes ^NU for pseudos
@@ -77,9 +77,9 @@ N4013  returns format in effect for displaying ALU memory locations.
        are stored as longs, so the format should always contain an 'l' (ell).
 N4014  returns stdout from last time n4014 or n4015 was defined. The user
        defines this macro to be some external command e.g. "n 4014 pwd".
-       If the external command fails, Y is set nonzero and the macro fails.
+       If the external command fails, Q is set nonzero and the macro fails.
 N4015  returns stderr from last time n4014 or n4015 was defined. The user
        defines this macro to be some external command e.g. "n 4015 pwd".
-       If the external command fails, Y is set nonzero.
+       If the external command fails, ALU register Q is set nonzero.
 N7xxx  returns contents of ALU memory location xxx.
 N13xxx returns contents of FPU memory location xxx.
