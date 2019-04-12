@@ -79,6 +79,10 @@ t2 10 15 24
                          (compare this with ^N&. In general, ^N& is primary VCS
                           and ^N^W& is secondary. E.g. git.qm sets git / RCS)
  ^N^W8   270  Either   Expands to the UTC time formatted by n4010
+ ^N^W9   271  Command  Move to and view around line number that is command line
+                        contents. Target line is repeated at foot of screen.
+                        (compare this with ^N9, which views around a located
+                         string)
  ^N^Wp   360  Command  Define string to be replaced over multiple files
                          (See note 2)
  ^N^Wq   361  Command  Define replacement string over multiple files

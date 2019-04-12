@@ -1166,6 +1166,22 @@ p1905:
       SOUNDALARM;
     }
     mcposn = 0;                    /* Got the macro */
+
+/* If curmac was an immediate macro, that immediate macro is now available */
+/* for re-use, *unless* it is in the macro stack (so ^NU can return to it) */
+  if (curmac >= FIRST_IMMEDIATE_MACRO && curmac <= LAST_IMMEDIATE_MACRO)
+  {
+    bool found = false;
+
+    for (i = mcnxfr - 1; i >= 0; i--)
+      if (mcstck[i].mcprev == curmac)
+      {
+        found = true;
+        break;
+      }                            /* if (scmacs[i].mcprev == curmac) */
+    if (!found)
+      immnxfr = curmac;
+  }                                /* if (curmac >= FIRST_IMMEDIATE_MACRO ... */
     curmac = thisch;
   }                                /* if (!thisch && curmac > 0) else */
   GETNEXTCHR;
