@@ -631,12 +631,12 @@ getnextchr:
       verb = 'J';                  /* Treat as Nl: drop thru to ^J */
 
     case 10:                       /* ^J - End of line: drop thru to ^T */
-      k = Curr->bchars;
+      k = Curr->bchars;            /* TESTS/55.17.ggo */
 
     case 20:                       /* ^T - Split line */
       if (verb == 'T')             /* If not a drop-thru */
       {
-        k = Curr->bcurs;
+        k = Curr->bcurs;           /* TESTS/55.17.ggo */
         modlin = modlin || (k < Curr->bchars); /* modlin unless ^T at EOL */
       }                            /* if (verb == 'T') */
 

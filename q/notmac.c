@@ -1,7 +1,7 @@
 /* N O T M A C
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012-2014 Duncan Roe
+ * Copyright (C) 2012-2014,2019 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -68,12 +68,34 @@ notmac(bool err)
         puts("** Macro not defined **\r");
     }                              /* if (curmac >= 0) */
   }                                /* if (err) */
+
+/* If curmac was an immediate macro, */
+/* that immediate macro is now available for re-use */
+  if (curmac >= FIRST_IMMEDIATE_MACRO && curmac <= LAST_IMMEDIATE_MACRO)
+    immnxfr = curmac;
+
   curmac = -1;                     /* Not in a macro */
   if (err || BRIEF || NONE)
     for (i = WCHRS - 1; i >= 0; i--)
       screen[i] = '\0';            /* Force refresh */
-  mcnxfr = MCDTUM;                 /* No stack */
-  immnxfr = FIRST_IMMEDIATE_MACRO;
-  for (i = 0; i <= stdidx; i++)
-    stdinfo[i].frommac = false;
+  if (err)
+  {
+/* Get out of all macros and U-USE files */
+    mcnxfr = MCDTUM;               /* No stack */
+    immnxfr = FIRST_IMMEDIATE_MACRO;
+    for (i = 0; i <= stdidx; i++)
+      stdinfo[i].frommac = false;
+  }                                /* if (err) */
+  else
+  {
+/* Only unwind back to the last U-USE file, if any */
+    for (; mcnxfr > MCDTUM; mcnxfr--)
+    {
+      if (mcstck[mcnxfr - 1].u_use)
+        break;
+      if (mcstck[mcnxfr - 1].mcprev >= FIRST_IMMEDIATE_MACRO &&
+        mcstck[mcnxfr - 1].mcprev <= LAST_IMMEDIATE_MACRO)
+        immnxfr = mcstck[mcnxfr - 1].mcprev;
+    }                              /* for (; mcnxfr > MCDTUM; mcnxfr--) */
+  }                                /* if (err) else */
 }
