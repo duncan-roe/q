@@ -3,10 +3,10 @@ n204 ^NC^NS^N\^<PSHQ>^<POP 0>!echo ^ND^N^<7000> >&2^J^<PS0>^<POP 0>^NU
 * These all test the result in the Q register from ^N^W<macro id>.
 * Item tested should be obvious and is not listed separately
 *                                ; Expected result
-fi ^NW^<4000>^N^<204>            ; Depends on mode: 10 if indent on
+fi ^NW^<4000>^N^<204>            ; Depends on mode: 7 if from runmost (default mode)
 fi ^NW^<4001>^N^<204>            ; 0
 fi ^NW^<4002>^N^<204>            ; Edit file name length
-fi ^NW^<4003>^N^<204>            ; HELP dir name lengthh
+fi ^NW^<4003>^N^<204>            ; HELP dir name length
 fi ^NW^<4004>^N^<204>            ; 0
 fi ^NW^<4005>^N^<204>            ; 0
 fi ^NW^<4006>^N^<204>            ; 0

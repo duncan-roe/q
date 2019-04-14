@@ -1,3 +1,3 @@
 #ifndef Q_VERSION
-#define Q_VERSION 55.32
+#define Q_VERSION 55.33
 #endif

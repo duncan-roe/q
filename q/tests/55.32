@@ -1,0 +1,2 @@
+*      ; Item(s) tested                                      ; Expected result
+fi ^NX ; ^NX in an immediate macro invoked from a u-use file ; q from runmost exits normally

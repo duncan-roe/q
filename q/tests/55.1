@@ -1,14 +1,11 @@
-* ggo q -a "-n </dev/pts/$my_pty >/dev/pts/$my_pty 2>&1" "set max-value-size sizeof (struct scrbuf5)" b\ scrdit.c:1296 c
-* watch glast
-* watch gpseu
-*                                                                                         ; Item(s) tested         ; Expected result
-fi !rm -f t5^J!touch t5^Jq t5^Ja^J123456789^J^[t3^Jm1^J^X^X^NP1^N\^NB1^N\^[s^J!rm t5^J^NX ; ^NB & ^NP              ; 1 123456789
-fi !rm -f t5^J!touch t5^Jq t5^Ja^Jxxx^J^[g1^J^NFAd tA^Jv^Js^J!rm t5^J^NX                  ; ^NF                    ; THE FILE IS EMPTY
-fi !rm -f t5^J!touch t5^Jq t5^Ja^Jxxx^J^[g1^J^NFA^N[A^N\^N]A^N\^[s^J!rm t5^J^NX           ; ^N[ & ^N]              ; 1 xxx
-fi !rm -f t5^J!touch t5^Jq t5^Ja^J123456789^Y^NA^N\^Z^NA^NS^N\^[!rm t5^J^NX               ; ^NA                    ; (nothing)
-fi !rm -f t5^J!touch t5^Jq t5^Ja^J123456789^Y^NG9^NS^N\^NG8^N\^[!rm t5^J^NX               ; ^NG                    ; (nothing)
-fi !rm -f t5^J!touch t5^Jq t5^Ja^J^NJ^C123456789^Y^J^[s^J!rm t5^J^NX                      ; ^NJ                    ; 1 456789
-fi !rm -f t5^J!touch t5^Jq t5^Ja^J^NL123456789^Y^J^[s^J!rm t5^J^NX                        ; ^NL                    ; 1 56789
-fi !rm -f t5^J!touch t5^Jq t5^Ja^J123456789^H^X^X^NO1^J^[m1^J^NR1^X^K^Js^J!rm t5^J^NX     ; ^NO & ^NR              ; 1 123
-fi !rm -f t5^J!touch t5^Jq t5^Ja^J1^J2^NFA^J3^J^[^NNAv0^Js^J!rm t5^J^NX                   ; ^NN & ^NFA appending   ; 2 2
-fi !rm -f t5^J!touch t5^Jq t5^Ja^J1^J2^J3^J^[m2^J^NFA^[^NNAv0^Js^J!rm t5^J^NX             ; ^NN & ^NFA modifying   ; 3 3
+*                                                                                                 ; Item(s) tested         ; Expected result
+fi !rm -f t5^J!touch t5^Jq t5^Ja^J123456789^J^[t3^Jm1^J^X^X^NP1^N\^NB1^N\^[s^Jg1^Jv0^J!rm t5^J^NX ; ^NB & ^NP              ; 1 123456789
+fi !rm -f t5^J!touch t5^Jq t5^Ja^Jxxx^J^[g1^J^NFAd tA^Js^Jv^J!rm t5^J^NX                          ; ^NF                    ; THE FILE IS EMPTY
+fi !rm -f t5^J!touch t5^Jq t5^Ja^Jxxx^J^[g1^J^NFA^N[A^N\^N]A^N\^[s^Jv0^J!rm t5^J^NX               ; ^N[ & ^N]              ; 1 xxx
+fi !rm -f t5^J!touch t5^Jq t5^Ja^J123456789^Y^NA^N\^Z^NA^NS^N\^[v^J!rm t5^J^NX                    ; ^NA                    ; THE FILE IS EMPTY
+fi !rm -f t5^J!touch t5^Jq t5^Ja^J123456789^Y^NG9^NS^N\^NG8^N\^[v^J!rm t5^J^NX                    ; ^NG                    ; THE FILE IS EMPTY
+fi !rm -f t5^J!touch t5^Jq t5^Ja^J^NJ^C123456789^Y^J^[s^Jg1^Jv0^J!rm t5^J^NX                      ; ^NJ                    ; 1 456789
+fi !rm -f t5^J!touch t5^Jq t5^Ja^J^NL123456789^Y^J^[s^Jg1^Jv0^J!rm t5^J^NX                        ; ^NL                    ; 1 56789
+fi !rm -f t5^J!touch t5^Jq t5^Ja^J123456789^H^X^X^NO1^J^[m1^J^NR1^X^K^Js^Jg1^jv0^J!rm t5^J^NX     ; ^NO & ^NR              ; 1 123
+fi !rm -f t5^J!touch t5^Jq t5^Ja^J1^J2^NFA^J3^J^[^NNAs^Jv0^J!rm t5^J^NX                           ; ^NN & ^NFA appending   ; 2 2
+fi !rm -f t5^J!touch t5^Jq t5^Ja^J1^J2^J3^J^[m2^J^NFA^[^NNAs^Jv0^J!rm t5^J^NX                     ; ^NN & ^NFA modifying   ; 3 3
