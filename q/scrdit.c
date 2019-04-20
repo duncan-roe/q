@@ -384,21 +384,10 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
   mctrst = false;
 getnextchr:
   if (curmac < 0)
-    refrsh(Curr);                  /* Display prompt etc */
-  if (curmac >= 0)
-  {
-/* Clear expanding if that was last char from macro */
-    if (mcposn >= scmacs[curmac]->maclen)
-    {
-      notmac(false);
-      GETNEXTCHR;
-    }                              /* if (mcposn >= scmacs[curmac]->maclen) */
-    thisch = scmacs[curmac]->data[mcposn++];
-  }                                /* if (curmac >= 0) */
-  else
   {
     bool eof_encountered;
 
+    refrsh(Curr);                  /* Display prompt etc */
     thisch = c1in5(&eof_encountered); /* Read 1 char */
     if (eof_encountered)
     {                              /* c1in5 will have returned '\r' */
@@ -417,7 +406,17 @@ getnextchr:
  */
     if (!USING_FILE && !(thisch & 0200))
       thisch = fxtabl[thisch];
-  }                                /* if (curmac >= 0) else */
+  }                                /* if (curmac < 0) */
+  else
+  {
+/* Clear expanding if that was last char from macro */
+    if (mcposn >= scmacs[curmac]->maclen)
+    {
+      notmac(false);
+      GETNEXTCHR;
+    }                              /* if (mcposn >= scmacs[curmac]->maclen) */
+    thisch = scmacs[curmac]->data[mcposn++];
+  }                                /* if (curmac < 0) else */
   if (contp)
   {
     if (cntrlw)

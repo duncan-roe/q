@@ -45,6 +45,7 @@
 #define READ_NEXT_COMMAND goto p1004
 #define ERRRTN(x) do {fprintf(stderr, "%s", (x)); return false;} while (0)
 #define PIPE_NAME "/tmp/qpipeXXXXXX"
+#define BAD_RDTK goto bad_rdtk
 
 /* Typedefs */
 
@@ -226,12 +227,12 @@ get_file_arg(void)
 static bool
 get_opt_lines2count(void)
 {
-  if (getnum(0))                   /* Format of optional # of lines OK */
+  if (getnum(false))               /* Format of optional # of lines OK */
   {
     count = oldcom->decval;
     if (oldcom->toktyp == eoltok || eolok()) /* EOL already or next */
       return true;
-  }                                /* if(getnum(0)) */
+  }                                /* if(getnum(false)) */
   return false;
 }                                  /* get_opt_lines2count() */
 
@@ -712,7 +713,7 @@ main(int xargc, char **xargv)
   int newl = 0;                    /* Label to go if Nl (MOD, INS, AP) */
   int numok;                     /* Label to go if # of lines OK & last param */
   int rtn = 0;                     /* Return from INS/MOD/APPE common code */
-  int i, j, k = 0, l, m, n, dummy; /* Scratch - I most so */
+  int i, j, k = 0, h, m, n, dummy; /* Scratch - I most so */
   int nonum;                       /* Label if no # of lines */
   int oldlen = 0;                  /* Length of OLDSTR */
   int newlen = 0;                  /* Length of NEWSTR */
@@ -1226,7 +1227,7 @@ p1201:
     cntrlc = false;                /* Reset flag */
     if (USING_FILE || curmac >= 0) /* If in macro, force an error */
     {
-      (void)write(1, "Keyboard interrupt", 18);
+      printf("%s", "Keyboard interrupt");
       REREAD_CMD;
     }
   }                                /* Else ignore the quit */
@@ -1269,6 +1270,7 @@ p1201:
       if (do_b_or_s(false))
         READ_NEXT_COMMAND;
       REREAD_CMD;
+
     case 'U':
       goto p1020;
     case 'V':
@@ -1318,8 +1320,7 @@ p1201:
       if (scrdtk(4, (uint8_t *)ubuf, BUFMAX, oldcom))
       {
         perror("SCRDTK of macro text");
-        putchar('\r');
-        printf("Unexpected error");
+        fprintf(stderr, "\rUnexpected error");
         REREAD_CMD;
       }
 /* Decide which macro this will be. */
@@ -1363,7 +1364,7 @@ p1201:
           }                        /* if (USING_FILE) else */
       }                            /* switch (get_answer()) */
       READ_NEXT_COMMAND;
-  }
+  }                                /* switch (verb) */
   printf("%s", "unknown command"); /* Dropped out of switch */
 p1025:
   if (cmd_state == LINE_NUMBER_SAVED) /* Deal with early errors specially */
@@ -1415,7 +1416,7 @@ p1027:if (cntrlc)
     case 'T':
       goto p1030;
   }
-  (void)write(1, "Internal error - EOL char not recognised", 40);
+  printf("%s", "Internal error - EOL char not recognised");
   newlin();
   READ_NEXT_COMMAND;
 p1029:
@@ -1822,7 +1823,7 @@ p1011:
  */
   if (scrdtk(2, (uint8_t *)tmfile, 17, oldcom))
   {
-  p11042:
+  bad_rdtk:
     fprintf(stderr, "%s. (scrdtk)", strerror(errno));
     REREAD_CMD;
   }
@@ -2015,15 +2016,15 @@ p1014:
  * get overwritten and we aren't going to use getlin, so ermess is spare. */
 
   if (scrdtk(2, (uint8_t *)ermess, BUFMAX, oldcom))
-    goto p11042;                   /* J bad RDTK */
+    BAD_RDTK;                      /* J bad RDTK */
   if (oldcom->toktyp == eoltok)
     goto p11043;
-  if (!(l = oldcom->toklen))       /* String is length zero */
+  if (!(h = oldcom->toklen))       /* String is length zero */
   {
   p11043:
-    write(1, "Null string to locate", 21);
+    printf("%s", "Null string to locate");
     REREAD_CMD;                    /* Reread command */
-  }                                /* if(!(l=oldcom->toklen)) */
+  }                                /* if(!(h=oldcom->toklen)) */
   numok = 1105;
   nonum = 1106;
   lstlin = ptrpos;                 /* -TO rel currnt line */
@@ -2062,9 +2063,9 @@ p1717:
     printf("Last pos'n < first\r\n");
     REREAD_CMD;
   }                                /* if(lastpos < firstpos) */
-  lastpos += l;                    /* Add search length to get wanted length */
+  lastpos += h;                    /* Add search length to get wanted length */
 p1719:
-  minlen = firstpos + l;           /* Get minimum line length to search */
+  minlen = firstpos + h;           /* Get minimum line length to search */
   if (eolok())
     goto asg2rtn;
   REREAD_CMD;
@@ -2105,9 +2106,9 @@ p1715:
       continue;                    /* Skip search if too short */
     if (m > lastpos)
       m = lastpos;                 /* Get length to search */
-    if (tokens ? ltok5a((uint8_t *)ermess, l, curr->bdata, firstpos, m,
+    if (tokens ? ltok5a((uint8_t *)ermess, h, curr->bdata, firstpos, m,
       &locpos, &dummy, (uint8_t *)ndel) : lsub5a((uint8_t *)ermess,
-      l, curr->bdata, firstpos, m, &locpos, &dummy))
+      h, curr->bdata, firstpos, m, &locpos, &dummy))
     {                              /* Line located */
       if (revrse)
         setptr(revpos);
@@ -2125,7 +2126,7 @@ p1715:
   setptr(savpos);                  /* Move pointer back */
   locpos = 0;                      /* zeroised by lstr5a */
   if (lgtmp2)
-    (void)write(1, "Specified string not found", 26);
+    printf("%s", "Specified string not found");
 p1810:locerr = true;               /* Picked up by RERDCM */
 p1811:
 /* Reset screen cursor */
@@ -2138,7 +2139,7 @@ p1811:
  * P17165 - Get 1st & last posn's for L & Y
  */
 p17165:
-  if (!getnum(0))
+  if (!getnum(false))
     REREAD_CMD;
   if (oldcom->toktyp != nortok)
     goto asg2nonum;                /* J no number given */
@@ -2190,7 +2191,7 @@ p1114:count2 = count;              /* Another # to get */
   goto p1110;                      /* Join M-MODIFY eventually */
 p1117:
   setptr(ptrpos - 1);              /* P1117 - bust line */
-  (void)write(1, "joining next line would exceed line size :- ", 44);
+  printf("%s", "joining next line would exceed line size :- ");
   rtn = 1118;
   goto p1120;                      /* End JOIN */
 /*
@@ -2205,27 +2206,27 @@ p1018:
 p1129:
   if (!getlin(true, false))        /* Bad source. C joins here */
   {
-    (void)write(1, " in source line", 15);
+    printf("%s", " in source line");
     REREAD_CMD;
   }
   k4 = oldcom->decval;             /* Remember source */
   if (!getlin(true, true))         /* Bad dest'n */
   {
-    (void)write(1, " in dest'n line", 15);
+    printf("%s", " in dest'n line");
     REREAD_CMD;
   }
   j4 = oldcom->decval;             /* Remember dest'n */
   lstlin = k4;                     /* -TO refers from source line */
   if (j4 == k4)                    /* Error if equal */
   {
-    (void)write(1, "Source and destination line #'s must be different", 49);
+    printf("%s", "Source and destination line #'s must be different");
     REREAD_CMD;
   }
   goto asg2rtn;                    /* End 1st common part */
 p1121:
   if (k4 == j4 - 1)
   {
-    (void)write(1, "moving a line to before the next line is a no-op", 48);
+    printf("%s", "moving a line to before the next line is a no-op");
     REREAD_CMD;
   }
   rtn = 1125;                      /* Only used if hit eof */
@@ -2396,7 +2397,7 @@ p1501:
  */
 p1904:
   if (scrdtk(2, (uint8_t *)oldkey, 3, oldcom))
-    goto p11042;
+    BAD_RDTK;
   if (oldcom->toktyp != eoltok)
     goto p1905;                    /* J line wasn't empty */
 /*
@@ -2424,12 +2425,12 @@ p1915:
   k = xkey[0];                     /* Convert to subscript */
   if (k < 128)
     goto p1916;                    /* Continue */
-  (void)write(1, "parity-high \"keys\" not allowed", 30);
+  printf("%s", "parity-high \"keys\" not allowed");
   REREAD_CMD;
 p1908:
   if (xkey[0] == CARAT)
     goto p1910;                    /* J starts "^" (legal) */
-  (void)write(1, "may only have single char or ^ char", 35);
+  printf("%s", "may only have single char or ^ char");
   REREAD_CMD;
 p1910:
   k = xkey[1];                     /* Isolate putative control */
@@ -2439,7 +2440,7 @@ p1910:
     goto p1912;                    /* ^* (=^) */
   if (k == QM)
     goto p1913;                    /* ^? (=rubout) */
-  (void)write(1, "Illegal control character representation", 40);
+  printf("%s", "Illegal control character representation");
   REREAD_CMD;
 p1911:
   k = k - 0100;                    /* Control char to subscript */
@@ -2456,7 +2457,7 @@ p1916:
 p1909:
   oldkey[0] = k;                   /* Now a subscript */
   if (scrdtk(2, (uint8_t *)newkey, 3, oldcom))
-    goto p11042;
+    BAD_RDTK;
   if (oldcom->toktyp == eoltok)
     goto p11043;                   /* Must have another parameter */
   xkey[0] = newkey[0];
@@ -2484,7 +2485,7 @@ p1607:
   tokens = false;                  /* Not FY */
 p2005:
   if (scrdtk(2, (uint8_t *)oldstr, BUFMAX, oldcom))
-    goto p11042;
+    BAD_RDTK;
   if (oldcom->toktyp == eoltok)
     goto p11043;
   oldlen = oldcom->toklen;         /* Length of string */
@@ -2494,18 +2495,19 @@ p2005:
  * Get string with which to replace it
  */
   if (scrdtk(2, (uint8_t *)newstr, BUFMAX, oldcom))
-    goto p11042;
+    BAD_RDTK;
   newlen = oldcom->toklen;
   ydiff = newlen - oldlen;
+
 /* strings must be equal length if Fixed-Length mode */
   if (ydiff && fmode & 0400)
   {
     printf("Replace string must be same length in FIXED LENGTH mode");
     REREAD_CMD;                    /* Report error */
   }
+
   if (oldcom->toktyp == eoltok)
     goto p1608;                    /* J no more params */
-/* */
   if (getlin(false, false))
     goto p1609;                    /* J definitely ok 1st line # */
   if (oldcom->toktyp != nortok)
@@ -2518,7 +2520,7 @@ p1608:j4 = 1;                      /* Start looking at line 1 */
   goto p16105;
 p1609:
   j4 = oldcom->decval;
-p16105:if (!getnum(0))
+p16105:if (!getnum(false))
     REREAD_CMD;                    /* Get # lines, 0 not allowed */
   count = oldcom->decval;
   if (oldcom->toktyp != nortok)    /* No number given */
@@ -2526,7 +2528,7 @@ p16105:if (!getnum(0))
     count = deferd ? LONG_MAX : lintot + 1 - j4; /* Process to eof */
   rtn = 1612;
   lstlin = -1;                     /* -TO not allowed for column pos'ns */
-  l = oldlen;                      /* Req'd by code for L-LOCATE */
+  h = oldlen;                      /* Req'd by code for L-LOCATE */
   goto p1722;                      /* Look for 1st & last pos'ns in line */
 
 /* Error messages */
@@ -2537,7 +2539,7 @@ p1622:
 p16221:
   printf(" %ld lines ", count - i4);
 p1616:
-  (void)write(1, "scanned", 7);
+  printf("%s", "scanned");
   newlin();
 p1712:setptr(savpos);              /* Restore file pos'n */
   READ_NEXT_COMMAND;               /* Leave Y */
@@ -2547,14 +2549,14 @@ p16175:
   goto p16221;
 p1620:
   if (curmac < 0 || !BRIEF)
-    (void)write(1, "specified string not found", 26);
+    printf("%s", "specified string not found");
   setptr(savpos);                  /* Restore file pos'n */
   goto p1810;
 
 p1612:
   if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
   {
-    (void)write(1, "Empty file - can't changeall any lines", 38);
+    printf("%s", "Empty file - can't changeall any lines");
     REREAD_CMD;
   }                                /* if(!lintot&&... */
 
@@ -2602,12 +2604,12 @@ p1710:savpos = ptrpos;             /* Remember so we can get back */
   p1619:if (tokens)
       goto p2011;                  /* J FY */
 /* J no more occurrences this line */
-    if (!lsub5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn, k - n, &l, &m))
+    if (!lsub5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn, k - n, &h, &m))
       goto p1617;
     goto p2012;
   p2011:
 /* J no more occurrences this line */
-    if (!ltok5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn, k - n, &l,
+    if (!ltok5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn, k - n, &h,
       &m, (uint8_t *)ndel))
       goto p1617;
   p2012:
@@ -2634,7 +2636,7 @@ p1710:savpos = ptrpos;             /* Remember so we can get back */
   p1618:
 /* Move in new string if not null */
     if (lgtmp2)
-      memcpy((char *)&curr->bdata[l], (char *)newstr, (size_t)newlen);
+      memcpy((char *)&curr->bdata[h], (char *)newstr, (size_t)newlen);
     k = k + ydiff;                 /* Get new line length */
     linmod = true;                 /* This line has been modified */
     yposn = m + 1 + ydiff;         /* Resume search after new string */
@@ -2722,20 +2724,20 @@ p1707:
 p2003:
   if (strlen(ndel) < 32)
     goto p2007;                    /* J table not full */
-  (void)write(1, "no room for further entries", 27);
+  printf("%s", "no room for further entries");
   REREAD_CMD;
 p2007:
 /* Get character to add */
   if (scrdtk(1, (uint8_t *)ubuf, 40, oldcom))
-    goto p11042;
+    BAD_RDTK;
   if (oldcom->toktyp != eoltok)
     goto p2008;                    /* J not EOL */
-  (void)write(1, "command requires a parameter", 28);
+  printf("%s", "command requires a parameter");
   REREAD_CMD;
 p2008:
   if (oldcom->toklen == 1)
     goto p2009;                    /* J 1-char param (good) */
-  (void)write(1, "parameter must be single character", 34);
+  printf("%s", "parameter must be single character");
   REREAD_CMD;
 p2009:
   if (!eolok())
@@ -2748,7 +2750,7 @@ p2009:
 p1801:
   if (do_cmd())
   {
-    (void)write(1, "bad luck", 8);
+    printf("%s", "bad luck");
     noRereadIfMacro = true;
     goto p1811;                    /* Error has been reported */
   }
