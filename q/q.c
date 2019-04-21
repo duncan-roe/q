@@ -1271,8 +1271,67 @@ p1201:
         READ_NEXT_COMMAND;
       REREAD_CMD;
 
-    case 'U':
-      goto p1020;
+    case 'U':                      /* U - USE */
+      if (!get_file_arg() || nofile)
+        ERR1025("Error in filename");
+      if (!eolok())
+        REREAD_CMD;
+      duplx5(true);                /* Assert XOFF recognition */
+
+/* NULLSTDOUT setting is same as parent */
+      stdinfo[stdidx + 1].nullstdout =
+        stdidx < 0 ? false : stdinfo[stdidx].nullstdout;
+
+/* Save current stdin */
+      stdidx++;
+      SYSCALL(stdinfo[stdidx].funit, dup(0));
+      if (stdinfo[stdidx].funit == -1)
+      {
+        stdidx--;
+        fprintf(stderr, "%s. (dup(0))", strerror(errno));
+        REREAD_CMD;
+      }                            /* if (stdinfo[stdidx].funit == -1) */
+
+/* Close funit 0 */
+      SYSCALL(i, close(0));
+
+/* Open new input source */
+      SYSCALL(i, open_buf(O_RDONLY, 0));
+      if (i == -1)
+      {
+        pop_stdin();
+        fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
+        REREAD_CMD;
+      }                            /* if (i == -1) */
+
+/* Verify new input opened on funit 0. Try to rectify if not */
+      if (i)
+      {
+        SYSCALL(j, dup2(i, 0));
+        if (j == -1)
+        {
+          fprintf(stderr, "%s.(dup2(%d, 0))", strerror(errno), i);
+          SYSCALL(j, close(i));
+          pop_stdin();
+          REREAD_CMD;
+        }                          /* if (j == -1) */
+        SYSCALL(j, close(i));
+      }                            /* if (i) */
+
+/* If invoked from a macro, suspend that macro */
+      if (curmac >= 0)
+      {
+        if (!pushmac(true))
+          REREAD_CMD;
+        curmac = -1;
+        stdinfo[stdidx].frommac = true;
+      }                            /* if (curmac >= 0) */
+      else
+        stdinfo[stdidx].frommac = false;
+
+      buf5len = 0;                 /* Flush any input left over */
+      READ_NEXT_COMMAND;
+
     case 'V':
       goto p1021;
     case 'W':
@@ -1288,7 +1347,7 @@ p1201:
     case 'N':
       goto p1501;
     case 'Y':
-      goto p1607;
+      goto p2005;
     case 'b':
       goto p1701;
     case 'v':
@@ -1304,7 +1363,7 @@ p1201:
     case 'l':
       goto p1014;                  /* Same as L */
     case 'y':
-      goto p2002;
+      goto p2005;
     case 't':
       goto p2003;
     case 'f':
@@ -1751,69 +1810,6 @@ p1010:
   }                                /* if(getlin(true, ... */
   REREAD_CMD;
 /*
- * U - USE
- */
-p1020:
-  if (!get_file_arg() || nofile)
-    ERR1025("Error in filename");
-  if (!eolok())
-    REREAD_CMD;
-  duplx5(true);                    /* Assert XOFF recognition */
-
-/* NULLSTDOUT setting is same as parent */
-  stdinfo[stdidx + 1].nullstdout =
-    stdidx < 0 ? false : stdinfo[stdidx].nullstdout;
-
-/* Save current stdin */
-  stdidx++;
-  SYSCALL(stdinfo[stdidx].funit, dup(0));
-  if (stdinfo[stdidx].funit == -1)
-  {
-    stdidx--;
-    fprintf(stderr, "%s. (dup(0))", strerror(errno));
-    REREAD_CMD;
-  }                                /* if (stdinfo[stdidx].funit == -1) */
-
-/* Close funit 0 */
-  SYSCALL(i, close(0));
-
-/* Open new input source */
-  SYSCALL(i, open_buf(O_RDONLY, 0));
-  if (i == -1)
-  {
-    pop_stdin();
-    fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
-    REREAD_CMD;
-  }                                /* if (i == -1) */
-
-/* Verify new input opened on funit 0. Try to rectify if not */
-  if (i)
-  {
-    SYSCALL(j, dup2(i, 0));
-    if (j == -1)
-    {
-      fprintf(stderr, "%s.(dup2(%d, 0))", strerror(errno), i);
-      SYSCALL(j, close(i));
-      pop_stdin();
-      REREAD_CMD;
-    }                              /* if (j == -1) */
-    SYSCALL(j, close(i));
-  }                                /* if (i) */
-
-/* If invoked from a macro, suspend that macro */
-  if (curmac >= 0)
-  {
-    if (!pushmac(true))
-      REREAD_CMD;
-    curmac = -1;
-    stdinfo[stdidx].frommac = true;
-  }                                /* if (curmac >= 0) */
-  else
-    stdinfo[stdidx].frommac = false;
-
-  buf5len = 0;                     /* Flush any input left over */
-  READ_NEXT_COMMAND;
-/*
  * H - HELP
  */
 p1011:
@@ -2012,8 +2008,10 @@ p1014:
     READ_NEXT_COMMAND;             /* Next command */
   }                                /* if(revrse?ptrpos<=1:ptrpos>lintot&&... */
 
-/* Get the string to locate. The string is read to the ermess array, as ubuf will
- * get overwritten and we aren't going to use getlin, so ermess is spare. */
+/* Get the string to locate.
+ * The string is read to the ermess array,
+ * as ubuf will get overwritten and we aren't going to use getlin,
+ * so ermess is spare. */
 
   if (scrdtk(2, (uint8_t *)ermess, BUFMAX, oldcom))
     BAD_RDTK;                      /* J bad RDTK */
@@ -2473,27 +2471,19 @@ p1914:
   fxtabl[(int)newkey[0]] = i;
   READ_NEXT_COMMAND;
 /*
- * Y - Change all occurrences of 1 string to another
- *
- *
- * P1607 - Get string to look for
+ * Y or FY - Change all occurrences of 1 string to another
  */
-p2002:
-  tokens = true;                   /* FY */
-  goto p2005;
-p1607:
-  tokens = false;                  /* Not FY */
 p2005:
+  tokens = verb == 'y';            /* Differentiate fy */
   if (scrdtk(2, (uint8_t *)oldstr, BUFMAX, oldcom))
     BAD_RDTK;
-  if (oldcom->toktyp == eoltok)
-    goto p11043;
-  oldlen = oldcom->toklen;         /* Length of string */
-  if (oldlen == 0)
-    goto p11043;                   /* J null string (error) */
-/*
- * Get string with which to replace it
- */
+  if (oldcom->toktyp == eoltok || !(oldlen = oldcom->toklen))
+  {
+    printf("%s", "Null string to replace");
+    REREAD_CMD;
+  }                                /* if (oldcom->toktyp == eoltok || ... */
+
+/* Get string with which to replace it */
   if (scrdtk(2, (uint8_t *)newstr, BUFMAX, oldcom))
     BAD_RDTK;
   newlen = oldcom->toklen;
@@ -2502,7 +2492,7 @@ p2005:
 /* strings must be equal length if Fixed-Length mode */
   if (ydiff && fmode & 0400)
   {
-    printf("Replace string must be same length in FIXED LENGTH mode");
+    printf("%s", "Replace string must be same length in FIXED LENGTH mode");
     REREAD_CMD;                    /* Report error */
   }
 
