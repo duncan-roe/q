@@ -2497,25 +2497,27 @@ p2005:
   }
 
   if (oldcom->toktyp == eoltok)
-    goto p1608;                    /* J no more params */
-  if (getlin(false, false))
-    goto p1609;                    /* J definitely ok 1st line # */
-  if (oldcom->toktyp != nortok)
-    goto p1608;                    /* J ok after all */
-  fprintf(stderr, "%s", ermess);
-  REREAD_CMD;
-p1608:j4 = 1;                      /* Start looking at line 1 */
-  if (oldcom->toktyp == eoltok)
-    goto p1610;                    /* Join no # lines code if eol now */
-  goto p16105;
-p1609:
-  j4 = oldcom->decval;
-p16105:if (!getnum(false))
-    REREAD_CMD;                    /* Get # lines, 0 not allowed */
-  count = oldcom->decval;
-  if (oldcom->toktyp != nortok)    /* No number given */
-  p1610:
-    count = deferd ? LONG_MAX : lintot + 1 - j4; /* Process to eof */
+    j4 = 1;
+  else
+  {
+    if (getlin(false, false))
+      j4 = oldcom->decval;
+    else
+    {
+      if (oldcom->toktyp == nortok)
+      {
+        fprintf(stderr, "%s", ermess);
+        REREAD_CMD;
+      }                            /* if (oldcom->toktyp == nortok) */
+      j4 = 1;                      /* Start looking at line 1 */
+    }                              /* if (getlin(false, false)) else */
+    if (!getnum(false))            /* Get # lines, 0 not allowed */
+      REREAD_CMD;
+    if (oldcom->toktyp != nortok)  /* No number given */
+      count = deferd ? LONG_MAX : lintot + 1 - j4; /* Process to eof */
+    else
+      count = oldcom->decval;
+  }                                /* if (oldcom->toktyp == eoltok) else */
   rtn = 1612;
   lstlin = -1;                     /* -TO not allowed for column pos'ns */
   h = oldlen;                      /* Req'd by code for L-LOCATE */
