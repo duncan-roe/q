@@ -40,12 +40,14 @@
 
 /* Macros */
 
-#define REREAD_CMD goto p1025
+#define REREAD_CMD goto reread_cmd
+#define REREAD_CMD_S(s) do {fputs(s, stdout); goto reread_cmd;} while (0)
 #define ERR1025(x) do {fprintf(stderr, "%s", (x)); REREAD_CMD;} while (0)
 #define READ_NEXT_COMMAND goto p1004
 #define ERRRTN(x) do {fprintf(stderr, "%s", (x)); return false;} while (0)
 #define PIPE_NAME "/tmp/qpipeXXXXXX"
 #define BAD_RDTK goto bad_rdtk
+#define revrse (fmode & 04000)
 
 /* Typedefs */
 
@@ -160,7 +162,7 @@ eolok(void)
   scrdtk(1, (uint8_t *)NULL, 0, oldcom);
   if (oldcom->toktyp == eoltok)    /* OK */
     return true;
-  fputs("Too many arguments for this command" ,stdout);
+  fputs("Too many arguments for this command", stdout);
   return false;
 }                                  /* static bool eolok(void) */
 
@@ -180,7 +182,7 @@ get_answer(void)
     return Q_MAYBE;
   if (oldcom->toktyp != nortok)    /* I.e. null token */
   {
-    fputs("Bad parameter for command" ,stdout);
+    fputs("Bad parameter for command", stdout);
     return Q_UNREC;
   }                                /* if (oldcom->toktyp != nortok) */
   if (!eolok())
@@ -200,7 +202,7 @@ get_answer(void)
     case 'N':
       return Q_NO;
   }
-  fputs("Parameter not recognised" ,stdout);
+  fputs("Parameter not recognised", stdout);
   return Q_UNREC;
 }                                  /* get_answer(void) */
 
@@ -722,7 +724,6 @@ main(int xargc, char **xargv)
   int minlen = 0;                  /* Min line length (L&Y) */
   int firstpos = 0;                /* First pos to search (L&Y) */
   int lastpos = 0;                 /* Last pos to search (L&Y) */ ;
-  bool revrse;                     /* Locate backwards */
   int savtok;                      /* Saved token type */
   int colonline;                   /* Line number from <file>:<line> */
 /* */
@@ -756,6 +757,49 @@ main(int xargc, char **xargv)
   long count = 0;                  /* Returned by GETNUM seq */
 
 /* INTERNAL FUNCTIOBS */
+
+/* ****************************** valid_FX_arg ****************************** */
+
+  bool valid_FX_arg(void)
+  {
+    if (oldcom->toklen == 0)
+    {
+      fputs("Null argument not allowed", stdout);
+      return false;
+    }                              /* if (oldcom->toklen == 0) */
+    if (oldcom->toklen != 2)       /* Can't be ^<char> */
+    {
+      k = xkey[0];                 /* Convert to subscript */
+      if (k >= 128)
+      {
+        fputs("parity-high \"keys\" not allowed", stdout);
+        return false;
+      }                            /* if (k >= 128) */
+    }                              /* if (oldcom->toklen != 2) */
+    else
+    {
+      if (xkey[0] != CARAT)
+      {
+        fputs("may only have single char or ^ char", stdout);
+        return false;
+      }                            /* if (xkey[0] != CARAT) */
+      k = xkey[1];                 /* Isolate putative control */
+      if (k >= 0100 && k <= 0137)  /* A real control char */
+        k = k - 0100;              /* Control char to subscript */
+      else if (k == ASTRSK)        /* ^* (real uparrow) */
+        k = CARAT;
+      else if (k == QM)            /* ^? (Rubout) */
+        k = 127;
+      else
+      {
+        fputs("Illegal control character representation", stdout);
+        return false;
+      }
+    }                              /* if (oldcom->toklen != 2) else */
+    if (k > 31 && k != 127)
+      puts("Warning: non-control char as argument\r");
+    return true;
+  }                                /* bool valid_FX_arg(void) */
 
 /* ************************* END INTERNAL FUNCTIOBS ************************* */
 
@@ -1229,12 +1273,8 @@ p1201:
   {
     cntrlc = false;                /* Reset flag */
     if (USING_FILE || curmac >= 0) /* If in macro, force an error */
-    {
-      fputs("Keyboard interrupt" ,stdout);
-      REREAD_CMD;
-    }
+      REREAD_CMD_S("Keyboard interrupt");
   }                                /* Else ignore the quit */
-  revrse = false;                  /* Guarantee validity if true */
   switch (verb)
   {
     case 'A':
@@ -1361,14 +1401,60 @@ p1201:
       goto p1707;
     case '!':
       goto p1801;
-    case 'x':
-      goto p1904;
+
+    case 'x':               /* FX - Exchange the functions of 2 keyboard keys */
+      if (scrdtk(2, (uint8_t *)oldkey, 3, oldcom))
+        BAD_RDTK;
+      if (oldcom->toktyp == eoltok) /* Empty line */
+      {
+/* FX with no params - Re-initialise the table, subject to
+ *                     confirmation */
+        if (!ysno5a("Re-initialise keyboard table to default - ok", A5NDEF))
+          READ_NEXT_COMMAND;       /* Finish if changed his mind */
+        for (i = 127; i >= 0; i--)
+          fxtabl[i] = i;           /* No FX commands yet */
+        READ_NEXT_COMMAND;         /* Finished after reset */
+      }                            /* if (oldcom->toktyp != eoltok) */
+      xkey[0] = oldkey[0];
+      xkey[1] = oldkey[1];
+      if (!valid_FX_arg())
+        REREAD_CMD;
+      oldkey[0] = k;               /* Now a subscript */
+      if (scrdtk(2, (uint8_t *)newkey, 3, oldcom))
+        BAD_RDTK;
+      if (oldcom->toktyp == eoltok)
+        REREAD_CMD_S("FX must have 2 parameters");
+      xkey[0] = newkey[0];
+      xkey[1] = newkey[1];
+      if (!valid_FX_arg())
+        REREAD_CMD;
+      newkey[0] = k;               /* Now a subscript */
+      if (!eolok())
+        REREAD_CMD;
+      i = fxtabl[(int)oldkey[0]];
+      fxtabl[(int)oldkey[0]] = fxtabl[(int)newkey[0]];
+      fxtabl[(int)newkey[0]] = i;
+      READ_NEXT_COMMAND;
+
     case 'l':
       goto p1014;                  /* Same as L */
     case 'y':
       goto p2005;
-    case 't':
-      goto p2003;
+
+    case 't':                      /* FT - TOKENCHAR */
+      if (strlen(ndel) >= 32)
+        REREAD_CMD_S("no room for further entries");
+      if (scrdtk(1, (uint8_t *)ubuf, 40, oldcom)) /* Get character to add */
+        BAD_RDTK;
+      if (oldcom->toktyp == eoltok)
+        REREAD_CMD_S("command requires a parameter");
+      if (oldcom->toklen != 1)
+        REREAD_CMD_S("parameter must be single character");
+      if (!eolok())
+        REREAD_CMD;
+      strcat(ndel, ubuf);
+      READ_NEXT_COMMAND;
+
     case 'f':
       goto p2013;
     case 'c':
@@ -1389,10 +1475,7 @@ p1201:
 /* Some nesting of FI macros is allowed, */
 /* to support e.g. nested U-use files which contain FI cmds */
       if (immnxfr > LAST_IMMEDIATE_MACRO)
-      {
-        fputs("Too many nested FI commands" ,stdout);
-        REREAD_CMD;
-      }                            /* if (immnxfr > LAST_IMMEDIATE_MACRO) */
+        REREAD_CMD_S("Too many nested FI commands");
       verb = immnxfr++;
       if (!newmac2(true))
         REREAD_CMD;
@@ -1420,15 +1503,12 @@ p1201:
             break;
           }                        /* if (USING_FILE) */
           else
-          {
-            fputs("fd y is not available from the keyboard" ,stdout);
-            REREAD_CMD;
-          }                        /* if (USING_FILE) else */
+            REREAD_CMD_S("fd y is not available from the keyboard");
       }                            /* switch (get_answer()) */
       READ_NEXT_COMMAND;
   }                                /* switch (verb) */
-  fputs("unknown command" ,stdout); /* Dropped out of switch */
-p1025:
+  fputs("unknown command", stdout); /* Dropped out of switch */
+reread_cmd:
   if (cmd_state == LINE_NUMBER_SAVED) /* Deal with early errors specially */
   {
     cmd_state = TRY_INITIAL_COMMAND;
@@ -1478,7 +1558,7 @@ p1027:if (cntrlc)
     case 'T':
       goto p1030;
   }
-  fputs("Internal error - EOL char not recognised" ,stdout);
+  fputs("Internal error - EOL char not recognised", stdout);
   newlin();
   READ_NEXT_COMMAND;
 p1029:
@@ -1999,7 +2079,7 @@ p1103:
  */
 p1014:
   tokens = verb == 'l';            /* Whether FL */
-  if ((revrse = (fmode & 04000) != 0))
+  if (revrse)
     revpos = ptrpos;
   lgtmp2 = !BRIEF || curmac < 0;   /* Display error messages if true */
   if (revrse ? ptrpos <= 1 : ptrpos > lintot && !(deferd &&
@@ -2018,14 +2098,8 @@ p1014:
 
   if (scrdtk(2, (uint8_t *)ermess, BUFMAX, oldcom))
     BAD_RDTK;                      /* J bad RDTK */
-  if (oldcom->toktyp == eoltok)
-    goto p11043;
-  if (!(h = oldcom->toklen))       /* String is length zero */
-  {
-  p11043:
-    fputs("Null string to locate" ,stdout);
-    REREAD_CMD;                    /* Reread command */
-  }                                /* if(!(h=oldcom->toklen)) */
+  if (oldcom->toktyp == eoltok || !(h = oldcom->toklen))
+    REREAD_CMD_S("Null string to locate");
   numok = 1105;
   nonum = 1106;
   lstlin = ptrpos;                 /* -TO rel currnt line */
@@ -2127,7 +2201,7 @@ p1715:
   setptr(savpos);                  /* Move pointer back */
   locpos = 0;                      /* zeroised by lstr5a */
   if (lgtmp2)
-    fputs("Specified string not found" ,stdout);
+    fputs("Specified string not found", stdout);
 p1810:locerr = true;               /* Picked up by RERDCM */
 p1811:
 /* Reset screen cursor */
@@ -2192,7 +2266,7 @@ p1114:count2 = count;              /* Another # to get */
   goto p1110;                      /* Join M-MODIFY eventually */
 p1117:
   setptr(ptrpos - 1);              /* P1117 - bust line */
-  fputs("joining next line would exceed line size :- " ,stdout);
+  fputs("joining next line would exceed line size :- ", stdout);
   rtn = 1118;
   goto p1120;                      /* End JOIN */
 /*
@@ -2206,30 +2280,18 @@ p1018:
   repos = true;
 p1129:
   if (!getlin(true, false))        /* Bad source. C joins here */
-  {
-    fputs(" in source line" ,stdout);
-    REREAD_CMD;
-  }
+    REREAD_CMD_S(" in source line");
   k4 = oldcom->decval;             /* Remember source */
   if (!getlin(true, true))         /* Bad dest'n */
-  {
-    fputs(" in dest'n line" ,stdout);
-    REREAD_CMD;
-  }
+    REREAD_CMD_S(" in dest'n line");
   j4 = oldcom->decval;             /* Remember dest'n */
   lstlin = k4;                     /* -TO refers from source line */
   if (j4 == k4)                    /* Error if equal */
-  {
-    fputs("Source and destination line #'s must be different" ,stdout);
-    REREAD_CMD;
-  }
+    REREAD_CMD_S("Source and destination line #'s must be different");
   goto asg2rtn;                    /* End 1st common part */
 p1121:
   if (k4 == j4 - 1)
-  {
-    fputs("moving a line to before the next line is a no-op" ,stdout);
-    REREAD_CMD;
-  }
+    REREAD_CMD_S("moving a line to before the next line is a no-op");
   rtn = 1125;                      /* Only used if hit eof */
 p1131:                             /* C joins us here */
   if (!get_opt_lines(&count))
@@ -2394,86 +2456,6 @@ p1501:
     READ_NEXT_COMMAND;             /* No error */
   REREAD_CMD;
 /*
- * FX - Exchange the functions of 2 keyboard keys
- */
-p1904:
-  if (scrdtk(2, (uint8_t *)oldkey, 3, oldcom))
-    BAD_RDTK;
-  if (oldcom->toktyp != eoltok)
-    goto p1905;                    /* J line wasn't empty */
-/*
- * FX with no params - Re-initialise the table, subject to
- *                     confirmation
- */
-  if (!ysno5a("Re-initialise keyboard table to default - ok", A5NDEF))
-    READ_NEXT_COMMAND;             /* Finish if changed his mind */
-  for (i = 127; i >= 0; i--)
-    fxtabl[i] = i;                 /* No FX commands yet */
-  READ_NEXT_COMMAND;               /* Finished after reset */
-/*
- * Validate parameter just read ...
- */
-p1905:
-  rtn = 1909;
-  xkey[0] = oldkey[0];
-  xkey[1] = oldkey[1];
-p1915:
-  i = oldcom->toklen;
-  if (i == 0)
-    goto p11043;                   /* Null param not allowed */
-  if (i == 2)
-    goto p1908;                    /* ^<char> allowed */
-  k = xkey[0];                     /* Convert to subscript */
-  if (k < 128)
-    goto p1916;                    /* Continue */
-  fputs("parity-high \"keys\" not allowed" ,stdout);
-  REREAD_CMD;
-p1908:
-  if (xkey[0] == CARAT)
-    goto p1910;                    /* J starts "^" (legal) */
-  fputs("may only have single char or ^ char" ,stdout);
-  REREAD_CMD;
-p1910:
-  k = xkey[1];                     /* Isolate putative control */
-  if (k >= 0100 && k <= 0137)
-    goto p1911;                    /* J a real control char */
-  if (k == ASTRSK)
-    goto p1912;                    /* ^* (=^) */
-  if (k == QM)
-    goto p1913;                    /* ^? (=rubout) */
-  fputs("Illegal control character representation" ,stdout);
-  REREAD_CMD;
-p1911:
-  k = k - 0100;                    /* Control char to subscript */
-  goto p1916;
-p1912:
-  k = CARAT;                       /* "^" as subscript */
-  goto p1916;
-p1913:
-  k = 127;                         /* Rubout is the last character */
-p1916:
-  if (k > 31 && k != 127)
-    puts("Warning: non-control char as argument\r");
-  goto asg2rtn;
-p1909:
-  oldkey[0] = k;                   /* Now a subscript */
-  if (scrdtk(2, (uint8_t *)newkey, 3, oldcom))
-    BAD_RDTK;
-  if (oldcom->toktyp == eoltok)
-    goto p11043;                   /* Must have another parameter */
-  xkey[0] = newkey[0];
-  xkey[1] = newkey[1];
-  rtn = 1914;
-  goto p1915;                      /* Validate parameter */
-p1914:
-  newkey[0] = k;                   /* Now a subscript */
-  if (!eolok())
-    REREAD_CMD;
-  i = fxtabl[(int)oldkey[0]];
-  fxtabl[(int)oldkey[0]] = fxtabl[(int)newkey[0]];
-  fxtabl[(int)newkey[0]] = i;
-  READ_NEXT_COMMAND;
-/*
  * Y or FY - Change all occurrences of 1 string to another
  */
 p2005:
@@ -2481,10 +2463,7 @@ p2005:
   if (scrdtk(2, (uint8_t *)oldstr, BUFMAX, oldcom))
     BAD_RDTK;
   if (oldcom->toktyp == eoltok || !(oldlen = oldcom->toklen))
-  {
-    fputs("Null string to replace" ,stdout);
-    REREAD_CMD;
-  }                                /* if (oldcom->toktyp == eoltok || ... */
+    REREAD_CMD_S("Null string to replace");
 
 /* Get string with which to replace it */
   if (scrdtk(2, (uint8_t *)newstr, BUFMAX, oldcom))
@@ -2494,10 +2473,7 @@ p2005:
 
 /* strings must be equal length if Fixed-Length mode */
   if (ydiff && fmode & 0400)
-  {
-    fputs("Replace string must be same length in FIXED LENGTH mode" ,stdout);
-    REREAD_CMD;                    /* Report error */
-  }
+    REREAD_CMD_S("Replace string must be same length in FIXED LENGTH mode");
 
   if (oldcom->toktyp == eoltok)
     j4 = 1;
@@ -2534,7 +2510,7 @@ p1622:
 p16221:
   printf(" %ld lines ", count - i4);
 p1616:
-  fputs("scanned" ,stdout);
+  fputs("scanned", stdout);
   newlin();
 p1712:setptr(savpos);              /* Restore file pos'n */
   READ_NEXT_COMMAND;               /* Leave Y */
@@ -2544,16 +2520,13 @@ p16175:
   goto p16221;
 p1620:
   if (curmac < 0 || !BRIEF)
-    fputs("specified string not found" ,stdout);
+    fputs("specified string not found", stdout);
   setptr(savpos);                  /* Restore file pos'n */
   goto p1810;
 
 p1612:
   if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
-  {
-    fputs("Empty file - can't changeall any lines" ,stdout);
-    REREAD_CMD;
-  }                                /* if(!lintot&&... */
+    REREAD_CMD_S("Empty file - can't changeall any lines");
 
 /* We act on BRIEF or NONE if in a macro without question. Otherwise, BRIEF or
  * NONE is queried, and we reset to VERBOSE if we don't get confirmation */
@@ -2712,38 +2685,12 @@ p1707:
   forget();                        /* In fact implemented by workfile */
   READ_NEXT_COMMAND;
 /*
- * FT - TOKENCHAR
- */
-p2003:
-  if (strlen(ndel) < 32)
-    goto p2007;                    /* J table not full */
-  fputs("no room for further entries" ,stdout);
-  REREAD_CMD;
-p2007:
-/* Get character to add */
-  if (scrdtk(1, (uint8_t *)ubuf, 40, oldcom))
-    BAD_RDTK;
-  if (oldcom->toktyp != eoltok)
-    goto p2008;                    /* J not EOL */
-  fputs("command requires a parameter" ,stdout);
-  REREAD_CMD;
-p2008:
-  if (oldcom->toklen == 1)
-    goto p2009;                    /* J 1-char param (good) */
-  fputs("parameter must be single character" ,stdout);
-  REREAD_CMD;
-p2009:
-  if (!eolok())
-    REREAD_CMD;
-  strcat(ndel, ubuf);
-  READ_NEXT_COMMAND;
-/*
  * ! - DO SHELL COMMAND
  */
 p1801:
   if (do_cmd())
   {
-    fputs("bad luck" ,stdout);
+    fputs("bad luck", stdout);
     noRereadIfMacro = true;
     goto p1811;                    /* Error has been reported */
   }
@@ -2767,10 +2714,6 @@ asg2rtn:switch (rtn)
       goto p1612;
     case 1715:
       goto p1715;
-    case 1914:
-      goto p1914;
-    case 1909:
-      goto p1909;
     case 2017:
       goto p2017;
     case 2014:
