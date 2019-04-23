@@ -115,7 +115,6 @@ uint8_t stderrbuf[Q_BUFSIZ];
 
 /* Static Variables */
 
-static long count = 0;             /* Returned by GETNUM seq */
 static char *help_dir;
 static char *help_cmd;
 static char *etc_dir;
@@ -161,7 +160,7 @@ eolok(void)
   scrdtk(1, (uint8_t *)NULL, 0, oldcom);
   if (oldcom->toktyp == eoltok)    /* OK */
     return true;
-  printf("%s", "Too many arguments for this command");
+  fputs("Too many arguments for this command" ,stdout);
   return false;
 }                                  /* static bool eolok(void) */
 
@@ -181,7 +180,7 @@ get_answer(void)
     return Q_MAYBE;
   if (oldcom->toktyp != nortok)    /* I.e. null token */
   {
-    printf("%s", "Bad parameter for command");
+    fputs("Bad parameter for command" ,stdout);
     return Q_UNREC;
   }                                /* if (oldcom->toktyp != nortok) */
   if (!eolok())
@@ -201,7 +200,7 @@ get_answer(void)
     case 'N':
       return Q_NO;
   }
-  printf("%s", "Parameter not recognised");
+  fputs("Parameter not recognised" ,stdout);
   return Q_UNREC;
 }                                  /* get_answer(void) */
 
@@ -222,19 +221,19 @@ get_file_arg(void)
   return true;
 }                                  /* get_file_arg() */
 
-/* &************************** get_opt_lines2count ************************** */
+/* ****************************** get_opt_lines ***************************** */
 
 static bool
-get_opt_lines2count(void)
+get_opt_lines(long *result)
 {
   if (getnum(false))               /* Format of optional # of lines OK */
   {
-    count = oldcom->decval;
+    *result = oldcom->decval;
     if (oldcom->toktyp == eoltok || eolok()) /* EOL already or next */
       return true;
   }                                /* if(getnum(false)) */
   return false;
-}                                  /* get_opt_lines2count() */
+}                                  /* get_opt_lines() */
 
 /* ***************************** do_stat_symlink **************************** */
 
@@ -388,7 +387,7 @@ do_b_or_s(bool is_b)
         return false;
       }                            /* if(unlink(tmfile)) */
       if (is_b)
-        printf("Previous backup file deleted:- ");
+        fputs("Previous backup file deleted:- ", stdout);
     }                              /* if(!stat(tmfile,&statbuf)) */
     if (rename(ubuf, tmfile))      /* If rename fails */
     {
@@ -462,7 +461,7 @@ do_b_or_s(bool is_b)
     }                              /* if (towner != statbuf.st_gid) */
 /* If there were no problems above, set any extra original mode bits */
     if (tmode != statbuf.st_mode && (fscode || chmod(pcnta, tmode) == -1))
-      printf("Warning - original mode not restored\r\n");
+      puts("Warning - original mode not restored\r");
   }                                /* if (towner) */
   mods = false;                    /* S or B succeeded */
   return true;
@@ -671,7 +670,7 @@ display_opcodes(void)
   char tbuf[16];
   char *p;
 
-  printf("\r\n"
+  puts("\r"
     "\t Instructions to Access Tabs\r\n"
     "\t ============ == ====== ====\r\n"
     "PSHTAB x Push value of tab x to R\r\n"
@@ -754,9 +753,13 @@ main(int xargc, char **xargv)
   q_yesno answer;
   char *initial_command = NULL;
   bool P, Q;                      /* For determining whether we are in a pipe */
-/*
- * Initial Tasks
- */
+  long count = 0;                  /* Returned by GETNUM seq */
+
+/* INTERNAL FUNCTIOBS */
+
+/* ************************* END INTERNAL FUNCTIOBS ************************* */
+
+/* Initial Tasks */
   argc = xargc;                    /* Xfer invocation arg to common */
   argv = xargv;                    /* Xfer invocation arg to common */
   dfltmode = 01212005;             /* +e +m +* +tr +dr +i +a */
@@ -1227,7 +1230,7 @@ p1201:
     cntrlc = false;                /* Reset flag */
     if (USING_FILE || curmac >= 0) /* If in macro, force an error */
     {
-      printf("%s", "Keyboard interrupt");
+      fputs("Keyboard interrupt" ,stdout);
       REREAD_CMD;
     }
   }                                /* Else ignore the quit */
@@ -1387,7 +1390,7 @@ p1201:
 /* to support e.g. nested U-use files which contain FI cmds */
       if (immnxfr > LAST_IMMEDIATE_MACRO)
       {
-        printf("%s", "Too many nested FI commands");
+        fputs("Too many nested FI commands" ,stdout);
         REREAD_CMD;
       }                            /* if (immnxfr > LAST_IMMEDIATE_MACRO) */
       verb = immnxfr++;
@@ -1418,13 +1421,13 @@ p1201:
           }                        /* if (USING_FILE) */
           else
           {
-            printf("%s", "fd y is not available from the keyboard");
+            fputs("fd y is not available from the keyboard" ,stdout);
             REREAD_CMD;
           }                        /* if (USING_FILE) else */
       }                            /* switch (get_answer()) */
       READ_NEXT_COMMAND;
   }                                /* switch (verb) */
-  printf("%s", "unknown command"); /* Dropped out of switch */
+  fputs("unknown command" ,stdout); /* Dropped out of switch */
 p1025:
   if (cmd_state == LINE_NUMBER_SAVED) /* Deal with early errors specially */
   {
@@ -1475,7 +1478,7 @@ p1027:if (cntrlc)
     case 'T':
       goto p1030;
   }
-  printf("%s", "Internal error - EOL char not recognised");
+  fputs("Internal error - EOL char not recognised" ,stdout);
   newlin();
   READ_NEXT_COMMAND;
 p1029:
@@ -1534,7 +1537,7 @@ p1015:
   {
     j4 = oldcom->decval;           /* 1st line to be altered */
     lstvld = false;                /* Previous line not valid */
-    if (!get_opt_lines2count())
+    if (!get_opt_lines(&count))
       REREAD_CMD;
   }
   else
@@ -1552,7 +1555,7 @@ p1036:
   {
     if (!rdlin(curr, false))       /* Get lin to mod / EOF */
     {
-      printf("E - O - F\r\n");
+      puts("E - O - F\r");
       READ_NEXT_COMMAND;
     }                              /* if(!rdlin(curr, false)) */
     curr->bcurs = locpos;          /* In case just come from LOCATE */
@@ -1595,7 +1598,7 @@ p1022:
 /* But ... must save returned decimal number before calling scrdtk again */
 
     line_number_saved = oldcom->decval;
-    if (!get_opt_lines2count() || !eolok())
+    if (!get_opt_lines(&count) || !eolok())
       REREAD_CMD;
     setptr(line_number_saved);     /* Get ready to write */
     wrtnum = count;
@@ -1645,7 +1648,7 @@ e_q_common:                        /* Q <filename> joins here */
       mapfil(statbuf.st_ino, statbuf.st_size, p);
     }                              /* if(statbuf.st_size) */
     else
-      printf("0 lines read.\r\n");
+      puts("0 lines read.\r");
   }                                /* if(fmode&02000&&... */
   else
     readfl();
@@ -1771,7 +1774,7 @@ p1008:
   if (!getlin(true, false))
     REREAD_CMD;                    /* J bad line # */
   k4 = oldcom->decval + 1;         /* Pos here for each delete */
-  if (!get_opt_lines2count())
+  if (!get_opt_lines(&count))
     REREAD_CMD;
   clrfgt();                        /* In case lines from last D */
   for (i4 = count; i4 > 0; i4--)
@@ -1848,9 +1851,9 @@ p1011:
 /* Output a potted message if he "typed h for help" */
     if (tmfile[0] == '#' && tmfile[1] == 0)
     {
-      printf("\r\n");
-      printf("Sorry - I can't find my HELP files.\r\n");
-      printf("If you have them installed somewhere,\r\n"
+      puts("\r");
+      puts("Sorry - I can't find my HELP files.\r");
+      puts("If you have them installed somewhere,\r"
         "please put that path in your shell environment"
         " with the name Q_HELP_DIR.\r\n\n");
       READ_NEXT_COMMAND;
@@ -1883,7 +1886,7 @@ p1023:
  */
 p1016:
   lstlin = ptrpos;                 /* -TO strt curr lin */
-  if (!get_opt_lines2count())
+  if (!get_opt_lines(&count))
     REREAD_CMD;
   rtn = 1093;
 p1104:
@@ -2020,7 +2023,7 @@ p1014:
   if (!(h = oldcom->toklen))       /* String is length zero */
   {
   p11043:
-    printf("%s", "Null string to locate");
+    fputs("Null string to locate" ,stdout);
     REREAD_CMD;                    /* Reread command */
   }                                /* if(!(h=oldcom->toklen)) */
   numok = 1105;
@@ -2058,7 +2061,7 @@ p1717:
   lastpos = oldcom->decval - 1;    /* Last start position */
   if (lastpos < firstpos)          /* Impossible combination of columns */
   {
-    printf("Last pos'n < first\r\n");
+    puts("Last pos'n < first\r");
     REREAD_CMD;
   }                                /* if(lastpos < firstpos) */
   lastpos += h;                    /* Add search length to get wanted length */
@@ -2124,7 +2127,7 @@ p1715:
   setptr(savpos);                  /* Move pointer back */
   locpos = 0;                      /* zeroised by lstr5a */
   if (lgtmp2)
-    printf("%s", "Specified string not found");
+    fputs("Specified string not found" ,stdout);
 p1810:locerr = true;               /* Picked up by RERDCM */
 p1811:
 /* Reset screen cursor */
@@ -2155,7 +2158,7 @@ p1013:
   goto p1107;                      /* Get opt. # lines to join in COUNT */
 p1114:count2 = count;              /* Another # to get */
   lstlin = -1;                     /* Not allowed -TO */
-  if (!get_opt_lines2count())
+  if (!get_opt_lines(&count))
     REREAD_CMD;
 /* At eof */
   if (ptrpos >= lintot && !(deferd && (dfread(1, NULL), ptrpos < lintot)))
@@ -2189,7 +2192,7 @@ p1114:count2 = count;              /* Another # to get */
   goto p1110;                      /* Join M-MODIFY eventually */
 p1117:
   setptr(ptrpos - 1);              /* P1117 - bust line */
-  printf("%s", "joining next line would exceed line size :- ");
+  fputs("joining next line would exceed line size :- " ,stdout);
   rtn = 1118;
   goto p1120;                      /* End JOIN */
 /*
@@ -2204,32 +2207,32 @@ p1018:
 p1129:
   if (!getlin(true, false))        /* Bad source. C joins here */
   {
-    printf("%s", " in source line");
+    fputs(" in source line" ,stdout);
     REREAD_CMD;
   }
   k4 = oldcom->decval;             /* Remember source */
   if (!getlin(true, true))         /* Bad dest'n */
   {
-    printf("%s", " in dest'n line");
+    fputs(" in dest'n line" ,stdout);
     REREAD_CMD;
   }
   j4 = oldcom->decval;             /* Remember dest'n */
   lstlin = k4;                     /* -TO refers from source line */
   if (j4 == k4)                    /* Error if equal */
   {
-    printf("%s", "Source and destination line #'s must be different");
+    fputs("Source and destination line #'s must be different" ,stdout);
     REREAD_CMD;
   }
   goto asg2rtn;                    /* End 1st common part */
 p1121:
   if (k4 == j4 - 1)
   {
-    printf("%s", "moving a line to before the next line is a no-op");
+    fputs("moving a line to before the next line is a no-op" ,stdout);
     REREAD_CMD;
   }
   rtn = 1125;                      /* Only used if hit eof */
 p1131:                             /* C joins us here */
-  if (!get_opt_lines2count())
+  if (!get_opt_lines(&count))
     REREAD_CMD;
   setptr(j4);                      /* Set main ptr at dest'n */
 /*
@@ -2423,12 +2426,12 @@ p1915:
   k = xkey[0];                     /* Convert to subscript */
   if (k < 128)
     goto p1916;                    /* Continue */
-  printf("%s", "parity-high \"keys\" not allowed");
+  fputs("parity-high \"keys\" not allowed" ,stdout);
   REREAD_CMD;
 p1908:
   if (xkey[0] == CARAT)
     goto p1910;                    /* J starts "^" (legal) */
-  printf("%s", "may only have single char or ^ char");
+  fputs("may only have single char or ^ char" ,stdout);
   REREAD_CMD;
 p1910:
   k = xkey[1];                     /* Isolate putative control */
@@ -2438,7 +2441,7 @@ p1910:
     goto p1912;                    /* ^* (=^) */
   if (k == QM)
     goto p1913;                    /* ^? (=rubout) */
-  printf("%s", "Illegal control character representation");
+  fputs("Illegal control character representation" ,stdout);
   REREAD_CMD;
 p1911:
   k = k - 0100;                    /* Control char to subscript */
@@ -2479,7 +2482,7 @@ p2005:
     BAD_RDTK;
   if (oldcom->toktyp == eoltok || !(oldlen = oldcom->toklen))
   {
-    printf("%s", "Null string to replace");
+    fputs("Null string to replace" ,stdout);
     REREAD_CMD;
   }                                /* if (oldcom->toktyp == eoltok || ... */
 
@@ -2492,7 +2495,7 @@ p2005:
 /* strings must be equal length if Fixed-Length mode */
   if (ydiff && fmode & 0400)
   {
-    printf("%s", "Replace string must be same length in FIXED LENGTH mode");
+    fputs("Replace string must be same length in FIXED LENGTH mode" ,stdout);
     REREAD_CMD;                    /* Report error */
   }
 
@@ -2527,43 +2530,41 @@ p2005:
 
 p1622:
   cntrlc = false;                  /* ^C noticed */
-  printf("Command abandoned :-");
+  fputs("Command abandoned :-", stdout);
 p16221:
   printf(" %ld lines ", count - i4);
 p1616:
-  printf("%s", "scanned");
+  fputs("scanned" ,stdout);
   newlin();
 p1712:setptr(savpos);              /* Restore file pos'n */
   READ_NEXT_COMMAND;               /* Leave Y */
 p16175:
   savpos = ptrpos - 1;             /* Point to too big line */
-  printf("Next line would exceed max size:-");
+  fputs("Next line would exceed max size:-", stdout);
   goto p16221;
 p1620:
   if (curmac < 0 || !BRIEF)
-    printf("%s", "specified string not found");
+    fputs("specified string not found" ,stdout);
   setptr(savpos);                  /* Restore file pos'n */
   goto p1810;
 
 p1612:
   if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
   {
-    printf("%s", "Empty file - can't changeall any lines");
+    fputs("Empty file - can't changeall any lines" ,stdout);
     REREAD_CMD;
   }                                /* if(!lintot&&... */
 
 /* We act on BRIEF or NONE if in a macro without question. Otherwise, BRIEF or
  * NONE is queried, and we reset to VERBOSE if we don't get confirmation */
 
-  if (curmac >= 0)
-    goto p1710;                    /* J in a macro */
-  if (!BRIEF)
-    goto p1710;                    /* J VERBOSE already */
-  if (ysno5a("Use brief/none in this command (y,n,Cr [n])", A5DNO))
-    goto p1710;
-  puts("Reverting to verbose\r");
-  fmode &= 07777777777;
-p1710:savpos = ptrpos;             /* Remember so we can get back */
+  if (curmac < 0 && BRIEF &&
+    !ysno5a("Use brief/none in this command (y,n,Cr [n])", A5DNO))
+  {
+    puts("Reverting to verbose\r");
+    fmode &= 07777777777;
+  }
+  savpos = ptrpos;                 /* Remember so we can get back */
   setptr(j4);                      /* First line to look at */
   lgtmp2 = newlen != 0;
   lgtmp3 = false;                  /* No lines changed yet */
@@ -2716,7 +2717,7 @@ p1707:
 p2003:
   if (strlen(ndel) < 32)
     goto p2007;                    /* J table not full */
-  printf("%s", "no room for further entries");
+  fputs("no room for further entries" ,stdout);
   REREAD_CMD;
 p2007:
 /* Get character to add */
@@ -2724,12 +2725,12 @@ p2007:
     BAD_RDTK;
   if (oldcom->toktyp != eoltok)
     goto p2008;                    /* J not EOL */
-  printf("%s", "command requires a parameter");
+  fputs("command requires a parameter" ,stdout);
   REREAD_CMD;
 p2008:
   if (oldcom->toklen == 1)
     goto p2009;                    /* J 1-char param (good) */
-  printf("%s", "parameter must be single character");
+  fputs("parameter must be single character" ,stdout);
   REREAD_CMD;
 p2009:
   if (!eolok())
@@ -2742,7 +2743,7 @@ p2009:
 p1801:
   if (do_cmd())
   {
-    printf("%s", "bad luck");
+    fputs("bad luck" ,stdout);
     noRereadIfMacro = true;
     goto p1811;                    /* Error has been reported */
   }
