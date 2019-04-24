@@ -208,18 +208,19 @@ get_answer(void)
 
 /* ****************************** get_file_arg ****************************** */
 static bool
-get_file_arg(void)
+get_file_arg(bool *no_file)
 {
   if (scrdtk(2, (uint8_t *)ubuf, PTHMAX, oldcom)) /* Read a f/n */
   {
-    perror("scrdtk");
-    putchar('\r');
+    fprintf(stderr, "%s. (scrdtk)\r\n", strerror(errno));
     return false;
   }
-  nofile = oldcom->toktyp == eoltok;
-  if (!nofile && oldcom->toktyp != nortok)
-    return false;
-  tildexpn(ubuf, PTHMAX);          /* Do tilde expansion */
+  if (!(*no_file = oldcom->toktyp == eoltok))
+  {
+    if (oldcom->toktyp == nultok)
+      return false;
+    tildexpn(ubuf, PTHMAX);        /* Do tilde expansion */
+  }                            /* if (!(*no_file = oldcom->toktyp == eoltok)) */
   return true;
 }                                  /* get_file_arg() */
 
@@ -354,7 +355,7 @@ do_b_or_s(bool is_b)
     dfread(LONG_MAX, NULL);        /* Ensure all file in */
   wrtnum = lintot;                 /* Write all lines */
   rdwr = O_WRONLY + O_CREAT;       /* Don't truncate yet in case mmap'd */
-  if (!get_file_arg())
+  if (!get_file_arg(&nofile))
     ERRRTN("Error in filename");
   if (nofile)                      /* B or S no filename arg */
   {
@@ -1315,7 +1316,7 @@ p1201:
       REREAD_CMD;
 
     case 'U':                      /* U - USE */
-      if (!get_file_arg() || nofile)
+      if (!get_file_arg(&nofile) || nofile)
         ERR1025("Error in filename");
       if (!eolok())
         REREAD_CMD;
@@ -1669,7 +1670,7 @@ p1022:
   {
     long line_number_saved;
 
-    if (!get_file_arg() || nofile)
+    if (!get_file_arg(&nofile) || nofile)
       ERR1025("Error in filename");
     if (!getlin(true, false))
       REREAD_CMD;                  /* J line # u/s */
@@ -1691,7 +1692,7 @@ p1022:
  * E - Enter
  */
 p1009:
-  if (!get_file_arg() || nofile)
+  if (!get_file_arg(&nofile) || nofile)
     ERR1025("Error in filename");
   if (!eolok())
     REREAD_CMD;
@@ -1749,7 +1750,7 @@ p1017:
     A5DNO))
     READ_NEXT_COMMAND;             /* J user changed his mind */
   Tcl_DumpActiveMemory("t5mem");
-  if (!get_file_arg())
+  if (!get_file_arg(&nofile))
     ERR1025("Error in filename");
   if (nofile)
   {

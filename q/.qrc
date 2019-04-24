@@ -2,4 +2,5 @@ fd y /* ************************ C + git + fm -s ************************
 fi u ^ND^N^<4003>/cmacs^J
 fi u ^ND^N^<4003>/git.qm^J
 fm -s
-u ../make.qm
+n4015 [ -r ../make.qm ]
+fi ^<SQEQ>^NUu ../make.qm^J

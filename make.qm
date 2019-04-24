@@ -1,1 +1,1 @@
-n040 !make -j3 ^J^NU
+n040 !CFLAGS=-O2 make -j3 ^J^NU

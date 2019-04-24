@@ -88,7 +88,7 @@ bool modlin;                       /* This line has actually changed */
 bool mods;                         /* Mods done since last SAVE */
 bool binary;                       /* Q invoked -b */
 int funit;                         /* File i/o ptr */
-char pcnta[256];                   /* Pathname we are editing */
+char pcnta[PTHSIZ];                /* Pathname we are editing */
 uint32_t row5, col5;               /* Screen / window geometry */
 bool cntrlc, seenwinch;
 char *macro_dir;                   /* Where macros are */
