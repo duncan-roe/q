@@ -713,10 +713,8 @@ main(int xargc, char **xargv)
   char *r;                         /* Scratch */
   char ndel[33];                   /* Table of non-delimiters FL & FY */
   int newl = 0;                    /* Label to go if Nl (MOD, INS, AP) */
-  int numok;                     /* Label to go if # of lines OK & last param */
   int rtn = 0;                     /* Return from INS/MOD/APPE common code */
   int i, j, k = 0, h, m, n, dummy; /* Scratch - I most so */
-  int nonum;                       /* Label if no # of lines */
   int oldlen = 0;                  /* Length of OLDSTR */
   int newlen = 0;                  /* Length of NEWSTR */
   int ydiff = 0;                   /* OLDLEN-NEWLEN */
@@ -725,7 +723,6 @@ main(int xargc, char **xargv)
   int minlen = 0;                  /* Min line length (L&Y) */
   int firstpos = 0;                /* First pos to search (L&Y) */
   int lastpos = 0;                 /* Last pos to search (L&Y) */ ;
-  int savtok;                      /* Saved token type */
   int colonline;                   /* Line number from <file>:<line> */
 /* */
 /* For those commands that take 2 #'s of lines */
@@ -755,7 +752,8 @@ main(int xargc, char **xargv)
   q_yesno answer;
   char *initial_command = NULL;
   bool P, Q;                      /* For determining whether we are in a pipe */
-  long count = 0;                  /* Returned by GETNUM seq */
+  long count;
+  int retcod;
 
 /* INTERNAL FUNCTIOBS */
 
@@ -801,6 +799,19 @@ main(int xargc, char **xargv)
       puts("Warning: non-control char as argument\r");
     return true;
   }                                /* bool valid_FX_arg(void) */
+
+/* ********************************* get_num ******************************** */
+
+  int get_num(bool okzero, long *result)
+/* Returns: 1: no number found and 1 returned in result
+ *          0: number found and returned in result
+ *         -1: error */
+  {
+    if (!getnum(okzero))
+      return -1;                   /* Format err on # of lines */
+    *result = oldcom->decval;      /* getnum() assures validity */
+    return oldcom->toktyp != nortok;
+  }                                /* int get_num(bool okzero, long *result) */
 
 /* ************************* END INTERNAL FUNCTIOBS ************************* */
 
@@ -2001,39 +2012,22 @@ p1093:
  * Afterwards, move pointer back to posn of entry.
  */
 p1021:
-  numok = 10965;
-  nonum = 1097;
   xcount = 0;                      /* Only show requested # */
   lstlin = -1;                     /* Not allowed -TO */
-  logtmp = true;                   /* Accept 0 lines */
   fullv = false;                   /* Assume not just "V" */
-p1107:
-  if (!getnum(logtmp))
-    REREAD_CMD;                    /* J format err on # of lines */
-  count = oldcom->decval;
-  if (oldcom->toktyp == eoltok)
-    goto asg2nonum;                /* J no # given */
-/*
- * !CAUTION! Tricky coding. LOGTMP is really for whether 0 is allowed
- * but it is also used here, in the reverse sense, to see whether extra
- * parameters are allowed or not. I.E. if true then 0 is allowed
- * but extra parameters aren't; false is the other way round.
- */
-  savtok = oldcom->toktyp;         /* eolok overwrites */
-  if (!logtmp || eolok())          /* More allowed or eol now */
+  if ((retcod = get_num(true, &count)) < 0)
+    REREAD_CMD;
+  if (retcod)                      /* No number given */
   {
-    if (savtok == nultok)          /* No # given */
-      goto asg2nonum;
-    else
-      goto asg2numok;
-  }                                /* if(!logtmp||eolok()) */
-  REREAD_CMD;
-/* Print enough lines to fill the screen... */
-p1097:
-  fullv = true;                    /* Try very hard to fill screen */
-  count = (row5 / 2) - 1;          /* No count given so assume 1/2 screen */
-  xcount = row5 & 1;               /* Extra line if odd screen length */
-p10965:
+    fullv = true;                  /* Try very hard to fill screen */
+    count = (row5 / 2) - 1;        /* No count given so assume 1/2 screen */
+    xcount = row5 & 1;             /* Extra line if odd screen length */
+  }                                /* if(retcod) */
+
+/* Check there are no more args */
+    if (!eolok())
+      REREAD_CMD;
+
   if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
   {
     puts("THE FILE IS EMPTY\r");
@@ -2101,38 +2095,32 @@ p1014:
     BAD_RDTK;                      /* J bad RDTK */
   if (oldcom->toktyp == eoltok || !(h = oldcom->toklen))
     REREAD_CMD_S("Null string to locate");
-  numok = 1105;
-  nonum = 1106;
   lstlin = ptrpos;                 /* -TO rel currnt line */
-  logtmp = false;                  /* Don't accept 0 lines */
-  goto p1107;                      /* Get number lines to search */
-p1106:                             /* No num, so search to [se]of */
-  if (revrse)
-    count = ptrpos - 1;
-  else if (deferd)
-    count = LONG_MAX;
-  else
-    count = lintot - ptrpos + 1;
-p1105:count2 = count;              /* We have another COUNT to get */
+  if ((retcod = get_num(false, &count2)) < 0) /* Get number lines to search */
+    REREAD_CMD;
+  if (retcod)                      /* No number given */
+  {
+    if (revrse)
+      count2 = ptrpos - 1;
+    else if (deferd)
+      count2 = LONG_MAX;
+    else
+      count2 = lintot - ptrpos + 1;
+  }                                /* if (retcod) */
   lstlin = -1;                     /* Not allowed -TO */
-  numok = 1514;
-  nonum = 1514;
-  goto p1107;                      /* Get # lines to mod on location */
-p1514:
+  if (get_num(false, &count) < 0)  /* Get # lines to mod on location */
+    REREAD_CMD;
   rtn = 1715;                      /* Shared 1st/last code */
 p1722:
-  numok = 1716;
-  nonum = 1716;                    /* 1st pos 0 default */
-  goto p17165;                     /* Get 1st pos to search */
-p1716:
+  if (!getnum(false))              /* Get 1st pos to search */
+    REREAD_CMD;
   firstpos = oldcom->decval - 1;   /* Columns start at 0 */
-  numok = 1717;
-  nonum = 1718;                    /* Last max lin len default */
-  goto p17165;                     /* Get last pos'n */
-p1718:
-  lastpos = BUFMAX;                /* BUFMAX does not include trlg null */
-  goto p1719;
-p1717:
+  if (!getnum(false))              /* Get last pos'n */
+    REREAD_CMD;
+  if (oldcom->toktyp != nortok)
+    lastpos = BUFMAX;                /* BUFMAX does not include trlg null */
+  else
+  {
   lastpos = oldcom->decval - 1;    /* Last start position */
   if (lastpos < firstpos)          /* Impossible combination of columns */
   {
@@ -2140,7 +2128,7 @@ p1717:
     REREAD_CMD;
   }                                /* if(lastpos < firstpos) */
   lastpos += h;                    /* Add search length to get wanted length */
-p1719:
+  }                                /* if (oldcom->toktyp != nortok) else */
   minlen = firstpos + h;           /* Get minimum line length to search */
   if (eolok())
     goto asg2rtn;
@@ -2212,26 +2200,14 @@ p1811:
   (void)scrdtk(1, (uint8_t *)NULL, 0, oldcom);
   REREAD_CMD;
 /*
- * P17165 - Get 1st & last posn's for L & Y
- */
-p17165:
-  if (!getnum(false))
-    REREAD_CMD;
-  if (oldcom->toktyp != nortok)
-    goto asg2nonum;                /* J no number given */
-  goto asg2numok;
-/*
  * J - Join
  */
 p1013:
   if (!getlin(true, false))
     REREAD_CMD;                    /* J bad line # */
   setptr(oldcom->decval);          /* Pos'n on line to be joined onto */
-  numok = 1114;
-  nonum = 1114;
-  logtmp = false;                  /* 0 not allowed - not eol yet */
-  goto p1107;                      /* Get opt. # lines to join in COUNT */
-p1114:count2 = count;              /* Another # to get */
+  if ((retcod = get_num(false, &count2)) < 0)
+    REREAD_CMD;
   lstlin = -1;                     /* Not allowed -TO */
   if (!get_opt_lines(&count))
     REREAD_CMD;
@@ -2502,42 +2478,19 @@ p2005:
   lstlin = -1;                     /* -TO not allowed for column pos'ns */
   h = oldlen;                      /* Req'd by code for L-LOCATE */
   goto p1722;                      /* Look for 1st & last pos'ns in line */
-
-/* Error messages */
-
-p1622:
-  cntrlc = false;                  /* ^C noticed */
-  fputs("Command abandoned :-", stdout);
-p16221:
-  printf(" %ld lines ", count - i4);
-p1616:
-  fputs("scanned", stdout);
-  newlin();
-p1712:setptr(savpos);              /* Restore file pos'n */
-  READ_NEXT_COMMAND;               /* Leave Y */
-p16175:
-  savpos = ptrpos - 1;             /* Point to too big line */
-  fputs("Next line would exceed max size:-", stdout);
-  goto p16221;
-p1620:
-  if (curmac < 0 || !BRIEF)
-    fputs("specified string not found", stdout);
-  setptr(savpos);                  /* Restore file pos'n */
-  goto p1810;
-
 p1612:
   if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
     REREAD_CMD_S("Empty file - can't changeall any lines");
 
 /* We act on BRIEF or NONE if in a macro without question. Otherwise, BRIEF or
  * NONE is queried, and we reset to VERBOSE if we don't get confirmation */
-
   if (curmac < 0 && BRIEF &&
     !ysno5a("Use brief/none in this command (y,n,Cr [n])", A5DNO))
   {
     puts("Reverting to verbose\r");
     fmode &= 07777777777;
   }
+
   savpos = ptrpos;                 /* Remember so we can get back */
   setptr(j4);                      /* First line to look at */
   lgtmp2 = newlen != 0;
@@ -2644,6 +2597,28 @@ p1612:
   if (!lgtmp3)
     goto p1620;                    /* J no lines changed */
   goto p1712;                      /* End Y */
+
+/* Error messages */
+
+p1622:
+  cntrlc = false;                  /* ^C noticed */
+  fputs("Command abandoned :-", stdout);
+p16221:
+  printf(" %ld lines ", count - i4);
+p1616:
+  fputs("scanned", stdout);
+  newlin();
+p1712:setptr(savpos);              /* Restore file pos'n */
+  READ_NEXT_COMMAND;               /* Leave Y */
+p16175:
+  savpos = ptrpos - 1;             /* Point to too big line */
+  fputs("Next line would exceed max size:-", stdout);
+  goto p16221;
+p1620:
+  if (curmac < 0 || !BRIEF)
+    fputs("specified string not found", stdout);
+  setptr(savpos);                  /* Restore file pos'n */
+  goto p1810;
 /*
  * FB - BRIEF
  */
@@ -2743,44 +2718,6 @@ asg2rtn:switch (rtn)
       goto p1032;
     default:
       printf("Assigned Goto failure, rtn = %d\r\n", rtn);
-      return 1;
-  }
-asg2numok:switch (numok)
-  {
-    case 1114:
-      goto p1114;
-    case 1717:
-      goto p1717;
-    case 1515:
-      goto p1114;
-    case 1716:
-      goto p1716;
-    case 1514:
-      goto p1514;
-    case 1105:
-      goto p1105;
-    case 10965:
-      goto p10965;
-    default:
-      printf("Assigned Goto failure, numok = %d\r\n", numok);
-      return 1;
-  }
-asg2nonum:switch (nonum)
-  {
-    case 1114:
-      goto p1114;
-    case 1718:
-      goto p1718;
-    case 1716:
-      goto p1716;
-    case 1514:
-      goto p1514;
-    case 1106:
-      goto p1106;
-    case 1097:
-      goto p1097;
-    default:
-      printf("Assigned Goto failure, nonum = %d\r\n", nonum);
       return 1;
   }
 }
