@@ -64,7 +64,7 @@ rerdcm()
   {
     sccmnd();                      /* Get next command */
     return;                        /* Finished */
-  }                                /* if(noRereadIfMacro==2) */
+  }                                /* if (use_sccmd) */
   fprintf(stderr, "%s\r\n", ", correct the command:");
 /*
  * If we had a split line, rejoin the 2 halves and leave the cursor

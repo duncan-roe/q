@@ -1,3 +1,4 @@
+q -v to not action FD Y
 FB to use clock_gettime (replaces gettimeofday) for 1/5 second interval
 FRecurse command to bring up q command line from w/in macro:
  Q continues macro; FQ abandons

@@ -48,6 +48,11 @@
 #define PIPE_NAME "/tmp/qpipeXXXXXX"
 #define BAD_RDTK goto bad_rdtk
 #define revrse (fmode & 04000)
+#define PRINT_LINES_I4_1 printf("%ld lines ", i4 - 1)
+#define I4_X_I4_1(x) i4 = x - i4 + 1
+#define \
+  PRINTF_EOF_REACHED printf("%s of file reached:- ", revrse ? "start" : "end")
+#define PRINTF_IGNORED printf("f%c ignored (mode +v)\r\n", verb)
 
 /* Typedefs */
 
@@ -136,6 +141,7 @@ static int saved_pipe_stdout;
 static int pipe_temp_fd;
 static char pipe_temp_name[sizeof PIPE_NAME] = { 0 };
 static struct sigaction act;
+static int retcod;                 /* Short-term use */
 
 /* Static functions */
 
@@ -303,7 +309,6 @@ do_stat_symlink(void)
 static int
 open_buf(int flags, mode_t mode)
 {
-  int retcod;
 
   SYSCALL(retcod, open(ubuf, flags, mode));
   return retcod;
@@ -314,7 +319,6 @@ open_buf(int flags, mode_t mode)
 static int
 my_close(int fd)
 {
-  int retcod;
 
   SYSCALL(retcod, close(fd));
   return retcod;
@@ -475,7 +479,6 @@ do_b_or_s(bool is_b)
 static void
 rm_pipe_temp(void)
 {
-  int retcod;
 
   if (*pipe_temp_name)
   {
@@ -523,7 +526,6 @@ write_workfile_to_stdout(void)
 static void
 dev_null_stdout(void)
 {
-  int retcod;
 
   if (my_close(STDOUT5FD))
   {
@@ -732,7 +734,7 @@ main(int xargc, char **xargv)
   long xcount = 0;                 /* For V-View */
 /* */
   char oldstr[Q_BUFSIZ], newstr[Q_BUFSIZ]; /* YCHANGEALL. !!AMENDED USAGE!! */
-  uint8_t *p, *q;                  /* Scratch */
+  uint8_t *p;                      /* Scratch */
   char *colonpos;                  /* Pos'n of ":" in q filename */
 /* */
   bool splt;                       /* Last line ended ^T (for MODIFY) */
@@ -753,9 +755,8 @@ main(int xargc, char **xargv)
   char *initial_command = NULL;
   bool P, Q;                      /* For determining whether we are in a pipe */
   long count;
-  int retcod;
 
-/* INTERNAL FUNCTIOBS */
+/* INTERNAL FUNCTIONS */
 
 /* ****************************** valid_FX_arg ****************************** */
 
@@ -812,6 +813,74 @@ main(int xargc, char **xargv)
     *result = oldcom->decval;      /* getnum() assures validity */
     return oldcom->toktyp != nortok;
   }                                /* int get_num(bool okzero, long *result) */
+
+/* **************************** report_control_c **************************** */
+
+  void report_control_c(void)
+  {
+    puts("Quit,\r");
+    if (!USING_FILE && curmac < 0)
+      cntrlc = false;              /* Forget ^C now unless macro */
+  }                                /* void report_control_c(void) */
+
+/* **************************** move_cursor_back **************************** */
+
+  void move_cursor_back(void)
+  {
+/* Reset screen cursor */
+    (void)scrdtk(5, (uint8_t *)NULL, 0, oldcom);
+
+/* Move past command & 1st param */
+    (void)scrdtk(1, (uint8_t *)NULL, 0, oldcom);
+    (void)scrdtk(1, (uint8_t *)NULL, 0, oldcom);
+  }                                /* void move_cursor_back(void) */
+
+/* *************************** get_search_columns *************************** */
+
+  bool get_search_columns(void)
+  {
+//p1722:
+    if (!getnum(false))            /* Get 1st pos to search */
+      return false;
+    firstpos = oldcom->decval - 1; /* Columns start at 0 */
+    if (!getnum(false))            /* Get last pos'n */
+      return false;
+    if (oldcom->toktyp != nortok)
+      lastpos = BUFMAX;            /* BUFMAX does not include trlg null */
+    else
+    {
+      lastpos = oldcom->decval - 1; /* Last start position */
+      if (lastpos < firstpos)      /* Impossible combination of columns */
+      {
+        puts("Last pos'n < first\r");
+        return false;
+      }                            /* if(lastpos < firstpos) */
+      lastpos += h;                /* Add search length to get wanted length */
+    }                              /* if (oldcom->toktyp != nortok) else */
+    minlen = firstpos + h;         /* Get minimum line length to search */
+    if (!eolok())
+      return false;
+    return true;
+  }                                /* bool get_search_columns(void) */
+
+/* **************************** do_shell_command **************************** */
+
+  bool do_shell_command(void)
+  {
+      if (do_cmd())
+      {
+        fputs("bad luck", stdout);
+        noRereadIfMacro = true;
+        move_cursor_back();        /* Error has been reported */
+        return false;
+      }
+      if (cntrlc)
+      {
+        newlin();
+        report_control_c();
+      }                            /* if (cntrlc) */
+      return true;
+  }                                /* bool do_shell_command(void); */
 
 /* ************************* END INTERNAL FUNCTIOBS ************************* */
 
@@ -1310,6 +1379,7 @@ p1201:
     case 'J':
       goto p1013;
     case 'L':
+    case 'l':                      /* Same as L */
       goto p1014;
     case 'M':
       goto p1015;
@@ -1403,16 +1473,44 @@ p1201:
       goto p1501;
     case 'Y':
       goto p2005;
-    case 'b':
-      goto p1701;
-    case 'v':
-      goto p1702;
-    case 'n':
-      goto p1703;
-    case 'o':
-      goto p1707;
-    case '!':
-      goto p1801;
+
+    case 'b':                      /* FBRIEF */
+      if (!eolok())
+        REREAD_CMD;
+      if (!(fmode & 01000))
+      {
+        fmode |= 010000000000;
+        fmode &= 017777777777;
+      }                            /* if (!(fmode & 01000)) */
+      else
+        PRINTF_IGNORED;
+      READ_NEXT_COMMAND;           /* Finished */
+
+    case 'v':                      /* FVERBOSE */
+      if (!eolok())
+        REREAD_CMD;
+      fmode &= 07777777777;
+      READ_NEXT_COMMAND;           /* Finished */
+
+    case 'n':                      /* FNONE */
+      if (!eolok())
+        REREAD_CMD;
+      if (fmode & 01000)
+        PRINTF_IGNORED;
+      else
+        fmode |= 030000000000u;
+      READ_NEXT_COMMAND;           /* Finished */
+
+    case 'o':                      /* FO - FORGET */
+      if (!eolok())
+        REREAD_CMD;
+      forget();                    /* In fact implemented by workfile */
+      READ_NEXT_COMMAND;
+
+    case '!':                      /* DO SHELL COMMAND */
+      if (do_shell_command())
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
 
     case 'x':               /* FX - Exchange the functions of 2 keyboard keys */
       if (scrdtk(2, (uint8_t *)oldkey, 3, oldcom))
@@ -1448,8 +1546,6 @@ p1201:
       fxtabl[(int)newkey[0]] = i;
       READ_NEXT_COMMAND;
 
-    case 'l':
-      goto p1014;                  /* Same as L */
     case 'y':
       goto p2005;
 
@@ -1536,7 +1632,7 @@ reread_cmd:
  */
 p1005:
   if (!eolok())
-    REREAD_CMD;                    /* Reread command */
+    REREAD_CMD;
   if (deferd)                      /* File not all read in yet */
     dfread(LONG_MAX, NULL);
   setptr(lintot + 1);              /* Ptr after last line in file */
@@ -1555,10 +1651,14 @@ p1026:
   sprmpt(ptrpos);                  /* PROMPT = # of new line */
 /*
  * See if ^C has been typed - get user out of INSERT/APPEND/MODIFY
- * if it has. (Particularly user 1, who can't input an ESC)
+ * if it has
  */
-p1027:if (cntrlc)
-    goto p1901;                    /* J ^C keyed */
+p1027:
+  if (cntrlc)
+  {
+    report_control_c();
+    READ_NEXT_COMMAND;
+  }                                /* if (cntrlc) */
   scrdit(curr, prev, (char *)prmpt, pchrs, false); /* Edit the line */
   lgtmp3 = curmac < 0 || !BRIEF;   /* Do a DISPLY if true */
   switch (verb)                    /* Check EOL type */
@@ -1885,11 +1985,9 @@ p1008:
 p1078:
   rtn = 1079;
 p1112:
-  i4 = count - i4 + 1;             /* This many *not* deleted */
-q1112:
-  printf("%s of file reached:- ", revrse ? "start" : "end");
-p1120:
-  printf("%ld lines ", i4 - 1);
+  I4_X_I4_1(count);                /* Lines *not* deleted to i4 */
+  PRINTF_EOF_REACHED;
+  PRINT_LINES_I4_1;
   goto asg2rtn;
 p1079:
   puts("deleted\r");
@@ -2025,8 +2123,8 @@ p1021:
   }                                /* if(retcod) */
 
 /* Check there are no more args */
-    if (!eolok())
-      REREAD_CMD;
+  if (!eolok())
+    REREAD_CMD;
 
   if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
   {
@@ -2090,11 +2188,11 @@ p1014:
  * The string is read to the ermess array,
  * as ubuf will get overwritten and we aren't going to use getlin,
  * so ermess is spare. */
-
   if (scrdtk(2, (uint8_t *)ermess, BUFMAX, oldcom))
     BAD_RDTK;                      /* J bad RDTK */
   if (oldcom->toktyp == eoltok || !(h = oldcom->toklen))
     REREAD_CMD_S("Null string to locate");
+
   lstlin = ptrpos;                 /* -TO rel currnt line */
   if ((retcod = get_num(false, &count2)) < 0) /* Get number lines to search */
     REREAD_CMD;
@@ -2110,30 +2208,8 @@ p1014:
   lstlin = -1;                     /* Not allowed -TO */
   if (get_num(false, &count) < 0)  /* Get # lines to mod on location */
     REREAD_CMD;
-  rtn = 1715;                      /* Shared 1st/last code */
-p1722:
-  if (!getnum(false))              /* Get 1st pos to search */
+  if (!get_search_columns())
     REREAD_CMD;
-  firstpos = oldcom->decval - 1;   /* Columns start at 0 */
-  if (!getnum(false))              /* Get last pos'n */
-    REREAD_CMD;
-  if (oldcom->toktyp != nortok)
-    lastpos = BUFMAX;                /* BUFMAX does not include trlg null */
-  else
-  {
-  lastpos = oldcom->decval - 1;    /* Last start position */
-  if (lastpos < firstpos)          /* Impossible combination of columns */
-  {
-    puts("Last pos'n < first\r");
-    REREAD_CMD;
-  }                                /* if(lastpos < firstpos) */
-  lastpos += h;                    /* Add search length to get wanted length */
-  }                                /* if (oldcom->toktyp != nortok) else */
-  minlen = firstpos + h;           /* Get minimum line length to search */
-  if (eolok())
-    goto asg2rtn;
-  REREAD_CMD;
-p1715:
   savpos = ptrpos;                 /* Remember pos in case no match */
 
 /* Start of search */
@@ -2157,11 +2233,9 @@ p1715:
     s1112:
       if (!lgtmp2 || count2 == LONG_MAX) /* No message wanted */
         break;                     /* for(i4=count2;i4>0;i4--) */
-      rtn = 1111;
-    r1112:
-      i4 = count2 - i4 + 1;        /* This many *not* searched */
-      goto q1112;
-    p1111:
+      I4_X_I4_1(count2);           /* Lines *not* searched to i4 */
+      PRINTF_EOF_REACHED;
+      PRINT_LINES_I4_1;
       puts("searched\r");
       break;                       /* for(i4=count2;i4>0;i4--) */
     }                              /* if(!rdlin(curr, false)) */
@@ -2191,13 +2265,8 @@ p1715:
   locpos = 0;                      /* zeroised by lstr5a */
   if (lgtmp2)
     fputs("Specified string not found", stdout);
-p1810:locerr = true;               /* Picked up by RERDCM */
-p1811:
-/* Reset screen cursor */
-  (void)scrdtk(5, (uint8_t *)NULL, 0, oldcom);
-/* Move past command & 1st param */
-  (void)scrdtk(1, (uint8_t *)NULL, 0, oldcom);
-  (void)scrdtk(1, (uint8_t *)NULL, 0, oldcom);
+  locerr = true;                   /* Picked up by RERDCM */
+  move_cursor_back();
   REREAD_CMD;
 /*
  * J - Join
@@ -2211,7 +2280,8 @@ p1013:
   lstlin = -1;                     /* Not allowed -TO */
   if (!get_opt_lines(&count))
     REREAD_CMD;
-/* At eof */
+
+/* At eof? */
   if (ptrpos >= lintot && !(deferd && (dfread(1, NULL), ptrpos < lintot)))
   {
     if (curmac < 0 || !BRIEF)      /* Message wanted */
@@ -2224,15 +2294,21 @@ p1013:
   {
     if (!rdlin(curr, false))       /* If eof */
     {
-      rtn = 1118;
-      goto r1112;
-    p1118:
+      I4_X_I4_1(count2);           /* Lines *not* searched to i4 */
+      PRINTF_EOF_REACHED;
+      PRINT_LINES_I4_1;
       puts("joined\r");
       break;
     }
     j = curr->bchars + prev->bchars;
-    if (j > prev->bmxch)
-      goto p1117;                  /* J would bust line */
+    if (j > prev->bmxch)           /* Overflowed line capacity */
+    {
+      setptr(ptrpos - 1);
+      fputs("joining next line would exceed line size :- ", stdout);
+      PRINT_LINES_I4_1;
+      puts("joined\r");
+      break;
+    }                              /* if (j > prev->bmxch) */
     r = (char *)&prev->bdata[prev->bchars]; /* Appending posn */
     prev->bchars = j;              /* New length */
     delete(false);                 /* Delete line just read */
@@ -2241,11 +2317,6 @@ p1013:
   }
   inslin(prev);                    /* Put composed line back */
   goto p1110;                      /* Join M-MODIFY eventually */
-p1117:
-  setptr(ptrpos - 1);              /* P1117 - bust line */
-  fputs("joining next line would exceed line size :- ", stdout);
-  rtn = 1118;
-  goto p1120;                      /* End JOIN */
 /*
  * R - Re position
  *
@@ -2274,22 +2345,28 @@ p1131:                             /* C joins us here */
   if (!get_opt_lines(&count))
     REREAD_CMD;
   setptr(j4);                      /* Set main ptr at dest'n */
-/*
- * Note:- When setting both pointers, always set AUX second
- */
+
+/* Note:- When setting both pointers, always set AUX second */
   setaux(k4);                      /* Set AUX ptr at source */
+
   for (i4 = count; i4 > 0; i4--)
   {
-    if (!rdlin(prev, true))
-      goto p1112;                  /* Read AUX, j eof to mess code */
-    if (repos)
-      delete(true);                /* For reposition only, delete line read */
-    inslin(prev);
+    if (rdlin(prev, true))         /* Read AUX */
+    {
+      if (repos)
+        delete(true);              /* For reposition only, delete line read */
+      inslin(prev);
+    }                              /* if (rdlin(prev, true)) */
+    else
+    {
+      I4_X_I4_1(count);            /* Lines *not* deleted to i4 */
+      PRINTF_EOF_REACHED;
+      PRINT_LINES_I4_1;
+      puts("repositioned\r");      /* Eof on repos. most of mess done */
+      break;
+    }                              /* if (rdlin(prev, true)) else */
   }
   READ_NEXT_COMMAND;               /* Finished C or R */
-p1125:
-  puts("repositioned\r");          /* Eof on repos. most of mess done */
-  READ_NEXT_COMMAND;               /* End R */
 /*
  * C-COPY
  */
@@ -2356,7 +2433,7 @@ p1407:
     fmode &= ~04000000000;
   READ_NEXT_COMMAND;
 /*
- * P2013 - FFnowrap. Use the O-indent code...
+ * P2013 - FNOWRAP. Use the O-indent code...
  */
 p2013:
   rtn = 2014;
@@ -2474,11 +2551,10 @@ p2005:
     else
       count = oldcom->decval;
   }                                /* if (oldcom->toktyp == eoltok) else */
-  rtn = 1612;
   lstlin = -1;                     /* -TO not allowed for column pos'ns */
   h = oldlen;                      /* Req'd by code for L-LOCATE */
-  goto p1722;                      /* Look for 1st & last pos'ns in line */
-p1612:
+  if (!get_search_columns())       /* Look for 1st & last pos'ns in line */
+    REREAD_CMD;
   if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
     REREAD_CMD_S("Empty file - can't changeall any lines");
 
@@ -2514,61 +2590,44 @@ p1612:
  */
     yposn = firstpos;              /* Search from 1st position spec'd */
     linmod = false;                /* No match this line yet */
-    k = curr->bchars;              /* Remembers line length */
-    if (k < minlen)
+    if (curr->bchars < minlen)
       continue;                    /* J line shorter than minimum */
     n = 0;
-    if (k > lastpos)
-      n = k - lastpos;             /* N=# at end not to search */
+    if (curr->bchars > lastpos)
+      n = curr->bchars - lastpos;  /* N=# at end not to search */
 /* */
-  p1619:if (tokens)
-      goto p2011;                  /* J FY */
-/* J no more occurrences this line */
-    if (!lsub5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn, k - n, &h, &m))
-      goto p1617;
-    goto p2012;
-  p2011:
-/* J no more occurrences this line */
-    if (!ltok5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn, k - n, &h,
-      &m, (uint8_t *)ndel))
-      goto p1617;
-  p2012:
-    if (k + ydiff > curr->bmxch)
-      goto p16175;                 /* J would bust line */
-    if (m == k - 1)
-      goto p1618;                  /* J no chars after string */
-    if (ydiff > 0)
-/* Create a gap of the right length. Overlapping r/h move */
+    do
     {
-      p = &curr->bdata[k - 1];     /* End char to pick up */
-      q = &curr->bdata[k - 1 + ydiff]; /* End char to set down */
-      for (i = k - m - 1; i > 0; i--)
-        *q-- = *p--;
-    }
-    else if (ydiff < 0)
-/* Close up by the right length. Overlapping l/h move */
-    {
-      p = &curr->bdata[m + 1];     /* Start char to pick up */
-      q = &curr->bdata[m + 1 + ydiff]; /* Start char to set down */
-      for (i = k - m - 1; i > 0; i--)
-        *q++ = *p++;
-    }
-  p1618:
+      if (tokens)
+        retcod =
+          ltok5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn,
+          curr->bchars - n, &h, &m, (uint8_t *)ndel);
+      else
+        retcod =
+          lsub5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn,
+          curr->bchars - n, &h, &m);
+      if (!retcod)
+        break;
+      if (curr->bchars + ydiff > curr->bmxch)
+        goto p16175;               /* J would bust line */
+      memmove(&curr->bdata[m + 1 + ydiff], &curr->bdata[m + 1],
+        curr->bchars - m - 1);
+
 /* Move in new string if not null */
-    if (lgtmp2)
-      memcpy((char *)&curr->bdata[h], (char *)newstr, (size_t)newlen);
-    k = k + ydiff;                 /* Get new line length */
-    linmod = true;                 /* This line has been modified */
-    yposn = m + 1 + ydiff;         /* Resume search after new string */
+      if (lgtmp2)
+        memcpy((char *)&curr->bdata[h], (char *)newstr, (size_t)newlen);
+      curr->bchars = curr->bchars + ydiff; /* Get new line length */
+      linmod = true;               /* This line has been modified */
+      yposn = m + 1 + ydiff;       /* Resume search after new string */
+
 /* Seek more occurrences if room */
-    if (k - n - yposn >= oldlen)
-      goto p1619;
-  p1617:
+    }
+    while (curr->bchars - n - yposn >= oldlen);
+
     if (!linmod)
       continue;                    /* J no mods to this line */
     linmod = false;
     lgtmp3 = true;                 /* A line changed now */
-    curr->bchars = k;
     if (!NONE)                     /* Some display may be req'd */
     {
 /*
@@ -2596,7 +2655,8 @@ p1612:
   }                                /* for(i4=count;i4>0;i4--) */
   if (!lgtmp3)
     goto p1620;                    /* J no lines changed */
-  goto p1712;                      /* End Y */
+  setptr(savpos);                  /* End Y */
+  READ_NEXT_COMMAND;
 
 /* Error messages */
 
@@ -2608,7 +2668,7 @@ p16221:
 p1616:
   fputs("scanned", stdout);
   newlin();
-p1712:setptr(savpos);              /* Restore file pos'n */
+  setptr(savpos);                  /* Restore file pos'n */
   READ_NEXT_COMMAND;               /* Leave Y */
 p16175:
   savpos = ptrpos - 1;             /* Point to too big line */
@@ -2618,66 +2678,9 @@ p1620:
   if (curmac < 0 || !BRIEF)
     fputs("specified string not found", stdout);
   setptr(savpos);                  /* Restore file pos'n */
-  goto p1810;
-/*
- * FB - BRIEF
- */
-p1701:
-  if (!eolok())
-    REREAD_CMD;
-  if (fmode & 01000)
-  {
-  q1704:
-    printf("f%c ignored (mode +v)\r\n", verb);
-    READ_NEXT_COMMAND;
-  }
-  fmode |= 010000000000;
-  fmode &= 017777777777;
-  READ_NEXT_COMMAND;               /* Finished */
-/*
- * FV - VERBOSE
- */
-p1702:
-  if (!eolok())
-    REREAD_CMD;
-  fmode &= 07777777777;
-  READ_NEXT_COMMAND;               /* Finished */
-/*
- * FN - NONE
- */
-p1703:
-  if (!eolok())
-    REREAD_CMD;
-  if (fmode & 01000)
-    goto q1704;
-  fmode |= 030000000000u;
-  READ_NEXT_COMMAND;               /* Finished */
-/*
- * FO - FORGET
- */
-p1707:
-  if (!eolok())
-    REREAD_CMD;
-  forget();                        /* In fact implemented by workfile */
-  READ_NEXT_COMMAND;
-/*
- * ! - DO SHELL COMMAND
- */
-p1801:
-  if (do_cmd())
-  {
-    fputs("bad luck", stdout);
-    noRereadIfMacro = true;
-    goto p1811;                    /* Error has been reported */
-  }
-  if (!cntrlc)
-    READ_NEXT_COMMAND;             /* J no ^C in command */
-  newlin();
-p1901:
-  puts("Quit,\r");
-  if (!USING_FILE && curmac < 0)
-    cntrlc = false;                /* Forget ^C now unless macro */
-  READ_NEXT_COMMAND;
+  locerr = true;                   /* Picked up by RERDCM */
+  move_cursor_back();
+  REREAD_CMD;
 asg2rtn:switch (rtn)
   {
     case 1037:
@@ -2686,10 +2689,6 @@ asg2rtn:switch (rtn)
       goto p1026;
     case 1616:
       goto p1616;
-    case 1612:
-      goto p1612;
-    case 1715:
-      goto p1715;
     case 2017:
       goto p2017;
     case 2014:
@@ -2700,14 +2699,8 @@ asg2rtn:switch (rtn)
       goto p1130;
     case 1128:
       goto p1128;
-    case 1125:
-      goto p1125;
     case 1121:
       goto p1121;
-    case 1118:
-      goto p1118;
-    case 1111:
-      goto p1111;
     case 1103:
       goto p1103;
     case 1093:
@@ -2717,7 +2710,7 @@ asg2rtn:switch (rtn)
     case 1032:
       goto p1032;
     default:
-      printf("Assigned Goto failure, rtn = %d\r\n", rtn);
+      fprintf(stderr, "Assigned Goto failure, rtn = %d\r\n", rtn);
       return 1;
   }
 }
