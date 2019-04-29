@@ -41,12 +41,10 @@
 /* Macros */
 
 #define REREAD_CMD goto reread_cmd
-#define REREAD_CMD_S(s) do {fputs(s, stdout); goto reread_cmd;} while (0)
 #define ERR1025(x) do {fprintf(stderr, "%s", (x)); REREAD_CMD;} while (0)
 #define READ_NEXT_COMMAND goto p1004
 #define ERRRTN(x) do {fprintf(stderr, "%s", (x)); return false;} while (0)
 #define PIPE_NAME "/tmp/qpipeXXXXXX"
-#define BAD_RDTK goto bad_rdtk
 #define revrse (fmode & 04000)
 #define PRINT_LINES_I4_1 printf("%ld lines ", i4 - 1)
 #define I4_X_I4_1(x) i4 = x - i4 + 1
@@ -667,6 +665,14 @@ init_alu(void)
     }                              /* if (opcode_defs[i].func) */
 }                                  /* init_alu() */
 
+/* ******************************** bad_rdtk ******************************** */
+
+static void
+bad_rdtk(void)
+{
+  fprintf(stderr, "%s. (scrdtk)", strerror(errno));
+}                                  /* static void bad_rdtk(void) */
+
 /* ***************************** display_opcodes **************************** */
 static void
 display_opcodes(void)
@@ -823,6 +829,16 @@ main(int xargc, char **xargv)
       cntrlc = false;              /* Forget ^C now unless macro */
   }                                /* void report_control_c(void) */
 
+/* *************************** print_scanned_lines ************************** */
+
+  void print_scanned_lines(long which)
+  {
+    printf(" %ld lines ", which - i4);
+    fputs("scanned", stdout);
+    newlin();
+    setptr(savpos);                /* Restore file pos'n */
+  }                                /* void print_scanned_lines(void) */
+
 /* **************************** move_cursor_back **************************** */
 
   void move_cursor_back(void)
@@ -839,7 +855,6 @@ main(int xargc, char **xargv)
 
   bool get_search_columns(void)
   {
-//p1722:
     if (!getnum(false))            /* Get 1st pos to search */
       return false;
     firstpos = oldcom->decval - 1; /* Columns start at 0 */
@@ -863,23 +878,74 @@ main(int xargc, char **xargv)
     return true;
   }                                /* bool get_search_columns(void) */
 
+/* ******************************* do_newmacro ****************************** */
+
+  bool do_newmacro(void)
+  {
+    i = newmac();
+    if (i < 0)                     /* Token was "-" */
+    {
+      scrdtk(2, (uint8_t *)ubuf, BUFMAX, oldcom);
+      if (oldcom->toktyp == eoltok)
+        typmac();
+      else
+      {
+        if (!eolok())
+        {
+          alu_macros_only = false;
+          return false;
+        }                          /* if (!eolok()) */
+/* Need to preserve stdout for this */
+        if (orig_stdout == -1)
+        {
+          SYSCALL(orig_stdout, dup(1));
+        }                          /* if (orig_stdout == -1) */
+        if (orig_stdout == -1)
+        {
+          fprintf(stderr, "\r\n%s. (dup(1))\r\n", strerror(errno));
+          refrsh(NULL);
+          alu_macros_only = false;
+          return false;
+        }                          /* if (orig_stdout == -1) */
+        else
+        {
+          SYSCALL(i, close(1));
+          SYSCALL(i, open_buf(O_WRONLY | O_CREAT | O_TRUNC, 0666));
+          if (i == 1)
+          {
+            lstmac();
+            i = 0;                 /* Success */
+          }                        /* if (i == 1) */
+          else
+            i = errno;
+          restore_stdout();
+          if (i)
+            fprintf(stderr, "%s. %s (freopen)", strerror(i), ubuf);
+          i = !i;                  /* Required below */
+        }                          /* if (orig_stdout == -1) else */
+      }                            /* if (oldcom->toktyp == eoltok) else */
+      alu_macros_only = false;
+    }                              /* if (i < 0) */
+    return i != 0;
+  }                                /* bool do_newmacro(void) */
+
 /* **************************** do_shell_command **************************** */
 
   bool do_shell_command(void)
   {
-      if (do_cmd())
-      {
-        fputs("bad luck", stdout);
-        noRereadIfMacro = true;
-        move_cursor_back();        /* Error has been reported */
-        return false;
-      }
-      if (cntrlc)
-      {
-        newlin();
-        report_control_c();
-      }                            /* if (cntrlc) */
-      return true;
+    if (do_cmd())
+    {
+      fputs("bad luck", stdout);
+      noRereadIfMacro = true;
+      move_cursor_back();          /* Error has been reported */
+      return false;
+    }
+    if (cntrlc)
+    {
+      newlin();
+      report_control_c();
+    }                              /* if (cntrlc) */
+    return true;
   }                                /* bool do_shell_command(void); */
 
 /* ************************* END INTERNAL FUNCTIOBS ************************* */
@@ -1354,7 +1420,10 @@ p1201:
   {
     cntrlc = false;                /* Reset flag */
     if (USING_FILE || curmac >= 0) /* If in macro, force an error */
-      REREAD_CMD_S("Keyboard interrupt");
+    {
+      fputs("Keyboard interrupt", stdout);
+      REREAD_CMD;
+    }
   }                                /* Else ignore the quit */
   switch (verb)
   {
@@ -1469,9 +1538,14 @@ p1201:
       goto p1102;
     case 'O':
       goto p1401;
+
     case 'N':
-      goto p1501;
-    case 'Y':
+      if (do_newmacro())
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
+
+    case 'Y':                      /* Drop thru */
+    case 'y':
       goto p2005;
 
     case 'b':                      /* FBRIEF */
@@ -1514,7 +1588,10 @@ p1201:
 
     case 'x':               /* FX - Exchange the functions of 2 keyboard keys */
       if (scrdtk(2, (uint8_t *)oldkey, 3, oldcom))
-        BAD_RDTK;
+      {
+        bad_rdtk();
+        REREAD_CMD;
+      }
       if (oldcom->toktyp == eoltok) /* Empty line */
       {
 /* FX with no params - Re-initialise the table, subject to
@@ -1531,9 +1608,15 @@ p1201:
         REREAD_CMD;
       oldkey[0] = k;               /* Now a subscript */
       if (scrdtk(2, (uint8_t *)newkey, 3, oldcom))
-        BAD_RDTK;
+      {
+        bad_rdtk();
+        REREAD_CMD;
+      }
       if (oldcom->toktyp == eoltok)
-        REREAD_CMD_S("FX must have 2 parameters");
+      {
+        fputs("FX must have 2 parameters", stdout);
+        REREAD_CMD;
+      }
       xkey[0] = newkey[0];
       xkey[1] = newkey[1];
       if (!valid_FX_arg())
@@ -1546,18 +1629,27 @@ p1201:
       fxtabl[(int)newkey[0]] = i;
       READ_NEXT_COMMAND;
 
-    case 'y':
-      goto p2005;
-
     case 't':                      /* FT - TOKENCHAR */
       if (strlen(ndel) >= 32)
-        REREAD_CMD_S("no room for further entries");
+      {
+        fputs("no room for further entries", stdout);
+        REREAD_CMD;
+      }
       if (scrdtk(1, (uint8_t *)ubuf, 40, oldcom)) /* Get character to add */
-        BAD_RDTK;
+      {
+        bad_rdtk();
+        REREAD_CMD;
+      }
       if (oldcom->toktyp == eoltok)
-        REREAD_CMD_S("command requires a parameter");
+      {
+        fputs("command requires a parameter", stdout);
+        REREAD_CMD;
+      }
       if (oldcom->toklen != 1)
-        REREAD_CMD_S("parameter must be single character");
+      {
+        fputs("parameter must be single character", stdout);
+        REREAD_CMD;
+      }
       if (!eolok())
         REREAD_CMD;
       strcat(ndel, ubuf);
@@ -1583,7 +1675,10 @@ p1201:
 /* Some nesting of FI macros is allowed, */
 /* to support e.g. nested U-use files which contain FI cmds */
       if (immnxfr > LAST_IMMEDIATE_MACRO)
-        REREAD_CMD_S("Too many nested FI commands");
+      {
+        fputs("Too many nested FI commands", stdout);
+        REREAD_CMD;
+      }
       verb = immnxfr++;
       if (!newmac2(true))
         REREAD_CMD;
@@ -1611,7 +1706,10 @@ p1201:
             break;
           }                        /* if (USING_FILE) */
           else
-            REREAD_CMD_S("fd y is not available from the keyboard");
+          {
+            fputs("fd y is not available from the keyboard", stdout);
+            REREAD_CMD;
+          }
       }                            /* switch (get_answer()) */
       READ_NEXT_COMMAND;
   }                                /* switch (verb) */
@@ -1984,7 +2082,6 @@ p1008:
   READ_NEXT_COMMAND;               /* Finished if get here */
 p1078:
   rtn = 1079;
-p1112:
   I4_X_I4_1(count);                /* Lines *not* deleted to i4 */
   PRINTF_EOF_REACHED;
   PRINT_LINES_I4_1;
@@ -2012,8 +2109,7 @@ p1011:
  */
   if (scrdtk(2, (uint8_t *)tmfile, 17, oldcom))
   {
-  bad_rdtk:
-    fprintf(stderr, "%s. (scrdtk)", strerror(errno));
+    bad_rdtk();
     REREAD_CMD;
   }
   k = oldcom->toklen;              /* Get length of HELP topic */
@@ -2189,9 +2285,15 @@ p1014:
  * as ubuf will get overwritten and we aren't going to use getlin,
  * so ermess is spare. */
   if (scrdtk(2, (uint8_t *)ermess, BUFMAX, oldcom))
-    BAD_RDTK;                      /* J bad RDTK */
+  {
+    bad_rdtk();
+    REREAD_CMD;
+  }                                /* J bad RDTK */
   if (oldcom->toktyp == eoltok || !(h = oldcom->toklen))
-    REREAD_CMD_S("Null string to locate");
+  {
+    fputs("Null string to locate", stdout);
+    REREAD_CMD;
+  }
 
   lstlin = ptrpos;                 /* -TO rel currnt line */
   if ((retcod = get_num(false, &count2)) < 0) /* Get number lines to search */
@@ -2218,8 +2320,10 @@ p1014:
   {
     if (cntrlc)                    /* User abort */
     {
-      count = count2;              /* Fit in with Y's error printing */
-      goto p1622;
+      cntrlc = false;              /* ^C noticed */
+      fputs("Command abandoned :-", stdout);
+      print_scanned_lines(count2);
+      READ_NEXT_COMMAND;
     }                              /* if(cntrlc) */
     if (revrse)
     {
@@ -2328,18 +2432,30 @@ p1018:
   repos = true;
 p1129:
   if (!getlin(true, false))        /* Bad source. C joins here */
-    REREAD_CMD_S(" in source line");
+  {
+    fputs(" in source line", stdout);
+    REREAD_CMD;
+  }
   k4 = oldcom->decval;             /* Remember source */
   if (!getlin(true, true))         /* Bad dest'n */
-    REREAD_CMD_S(" in dest'n line");
+  {
+    fputs(" in dest'n line", stdout);
+    REREAD_CMD;
+  }
   j4 = oldcom->decval;             /* Remember dest'n */
   lstlin = k4;                     /* -TO refers from source line */
   if (j4 == k4)                    /* Error if equal */
-    REREAD_CMD_S("Source and destination line #'s must be different");
+  {
+    fputs("Source and destination line #'s must be different", stdout);
+    REREAD_CMD;
+  }
   goto asg2rtn;                    /* End 1st common part */
 p1121:
   if (k4 == j4 - 1)
-    REREAD_CMD_S("moving a line to before the next line is a no-op");
+  {
+    fputs("moving a line to before the next line is a no-op", stdout);
+    REREAD_CMD;
+  }
   rtn = 1125;                      /* Only used if hit eof */
 p1131:                             /* C joins us here */
   if (!get_opt_lines(&count))
@@ -2459,75 +2575,36 @@ p2017:
     fmode &= ~02000000000;
   READ_NEXT_COMMAND;
 /*
- * N - NEWMACRO
- */
-p1501:
-  i = newmac();
-  if (i < 0)                       /* Token was "-" */
-  {
-    scrdtk(2, (uint8_t *)ubuf, BUFMAX, oldcom);
-    if (oldcom->toktyp == eoltok)
-      typmac();
-    else
-    {
-      if (!eolok())
-      {
-        alu_macros_only = false;
-        REREAD_CMD;
-      }                            /* if (!eolok()) */
-/* Need to preserve stdout for this */
-      if (orig_stdout == -1)
-      {
-        SYSCALL(orig_stdout, dup(1));
-      }                            /* if (orig_stdout == -1) */
-      if (orig_stdout == -1)
-      {
-        fprintf(stderr, "\r\n%s. (dup(1))\r\n", strerror(errno));
-        refrsh(NULL);
-        alu_macros_only = false;
-        REREAD_CMD;
-      }                            /* if (orig_stdout == -1) */
-      else
-      {
-        SYSCALL(i, close(1));
-        SYSCALL(i, open_buf(O_WRONLY | O_CREAT | O_TRUNC, 0666));
-        if (i == 1)
-        {
-          lstmac();
-          i = 0;                   /* Success */
-        }                          /* if (i == 1) */
-        else
-          i = errno;
-        restore_stdout();
-        if (i)
-          fprintf(stderr, "%s. %s (freopen)", strerror(i), ubuf);
-        i = !i;                    /* Required below */
-      }                            /* if (orig_stdout == -1) else */
-    }                              /* if (oldcom->toktyp == eoltok) else */
-    alu_macros_only = false;
-  }                                /* if (i < 0) */
-  if (i)
-    READ_NEXT_COMMAND;             /* No error */
-  REREAD_CMD;
-/*
  * Y or FY - Change all occurrences of 1 string to another
  */
 p2005:
   tokens = verb == 'y';            /* Differentiate fy */
   if (scrdtk(2, (uint8_t *)oldstr, BUFMAX, oldcom))
-    BAD_RDTK;
+  {
+    bad_rdtk();
+    REREAD_CMD;
+  }
   if (oldcom->toktyp == eoltok || !(oldlen = oldcom->toklen))
-    REREAD_CMD_S("Null string to replace");
+  {
+    fputs("Null string to replace", stdout);
+    REREAD_CMD;
+  }
 
 /* Get string with which to replace it */
   if (scrdtk(2, (uint8_t *)newstr, BUFMAX, oldcom))
-    BAD_RDTK;
+  {
+    bad_rdtk();
+    REREAD_CMD;
+  }
   newlen = oldcom->toklen;
   ydiff = newlen - oldlen;
 
 /* strings must be equal length if Fixed-Length mode */
   if (ydiff && fmode & 0400)
-    REREAD_CMD_S("Replace string must be same length in FIXED LENGTH mode");
+  {
+    fputs("Replace string must be same length in FIXED LENGTH mode", stdout);
+    REREAD_CMD;
+  }
 
   if (oldcom->toktyp == eoltok)
     j4 = 1;
@@ -2556,7 +2633,10 @@ p2005:
   if (!get_search_columns())       /* Look for 1st & last pos'ns in line */
     REREAD_CMD;
   if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
-    REREAD_CMD_S("Empty file - can't changeall any lines");
+  {
+    fputs("Empty file - can't changeall any lines", stdout);
+    REREAD_CMD;
+  }
 
 /* We act on BRIEF or NONE if in a macro without question. Otherwise, BRIEF or
  * NONE is queried, and we reset to VERBOSE if we don't get confirmation */
@@ -2577,17 +2657,26 @@ p2005:
   for (i4 = count; i4 > 0; i4--)
   {
     if (cntrlc)                    /* User has interrupted */
-      goto p1622;
+    {
+      cntrlc = false;              /* ^C noticed */
+      fputs("Command abandoned :-", stdout);
+      print_scanned_lines(count);
+      READ_NEXT_COMMAND;           /* Leave Y */
+    }                              /* if (cntrlc) */
     if (!rdlin(curr, false))       /* Eof on main pointer */
     {
       if (count == LONG_MAX)       /* Was going to deferred eof */
         break;                     /* for(i4=count;i4>0;i4--) */
-      rtn = 1616;
-      goto p1112;                  /* Print most of end of file message */
+      I4_X_I4_1(count);            /* Lines *not* deleted to i4 */
+      PRINTF_EOF_REACHED;
+      PRINT_LINES_I4_1;
+      fputs("scanned", stdout);
+      newlin();
+      setptr(savpos);              /* Restore file pos'n */
+      READ_NEXT_COMMAND;           /* Leave Y */
     }
-/*
- * Initial tasks for each line
- */
+
+/* Initial tasks for each line */
     yposn = firstpos;              /* Search from 1st position spec'd */
     linmod = false;                /* No match this line yet */
     if (curr->bchars < minlen)
@@ -2595,7 +2684,7 @@ p2005:
     n = 0;
     if (curr->bchars > lastpos)
       n = curr->bchars - lastpos;  /* N=# at end not to search */
-/* */
+
     do
     {
       if (tokens)
@@ -2660,20 +2749,11 @@ p2005:
 
 /* Error messages */
 
-p1622:
-  cntrlc = false;                  /* ^C noticed */
-  fputs("Command abandoned :-", stdout);
-p16221:
-  printf(" %ld lines ", count - i4);
-p1616:
-  fputs("scanned", stdout);
-  newlin();
-  setptr(savpos);                  /* Restore file pos'n */
-  READ_NEXT_COMMAND;               /* Leave Y */
 p16175:
   savpos = ptrpos - 1;             /* Point to too big line */
   fputs("Next line would exceed max size:-", stdout);
-  goto p16221;
+  print_scanned_lines(count);
+  READ_NEXT_COMMAND;               /* Leave Y */
 p1620:
   if (curmac < 0 || !BRIEF)
     fputs("specified string not found", stdout);
@@ -2687,8 +2767,6 @@ asg2rtn:switch (rtn)
       goto p1037;
     case 1026:
       goto p1026;
-    case 1616:
-      goto p1616;
     case 2017:
       goto p2017;
     case 2014:
