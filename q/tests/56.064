@@ -1,0 +1,4 @@
+fi !rm -f t5^J!touch t5^Jq t5^Ja^Jaaaaaaaaa^J^[c1 eof 999^Jg42^J
+*                         ; Item(s) tested                ; Expected result
+fi y a b 990 20 1 3^J^NX  ; count of lines scanned        ; end of file reached:- 11 lines scanned
+fi v0^J^NX                ; file repositioned             ; 42 aaaaaaaaa

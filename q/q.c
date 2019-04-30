@@ -2070,25 +2070,24 @@ p1008:
   for (i4 = count; i4 > 0; i4--)
   {
 
-/* Next line checks if there are deferred lines then try to get one. We need to
+/* Check if there are deferred lines and try to get one if so. We need to
  * re-check lintot: "deferd" will get cleared in the process if the last line
  * was unterminated */
-
     if (k4 == lintot + 2 && !(deferd && (dfread(1, NULL), k4 != lintot + 2)))
-      goto p1078;
-    setptr(k4);                    /* Pos 1 past 1st line to go */
-    delete(false);                 /* Knock off line. Use normal ptr */
+    {
+      I4_X_I4_1(count);            /* Lines *not* deleted to i4 */
+      PRINTF_EOF_REACHED;
+      PRINT_LINES_I4_1;
+      puts("deleted\r");
+      break;
+    }                              /* if (k4 == lintot + 2 && ...) */
+    else
+    {
+      setptr(k4);                  /* Pos 1 past 1st line to go */
+      delete(false);               /* Knock off line. Use normal ptr */
+    }                              /* if (k4 == lintot + 2 && ...) else */
   }
   READ_NEXT_COMMAND;               /* Finished if get here */
-p1078:
-  rtn = 1079;
-  I4_X_I4_1(count);                /* Lines *not* deleted to i4 */
-  PRINTF_EOF_REACHED;
-  PRINT_LINES_I4_1;
-  goto asg2rtn;
-p1079:
-  puts("deleted\r");
-  READ_NEXT_COMMAND;               /* End DELETE */
 /*
  * G - GOTO
  */
@@ -2670,8 +2669,7 @@ p2005:
       I4_X_I4_1(count);            /* Lines *not* deleted to i4 */
       PRINTF_EOF_REACHED;
       PRINT_LINES_I4_1;
-      fputs("scanned", stdout);
-      newlin();
+      puts("scanned\r");
       setptr(savpos);              /* Restore file pos'n */
       READ_NEXT_COMMAND;           /* Leave Y */
     }
@@ -2697,8 +2695,13 @@ p2005:
           curr->bchars - n, &h, &m);
       if (!retcod)
         break;
-      if (curr->bchars + ydiff > curr->bmxch)
-        goto p16175;               /* J would bust line */
+      if (curr->bchars + ydiff > curr->bmxch) /* Would exceed line capacity */
+      {
+        savpos = ptrpos - 1;       /* Point to too big line */
+        fputs("Next line would exceed max size:-", stdout);
+        print_scanned_lines(count);
+        READ_NEXT_COMMAND;
+      }                            /* if (curr->bchars + ydiff > curr->bmxch) */
       memmove(&curr->bdata[m + 1 + ydiff], &curr->bdata[m + 1],
         curr->bchars - m - 1);
 
@@ -2719,9 +2722,9 @@ p2005:
     lgtmp3 = true;                 /* A line changed now */
     if (!NONE)                     /* Some display may be req'd */
     {
-/*
- * SPEEDUP - If BRIEF, only display every 1/5th sec
- */
+      bool want_display = true;
+
+/* If BRIEF, only display every 1/5th sec */
       if (BRIEF)                   /* only display if time to (or 1st) */
       {
         if ((timnow = times(&tloc)) == -1)
@@ -2731,36 +2734,32 @@ p2005:
           REREAD_CMD;
         }
         if (timnow - timlst < 20)
-          goto p1711;              /* J not yet time to display */
-        timlst = timnow;           /* Displaying */
-        forych = true;             /* Tell PDSPLY short display */
+          want_display = false;
+        else
+        {
+          timlst = timnow;         /* Displaying */
+          forych = true;           /* Tell PDSPLY short display */
+        }                          /* if (timnow - timlst < 20) else */
       }                            /* if(BRIEF) */
-      sprmpt(ptrpos - 1);          /* set up line # */
-      pdsply(curr, prmpt, pchrs);  /* Display the modified line */
+      if (want_display)
+      {
+        sprmpt(ptrpos - 1);        /* set up line # */
+        pdsply(curr, prmpt, pchrs); /* Display the modified line */
+      }                            /* if (want_display) */
     }                              /* if(!NONE) */
-  p1711:
     delete(false);                 /* Remove old version of line */
     inslin(curr);                  /* Insert new version */
   }                                /* for(i4=count;i4>0;i4--) */
-  if (!lgtmp3)
-    goto p1620;                    /* J no lines changed */
   setptr(savpos);                  /* End Y */
+  if (!lgtmp3)
+  {
+    if (curmac < 0 || !BRIEF)
+      fputs("specified string not found", stdout);
+    locerr = true;                 /* Picked up by RERDCM */
+    move_cursor_back();
+    REREAD_CMD;
+  }                                /* if (!lgtmp3) */
   READ_NEXT_COMMAND;
-
-/* Error messages */
-
-p16175:
-  savpos = ptrpos - 1;             /* Point to too big line */
-  fputs("Next line would exceed max size:-", stdout);
-  print_scanned_lines(count);
-  READ_NEXT_COMMAND;               /* Leave Y */
-p1620:
-  if (curmac < 0 || !BRIEF)
-    fputs("specified string not found", stdout);
-  setptr(savpos);                  /* Restore file pos'n */
-  locerr = true;                   /* Picked up by RERDCM */
-  move_cursor_back();
-  REREAD_CMD;
 asg2rtn:switch (rtn)
   {
     case 1037:
@@ -2783,8 +2782,6 @@ asg2rtn:switch (rtn)
       goto p1103;
     case 1093:
       goto p1093;
-    case 1079:
-      goto p1079;
     case 1032:
       goto p1032;
     default:
