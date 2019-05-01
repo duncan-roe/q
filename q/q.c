@@ -46,10 +46,6 @@
 #define ERRRTN(x) do {fprintf(stderr, "%s", (x)); return false;} while (0)
 #define PIPE_NAME "/tmp/qpipeXXXXXX"
 #define revrse (fmode & 04000)
-#define PRINT_LINES_I4_1 printf("%ld lines ", i4 - 1)
-#define I4_X_I4_1(x) i4 = x - i4 + 1
-#define \
-  PRINTF_EOF_REACHED printf("%s of file reached:- ", revrse ? "start" : "end")
 #define PRINTF_IGNORED printf("f%c ignored (mode +v)\r\n", verb)
 
 /* Typedefs */
@@ -878,6 +874,214 @@ main(int xargc, char **xargv)
     return true;
   }                                /* bool get_search_columns(void) */
 
+/* *************************** printf_eof_reached *************************** */
+
+  void printf_eof_reached(long ct, char *action)
+  {
+    i4 = ct - i4 + 1;              /* Lines not actioned */
+    printf("%s of file reached:- ", revrse ? "start" : "end");
+    printf("%ld lines ", i4 - 1);
+    printf("%s\r", action);
+  }                         /* void printf_eof_reached(long ct, char *action) */
+
+/* IMPLEMENT Q COMMANDS (In alphabetical order) */
+
+/* ******************************** do_fbrief ******************************* */
+
+  bool do_fbrief(void)
+  {
+    if (!eolok())
+      return false;
+    if (!(fmode & 01000))
+    {
+      fmode |= 010000000000;
+      fmode &= 017777777777;
+    }                              /* if (!(fmode & 01000)) */
+    else
+      PRINTF_IGNORED;
+    return true;                   /* Finished */
+  }                                /* bool do_fbrief(void) */
+
+/* ******************************* do_fdevnull ****************************** */
+
+  bool do_fdevnull(void)
+  {
+    if (verbose_flag)              /* FD ineffective in q -v */
+    {
+      PRINTF_IGNORED;
+      return true;
+    }                              /* if (verbose_flag) */
+    switch (get_answer())
+    {
+      case Q_UNREC:
+        return false;
+      case Q_MAYBE:
+      case Q_NO:
+        restore_stdout();
+        break;
+      case Q_YES:
+        if (USING_FILE)
+        {
+          devnull_stdout();
+          break;
+        }                          /* if (USING_FILE) */
+        else
+        {
+          fputs("fd y is not available from the keyboard", stdout);
+          return false;
+        }
+    }                              /* switch (get_answer()) */
+    return true;
+  }                                /* bool do_fdevnull(void) */
+
+/* *************************** do_fimmediate_macro ************************** */
+
+  bool do_fimmediate_macro(void)
+  {
+    if (scrdtk(4, (uint8_t *)ubuf, BUFMAX, oldcom))
+    {
+      perror("SCRDTK of macro text");
+      fprintf(stderr, "\rUnexpected error");
+      return false;
+    }
+/* Decide which macro this will be. */
+/* Some nesting of FI macros is allowed, */
+/* to support e.g. nested U-use files which contain FI cmds */
+    if (immnxfr > LAST_IMMEDIATE_MACRO)
+    {
+      fputs("Too many nested FI commands", stdout);
+      return false;
+    }
+    verb = immnxfr++;
+    if (!newmac2(true))
+      return false;
+
+/* FI does an implied ^ND */
+    if (curmac >= 0 && !pushmac(false))
+      return false;
+
+    curmac = verb;
+    mcposn = 0;
+    return true;
+  }                                /* bool do_fimmediate_macro(void) */
+
+/* ******************************** do_fmode ******************************** */
+
+  bool do_fmode(void)
+  {
+    return setmode();
+  }                                /* bool do_fmode(void) */
+
+/* ******************************** do_fnone ******************************** */
+
+  bool do_fnone(void)
+  {
+    if (!eolok())
+      return false;
+    if (fmode & 01000)
+      PRINTF_IGNORED;
+    else
+      fmode |= 030000000000u;
+    return true;                   /* Finished */
+  }                                /* bool do_fnone(void) */
+
+/* ******************************** do_forget ******************************* */
+
+  bool do_forget(void)
+  {
+    if (!eolok())
+      return false;
+    forget();                      /* Implemented by workfile */
+    return true;
+  }                                /* bool do_forget(void) */
+
+/* ****************************** do_ftokenchar ***************************** */
+
+  bool do_ftokenchar(void)
+  {
+    if (strlen(ndel) >= 32)
+    {
+      fputs("no room for further entries", stdout);
+      return false;
+    }
+    if (scrdtk(1, (uint8_t *)ubuf, 40, oldcom)) /* Get character to add */
+    {
+      bad_rdtk();
+      return false;
+    }
+    if (oldcom->toktyp == eoltok)
+    {
+      fputs("command requires a parameter", stdout);
+      return false;
+    }
+    if (oldcom->toklen != 1)
+    {
+      fputs("parameter must be single character", stdout);
+      return false;
+    }
+    if (!eolok())
+      return false;
+    strcat(ndel, ubuf);
+    return true;
+  }                                /* bool do_ftokenchar(void) */
+
+/* ******************************* do_fverbose ****************************** */
+
+  bool do_fverbose(void)
+  {
+    if (!eolok())
+      return false;
+    fmode &= 07777777777;
+    return true;                   /* Finished */
+  }                                /* bool do_fverbose(void) */
+
+/* ******************************* do_fxchange ****************************** */
+
+  bool do_fxchange(void)
+  {
+    if (scrdtk(2, (uint8_t *)oldkey, 3, oldcom))
+    {
+      bad_rdtk();
+      return false;
+    }
+    if (oldcom->toktyp == eoltok)  /* Empty line */
+    {
+/* FX with no params - Re-initialise the table, subject to
+ *                     confirmation */
+      if (!ysno5a("Re-initialise keyboard table to default - ok", A5NDEF))
+        return true;               /* Finish if changed his mind */
+      for (i = 127; i >= 0; i--)
+        fxtabl[i] = i;             /* No FX commands yet */
+      return true;                 /* Finished after reset */
+    }                              /* if (oldcom->toktyp != eoltok) */
+    xkey[0] = oldkey[0];
+    xkey[1] = oldkey[1];
+    if (!valid_FX_arg())
+      return false;
+    oldkey[0] = k;                 /* Now a subscript */
+    if (scrdtk(2, (uint8_t *)newkey, 3, oldcom))
+    {
+      bad_rdtk();
+      return false;
+    }
+    if (oldcom->toktyp == eoltok)
+    {
+      fputs("FX must have 2 parameters", stdout);
+      return false;
+    }
+    xkey[0] = newkey[0];
+    xkey[1] = newkey[1];
+    if (!valid_FX_arg())
+      return false;
+    newkey[0] = k;                 /* Now a subscript */
+    if (!eolok())
+      return false;
+    i = fxtabl[(int)oldkey[0]];
+    fxtabl[(int)oldkey[0]] = fxtabl[(int)newkey[0]];
+    fxtabl[(int)newkey[0]] = i;
+    return true;
+  }                                /* bool do_fxchange(void) */
+
 /* ******************************* do_newmacro ****************************** */
 
   bool do_newmacro(void)
@@ -947,6 +1151,261 @@ main(int xargc, char **xargv)
     }                              /* if (cntrlc) */
     return true;
   }                                /* bool do_shell_command(void); */
+
+/* ******************************* do_usefile ******************************* */
+
+  bool do_usefile(void)
+  {
+    if (!get_file_arg(&nofile) || nofile)
+      ERRRTN("Error in filename");
+    if (!eolok())
+      return false;
+    duplx5(true);                  /* Assert XOFF recognition */
+
+/* NULLSTDOUT setting is same as parent */
+    stdinfo[stdidx + 1].nullstdout =
+      stdidx < 0 ? false : stdinfo[stdidx].nullstdout;
+
+/* Save current stdin */
+    stdidx++;
+    SYSCALL(stdinfo[stdidx].funit, dup(0));
+    if (stdinfo[stdidx].funit == -1)
+    {
+      stdidx--;
+      fprintf(stderr, "%s. (dup(0))", strerror(errno));
+      return false;
+    }                              /* if (stdinfo[stdidx].funit == -1) */
+
+/* Close funit 0 */
+    SYSCALL(i, close(0));
+
+/* Open new input source */
+    SYSCALL(i, open_buf(O_RDONLY, 0));
+    if (i == -1)
+    {
+      pop_stdin();
+      fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
+      return false;
+    }                              /* if (i == -1) */
+
+/* Verify new input opened on funit 0. Try to rectify if not */
+    if (i)
+    {
+      SYSCALL(j, dup2(i, 0));
+      if (j == -1)
+      {
+        fprintf(stderr, "%s.(dup2(%d, 0))", strerror(errno), i);
+        SYSCALL(j, close(i));
+        pop_stdin();
+        return false;
+      }                            /* if (j == -1) */
+      SYSCALL(j, close(i));
+    }                              /* if (i) */
+
+/* If invoked from a macro, suspend that macro */
+    if (curmac >= 0)
+    {
+      if (!pushmac(true))
+        return false;
+      curmac = -1;
+      stdinfo[stdidx].frommac = true;
+    }                              /* if (curmac >= 0) */
+    else
+      stdinfo[stdidx].frommac = false;
+
+    buf5len = 0;                   /* Flush any input left over */
+    return true;
+  }                                /* bool do_usefile(void) */
+
+/* ****************************** do_ychangeall ***************************** */
+
+  bool do_ychangeall(void)
+  {
+/*
+ * Y or FY - Change all occurrences of 1 string to another
+ */
+    tokens = verb == 'y';          /* Differentiate fy */
+    if (scrdtk(2, (uint8_t *)oldstr, BUFMAX, oldcom))
+    {
+      bad_rdtk();
+      return false;
+    }
+    if (oldcom->toktyp == eoltok || !(oldlen = oldcom->toklen))
+    {
+      fputs("Null string to replace", stdout);
+      return false;
+    }
+
+/* Get string with which to replace it */
+    if (scrdtk(2, (uint8_t *)newstr, BUFMAX, oldcom))
+    {
+      bad_rdtk();
+      return false;
+    }
+    newlen = oldcom->toklen;
+    ydiff = newlen - oldlen;
+
+/* strings must be equal length if Fixed-Length mode */
+    if (ydiff && fmode & 0400)
+    {
+      fputs("Replace string must be same length in FIXED LENGTH mode", stdout);
+      return false;
+    }
+
+    if (oldcom->toktyp == eoltok)
+      j4 = 1;
+    else
+    {
+      if (getlin(false, false))
+        j4 = oldcom->decval;
+      else
+      {
+        if (oldcom->toktyp == nortok)
+        {
+          fprintf(stderr, "%s", ermess);
+          return false;
+        }                          /* if (oldcom->toktyp == nortok) */
+        j4 = 1;                    /* Start looking at line 1 */
+      }                            /* if (getlin(false, false)) else */
+      if (!getnum(false))          /* Get # lines, 0 not allowed */
+        return false;
+      if (oldcom->toktyp != nortok) /* No number given */
+        count = deferd ? LONG_MAX : lintot + 1 - j4; /* Process to eof */
+      else
+        count = oldcom->decval;
+    }                              /* if (oldcom->toktyp == eoltok) else */
+    lstlin = -1;                   /* -TO not allowed for column pos'ns */
+    h = oldlen;                    /* Req'd by code for L-LOCATE */
+    if (!get_search_columns())     /* Look for 1st & last pos'ns in line */
+      return false;
+    if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
+    {
+      fputs("Empty file - can't changeall any lines", stdout);
+      return false;
+    }
+
+/* We act on BRIEF or NONE if in a macro without question. Otherwise, BRIEF or
+ * NONE is queried, and we reset to VERBOSE if we don't get confirmation */
+    if (curmac < 0 && BRIEF &&
+      !ysno5a("Use brief/none in this command (y,n,Cr [n])", A5DNO))
+    {
+      puts("Reverting to verbose\r");
+      fmode &= 07777777777;
+    }
+
+    savpos = ptrpos;               /* Remember so we can get back */
+    setptr(j4);                    /* First line to look at */
+    lgtmp2 = newlen != 0;
+    lgtmp3 = false;                /* No lines changed yet */
+/*
+ * Main loop on specified lines
+ */
+    for (i4 = count; i4 > 0; i4--)
+    {
+      if (cntrlc)                  /* User has interrupted */
+      {
+        cntrlc = false;            /* ^C noticed */
+        fputs("Command abandoned :-", stdout);
+        print_scanned_lines(count);
+        return true;               /* Leave Y */
+      }                            /* if (cntrlc) */
+      if (!rdlin(curr, false))     /* Eof on main pointer */
+      {
+        if (count == LONG_MAX)     /* Was going to deferred eof */
+          break;                   /* for(i4=count;i4>0;i4--) */
+        printf_eof_reached(count, "scanned");
+        newlin();
+        setptr(savpos);            /* Restore file pos'n */
+        return true;               /* Leave Y */
+      }
+
+/* Initial tasks for each line */
+      yposn = firstpos;            /* Search from 1st position spec'd */
+      linmod = false;              /* No match this line yet */
+      if (curr->bchars < minlen)
+        continue;                  /* J line shorter than minimum */
+      n = 0;
+      if (curr->bchars > lastpos)
+        n = curr->bchars - lastpos; /* N=# at end not to search */
+
+      do
+      {
+        if (tokens)
+          retcod =
+            ltok5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn,
+            curr->bchars - n, &h, &m, (uint8_t *)ndel);
+        else
+          retcod =
+            lsub5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn,
+            curr->bchars - n, &h, &m);
+        if (!retcod)
+          break;
+        if (curr->bchars + ydiff > curr->bmxch) /* Would exceed line capacity */
+        {
+          savpos = ptrpos - 1;     /* Point to too big line */
+          fputs("Next line would exceed max size:-", stdout);
+          print_scanned_lines(count);
+          return true;
+        }                          /* if (curr->bchars + ydiff > curr->bmxch) */
+        memmove(&curr->bdata[m + 1 + ydiff], &curr->bdata[m + 1],
+          curr->bchars - m - 1);
+
+/* Move in new string if not null */
+        if (lgtmp2)
+          memcpy((char *)&curr->bdata[h], (char *)newstr, (size_t)newlen);
+        curr->bchars = curr->bchars + ydiff; /* Get new line length */
+        linmod = true;             /* This line has been modified */
+        yposn = m + 1 + ydiff;     /* Resume search after new string */
+
+/* Seek more occurrences if room */
+      }
+      while (curr->bchars - n - yposn >= oldlen);
+
+      if (!linmod)
+        continue;                  /* J no mods to this line */
+      linmod = false;
+      lgtmp3 = true;               /* A line changed now */
+      if (!NONE)                   /* Some display may be req'd */
+      {
+        bool want_display = true;
+
+/* If BRIEF, only display every 1/5th sec */
+        if (BRIEF)                 /* only display if time to (or 1st) */
+        {
+          if ((timnow = times(&tloc)) == -1)
+          {
+            perror("times");
+            putchar('\r');
+            return false;
+          }
+          if (timnow - timlst < 20)
+            want_display = false;
+          else
+          {
+            timlst = timnow;       /* Displaying */
+            forych = true;         /* Tell PDSPLY short display */
+          }                        /* if (timnow - timlst < 20) else */
+        }                          /* if(BRIEF) */
+        if (want_display)
+        {
+          sprmpt(ptrpos - 1);      /* set up line # */
+          pdsply(curr, prmpt, pchrs); /* Display the modified line */
+        }                          /* if (want_display) */
+      }                            /* if(!NONE) */
+      delete(false);               /* Remove old version of line */
+      inslin(curr);                /* Insert new version */
+    }                              /* for(i4=count;i4>0;i4--) */
+    setptr(savpos);                /* End Y */
+    if (!lgtmp3)
+    {
+      if (curmac < 0 || !BRIEF)
+        fputs("specified string not found", stdout);
+      locerr = true;               /* Picked up by RERDCM */
+      move_cursor_back();
+      return false;
+    }                              /* if (!lgtmp3) */
+    return true;
+  }                                /* bool do_ychangeall(void) */
 
 /* ************************* END INTERNAL FUNCTIOBS ************************* */
 
@@ -1429,10 +1888,12 @@ p1201:
   {
     case 'A':
       goto p1005;
+
     case 'B':
       if (do_b_or_s(true))
         READ_NEXT_COMMAND;
       REREAD_CMD;
+
     case 'C':
       goto p1007;
     case 'D':
@@ -1460,71 +1921,16 @@ p1201:
       goto p1017;
     case 'R':
       goto p1018;
+
     case 'S':
       if (do_b_or_s(false))
         READ_NEXT_COMMAND;
       REREAD_CMD;
 
     case 'U':                      /* U - USE */
-      if (!get_file_arg(&nofile) || nofile)
-        ERR1025("Error in filename");
-      if (!eolok())
-        REREAD_CMD;
-      duplx5(true);                /* Assert XOFF recognition */
-
-/* NULLSTDOUT setting is same as parent */
-      stdinfo[stdidx + 1].nullstdout =
-        stdidx < 0 ? false : stdinfo[stdidx].nullstdout;
-
-/* Save current stdin */
-      stdidx++;
-      SYSCALL(stdinfo[stdidx].funit, dup(0));
-      if (stdinfo[stdidx].funit == -1)
-      {
-        stdidx--;
-        fprintf(stderr, "%s. (dup(0))", strerror(errno));
-        REREAD_CMD;
-      }                            /* if (stdinfo[stdidx].funit == -1) */
-
-/* Close funit 0 */
-      SYSCALL(i, close(0));
-
-/* Open new input source */
-      SYSCALL(i, open_buf(O_RDONLY, 0));
-      if (i == -1)
-      {
-        pop_stdin();
-        fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
-        REREAD_CMD;
-      }                            /* if (i == -1) */
-
-/* Verify new input opened on funit 0. Try to rectify if not */
-      if (i)
-      {
-        SYSCALL(j, dup2(i, 0));
-        if (j == -1)
-        {
-          fprintf(stderr, "%s.(dup2(%d, 0))", strerror(errno), i);
-          SYSCALL(j, close(i));
-          pop_stdin();
-          REREAD_CMD;
-        }                          /* if (j == -1) */
-        SYSCALL(j, close(i));
-      }                            /* if (i) */
-
-/* If invoked from a macro, suspend that macro */
-      if (curmac >= 0)
-      {
-        if (!pushmac(true))
-          REREAD_CMD;
-        curmac = -1;
-        stdinfo[stdidx].frommac = true;
-      }                            /* if (curmac >= 0) */
-      else
-        stdinfo[stdidx].frommac = false;
-
-      buf5len = 0;                 /* Flush any input left over */
-      READ_NEXT_COMMAND;
+      if (do_usefile())
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
 
     case 'V':
       goto p1021;
@@ -1546,40 +1952,29 @@ p1201:
 
     case 'Y':                      /* Drop thru */
     case 'y':
-      goto p2005;
+      if (do_ychangeall())
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
 
     case 'b':                      /* FBRIEF */
-      if (!eolok())
-        REREAD_CMD;
-      if (!(fmode & 01000))
-      {
-        fmode |= 010000000000;
-        fmode &= 017777777777;
-      }                            /* if (!(fmode & 01000)) */
-      else
-        PRINTF_IGNORED;
-      READ_NEXT_COMMAND;           /* Finished */
+      if (do_fbrief())
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
 
     case 'v':                      /* FVERBOSE */
-      if (!eolok())
-        REREAD_CMD;
-      fmode &= 07777777777;
-      READ_NEXT_COMMAND;           /* Finished */
+      if (do_fverbose())
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
 
     case 'n':                      /* FNONE */
-      if (!eolok())
-        REREAD_CMD;
-      if (fmode & 01000)
-        PRINTF_IGNORED;
-      else
-        fmode |= 030000000000u;
-      READ_NEXT_COMMAND;           /* Finished */
+      if (do_fnone())
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
 
     case 'o':                      /* FO - FORGET */
-      if (!eolok())
-        REREAD_CMD;
-      forget();                    /* In fact implemented by workfile */
-      READ_NEXT_COMMAND;
+      if (do_forget())
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
 
     case '!':                      /* DO SHELL COMMAND */
       if (do_shell_command())
@@ -1587,131 +1982,34 @@ p1201:
       REREAD_CMD;
 
     case 'x':               /* FX - Exchange the functions of 2 keyboard keys */
-      if (scrdtk(2, (uint8_t *)oldkey, 3, oldcom))
-      {
-        bad_rdtk();
-        REREAD_CMD;
-      }
-      if (oldcom->toktyp == eoltok) /* Empty line */
-      {
-/* FX with no params - Re-initialise the table, subject to
- *                     confirmation */
-        if (!ysno5a("Re-initialise keyboard table to default - ok", A5NDEF))
-          READ_NEXT_COMMAND;       /* Finish if changed his mind */
-        for (i = 127; i >= 0; i--)
-          fxtabl[i] = i;           /* No FX commands yet */
-        READ_NEXT_COMMAND;         /* Finished after reset */
-      }                            /* if (oldcom->toktyp != eoltok) */
-      xkey[0] = oldkey[0];
-      xkey[1] = oldkey[1];
-      if (!valid_FX_arg())
-        REREAD_CMD;
-      oldkey[0] = k;               /* Now a subscript */
-      if (scrdtk(2, (uint8_t *)newkey, 3, oldcom))
-      {
-        bad_rdtk();
-        REREAD_CMD;
-      }
-      if (oldcom->toktyp == eoltok)
-      {
-        fputs("FX must have 2 parameters", stdout);
-        REREAD_CMD;
-      }
-      xkey[0] = newkey[0];
-      xkey[1] = newkey[1];
-      if (!valid_FX_arg())
-        REREAD_CMD;
-      newkey[0] = k;               /* Now a subscript */
-      if (!eolok())
-        REREAD_CMD;
-      i = fxtabl[(int)oldkey[0]];
-      fxtabl[(int)oldkey[0]] = fxtabl[(int)newkey[0]];
-      fxtabl[(int)newkey[0]] = i;
-      READ_NEXT_COMMAND;
+      if (do_fxchange())
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
 
     case 't':                      /* FT - TOKENCHAR */
-      if (strlen(ndel) >= 32)
-      {
-        fputs("no room for further entries", stdout);
-        REREAD_CMD;
-      }
-      if (scrdtk(1, (uint8_t *)ubuf, 40, oldcom)) /* Get character to add */
-      {
-        bad_rdtk();
-        REREAD_CMD;
-      }
-      if (oldcom->toktyp == eoltok)
-      {
-        fputs("command requires a parameter", stdout);
-        REREAD_CMD;
-      }
-      if (oldcom->toklen != 1)
-      {
-        fputs("parameter must be single character", stdout);
-        REREAD_CMD;
-      }
-      if (!eolok())
-        REREAD_CMD;
-      strcat(ndel, ubuf);
-      READ_NEXT_COMMAND;
+      if (do_ftokenchar())
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
 
     case 'f':
       goto p2013;
     case 'c':
       goto p2016;
+
     case 'm':                      /* "FM"ode */
-      if (setmode())
+      if (do_fmode())
         READ_NEXT_COMMAND;
-/* Get Yes / No (no default) */
       REREAD_CMD;
+
     case 'i':                      /* "FI'mmediate macro */
-      if (scrdtk(4, (uint8_t *)ubuf, BUFMAX, oldcom))
-      {
-        perror("SCRDTK of macro text");
-        fprintf(stderr, "\rUnexpected error");
-        REREAD_CMD;
-      }
-/* Decide which macro this will be. */
-/* Some nesting of FI macros is allowed, */
-/* to support e.g. nested U-use files which contain FI cmds */
-      if (immnxfr > LAST_IMMEDIATE_MACRO)
-      {
-        fputs("Too many nested FI commands", stdout);
-        REREAD_CMD;
-      }
-      verb = immnxfr++;
-      if (!newmac2(true))
-        REREAD_CMD;
+      if (do_fimmediate_macro())
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
 
-/* FI does an implied ^ND */
-      if (curmac >= 0 && !pushmac(false))
-        REREAD_CMD;
-
-      curmac = verb;
-      mcposn = 0;
-      READ_NEXT_COMMAND;
     case 'd':                      /* "FD"evnull */
-      switch (get_answer())
-      {
-        case Q_UNREC:
-          REREAD_CMD;
-        case Q_MAYBE:
-        case Q_NO:
-          restore_stdout();
-          break;
-        case Q_YES:
-          if (USING_FILE)
-          {
-            devnull_stdout();
-            break;
-          }                        /* if (USING_FILE) */
-          else
-          {
-            fputs("fd y is not available from the keyboard", stdout);
-            REREAD_CMD;
-          }
-      }                            /* switch (get_answer()) */
-      READ_NEXT_COMMAND;
+      if (do_fdevnull())
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
   }                                /* switch (verb) */
   fputs("unknown command", stdout); /* Dropped out of switch */
 reread_cmd:
@@ -2075,10 +2373,7 @@ p1008:
  * was unterminated */
     if (k4 == lintot + 2 && !(deferd && (dfread(1, NULL), k4 != lintot + 2)))
     {
-      I4_X_I4_1(count);            /* Lines *not* deleted to i4 */
-      PRINTF_EOF_REACHED;
-      PRINT_LINES_I4_1;
-      puts("deleted\r");
+      printf_eof_reached(count, "deleted");
       break;
     }                              /* if (k4 == lintot + 2 && ...) */
     else
@@ -2334,12 +2629,8 @@ p1014:
     else if (!rdlin(curr, false))  /* If eof */
     {
     s1112:
-      if (!lgtmp2 || count2 == LONG_MAX) /* No message wanted */
-        break;                     /* for(i4=count2;i4>0;i4--) */
-      I4_X_I4_1(count2);           /* Lines *not* searched to i4 */
-      PRINTF_EOF_REACHED;
-      PRINT_LINES_I4_1;
-      puts("searched\r");
+      if (lgtmp2 && count2 != LONG_MAX) /* Message wanted */
+        printf_eof_reached(count2, "searched");
       break;                       /* for(i4=count2;i4>0;i4--) */
     }                              /* if(!rdlin(curr, false)) */
     m = curr->bchars;
@@ -2397,10 +2688,7 @@ p1013:
   {
     if (!rdlin(curr, false))       /* If eof */
     {
-      I4_X_I4_1(count2);           /* Lines *not* searched to i4 */
-      PRINTF_EOF_REACHED;
-      PRINT_LINES_I4_1;
-      puts("joined\r");
+      printf_eof_reached(count2, "joined");
       break;
     }
     j = curr->bchars + prev->bchars;
@@ -2408,7 +2696,7 @@ p1013:
     {
       setptr(ptrpos - 1);
       fputs("joining next line would exceed line size :- ", stdout);
-      PRINT_LINES_I4_1;
+      printf("%ld lines ", i4 - 1);
       puts("joined\r");
       break;
     }                              /* if (j > prev->bmxch) */
@@ -2474,10 +2762,7 @@ p1131:                             /* C joins us here */
     }                              /* if (rdlin(prev, true)) */
     else
     {
-      I4_X_I4_1(count);            /* Lines *not* deleted to i4 */
-      PRINTF_EOF_REACHED;
-      PRINT_LINES_I4_1;
-      puts("repositioned\r");      /* Eof on repos. most of mess done */
+      printf_eof_reached(count, "repositioned");
       break;
     }                              /* if (rdlin(prev, true)) else */
   }
@@ -2572,193 +2857,6 @@ p2017:
     fmode |= 02000000000;
   else
     fmode &= ~02000000000;
-  READ_NEXT_COMMAND;
-/*
- * Y or FY - Change all occurrences of 1 string to another
- */
-p2005:
-  tokens = verb == 'y';            /* Differentiate fy */
-  if (scrdtk(2, (uint8_t *)oldstr, BUFMAX, oldcom))
-  {
-    bad_rdtk();
-    REREAD_CMD;
-  }
-  if (oldcom->toktyp == eoltok || !(oldlen = oldcom->toklen))
-  {
-    fputs("Null string to replace", stdout);
-    REREAD_CMD;
-  }
-
-/* Get string with which to replace it */
-  if (scrdtk(2, (uint8_t *)newstr, BUFMAX, oldcom))
-  {
-    bad_rdtk();
-    REREAD_CMD;
-  }
-  newlen = oldcom->toklen;
-  ydiff = newlen - oldlen;
-
-/* strings must be equal length if Fixed-Length mode */
-  if (ydiff && fmode & 0400)
-  {
-    fputs("Replace string must be same length in FIXED LENGTH mode", stdout);
-    REREAD_CMD;
-  }
-
-  if (oldcom->toktyp == eoltok)
-    j4 = 1;
-  else
-  {
-    if (getlin(false, false))
-      j4 = oldcom->decval;
-    else
-    {
-      if (oldcom->toktyp == nortok)
-      {
-        fprintf(stderr, "%s", ermess);
-        REREAD_CMD;
-      }                            /* if (oldcom->toktyp == nortok) */
-      j4 = 1;                      /* Start looking at line 1 */
-    }                              /* if (getlin(false, false)) else */
-    if (!getnum(false))            /* Get # lines, 0 not allowed */
-      REREAD_CMD;
-    if (oldcom->toktyp != nortok)  /* No number given */
-      count = deferd ? LONG_MAX : lintot + 1 - j4; /* Process to eof */
-    else
-      count = oldcom->decval;
-  }                                /* if (oldcom->toktyp == eoltok) else */
-  lstlin = -1;                     /* -TO not allowed for column pos'ns */
-  h = oldlen;                      /* Req'd by code for L-LOCATE */
-  if (!get_search_columns())       /* Look for 1st & last pos'ns in line */
-    REREAD_CMD;
-  if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
-  {
-    fputs("Empty file - can't changeall any lines", stdout);
-    REREAD_CMD;
-  }
-
-/* We act on BRIEF or NONE if in a macro without question. Otherwise, BRIEF or
- * NONE is queried, and we reset to VERBOSE if we don't get confirmation */
-  if (curmac < 0 && BRIEF &&
-    !ysno5a("Use brief/none in this command (y,n,Cr [n])", A5DNO))
-  {
-    puts("Reverting to verbose\r");
-    fmode &= 07777777777;
-  }
-
-  savpos = ptrpos;                 /* Remember so we can get back */
-  setptr(j4);                      /* First line to look at */
-  lgtmp2 = newlen != 0;
-  lgtmp3 = false;                  /* No lines changed yet */
-/*
- * Main loop on specified lines
- */
-  for (i4 = count; i4 > 0; i4--)
-  {
-    if (cntrlc)                    /* User has interrupted */
-    {
-      cntrlc = false;              /* ^C noticed */
-      fputs("Command abandoned :-", stdout);
-      print_scanned_lines(count);
-      READ_NEXT_COMMAND;           /* Leave Y */
-    }                              /* if (cntrlc) */
-    if (!rdlin(curr, false))       /* Eof on main pointer */
-    {
-      if (count == LONG_MAX)       /* Was going to deferred eof */
-        break;                     /* for(i4=count;i4>0;i4--) */
-      I4_X_I4_1(count);            /* Lines *not* deleted to i4 */
-      PRINTF_EOF_REACHED;
-      PRINT_LINES_I4_1;
-      puts("scanned\r");
-      setptr(savpos);              /* Restore file pos'n */
-      READ_NEXT_COMMAND;           /* Leave Y */
-    }
-
-/* Initial tasks for each line */
-    yposn = firstpos;              /* Search from 1st position spec'd */
-    linmod = false;                /* No match this line yet */
-    if (curr->bchars < minlen)
-      continue;                    /* J line shorter than minimum */
-    n = 0;
-    if (curr->bchars > lastpos)
-      n = curr->bchars - lastpos;  /* N=# at end not to search */
-
-    do
-    {
-      if (tokens)
-        retcod =
-          ltok5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn,
-          curr->bchars - n, &h, &m, (uint8_t *)ndel);
-      else
-        retcod =
-          lsub5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn,
-          curr->bchars - n, &h, &m);
-      if (!retcod)
-        break;
-      if (curr->bchars + ydiff > curr->bmxch) /* Would exceed line capacity */
-      {
-        savpos = ptrpos - 1;       /* Point to too big line */
-        fputs("Next line would exceed max size:-", stdout);
-        print_scanned_lines(count);
-        READ_NEXT_COMMAND;
-      }                            /* if (curr->bchars + ydiff > curr->bmxch) */
-      memmove(&curr->bdata[m + 1 + ydiff], &curr->bdata[m + 1],
-        curr->bchars - m - 1);
-
-/* Move in new string if not null */
-      if (lgtmp2)
-        memcpy((char *)&curr->bdata[h], (char *)newstr, (size_t)newlen);
-      curr->bchars = curr->bchars + ydiff; /* Get new line length */
-      linmod = true;               /* This line has been modified */
-      yposn = m + 1 + ydiff;       /* Resume search after new string */
-
-/* Seek more occurrences if room */
-    }
-    while (curr->bchars - n - yposn >= oldlen);
-
-    if (!linmod)
-      continue;                    /* J no mods to this line */
-    linmod = false;
-    lgtmp3 = true;                 /* A line changed now */
-    if (!NONE)                     /* Some display may be req'd */
-    {
-      bool want_display = true;
-
-/* If BRIEF, only display every 1/5th sec */
-      if (BRIEF)                   /* only display if time to (or 1st) */
-      {
-        if ((timnow = times(&tloc)) == -1)
-        {
-          perror("times");
-          putchar('\r');
-          REREAD_CMD;
-        }
-        if (timnow - timlst < 20)
-          want_display = false;
-        else
-        {
-          timlst = timnow;         /* Displaying */
-          forych = true;           /* Tell PDSPLY short display */
-        }                          /* if (timnow - timlst < 20) else */
-      }                            /* if(BRIEF) */
-      if (want_display)
-      {
-        sprmpt(ptrpos - 1);        /* set up line # */
-        pdsply(curr, prmpt, pchrs); /* Display the modified line */
-      }                            /* if (want_display) */
-    }                              /* if(!NONE) */
-    delete(false);                 /* Remove old version of line */
-    inslin(curr);                  /* Insert new version */
-  }                                /* for(i4=count;i4>0;i4--) */
-  setptr(savpos);                  /* End Y */
-  if (!lgtmp3)
-  {
-    if (curmac < 0 || !BRIEF)
-      fputs("specified string not found", stdout);
-    locerr = true;                 /* Picked up by RERDCM */
-    move_cursor_back();
-    REREAD_CMD;
-  }                                /* if (!lgtmp3) */
   READ_NEXT_COMMAND;
 asg2rtn:switch (rtn)
   {
