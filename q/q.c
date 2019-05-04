@@ -663,11 +663,13 @@ init_alu(void)
 
 /* ******************************** bad_rdtk ******************************** */
 
-static void
+static bool
 bad_rdtk(void)
 {
   fprintf(stderr, "%s. (scrdtk)", strerror(errno));
-}                                  /* static void bad_rdtk(void) */
+/* Most callers were returning false next so let them return bad_rdtk instead */
+  return false;
+}                                  /* bad_rdtk(void) */
 
 /* ***************************** display_opcodes **************************** */
 static void
@@ -753,7 +755,6 @@ main(int xargc, char **xargv)
   command_state cmd_state = TRY_INITIAL_COMMAND;
   qrc_state e_state = LOCAL;
   bool fullv = false;              /* Full VIEW wanted */
-  q_yesno answer;
   char *initial_command = NULL;
   bool P, Q;                      /* For determining whether we are in a pipe */
   long count;
@@ -880,11 +881,77 @@ main(int xargc, char **xargv)
   {
     i4 = ct - i4 + 1;              /* Lines not actioned */
     printf("%s of file reached:- ", revrse ? "start" : "end");
-    printf("%ld lines ", i4 - 1);
+    printf("%ld line%s ", i4 - 1, i4 == 2 ? "" : "s");
     printf("%s\r", action);
   }                         /* void printf_eof_reached(long ct, char *action) */
 
+/* ***************************** get_c_or_r_args **************************** */
+
+  bool get_c_or_r_args(void)
+  {
+    if (!getlin(true, false))      /* Bad source */
+    {
+      fputs(" in source line", stdout);
+      return false;
+    }
+    k4 = oldcom->decval;           /* Remember source */
+    if (!getlin(true, true))       /* Bad dest'n */
+    {
+      fputs(" in dest'n line", stdout);
+      return false;
+    }
+    j4 = oldcom->decval;           /* Remember dest'n */
+    lstlin = k4;                   /* -TO refers from source line */
+    if (j4 == k4)                  /* Error if equal */
+    {
+      fputs("Source and destination line #'s must be different", stdout);
+      return false;
+    }
+    return true;
+  }                                /* bool get_c_or_r_args(void) */
+
+/* ****************************** finish_c_or_r ***************************** */
+
+  bool finish_c_or_r(char *which)
+  {
+    if (!get_opt_lines(&count))
+      return false;
+    setptr(j4);                    /* Set main ptr at dest'n */
+
+/* Note:- When setting both pointers, always set AUX second */
+    setaux(k4);                    /* Set AUX ptr at source */
+
+    for (i4 = count; i4 > 0; i4--)
+    {
+      if (rdlin(prev, true))       /* Read AUX */
+      {
+        if (repos)
+          delete(true);            /* For reposition only, delete line read */
+        inslin(prev);
+      }                            /* if (rdlin(prev, true)) */
+      else
+      {
+        printf_eof_reached(count, which);
+        newlin();
+        break;
+      }                            /* if (rdlin(prev, true)) else */
+    }
+    return true;                   /* Finished C or R */
+  }                                /* bool finish_c_or_r(char *which) */
+
 /* IMPLEMENT Q COMMANDS (In alphabetical order) */
+
+/* ********************************* do_copy ******************************** */
+
+  bool do_copy(void)
+  {
+    repos = false;                 /* C-COPY, not R-REPOS */
+    if (!get_c_or_r_args())
+      return false;
+    if (finish_c_or_r("copied"))
+      return true;                 /* End C */
+    return false;
+  }                                /* bool do_copy(void) */
 
 /* ******************************** do_fbrief ******************************* */
 
@@ -1133,6 +1200,49 @@ main(int xargc, char **xargv)
     return i != 0;
   }                                /* bool do_newmacro(void) */
 
+/* ****************************** do_o_ff_or_fc ***************************** */
+
+  bool do_o_ff_or_fc(unsigned long bit)
+  {
+    logtmp = fmode & bit;
+    switch (get_answer())
+    {
+      case Q_YES:
+        logtmp = true;
+        break;
+      case Q_NO:
+        logtmp = false;
+        break;
+      case Q_MAYBE:
+        logtmp = !logtmp;
+        break;
+      case Q_UNREC:
+        return false;
+    }                              /* switch (answer) */
+    if (logtmp)
+      fmode |= bit;
+    else
+      fmode &= ~bit;
+    return true;
+  }                                /* bool do_o_ff_or_fc(unsigned long bit) */
+
+/* ****************************** do_reposition ***************************** */
+
+  bool do_reposition(void)
+  {
+    repos = true;
+    if (!get_c_or_r_args())
+      return false;
+    if (k4 == j4 - 1)
+    {
+      fputs("moving a line to before the next line is a no-op", stdout);
+      return false;
+    }
+    if (finish_c_or_r("repositioned"))
+      return true;
+    return false;
+  }                                /* bool do_reposition(void) */
+
 /* **************************** do_shell_command **************************** */
 
   bool do_shell_command(void)
@@ -1151,6 +1261,13 @@ main(int xargc, char **xargv)
     }                              /* if (cntrlc) */
     return true;
   }                                /* bool do_shell_command(void); */
+
+/* ******************************** do_tabset ******************************* */
+
+  bool do_tabset(void)
+  {
+    return tabset(oldcom);  /* Enter SCREENEDIT subsystem to complete command */
+  }                                /* bool do_tabset(void) */
 
 /* ******************************* do_usefile ******************************* */
 
@@ -1406,6 +1523,23 @@ main(int xargc, char **xargv)
     }                              /* if (!lgtmp3) */
     return true;
   }                                /* bool do_ychangeall(void) */
+
+/* ******************************* do_zenduse ******************************* */
+
+  bool do_zenduse(void)
+  {
+    if (!eolok() || !pop_stdin())
+      return false;
+
+/* If U-use was in a macro, resume that macro */
+    if (stdinfo[stdidx + 1].frommac)
+    {
+      mcnxfr--;
+      curmac = mcstck[mcnxfr].mcprev;
+      mcposn = mcstck[mcnxfr].mcposn;
+    }                              /* if (stdinfo[stdidx + 1].frommac) */
+    return true;
+  }                                /* bool do_zenduse(void) */
 
 /* ************************* END INTERNAL FUNCTIOBS ************************* */
 
@@ -1895,7 +2029,10 @@ p1201:
       REREAD_CMD;
 
     case 'C':
-      goto p1007;
+      if (do_copy())
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
+
     case 'D':
       goto p1008;
     case 'E':
@@ -1915,12 +2052,15 @@ p1201:
       goto p1015;
     case 'P':
       goto p1016;
-    case 'Q':
-      goto p1017;
+
+    case 'Q':                      /* Drop thru */
     case 'q':
       goto p1017;
+
     case 'R':
-      goto p1018;
+      if (do_reposition())
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
 
     case 'S':
       if (do_b_or_s(false))
@@ -1938,12 +2078,21 @@ p1201:
       goto p1022;
     case 'X':
       goto p1023;
+
     case 'T':
-      goto p1101;
+      if (do_tabset())
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
+
     case 'Z':
-      goto p1102;
+      if (do_zenduse())
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
+
     case 'O':
-      goto p1401;
+      if (do_o_ff_or_fc(04000000000))
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
 
     case 'N':
       if (do_newmacro())
@@ -1992,9 +2141,14 @@ p1201:
       REREAD_CMD;
 
     case 'f':
-      goto p2013;
+      if (do_o_ff_or_fc(01000000000))
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
+
     case 'c':
-      goto p2016;
+      if (do_o_ff_or_fc(02000000000))
+        READ_NEXT_COMMAND;
+      REREAD_CMD;
 
     case 'm':                      /* "FM"ode */
       if (do_fmode())
@@ -2374,6 +2528,7 @@ p1008:
     if (k4 == lintot + 2 && !(deferd && (dfread(1, NULL), k4 != lintot + 2)))
     {
       printf_eof_reached(count, "deleted");
+      newlin();
       break;
     }                              /* if (k4 == lintot + 2 && ...) */
     else
@@ -2708,174 +2863,12 @@ p1013:
   }
   inslin(prev);                    /* Put composed line back */
   goto p1110;                      /* Join M-MODIFY eventually */
-/*
- * R - Re position
- *
- *
- * Most of the code is common to C-COPY
- */
-p1018:
-  rtn = 1121;
-  repos = true;
-p1129:
-  if (!getlin(true, false))        /* Bad source. C joins here */
-  {
-    fputs(" in source line", stdout);
-    REREAD_CMD;
-  }
-  k4 = oldcom->decval;             /* Remember source */
-  if (!getlin(true, true))         /* Bad dest'n */
-  {
-    fputs(" in dest'n line", stdout);
-    REREAD_CMD;
-  }
-  j4 = oldcom->decval;             /* Remember dest'n */
-  lstlin = k4;                     /* -TO refers from source line */
-  if (j4 == k4)                    /* Error if equal */
-  {
-    fputs("Source and destination line #'s must be different", stdout);
-    REREAD_CMD;
-  }
-  goto asg2rtn;                    /* End 1st common part */
-p1121:
-  if (k4 == j4 - 1)
-  {
-    fputs("moving a line to before the next line is a no-op", stdout);
-    REREAD_CMD;
-  }
-  rtn = 1125;                      /* Only used if hit eof */
-p1131:                             /* C joins us here */
-  if (!get_opt_lines(&count))
-    REREAD_CMD;
-  setptr(j4);                      /* Set main ptr at dest'n */
-
-/* Note:- When setting both pointers, always set AUX second */
-  setaux(k4);                      /* Set AUX ptr at source */
-
-  for (i4 = count; i4 > 0; i4--)
-  {
-    if (rdlin(prev, true))         /* Read AUX */
-    {
-      if (repos)
-        delete(true);              /* For reposition only, delete line read */
-      inslin(prev);
-    }                              /* if (rdlin(prev, true)) */
-    else
-    {
-      printf_eof_reached(count, "repositioned");
-      break;
-    }                              /* if (rdlin(prev, true)) else */
-  }
-  READ_NEXT_COMMAND;               /* Finished C or R */
-/*
- * C-COPY
- */
-p1007:
-  repos = false;                   /* C-COPY, not R-REPOS */
-  rtn = 1128;
-  goto p1129;                      /* Phase 1 - get source & dest'n #'s */
-p1128:
-  rtn = 1130;                      /* Come back if hit eof */
-  goto p1131;                      /* Get 3rd param & do copy */
-p1130:
-  puts("copied\r");                /* Eof. Most of message o/p */
-  READ_NEXT_COMMAND;               /* End C */
-/*
- * T - Tabset
- */
-/* Enter SCREENEDIT subsystem to complete command */
-p1101:
-  if (tabset(oldcom))
-    READ_NEXT_COMMAND;
-  REREAD_CMD;                      /* Allow user to correct any errors */
-/*
- * Z - Return from a Use file
- */
-p1102:
-  if (!eolok() || !pop_stdin())
-    REREAD_CMD;
-
-/* If U-use was in a macro, resume that macro */
-  if (stdinfo[stdidx + 1].frommac)
-  {
-    mcnxfr--;
-    curmac = mcstck[mcnxfr].mcprev;
-    mcposn = mcstck[mcnxfr].mcposn;
-  }                                /* if (stdinfo[stdidx + 1].frommac) */
-  READ_NEXT_COMMAND;
-/*
- * O - Switch On INDENT
- */
-p1401:
-  logtmp = INDENT != 0;
-  rtn = 1407;
-p2015:
-  answer = get_answer();
-  switch (answer)
-  {
-    case Q_YES:
-      logtmp = true;
-      break;
-    case Q_NO:
-      logtmp = false;
-      break;
-    case Q_MAYBE:
-      logtmp = !logtmp;
-      break;
-    case Q_UNREC:
-      REREAD_CMD;
-  }                                /* switch (answer) */
-  goto asg2rtn;
-p1407:
-  if (logtmp)
-    fmode |= 04000000000;
-  else
-    fmode &= ~04000000000;
-  READ_NEXT_COMMAND;
-/*
- * P2013 - FNOWRAP. Use the O-indent code...
- */
-p2013:
-  rtn = 2014;
-  logtmp = NOWRAP;
-  goto p2015;
-p2014:
-  if (logtmp)
-    fmode |= 01000000000;
-  else
-    fmode &= ~01000000000;
-  READ_NEXT_COMMAND;
-/*
- * P2016 - FCaseind. Use the O-indent code...
- */
-p2016:
-  rtn = 2017;
-  logtmp = !CASDEP;
-  goto p2015;
-p2017:
-  if (logtmp)
-    fmode |= 02000000000;
-  else
-    fmode &= ~02000000000;
-  READ_NEXT_COMMAND;
 asg2rtn:switch (rtn)
   {
     case 1037:
       goto p1037;
     case 1026:
       goto p1026;
-    case 2017:
-      goto p2017;
-    case 2014:
-      goto p2014;
-    case 1407:
-      goto p1407;
-    case 1130:
-      goto p1130;
-    case 1128:
-      goto p1128;
-    case 1121:
-      goto p1121;
     case 1103:
       goto p1103;
     case 1093:

@@ -31,6 +31,7 @@ INTERNALS
 	STARTED: Be more careful what goes to stderr / stdin
 	STARTED: use stdint types
 	STARTED: Reduce number of goto stmts
+	STARTED: return bad_rdtk() once H & L are subroutinised
 Show what arguments Q started with (?)
 STARTED: Catalogue of useful macros
 New pseudomacro to replace "/*" with arbitrary seq: #, // &c (i.e. for ^O)
