@@ -742,7 +742,8 @@ main(int xargc, char **xargv)
   char *colonpos;                  /* Pos'n of ":" in q filename */
 /* */
   bool splt;                       /* Last line ended ^T (for MODIFY) */
-  bool logtmp = false, lgtmp2 = false, lgtmp3 = false, lgtmp4; /* Scratch */
+  bool logtmp = false, lgtmp3 = false; /* Scratch */
+  bool display_wanted;
   bool repos = false;              /* We are R-REPOSITION (not C-COPY) */
   bool linmod;                     /* This line modified (Y) */
   bool tokens = false;             /* Token search yes/no */
@@ -1412,7 +1413,6 @@ main(int xargc, char **xargv)
 
     savpos = ptrpos;               /* Remember so we can get back */
     setptr(j4);                    /* First line to look at */
-    lgtmp2 = newlen != 0;
     lgtmp3 = false;                /* No lines changed yet */
 /*
  * Main loop on specified lines
@@ -1468,7 +1468,7 @@ main(int xargc, char **xargv)
           curr->bchars - m - 1);
 
 /* Move in new string if not null */
-        if (lgtmp2)
+        if (newlen != 0)
           memcpy((char *)&curr->bdata[h], (char *)newstr, (size_t)newlen);
         curr->bchars = curr->bchars + ydiff; /* Get new line length */
         linmod = true;             /* This line has been modified */
@@ -1919,6 +1919,9 @@ main(int xargc, char **xargv)
 p1004:
   if ((!USING_FILE && curmac < 0) || cmd_state > LINE_NUMBER_BASE)
   {
+    bool printf_wanted = true;
+    bool oldcom_done = false;
+
     switch (cmd_state)
     {
       case TRY_INITIAL_COMMAND:
@@ -1934,7 +1937,9 @@ p1004:
         }                          /* if (initial_command != NULL) */
 /* Drop through */
       case RUNNING:
-        goto read_command_normally;
+        sccmnd();                  /* Read a command; set VERB */
+        printf_wanted = false;
+        break;
 
       case Q_ARG1:
 
@@ -1982,13 +1987,13 @@ p1004:
         oldcom->bchars =
           snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "g %s",
           *(argv + optind - 1) + 1);
-        goto setup_goto_cmd;
+        oldcom_done = true;        /* Drop thru */
 
       case HAVE_LINE_NUMBER:
-        oldcom->bchars =
-          snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "g %d",
-          colonline);
-      setup_goto_cmd:
+        if (!oldcom_done)
+          oldcom->bchars =
+            snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "g %d",
+            colonline);
         cmd_state = DO_V_NEXT;
         verb = 'G';
         oldcom->bcurs = 2;
@@ -2003,10 +2008,10 @@ p1004:
         oldcom->bcurs = 1;
         break;
     }                              /* switch(cmd_state) */
-    printf("> %s\r\n", oldcom->bdata);
+    if (printf_wanted)
+      printf("> %s\r\n", oldcom->bdata);
   }                               /* if ((!USING_FILE && curmac < 0) || ... ) */
   else
-  read_command_normally:
     sccmnd();                      /* Read a command; set VERB */
 p1201:
   if (cntrlc)                      /* There has been a ^C or BRK */
@@ -2210,7 +2215,7 @@ p1027:
     READ_NEXT_COMMAND;
   }                                /* if (cntrlc) */
   scrdit(curr, prev, (char *)prmpt, pchrs, false); /* Edit the line */
-  lgtmp3 = curmac < 0 || !BRIEF;   /* Do a DISPLY if true */
+  display_wanted = curmac < 0 || !BRIEF;
   switch (verb)                    /* Check EOL type */
   {
     case 'J':
@@ -2226,13 +2231,12 @@ p1027:
 p1029:
   rtn = newl;
 p1033:
-  lgtmp4 = (modify || splt);       /* We are not inserting */
-  if (lgtmp4 && modlin)
+  if ((modify || splt) && modlin)
     delete(false);                 /* Delete CHANGED existing line */
   splt = false;                    /* Not a split this time */
-  if (lgtmp3)
+  if (display_wanted)
     disply(prev, false);           /* Display final line */
-  if ((!lgtmp4) || modlin)
+  if (!(modify || splt) || modlin)
     inslin(prev);                  /* Insert changed or new line */
   goto asg2rtn;                    /* ^M & ^T part here */
 p1030:
@@ -2249,12 +2253,12 @@ p1032:
 p1301:
   if (modify || splt)
   {
-    if (lgtmp3)                    /* Display req'd */
+    if (display_wanted)
     {
       setptr(ptrpos - 1);
       rdlin(prev, false);
       disply(prev, false);
-    }                              /* if(lgtmp3) */
+    }                              /* if(display_wanted) */
     splt = false;
   }                                /* if(modify||splt) */
   if (revrse)                      /* "L"ocate backwards */
@@ -2719,11 +2723,11 @@ p1014:
   tokens = verb == 'l';            /* Whether FL */
   if (revrse)
     revpos = ptrpos;
-  lgtmp2 = !BRIEF || curmac < 0;   /* Display error messages if true */
+  display_wanted = !BRIEF || curmac < 0;   /* Display error messages if true */
   if (revrse ? ptrpos <= 1 : ptrpos > lintot && !(deferd &&
     (dfread(1, NULL), ptrpos <= lintot)))
   {
-    if (lgtmp2)
+    if (display_wanted)
       printf("At %s of file already - no lines to search\r\n",
         revrse ? "start" : "end");
     READ_NEXT_COMMAND;             /* Next command */
@@ -2784,7 +2788,7 @@ p1014:
     else if (!rdlin(curr, false))  /* If eof */
     {
     s1112:
-      if (lgtmp2 && count2 != LONG_MAX) /* Message wanted */
+      if (display_wanted && count2 != LONG_MAX) /* Message wanted */
         printf_eof_reached(count2, "searched");
       break;                       /* for(i4=count2;i4>0;i4--) */
     }                              /* if(!rdlin(curr, false)) */
@@ -2812,7 +2816,7 @@ p1014:
 
   setptr(savpos);                  /* Move pointer back */
   locpos = 0;                      /* zeroised by lstr5a */
-  if (lgtmp2)
+  if (display_wanted)
     fputs("Specified string not found", stdout);
   locerr = true;                   /* Picked up by RERDCM */
   move_cursor_back();
