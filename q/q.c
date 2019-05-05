@@ -45,7 +45,7 @@
 #define READ_NEXT_COMMAND goto p1004
 #define ERRRTN(x) do {fprintf(stderr, "%s", (x)); return false;} while (0)
 #define PIPE_NAME "/tmp/qpipeXXXXXX"
-#define revrse (fmode & 04000)
+#define REVRSE (fmode & 04000)
 #define PRINTF_IGNORED printf("f%c ignored (mode +v)\r\n", verb)
 
 /* Typedefs */
@@ -718,7 +718,6 @@ main(int xargc, char **xargv)
   char xkey[2], newkey[3];         /* 2nd param to FX command */
   char *r;                         /* Scratch */
   char ndel[33];                   /* Table of non-delimiters FL & FY */
-  int newl = 0;                    /* Label to go if Nl (MOD, INS, AP) */
   int rtn = 0;                     /* Return from INS/MOD/APPE common code */
   int i, j, k = 0, h, m, n, dummy; /* Scratch - I most so */
   int oldlen = 0;                  /* Length of OLDSTR */
@@ -744,6 +743,7 @@ main(int xargc, char **xargv)
   bool splt;                       /* Last line ended ^T (for MODIFY) */
   bool logtmp = false, lgtmp3 = false; /* Scratch */
   bool display_wanted;
+  bool is_locate;
   bool repos = false;              /* We are R-REPOSITION (not C-COPY) */
   bool linmod;                     /* This line modified (Y) */
   bool tokens = false;             /* Token search yes/no */
@@ -881,7 +881,7 @@ main(int xargc, char **xargv)
   void printf_eof_reached(long ct, char *action)
   {
     i4 = ct - i4 + 1;              /* Lines not actioned */
-    printf("%s of file reached:- ", revrse ? "start" : "end");
+    printf("%s of file reached:- ", REVRSE ? "start" : "end");
     printf("%ld line%s ", i4 - 1, i4 == 2 ? "" : "s");
     printf("%s\r", action);
   }                         /* void printf_eof_reached(long ct, char *action) */
@@ -939,6 +939,76 @@ main(int xargc, char **xargv)
     }
     return true;                   /* Finished C or R */
   }                                /* bool finish_c_or_r(char *which) */
+
+/* **************************** */
+
+  void was_p1033(void)
+  {
+    if ((modify || splt) && modlin)
+      delete(false);               /* Delete CHANGED existing line */
+    splt = false;                  /* Not a split this time */
+    if (display_wanted)
+      disply(prev, false);         /* Display final line */
+    if (!modify || modlin)         /* Was: if (!(modify || splt) || modlin) */
+      inslin(prev);                /* Insert changed or new line */
+  }                                /* void was_p1033(void) */
+
+/* ************************* */
+
+  bool was_p1027(void)
+  {
+    bool repeat;
+
+    do
+    {
+/* Get user out of INSERT/APPEND/MODIFY is ^C has been typed */
+      if (cntrlc)
+      {
+        report_control_c();
+        return true;
+      }                            /* if (cntrlc) */
+      repeat = false;
+      scrdit(curr, prev, (char *)prmpt, pchrs, false); /* Edit the line */
+      display_wanted = curmac < 0 || !BRIEF;
+      switch (verb)                /* Check EOL type */
+      {
+        case 'J':
+          was_p1033();
+          break;
+
+/* ESC. If we were changing an existing line, display the original */
+        case '[':
+          if (modify || splt)
+          {
+            if (display_wanted)
+            {
+              setptr(ptrpos - 1);
+              rdlin(prev, false);
+              disply(prev, false);
+            }                      /* if(display_wanted) */
+            splt = false;
+          }                        /* if(modify||splt) */
+          if (REVRSE && is_locate) /* "L"ocate backwards */
+            setptr(revpos);        /* !!!!!!!!!!!!!!!!!!! */
+          return true;
+
+        case 'T':
+          was_p1033();             /* Display & update file */
+          splt = true;             /* Force a delete next time */
+          inslin(curr);            /* In case ESC next time */
+          sprmpt(ptrpos - 1);
+          repeat = true;           /* New line for all 3 (A,I,M) */
+          break;
+
+        default:
+          fputs("Internal error - EOL char not recognised", stdout);
+          newlin();
+          return true;
+      }                            /* switch (verb) */
+    }                              /* do */
+    while (repeat);
+    return false;
+  }                                /* bool was_p1027(void) */
 
 /* IMPLEMENT Q COMMANDS (In alphabetical order) */
 
@@ -2023,6 +2093,7 @@ p1201:
       REREAD_CMD;
     }
   }                                /* Else ignore the quit */
+  is_locate = false;
   switch (verb)
   {
     case 'A':
@@ -2196,74 +2267,13 @@ p1005:
  */
 p1034:modify = false;
   lstvld = false;                  /* Previous line not valid */
-  newl = 1026;
 p1026:
   curr->bchars = 0;
   curr->bcurs = 0;                 /* Set up new empty line */
-/*
- * Code used by INSERT, APPEND, MODIFY
- */
   sprmpt(ptrpos);                  /* PROMPT = # of new line */
-/*
- * See if ^C has been typed - get user out of INSERT/APPEND/MODIFY
- * if it has
- */
-p1027:
-  if (cntrlc)
-  {
-    report_control_c();
+  if (was_p1027())
     READ_NEXT_COMMAND;
-  }                                /* if (cntrlc) */
-  scrdit(curr, prev, (char *)prmpt, pchrs, false); /* Edit the line */
-  display_wanted = curmac < 0 || !BRIEF;
-  switch (verb)                    /* Check EOL type */
-  {
-    case 'J':
-      goto p1029;
-    case '[':
-      goto p1301;
-    case 'T':
-      goto p1030;
-  }
-  fputs("Internal error - EOL char not recognised", stdout);
-  newlin();
-  READ_NEXT_COMMAND;
-p1029:
-  rtn = newl;
-p1033:
-  if ((modify || splt) && modlin)
-    delete(false);                 /* Delete CHANGED existing line */
-  splt = false;                    /* Not a split this time */
-  if (display_wanted)
-    disply(prev, false);           /* Display final line */
-  if (!(modify || splt) || modlin)
-    inslin(prev);                  /* Insert changed or new line */
-  goto asg2rtn;                    /* ^M & ^T part here */
-p1030:
-  rtn = 1032;
-  goto p1033;                      /* Display & update file */
-p1032:
-  splt = true;                     /* Force a delete next time */
-  inslin(curr);                    /* In case ESC next time */
-  sprmpt(ptrpos - 1);
-  goto p1027;                      /* New line for all 3 (A,I,M) */
-
-/* P1301 - ESC. If we were changing an existing line, display the original */
-
-p1301:
-  if (modify || splt)
-  {
-    if (display_wanted)
-    {
-      setptr(ptrpos - 1);
-      rdlin(prev, false);
-      disply(prev, false);
-    }                              /* if(display_wanted) */
-    splt = false;
-  }                                /* if(modify||splt) */
-  if (revrse)                      /* "L"ocate backwards */
-    setptr(revpos);
-  READ_NEXT_COMMAND;
+  goto p1026;
 /*
  * I - Insert
  */
@@ -2294,7 +2304,6 @@ p1015:
     REREAD_CMD;                    /* Reread command */
   }
 p1036:
-  newl = 1037;                  /* Eventually come back here after any splits */
   if (verb == 'M')                 /* Was M-modify */
     setptr(j4);                    /* Position on 1st line to alter */
   for (i = count; i > 0; i--)
@@ -2307,14 +2316,14 @@ p1036:
     curr->bcurs = locpos;          /* In case just come from LOCATE */
     locpos = 0;                    /* In case just come from LOCATE */
     sprmpt(ptrpos - 1);            /* Set up prompt lin # just read */
-    goto p1027;
-  p1037:;                          /* Nl typed (possibly after ^T(s)) */
+    if (was_p1027())
+      READ_NEXT_COMMAND;
   }
 
 /* If doing a reverse, locate move pointer back to where locate was, ready for
  * the next one. Also has to be done after Ec) */
 
-  if (revrse)
+  if (REVRSE)
     setptr(revpos);
 
   READ_NEXT_COMMAND;               /* Finished this MODIFY */
@@ -2720,18 +2729,19 @@ p1103:
  * L - Locate
  */
 p1014:
+  is_locate = true;
   tokens = verb == 'l';            /* Whether FL */
-  if (revrse)
+  if (REVRSE)
     revpos = ptrpos;
-  display_wanted = !BRIEF || curmac < 0;   /* Display error messages if true */
-  if (revrse ? ptrpos <= 1 : ptrpos > lintot && !(deferd &&
+  display_wanted = !BRIEF || curmac < 0; /* Display error messages if true */
+  if (REVRSE ? ptrpos <= 1 : ptrpos > lintot && !(deferd &&
     (dfread(1, NULL), ptrpos <= lintot)))
   {
     if (display_wanted)
       printf("At %s of file already - no lines to search\r\n",
-        revrse ? "start" : "end");
+        REVRSE ? "start" : "end");
     READ_NEXT_COMMAND;             /* Next command */
-  }                                /* if(revrse?ptrpos<=1:ptrpos>lintot&&... */
+  }                                /* if(REVRSE?ptrpos<=1:ptrpos>lintot&&... */
 
 /* Get the string to locate.
  * The string is read to the ermess array,
@@ -2753,7 +2763,7 @@ p1014:
     REREAD_CMD;
   if (retcod)                      /* No number given */
   {
-    if (revrse)
+    if (REVRSE)
       count2 = ptrpos - 1;
     else if (deferd)
       count2 = LONG_MAX;
@@ -2778,13 +2788,13 @@ p1014:
       print_scanned_lines(count2);
       READ_NEXT_COMMAND;
     }                              /* if(cntrlc) */
-    if (revrse)
+    if (REVRSE)
     {
       if (revpos <= 1)             /* Sof (< shouldn't happen) */
         goto s1112;
       setptr(--revpos);            /* Read previous line */
       rdlin(curr, false);          /* "can't" hit eof */
-    }                              /* if(revrse) */
+    }                              /* if(REVRSE) */
     else if (!rdlin(curr, false))  /* If eof */
     {
     s1112:
@@ -2801,7 +2811,7 @@ p1014:
       &locpos, &dummy, (uint8_t *)ndel) : lsub5a((uint8_t *)ermess,
       h, curr->bdata, firstpos, m, &locpos, &dummy))
     {                              /* Line located */
-      if (revrse)
+      if (REVRSE)
         setptr(revpos);
       else
       p1110:                       /* Joined here by "J"oin */
@@ -2869,16 +2879,12 @@ p1013:
   goto p1110;                      /* Join M-MODIFY eventually */
 asg2rtn:switch (rtn)
   {
-    case 1037:
-      goto p1037;
     case 1026:
       goto p1026;
     case 1103:
       goto p1103;
     case 1093:
       goto p1093;
-    case 1032:
-      goto p1032;
     default:
       fprintf(stderr, "Assigned Goto failure, rtn = %d\r\n", rtn);
       return 1;
