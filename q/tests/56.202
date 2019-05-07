@@ -1,0 +1,2 @@
+*                                                       ; Item(s) tested            ; Expected result
+fi !rm -f t5^J!touch t5^Jq t5^Ja^Jxxxx^H^T^J^[m1,4^J^J^J^J^Js^J^NX ; ^T at line start during A ; 2 lines: blank + xxxx

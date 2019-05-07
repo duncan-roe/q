@@ -6,5 +6,6 @@ q -onvifm+q^Ju,55.13^Jq^J </dev/null
 q -onvifm+q^Ju,55.15^Jq^J </dev/null
 q -onvifm+q^Ju,56.062^Jq^J </dev/null
 q -onvifm+q^Ju,56.064^Jq^J </dev/null
+q -onvifm+q^Ju,56.202^Jq^J </dev/null
 # 55.32 exits q so m.b. last test
 q -onvifm+q^Ju,55.32^Jq^J </dev/null

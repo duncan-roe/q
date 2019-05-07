@@ -942,11 +942,11 @@ main(int xargc, char **xargv)
   {
     if ((modify || splt) && modlin)
       delete(false);               /* Delete CHANGED existing line */
-    splt = false;                  /* Not a split this time */
     if (display_wanted)
       disply(prev, false);         /* Display final line */
-    if (!modify || modlin)         /* Was: if (!(modify || splt) || modlin) */
+    if (!(modify || splt) || modlin)
       inslin(prev);                /* Insert changed or new line */
+    splt = false;                  /* Not a split this time */
   }                                /* void display_and_update_file(void) */
 
 /* ****************************** A_I_M_common ****************************** */
