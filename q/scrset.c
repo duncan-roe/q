@@ -78,12 +78,14 @@ p1003:
 /*
  * End line initials
  */
-p1002:if (ichars != cdone)
+p1002:
+  if (ichars != cdone)
     goto p1004;
 /* J non-empty line */
   cursr = icurs + 1;               /* Put curs strt after any prompt */
   return;                          /* Finished */
-p1004:if (cdone != ichars)
+p1004:
+  if (cdone != ichars)
     goto p1005;
 /* J more on line */
 /* If curs after last chr, set it now */
@@ -106,7 +108,8 @@ p1101:
  * Characters with the parity bit =1 are displayed as '^<xxx>'
  * where 'xxx' is their octal value.
  */
-p1005:icurs = icurs + 1;           /* Point to next vacant space */
+p1005:
+  icurs = icurs + 1;               /* Point to next vacant space */
   thisch = line->bdata[cdone++];   /* Get this char */
   phigh = (thisch & 0200) != 0;    /* Remember high parity bit */
   cntrl = thisch < SPACE || phigh; /* Set CNTRL if non printing */
@@ -213,7 +216,8 @@ p1013:
  * P1008 - The current screen line is full. If the cursor has been
  *	  found, routine has finished. Else keep looking...
  */
-p1008:partno = partno + 1;
+p1008:
+  partno = partno + 1;
   if (endlin)
     return;                        /* Finished if for DISPLY */
   if (cursr >= 0)

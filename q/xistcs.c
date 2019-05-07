@@ -136,13 +136,15 @@ p1025:
 /*
  * P1008 - ^A continuing
  */
-p1008:if (result != 0)
+p1008:
+  if (result != 0)
     goto p1011;
   if (cmdbuf.toktyp == eoltok)
     goto p1018;
   rtn = 1018;
   goto p10216;                     /* Check EOL now */
-p1018:cacnt = result;
+p1018:
+  cacnt = result;
   goto ok_command;
 p1011:
   p = cachrs;                      /* Where characters go */
@@ -251,9 +253,11 @@ p1201:
   goto p1203;
 p1202:
   backsp = octnum;
-p1022:bspace = true;
+p1022:
+  bspace = true;
   goto ok_command;
-p1023:bspace = false;
+p1023:
+  bspace = false;
   goto ok_command;
 /*
  * D - Set per-character delay or typeout if no param
@@ -269,13 +273,15 @@ p1003:
 p1004:
   rtn = 1028;
   goto p1025;                      /* Get # of chrs */
-p1028:if (result != 0)
+p1028:
+  if (result != 0)
     goto p1029;
   if (cmdbuf.toktyp == eoltok)
     goto p1030;                    /* J EOL */
   rtn = 1030;
   goto p10216;                     /* Check nothing further */
-p1030:rtcnt = result;
+p1030:
+  rtcnt = result;
   goto ok_command;
 p1029:
   if (result >= 2)

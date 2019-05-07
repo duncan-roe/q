@@ -65,7 +65,8 @@ lsub5a(uint8_t *srchstr, int srchlen, uint8_t *string,
  *strtpos = p - string - 1;
  *endpos = *strtpos + srchlen - 1;
     return true;
-  p1001:;
+  p1001:
+    ;
   }
 /*
  *  Not found string if get here

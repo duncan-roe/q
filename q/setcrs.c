@@ -96,7 +96,8 @@ setcrs(int posn)
 /*
  * P1003 - Cursor to be moved forward
  */
-p1003:fwd = scurs - oldcrs;        /* # chars if refresh forward */
+p1003:
+  fwd = scurs - oldcrs;            /* # chars if refresh forward */
   if (cacnt)                       /* If fast ^A available */
 /* cacnt shouldn't be zero if VT100 is enabled, so no check here */
   {

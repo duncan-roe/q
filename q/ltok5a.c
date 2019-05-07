@@ -105,7 +105,8 @@ ltok5a(uint8_t *srchstr, int srchlen, uint8_t *string,
     *strtpos = p - string - 1;
     *endpos = *strtpos + srchlen - 1;
     return true;
-  p1001:l = 0;
+  p1001:
+    l = 0;
   }
 /*
  *  Not found string if get here

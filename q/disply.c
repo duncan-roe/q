@@ -1,7 +1,7 @@
 /* D I S P L Y */
 /*
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2012,2014,2018 Duncan Roe
+ * Copyright (C) 2012,2014,2018,2019 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -28,14 +28,16 @@ disply(scrbuf5 *line, bool savecurs)
   oldcrs = line->bcurs;
   line->bcurs = line->bchars;      /* Force SCRSET to o/p the lot */
 /* */
-p1001:refrsh(line);
+p1001:
+  refrsh(line);
   newlin();
   if (NOWRAP)
     goto p1002;                    /* J only showing 1st 72 chars */
   if (cdone != line->bchars)
     goto p1001;
 /* J more to do */
-p1002:endlin = false;              /* Finishing off */
+p1002:
+  endlin = false;                  /* Finishing off */
   if (savecurs)
     line->bcurs = oldcrs;
 }

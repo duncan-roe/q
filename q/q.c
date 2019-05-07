@@ -40,9 +40,6 @@
 
 /* Macros */
 
-#define REREAD_CMD goto reread_cmd
-#define ERR1025(x) do {fprintf(stderr, "%s", (x)); REREAD_CMD;} while (0)
-#define READ_NEXT_COMMAND goto p1004
 #define ERRRTN(x) do {fprintf(stderr, "%s", (x)); return false;} while (0)
 #define PIPE_NAME "/tmp/qpipeXXXXXX"
 #define REVRSE (fmode & 04000)
@@ -389,7 +386,7 @@ do_b_or_s(bool is_b)
       }                            /* if(unlink(tmfile)) */
       if (is_b)
         fputs("Previous backup file deleted:- ", stdout);
-    }                              /* if(!stat(tmfile,&statbuf)) */
+    }                              /* while (!stat(tmfile, &statbuf)) */
     if (rename(ubuf, tmfile))      /* If rename fails */
     {
 /* OK nofile if B with param */
@@ -1314,10 +1311,7 @@ main(int xargc, char **xargv)
       return false;
     }
     if (scrdtk(1, (uint8_t *)ubuf, 40, oldcom)) /* Get character to add */
-    {
-      bad_rdtk();
-      return false;
-    }
+      return bad_rdtk();
     if (oldcom->toktyp == eoltok)
     {
       fputs("command requires a parameter", stdout);
@@ -1349,10 +1343,7 @@ main(int xargc, char **xargv)
   bool do_fxchange(void)
   {
     if (scrdtk(2, (uint8_t *)oldkey, 3, oldcom))
-    {
-      bad_rdtk();
-      return false;
-    }
+      return bad_rdtk();
     if (oldcom->toktyp == eoltok)  /* Empty line */
     {
 /* FX with no params - Re-initialise the table, subject to
@@ -1369,10 +1360,7 @@ main(int xargc, char **xargv)
       return false;
     oldkey[0] = k;                 /* Now a subscript */
     if (scrdtk(2, (uint8_t *)newkey, 3, oldcom))
-    {
-      bad_rdtk();
-      return false;
-    }
+      return bad_rdtk();
     if (oldcom->toktyp == eoltok)
     {
       fputs("FX must have 2 parameters", stdout);
@@ -1410,10 +1398,7 @@ main(int xargc, char **xargv)
 /* We have some extra work here, because HELP doesn't actually take
  * a filename, and doesn't want one. */
     if (scrdtk(2, (uint8_t *)tmfile, 17, oldcom))
-    {
-      bad_rdtk();
-      return false;
-    }
+      return bad_rdtk();
     if (!eolok())
       return false;
     k = oldcom->toklen;            /* Get length of HELP topic */
@@ -1549,10 +1534,7 @@ main(int xargc, char **xargv)
  * as ubuf will get overwritten and we aren't going to use getlin,
  * so ermess is spare. */
     if (scrdtk(2, (uint8_t *)ermess, BUFMAX, oldcom))
-    {
-      bad_rdtk();
-      return false;
-    }                              /* J bad RDTK */
+      return bad_rdtk();
     if (oldcom->toktyp == eoltok || !(h = oldcom->toklen))
     {
       fputs("Null string to locate", stdout);
@@ -2069,10 +2051,7 @@ main(int xargc, char **xargv)
  */
     tokens = verb == 'y';          /* Differentiate fy */
     if (scrdtk(2, (uint8_t *)oldstr, BUFMAX, oldcom))
-    {
-      bad_rdtk();
-      return false;
-    }
+      return bad_rdtk();
     if (oldcom->toktyp == eoltok || !(oldlen = oldcom->toklen))
     {
       fputs("Null string to replace", stdout);
@@ -2081,10 +2060,7 @@ main(int xargc, char **xargv)
 
 /* Get string with which to replace it */
     if (scrdtk(2, (uint8_t *)newstr, BUFMAX, oldcom))
-    {
-      bad_rdtk();
-      return false;
-    }
+      return bad_rdtk();
     newlen = oldcom->toklen;
     ydiff = newlen - oldlen;
 
@@ -2560,7 +2536,7 @@ main(int xargc, char **xargv)
   splt = false;                    /* Not splitting a line initially */
   mods = false;                    /* No mods to i/p file yet */
   pcnta[0] = 0;                    /* No default filename yet */
-  locpos = 0;                      /* Stays at 1 except after a LOCATE */
+  locpos = 0;                      /* Stays at 0 except after a LOCATE */
   locerr = false;                  /* 1st error might not be LOCATE */
   noRereadIfMacro = false;
   forych = false;                  /* Start off VERBOSE */
@@ -2591,356 +2567,337 @@ main(int xargc, char **xargv)
       fprintf(stderr, "\r\n%s. (dup(0))\r\n", strerror(errno));
       refrsh(NULL);
       stdidx--;
-      READ_NEXT_COMMAND;           /* Don't try to open .qrc */
     }                              /* if (stdinfo[stdidx].funit == -1) */
-    my_close(0);
+    else
+    {
+      my_close(0);
 
 /* Try for .qrc, ~/.qrc or ... */
-    for (;;)
-    {
-      switch (e_state)
+      for (;;)
       {
-        case LOCAL:
-          strcpy(ubuf, ".qrc");
-          break;
-        case HOME:
-          strcpy(ubuf, "~/.qrc");
-          tildexpn(ubuf, Q_BUFSIZ);
-          break;
-        case ETC:
-          snprintf(ubuf, sizeof ubuf, "%s%s", etc_dir, "/qrc");
-          break;
-        case GIVE_UP:
-          pop_stdin();
-/* The /etc/file should exist. so output an error message */
-          fprintf(stderr, "%s. %s (open) (Installation problem?)\r\n",
-            strerror(errno), ubuf);
-          break;
-      }                            /* switch (e_state) */
-      if (e_state == GIVE_UP)
-        break;
-      SYSCALL(i, open_buf(O_RDONLY, 0));
-      if (i != -1)
-        break;
-      e_state++;
-    }                              /* for (;;) */
-    if (e_state != GIVE_UP)
-    {
-      if (i)
-      {
-        my_close(i);
-        fprintf(stderr, "Serious problem - new stdin opened on funit %d\r\n",
-          i);
-        pop_stdin();
-        READ_NEXT_COMMAND;
-      }                            /* if (i) */
-      duplx5(true);                /* Assert XOFF recognition */
-      printf("> u %s\r\n", ubuf);  /* Simulate a command */
-    }                              /* if (e_state != GIVE_UP) */
-  }                                /* if (do_rc) */
-/*
- * Main command reading loop
- */
-p1004:
-  if ((!USING_FILE && curmac < 0) || cmd_state > LINE_NUMBER_BASE)
-  {
-    bool printf_wanted = true;
-    bool oldcom_done = false;
-
-    switch (cmd_state)
-    {
-      case TRY_INITIAL_COMMAND:
-        cmd_state = RUNNING;
-        if (initial_command != NULL)
+        switch (e_state)
         {
-          oldcom->bchars = snprintf((char *)oldcom->bdata, sizeof oldcom->bdata,
-            "fi %s", initial_command);
-          initial_command = NULL;
-          verb = 'i';
-          oldcom->bcurs = 3;
+          case LOCAL:
+            strcpy(ubuf, ".qrc");
+            break;
+          case HOME:
+            strcpy(ubuf, "~/.qrc");
+            tildexpn(ubuf, Q_BUFSIZ);
+            break;
+          case ETC:
+            snprintf(ubuf, sizeof ubuf, "%s%s", etc_dir, "/qrc");
+            break;
+          case GIVE_UP:
+            pop_stdin();
+/* The /etc/file should exist. so output an error message */
+            fprintf(stderr, "%s. %s (open) (Installation problem?)\r\n",
+              strerror(errno), ubuf);
+            break;
+        }                          /* switch (e_state) */
+        if (e_state == GIVE_UP)
           break;
-        }                          /* if (initial_command != NULL) */
-/* Drop through */
-      case RUNNING:
-        sccmnd();                  /* Read a command; set VERB */
-        printf_wanted = false;
-        break;
+        SYSCALL(i, open_buf(O_RDONLY, 0));
+        if (i != -1)
+          break;
+        e_state++;
+      }                            /* for (;;) */
+      if (e_state != GIVE_UP)
+      {
+        if (i)
+        {
+          my_close(i);
+          fprintf(stderr, "Serious problem - new stdin opened on funit %d\r\n",
+            i);
+          pop_stdin();
+        }                          /* if (i) */
+        else
+        {
+          duplx5(true);            /* Assert XOFF recognition */
+          printf("> u %s\r\n", ubuf); /* Simulate a command */
+        }                          /* if (i) else */
+      }                            /* if (e_state != GIVE_UP) */
+    }                              /* if (stdinfo[stdidx].funit == -1) else */
+  }                                /* if (do_rc) */
 
-      case Q_ARG1:
+/* MAIN COMMAND READING LOOP */
+
+  for (;;)
+  {
+    if ((!USING_FILE && curmac < 0) || cmd_state > LINE_NUMBER_BASE)
+    {
+      bool printf_wanted = true;
+      bool oldcom_done = false;
+
+      switch (cmd_state)
+      {
+        case TRY_INITIAL_COMMAND:
+          cmd_state = RUNNING;
+          if (initial_command != NULL)
+          {
+            oldcom->bchars =
+              snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "fi %s",
+              initial_command);
+            initial_command = NULL;
+            verb = 'i';
+            oldcom->bcurs = 3;
+            break;
+          }                        /* if (initial_command != NULL) */
+/* Drop through */
+        case RUNNING:
+          sccmnd();                /* Read a command; set VERB */
+          printf_wanted = false;
+          break;
+
+        case Q_ARG1:
 
 /* Q-quit into the first file on the command line. Pagers (e.g. less) may
  * precede this with +<line#> so deal with this too. Cause command to be
  * actioned & displayed by setting up oldcom, also set up "verb" since sccmd is
  * not being called */
 
-        if (piping)
-          cmd_state = TRY_INITIAL_COMMAND;
-        else
+          if (piping)
+            cmd_state = TRY_INITIAL_COMMAND;
+          else
 /* assume if the first arg starts "+" and there is at least 1 more arg then the
  * first arg is a line number */
-        {
-          if (**(argv + optind) == '+' && strlen(*(argv + optind)) > 1 &&
-            argc - optind >= 2)
           {
-            optind++;              /* "hide" +# arg */
-            cmd_state = LINE_NUMBER_SAVED; /* Have a +# arg */
-          }                        /* if(**(argv+optind)=='+'&&... */
-          else
-            cmd_state = TRY_INITIAL_COMMAND;
-        }                          /* if (!piping) */
+            if (**(argv + optind) == '+' && strlen(*(argv + optind)) > 1 &&
+              argc - optind >= 2)
+            {
+              optind++;            /* "hide" +# arg */
+              cmd_state = LINE_NUMBER_SAVED; /* Have a +# arg */
+            }                      /* if(**(argv+optind)=='+'&&... */
+            else
+              cmd_state = TRY_INITIAL_COMMAND;
+          }                        /* if (!piping) */
 
 /* Open the file whether line number supplied or not */
-        oldcom->bchars =
-          snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "q %s",
-          piping ? pipe_temp_name : *(argv + optind));
-        verb = 'Q';
-        oldcom->bcurs = 2;
-        if (piping)
-          atexit(write_workfile_to_stdout);
-        break;
+          oldcom->bchars =
+            snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "q %s",
+            piping ? pipe_temp_name : *(argv + optind));
+          verb = 'Q';
+          oldcom->bcurs = 2;
+          if (piping)
+            atexit(write_workfile_to_stdout);
+          break;
 
 /* The line number states are used on "q file:line",
  * either initially or any time subsequently.
  * They are also used on an initial "q +line file". */
 
-      case LINE_NUMBER_BASE:
-        fprintf(stderr, "Illegal command state in %s:%d\r\n", __FILE__,
-          __LINE__);
-        exit(1);
+        case LINE_NUMBER_BASE:
+          fprintf(stderr, "Illegal command state in %s:%d\r\n", __FILE__,
+            __LINE__);
+          exit(1);
 
-      case LINE_NUMBER_SAVED:
-        oldcom->bchars =
-          snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "g %s",
-          *(argv + optind - 1) + 1);
-        oldcom_done = true;        /* Drop thru */
-
-      case HAVE_LINE_NUMBER:
-        if (!oldcom_done)
+        case LINE_NUMBER_SAVED:
           oldcom->bchars =
-            snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "g %d",
-            colonline);
-        cmd_state = DO_V_NEXT;
-        verb = 'G';
-        oldcom->bcurs = 2;
-        break;
+            snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "g %s",
+            *(argv + optind - 1) + 1);
+          oldcom_done = true;      /* Drop thru */
 
-      case DO_V_NEXT:
-        cmd_state = TRY_INITIAL_COMMAND;
-        oldcom->bchars = 1;
-        oldcom->bdata[0] = 'v';
-        oldcom->bdata[1] = 0;
-        verb = 'V';
-        oldcom->bcurs = 1;
-        break;
-    }                              /* switch(cmd_state) */
-    if (printf_wanted)
-      printf("> %s\r\n", oldcom->bdata);
-  }                               /* if ((!USING_FILE && curmac < 0) || ... ) */
-  else
-    sccmnd();                      /* Read a command; set VERB */
-p1201:
-  if (cntrlc)                      /* There has been a ^C or BRK */
-  {
-    cntrlc = false;                /* Reset flag */
-    if (USING_FILE || curmac >= 0) /* If in macro, force an error */
+        case HAVE_LINE_NUMBER:
+          if (!oldcom_done)
+            oldcom->bchars =
+              snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "g %d",
+              colonline);
+          cmd_state = DO_V_NEXT;
+          verb = 'G';
+          oldcom->bcurs = 2;
+          break;
+
+        case DO_V_NEXT:
+          cmd_state = TRY_INITIAL_COMMAND;
+          oldcom->bchars = 1;
+          oldcom->bdata[0] = 'v';
+          oldcom->bdata[1] = 0;
+          verb = 'V';
+          oldcom->bcurs = 1;
+          break;
+      }                            /* switch(cmd_state) */
+      if (printf_wanted)
+        printf("> %s\r\n", oldcom->bdata);
+    }                             /* if ((!USING_FILE && curmac < 0) || ... ) */
+    else
+      sccmnd();                    /* Read a command; set VERB */
+  cmd_reread:
+    retcod = true;
+    if (cntrlc)                    /* There has been a ^C or BRK */
     {
-      fputs("Keyboard interrupt", stdout);
-      REREAD_CMD;
-    }
-  }                                /* Else ignore the quit */
-  is_locate = false;
-  switch (verb)
-  {
-    case 'A':
-      if (do_append())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+      cntrlc = false;              /* Reset flag */
+      if (USING_FILE || curmac >= 0) /* If in macro, force an error */
+      {
+        fputs("Keyboard interrupt", stdout);
+        retcod = false;            /* Skip switch */
+      }
+    }                              /* Else ignore the quit */
+    is_locate = false;
+    if (retcod)
+    {
+      switch (verb)
+      {
+        case 'A':
+          retcod = do_append();
+          break;
 
-    case 'B':
-      if (do_b_or_s(true))
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'B':
+          retcod = do_b_or_s(true);
+          break;
 
-    case 'C':
-      if (do_copy())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'C':
+          retcod = do_copy();
+          break;
 
-    case 'D':
-      if (do_delete())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'D':
+          retcod = do_delete();
+          break;
 
-    case 'E':
-      if (do_enter())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'E':
+          retcod = do_enter();
+          break;
 
-    case 'G':
-      if (do_goto())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'G':
+          retcod = do_goto();
+          break;
 
-    case 'H':
-      if (do_help())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'H':
+          retcod = do_help();
+          break;
 
-    case 'I':
-      if (do_insert())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'I':
+          retcod = do_insert();
+          break;
 
-    case 'J':
-      if (do_join())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'J':
+          retcod = do_join();
+          break;
 
-    case 'L':
-    case 'l':                      /* Same as L */
-      if (do_locate())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'L':
+        case 'l':                  /* Same as L */
+          retcod = do_locate();
+          break;
 
-    case 'M':
-      if (do_modify())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'M':
+          retcod = do_modify();
+          break;
 
-    case 'P':
-      if (do_print())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'P':
+          retcod = do_print();
+          break;
 
-    case 'Q':                      /* Drop thru */
-    case 'q':
-      if (do_quit())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'Q':                  /* Drop thru */
+        case 'q':
+          retcod = do_quit();
+          break;
 
-    case 'R':
-      if (do_reposition())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'R':
+          retcod = do_reposition();
+          break;
 
-    case 'S':
-      if (do_b_or_s(false))
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'S':
+          retcod = do_b_or_s(false);
+          break;
 
-    case 'U':                      /* U - USE */
-      if (do_usefile())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'U':                  /* U - USE */
+          retcod = do_usefile();
+          break;
 
-    case 'V':
-      if (do_view())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'V':
+          retcod = do_view();
+          break;
 
-    case 'W':
-      if (do_writefile())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'W':
+          retcod = do_writefile();
+          break;
 
-    case 'X':
-      if (do_xistics())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'X':
+          retcod = do_xistics();
+          break;
 
-    case 'T':
-      if (do_tabset())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'T':
+          retcod = do_tabset();
+          break;
 
-    case 'Z':
-      if (do_zenduse())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'Z':
+          retcod = do_zenduse();
+          break;
 
-    case 'O':
-      if (do_o_ff_or_fc(04000000000))
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'O':
+          retcod = do_o_ff_or_fc(04000000000);
+          break;
 
-    case 'N':
-      if (do_newmacro())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'N':
+          retcod = do_newmacro();
+          break;
 
-    case 'Y':                      /* Drop thru */
-    case 'y':
-      if (do_ychangeall())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'Y':                  /* Drop thru */
+        case 'y':
+          retcod = do_ychangeall();
+          break;
 
-    case 'b':                      /* FBRIEF */
-      if (do_fbrief())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'b':                  /* FBRIEF */
+          retcod = do_fbrief();
+          break;
 
-    case 'v':                      /* FVERBOSE */
-      if (do_fverbose())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'v':                  /* FVERBOSE */
+          retcod = do_fverbose();
+          break;
 
-    case 'n':                      /* FNONE */
-      if (do_fnone())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'n':                  /* FNONE */
+          retcod = do_fnone();
+          break;
 
-    case 'o':                      /* FO - FORGET */
-      if (do_forget())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'o':                  /* FO - FORGET */
+          retcod = do_forget();
+          break;
 
-    case '!':                      /* DO SHELL COMMAND */
-      if (do_shell_command())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case '!':                  /* DO SHELL COMMAND */
+          retcod = do_shell_command();
+          break;
 
-    case 'x':               /* FX - Exchange the functions of 2 keyboard keys */
-      if (do_fxchange())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'x':           /* FX - Exchange the functions of 2 keyboard keys */
+          retcod = do_fxchange();
+          break;
 
-    case 't':                      /* FT - TOKENCHAR */
-      if (do_ftokenchar())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 't':                  /* FT - TOKENCHAR */
+          retcod = do_ftokenchar();
+          break;
 
-    case 'f':
-      if (do_o_ff_or_fc(01000000000))
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'f':
+          retcod = do_o_ff_or_fc(01000000000);
+          break;
 
-    case 'c':
-      if (do_o_ff_or_fc(02000000000))
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'c':
+          retcod = do_o_ff_or_fc(02000000000);
+          break;
 
-    case 'm':                      /* "FM"ode */
-      if (do_fmode())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'm':                  /* "FM"ode */
+          retcod = do_fmode();
+          break;
 
-    case 'i':                      /* "FI'mmediate macro */
-      if (do_fimmediate_macro())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
+        case 'i':                  /* "FI'mmediate macro */
+          retcod = do_fimmediate_macro();
+          break;
 
-    case 'd':                      /* "FD"evnull */
-      if (do_fdevnull())
-        READ_NEXT_COMMAND;
-      REREAD_CMD;
-  }                                /* switch (verb) */
-  fputs("unknown command", stdout); /* Dropped out of switch */
-reread_cmd:
-  if (cmd_state == LINE_NUMBER_SAVED) /* Deal with early errors specially */
-  {
-    cmd_state = TRY_INITIAL_COMMAND;
-    optind--;
-  }                                /* if (cmd_state == LINE_NUMBER_SAVED) */
-  rerdcm();
-  goto p1201;
-}
+        case 'd':                  /* "FD"evnull */
+          retcod = do_fdevnull();
+          break;
+
+        default:                   /* Coding error if we get here */
+          fputs("unknown command", stdout);
+          retcod = false;
+          break;
+      }                            /* switch (verb) */
+    }                              /* if (retcod) */
+    if (!retcod)
+    {
+      if (cmd_state == LINE_NUMBER_SAVED) /* Deal with early errors specially */
+      {
+        cmd_state = TRY_INITIAL_COMMAND;
+        optind--;
+      }                            /* if (cmd_state == LINE_NUMBER_SAVED) */
+      rerdcm();
+      goto cmd_reread;
+    }                              /* if (!retcod) */
+  }                                /* for(;;) */
+}                                  /* main() */
