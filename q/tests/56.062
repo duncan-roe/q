@@ -1,7 +1,7 @@
 fi !rm -f t5^J!touch t5^Jq t5^Ja^Jaaaaaaaaa^J^[c1 eof 8^J
-*                         ; Item(s) tested                ; Expected result
-fi y a b 4 3 4 6^J^NX     ; All args to Y                 ; aaabbbaaa * 3
-fi y bbb ' b '^J^NX       ; All args to Y                 ; aaa b aaa * 3
-fi fy b c 4 3 4 4^J^NX    ; All args to FY except tokens  ; specified string not found
-fi fy b c 5 1 5 5^J^NX    ; All args to FY except tokens  ; aaa c aaa
+*                         ; Item(s) tested  ; Expected result
+fi y a b 4 3 4 6^J^NX     ; All args to Y   ; aaabbbaaa * 3
+fi y bbb ' b '^J^NX       ; All args to Y   ; aaa b aaa * 3
+fi fy b c 4 3 4 4^J^NX    ; All args to FY  ; specified string not found
+fi fy b c 5 1 5 5^J^NX    ; All args to FY  ; aaa c aaa
 fi s^J

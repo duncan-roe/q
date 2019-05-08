@@ -2088,11 +2088,11 @@ main(int xargc, char **xargv)
       }                            /* if (getlin(false, false)) else */
       if (!getnum(false))          /* Get # lines, 0 not allowed */
         return false;
-      if (oldcom->toktyp != nortok) /* No number given */
-        count = deferd ? LONG_MAX : lintot + 1 - j4; /* Process to eof */
-      else
-        count = oldcom->decval;
     }                              /* if (oldcom->toktyp == eoltok) else */
+    if (oldcom->toktyp != nortok)  /* No number given */
+      count = deferd ? LONG_MAX : lintot + 1 - j4; /* Process to eof */
+    else
+      count = oldcom->decval;
     lstlin = -1;                   /* -TO not allowed for column pos'ns */
     h = oldlen;                    /* Req'd by code for L-LOCATE */
     if (!get_search_columns())     /* Look for 1st & last pos'ns in line */

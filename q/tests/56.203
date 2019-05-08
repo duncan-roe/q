@@ -1,0 +1,2 @@
+*                                                       ; Item(s) tested            ; Expected result
+fi !rm -f t5^J!echo abababab >t5^Jq t5^Jy b^Jv0^Js^J^NX ; Y  null repl str and deferred read ; aaaa
