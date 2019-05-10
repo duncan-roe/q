@@ -1399,9 +1399,9 @@ main(int xargc, char **xargv)
  * a filename, and doesn't want one. */
     if (scrdtk(2, (uint8_t *)tmfile, 17, oldcom))
       return bad_rdtk();
+    k = oldcom->toklen;            /* Get length of HELP topic */
     if (!eolok())
       return false;
-    k = oldcom->toklen;            /* Get length of HELP topic */
     if (k == 0)                    /* No topic given */
     {
       k = 1;
