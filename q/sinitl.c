@@ -30,7 +30,6 @@ sinitl()
   bspace = true;
   backsp = '\b';                   /* Set variable to the default */
   rtcnt = 1;
-  rtchrs = '\r';                   /* CR */
   vt100 = true;                    /* VT100 or X */
   cacnt = 0;                       /* No fast EOL */
   tabcnt = 3;

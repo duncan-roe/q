@@ -14,7 +14,7 @@
 #define PRMAX 15
 #define WCHRS (col5 - 1)
 uint8_t screen[SCRMAX], reqd[SCRMAX], prompt[PRSIZ], crsbuf[SCRMAX];
-uint8_t rtchrs, backsp, cachrs[PRSIZ];
+uint8_t backsp, cachrs[PRSIZ];
 int cursr, scurs, pchars, icurs, crscnt, rtcnt;
 int cacnt, tabcnt, cdone, partno, mxchrs;
 bool insert, rfrsh, endlin;
@@ -38,7 +38,6 @@ double delay;
  * crscnt - No. of sig chars in CRSBUF
  * bspace - This terminal can backspace
  * rtcnt  - # of chars to effect NL (max 2)
- * rtchrs - The characters to effect NL
  * cacnt  - # of chars to effect ^A (max 40)
  * cachrs - Chars to effect ^A (primitive, i.e. get last posn on screen)
  *          cacnt includes any number of backspaces + these chars (max 2)

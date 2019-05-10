@@ -30,6 +30,8 @@
 /* Macros */
 
 #define REREAD_CMD goto msg_read_command
+#define REREAD_CMD_S(x) do {msg = x; REREAD_CMD;} while (0)
+#define READ_NEXT_COMMAND goto ok_command
 
 char *xistics_end_sequence = "\025x\n";
 void
@@ -37,11 +39,65 @@ xistcs()
 {
   scrbuf5 cmdbuf;
   uint8_t buf[5], *p = NULL;
-  int rtn;                         /* Return from subroutines */
   int result = 0;                  /* Returned value */
   int octnum = 0;                  /* Returned value */
   int j, k = 0;                    /* Scratch */
   char *msg;
+
+/* INTERNAL FUNCTIONS */
+
+/* ******************************* get_result ******************************* */
+
+  bool get_result(void)
+  {
+    if (scrdtk(1, buf, 5, &cmdbuf))
+    {
+      fprintf(stderr, "%s. decno (scrdtk)\r\n", strerror(errno));
+      msg = "Error - see above";
+      return false;
+    }                              /* if (scrdtk(1, buf, 5, &cmdbuf)) */
+    if (cmdbuf.toktyp == eoltok)
+    {
+      result = 0;
+      return true;                 /* Finish if EOL */
+    }                              /* if (cmdbuf.toktyp == eoltok) */
+    if (cmdbuf.toktyp != nortok)
+    {
+      msg = "Null decno illegal";
+      return false;
+    }                              /* if (cmdbuf.toktyp != nortok) */
+    if (!cmdbuf.decok)
+    {
+      msg = "Bad decno";
+      return false;
+    }                              /* if (!cmdbuf.decok) */
+    result = cmdbuf.decval;        /* All checks OK: set result */
+    return true;
+  }                                /* bool get_result(void) */
+
+/* ******************************* good_octnum ****************************** */
+
+  bool good_octnum(void)
+  {
+    if (octnum < 0200)
+      return true;                 /* J a char */
+    fprintf(stderr, "%*s", cmdbuf.toklen, buf);
+    msg = " not octal for any char";
+    return false;
+  }                                /* bool good_octnum(void) */
+
+/* ********************************** eolok ********************************* */
+
+  bool eolok(void)
+  {
+    (void)scrdtk(1, 0, 0, &cmdbuf);
+    if (cmdbuf.toktyp == eoltok)
+      return true;                 /* J EOL (OK) */
+    msg = "Spurious params - command not done";
+    return false;
+  }                                /* bool eolok(void) */
+
+/* END INTERNAL FUNCTIONS */
 
   end_seq = xistics_end_sequence;
 /*
@@ -84,124 +140,77 @@ msg_read_command:
       goto p1002;
     case 'D':
       goto p1003;
-    case 'R':
-      goto p1004;
     case 'X':
       goto p1006;
     case 'T':
       goto p1401;
     case 'W':
-      rtn = 1301;
-      goto p10216;                 /* Check eol now */
-    p1301:
+      if (!eolok())
+        REREAD_CMD;
       vt100 = false;
-      goto ok_command;
+      READ_NEXT_COMMAND;
   }
   putchar(verb);                   /* Error if drop thro' GOTO */
   msg = " is not a recognised characteristic";
   REREAD_CMD;
 /* T - Tab spacing in file */
 p1401:
-  rtn = 1402;
-  goto p1025;
-p1402:
+  if (!get_result())
+    REREAD_CMD;
+  if (!eolok())
+    REREAD_CMD;
   tabsiz = result ? result : 8;
-  goto ok_command;
+  READ_NEXT_COMMAND;
 /*
  * A - End - of - line
  */
 p1001:
-  rtn = 1008;
-/*
- * P1025 - Get a decimal number. 0 if EOL. Result in result.
- */
-p1025:
-  if (scrdtk(1, buf, 5, &cmdbuf))
-    fprintf(stderr, "%s. decno (scrdtk)\r\n", strerror(errno));
-  result = 0;
-  if (cmdbuf.toktyp == eoltok)
-    goto asg2rtn;                  /* Finish if EOL */
-  if (cmdbuf.toktyp != nortok)
-  {
-    msg = "Null decno illegal";
+  if (!get_result())
     REREAD_CMD;
-  }                                /* if (cmdbuf.toktyp != nortok) */
-  if (!cmdbuf.decok)
+  if (result == 0)
   {
-    msg = "Bad decno";
-    REREAD_CMD;
-  }                                /* if (!cmdbuf.decok) */
-  result = cmdbuf.decval;          /* All checks OK: set result */
-  goto asg2rtn;
-/*
- * P1008 - ^A continuing
- */
-p1008:
-  if (result != 0)
-    goto p1011;
-  if (cmdbuf.toktyp == eoltok)
-    goto p1018;
-  rtn = 1018;
-  goto p10216;                     /* Check EOL now */
-p1018:
-  cacnt = result;
-  goto ok_command;
-p1011:
-  p = cachrs;                      /* Where characters go */
-  j = result;                      /* Result includes backspaces */
-  if (j > PRMAX)
-    j = PRMAX;
-  rtn = 1013;
-  for (k = j; k > 0; k--)
+    if (!eolok())
+      REREAD_CMD;                  /* Check EOL now */
+  }                                /* if (result == 0) */
+  else
   {
-/*
- * P1034 - Get an octal character to OCTNUM. Single characters stand for
- *         themselves, so octal numbers must have at least 2 digits...
- */
-  p1034:
-    if (scrdtk(1, buf, 4, &cmdbuf))
+    p = cachrs;                    /* Where characters go */
+    j = result;                    /* Result includes backspaces */
+    if (j > PRMAX)
+      j = PRMAX;
+    for (k = j; k > 0; k--)
     {
-      fprintf(stderr, "%s. octno (scrdtk)\r\n", strerror(errno));
-    p1101:
-      msg = "Bad octal #";
+/* Get an octal character to OCTNUM. Single characters stand for themselves,
+ * so octal numbers must have at least 2 digits... */
+      if (scrdtk(1, buf, 4, &cmdbuf))
+      {
+        fprintf(stderr, "%s. octno (scrdtk)\r\n", strerror(errno));
+        REREAD_CMD_S("Error - see above");
+      }
+      if (cmdbuf.toktyp != eoltok)
+      {
+        if (cmdbuf.toktyp ^= nortok)
+          REREAD_CMD_S("Null value not allowed");
+        if (cmdbuf.toklen == 1)
+          octnum = buf[0];
+        else
+        {
+          if (!cmdbuf.octok)
+            REREAD_CMD_S("Bad octal #"); /* J not octal after all */
+          octnum = cmdbuf.octval;
+          if (!good_octnum())
+            REREAD_CMD;
+        }                          /* if (cmdbuf.toklen == 1) else */
+      }                            /* if (cmdbuf.toktyp != eoltok) */
+      if (cmdbuf.toktyp == eoltok)
+        break;                     /* J out no octal char (EOL) */
+      *p++ = octnum;
+    }                              /* for (k = j; k > 0; k--) */
+    if (!eolok())
       REREAD_CMD;
-    }
-    if (cmdbuf.toktyp == eoltok)
-      goto asg2rtn;                /* J EOL */
-    if (cmdbuf.toktyp ^= nortok)
-      goto p1011;                  /* J not poss OK octal */
-    if (cmdbuf.toklen == 1)
-    {
-      octnum = buf[0];
-      goto asg2rtn;                /* Return single-char */
-    }
-    if (!cmdbuf.octok)
-      goto p1101;                  /* J not octal after all */
-    octnum = cmdbuf.octval;
-  p1203:
-    if (octnum < 0200)
-      goto asg2rtn;                /* J a char */
-    fprintf(stderr, "%*s", cmdbuf.toklen, buf);
-    msg = " not octal for any char";
-    REREAD_CMD;
-/*
- * P1013 - ^A Continuing
- */
-  p1013:
-    if (cmdbuf.toktyp == eoltok)
-      goto p1018;                  /* J out no octal char (EOL) */
-    *p++ = octnum;
-  }                                /* End of loop on special chrs */
-  rtn = 1018;
-/*
- * P10216- E.O.L. check
- */
-p10216:
-  (void)scrdtk(1, 0, 0, &cmdbuf);
-  if (cmdbuf.toktyp == eoltok)
-    goto asg2rtn;                  /* J EOL (OK) */
-  msg = "Spurious params - command not done";
-  REREAD_CMD;
+  }                                /* if (result == 0) else */
+  cacnt = result;
+  READ_NEXT_COMMAND;
 /*
  * B - Backspace
  */
@@ -210,7 +219,7 @@ p1002:
   if (cmdbuf.toktyp != eoltok)
     goto p1019;                    /* J not EOL */
   bspace = !bspace;
-  goto ok_command;                 /* No params => invert BSPACE */
+  READ_NEXT_COMMAND;               /* No params => invert BSPACE */
 p1019:
   if (cmdbuf.toktyp != nortok)
   {
@@ -224,124 +233,47 @@ p1019:
   verb = buf[0];
   result = cmdbuf.octok;           /* In case we got an OCTNUM */
   octnum = cmdbuf.octval;          /* In case we got an OCTNUM */
-/*
- * Now do E.O.L. check
- */
-  rtn = 10213;
-  goto p10216;
-p10213:
-  if (result)
-    goto p1201;                    /* J we were given OCTNUM */
-  switch (verb)
+  if (!eolok())
+    REREAD_CMD;
+  if (!result)
   {
-    case 'Y':
-      goto p1022;
-    case 'T':
-      goto p1022;
-    case 'N':
-      goto p1023;
-    case 'F':
-      goto p1023;
-  }
-  msg = "param not recognised";
-  REREAD_CMD;
-/*
- * P1201 - We have a octal param to B. Check in limits (i.e a character)
- */
-p1201:
-  rtn = 1202;
-  goto p1203;
-p1202:
+    switch (verb)
+    {
+      case 'Y':
+        goto p1022;
+      case 'T':
+        goto p1022;
+      case 'N':
+        goto p1023;
+      case 'F':
+        goto p1023;
+    }
+    msg = "param not recognised";
+    REREAD_CMD;
+  }                                /* if (!result) */
+  if (!good_octnum())
+    REREAD_CMD;
   backsp = octnum;
 p1022:
   bspace = true;
-  goto ok_command;
+  READ_NEXT_COMMAND;
 p1023:
   bspace = false;
-  goto ok_command;
+  READ_NEXT_COMMAND;
 /*
  * D - Set per-character delay or typeout if no param
  */
 p1003:
   puts("Delay is not currently working\r");
-  goto ok_command;
-/*
- * R - C/R sequence
- */
-/* WARNING - THIS IS IGNORED BY THE REST OF Q. LATER, WE SHOULD PROBABLY
- * TIDY THIS UP... */
-p1004:
-  rtn = 1028;
-  goto p1025;                      /* Get # of chrs */
-p1028:
-  if (result != 0)
-    goto p1029;
-  if (cmdbuf.toktyp == eoltok)
-    goto p1030;                    /* J EOL */
-  rtn = 1030;
-  goto p10216;                     /* Check nothing further */
-p1030:
-  rtcnt = result;
-  goto ok_command;
-p1029:
-  if (result >= 2)
-  {
-    msg = "C/r sequence 1 chr max";
-    REREAD_CMD;
-  }                                /* if (result >= 2) */
-  rtn = 1033;
-  if (result == 1)
-  {
-    goto p1034;                    /* Get an octal character */
-  p1033:
-    if (cmdbuf.toktyp == eoltok)
-      goto p1035;                  /* J EOL (illegal) */
-    rtchrs = octnum;               /* Remember the character */
-  }
-/*
- * We have the chars. But there must not be any more...
- */
-  rtn = 1030;
-  goto p10216;
-p1035:
-  msg = "# of chrs supplied & spec'd disagree";
-  REREAD_CMD;
+  READ_NEXT_COMMAND;
 /*
  * X - Back to main editor
  */
 p1006:
-  rtn = 1037;
-  goto p10216;                     /* Check no params */
-p1037:
+  if (!eolok())
+    REREAD_CMD;                    /* Check no params */
   end_seq = normal_end_sequence;
   if (simulate_q)
     simulate_q_idx = 0;
   return;
-asg2rtn:switch (rtn)
-  {
-    case 1037:
-      goto p1037;
-    case 1033:
-      goto p1033;
-    case 1030:
-      goto p1030;
-    case 1301:
-      goto p1301;
-    case 1028:
-      goto p1028;
-    case 1202:
-      goto p1202;
-    case 10213:
-      goto p10213;
-    case 1013:
-      goto p1013;
-    case 1018:
-      goto p1018;
-    case 1008:
-      goto p1008;
-    case 1402:
-      goto p1402;
-    default:
-      fprintf(stderr, "Assigned Goto failure, rtn = %d\r\n", rtn);
-  }
-}
+}                                  /* main() */

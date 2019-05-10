@@ -25,7 +25,7 @@ INTERNALS
 	STARTED: Have a bool enum for logicals
 	DONE: Fix runindent label squashes
 	STARTED: More GIVE_UP macros - use error_exit as standard label
-	STARTED: rework asg2 blocks (including xistcs.c)
+	DONE: rework asg2 blocks (including xistcs.c)
 	STARTED: Use meaningful names instead of logtmp &c.
 	STARTED: Tidy scmnrd.c in particular
 	STARTED: Be more careful what goes to stderr / stdin
