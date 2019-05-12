@@ -774,7 +774,7 @@ so as to pick up the correct \fIStartup file\fR.
 .RE
 .RS -7
 .nf
-cat /dev/null | q -v -i n,-^J 2>&1 | q -n -i fl,:^J^NC^NU^[d,1,-,-2^Ja^J^[d,-1^Jy,^P^M,,^J | less
+cat /dev/null | q -v -i n,-^J 2>&1 | q -n -i fl,:,,,,4^J^NC^NU^[d,1,-,-2^Ja^J^[d,-1^Jy,^P^M,,^J | less
 .fi
 .RE
 .RS 3
@@ -801,7 +801,7 @@ the canonical (minimum length) version is:
 .RE
 .RS -7
 .nf
-cat /dev/null|q -vin-^J 2>&1|q -nifl:^J^NC^NU^[d1,-,-2^Ja^J^[d-1^Jy,^P^M^J|less
+cat /dev/null|q -vin-^J 2>&1|q -nifl:,,,,4^J^NC^NU^[d1,-,-2^Ja^J^[d-1^Jy,^P^M^J|less
 .fi
 .RE
 .PP

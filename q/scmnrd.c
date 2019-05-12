@@ -11,6 +11,10 @@
  *
  * Reads a command line - insists on a 1-char verb
  * Leaves READTOKEN ready to read 1st param
+ *
+ * This function is (trivially) recursive:
+ * it can call itself via rerdcm(),
+ * but always returns immediately after doing so
  */
 #include <stdio.h>
 #include <memory.h>
@@ -24,6 +28,14 @@
 #include "scrnedit.h"
 #include "fmode.h"
 #include "c1in.h"
+
+/* Static prototypes */
+static void massage_q_arg(void);
+static void complain_bad_command(void);
+static action do_the_massage(void);
+static action set__want_disply(void);
+static action display_maybe(void);
+static void complain_cvmba(void);
 
 static char *cmtabl[52] = {        /* Table of commands in full */
   "APPEND",
@@ -52,9 +64,8 @@ static char *cmtabl[52] = {        /* Table of commands in full */
   "XISTICS",
   "YCHANGEALL",
   "ZENDUSE",
-/*
- * Commands starting with F
- */
+
+/* Commands starting with F */
   "",                              /* FA */
   "BRIEF",                         /* FB */
   "CASEINDEPEND",                  /* FC */
@@ -83,15 +94,25 @@ static char *cmtabl[52] = {        /* Table of commands in full */
   ""                               /* FZ */
 };
 
+/* General variables */
+static int idx;
+static bool want_disply;
+static int start_pos, split_pos;
+static bool fanout;                /* For F commands */
+static int wanted_arg;
+
 void
 scmnrd()
 {
-  long i, n, k, l;                 /* Scratch */
-  bool want_disply = false;
-  bool fanout = false;             /* For F commands */
-/*
- * Read line
- */
+  int k;                           /* Scratch */
+  int file_start;
+  int savcurs;
+
+/* Initialise former stack variables */
+  want_disply = false;
+  fanout = false;
+
+/* Read line */
   while (true)
   {
     cmsplt = false;                /* No split command yet */
@@ -167,9 +188,9 @@ scmnrd()
         oldcom->bchars = 1;
         verb = '!';
         cntrlc = false;            /* ^C noted */
-        goto p1003;                /* J back in - simulate ! */
+        SWITCH_ACTION(display_maybe()); /* J back in - simulate ! */
       }                            /* if (oldcom->toktyp != nortok) */
-      printf("Null command verb not allowed");
+      fputs("Null command verb not allowed", stdout);
       rerdcm();
       return;
     }
@@ -177,7 +198,7 @@ scmnrd()
     if (verb == '#')
       verb = ASTRSK;
     if (verb == ASTRSK)
-      goto p1109;                  /* J # comment - display */
+      SWITCH_ACTION(set__want_disply()); /* # comment - display */
 
 /* Check out non-alpha's... */
     if (!(verb >= 'A' && verb <= 'Z')) /* Verb non-alpha */
@@ -185,11 +206,8 @@ scmnrd()
       if (verb != '!')             /* If not system command */
       {
         if (oldcom->toklen == 1 && verb == ASTRSK)
-          goto p1109;              /* J * comment - display */
-      p1106:
-        newlin();
-        printf("Command verb must be alphabetic");
-        rerdcm();
+          SWITCH_ACTION(set__want_disply()); /* * comment - display */
+        complain_cvmba();
         return;
       }
     }
@@ -198,9 +216,9 @@ scmnrd()
  * length we simplistically calculate ourselves
  */
     if (oldcom->toklen == 1)
-      goto p1109;                  /* Can't massage 1-char verb */
-    for (i = 0;; i++)
-      if (oldcom->bdata[i] != SPACE)
+      SWITCH_ACTION(set__want_disply()); /* Can't massage 1-char verb */
+    for (start_pos = 0;; start_pos++)
+      if (oldcom->bdata[start_pos] != SPACE)
         break;                     /* Find start of command */
 /*
  * SCRDTK leaves cursor just after token delimiter or at e.o.l.
@@ -211,73 +229,34 @@ scmnrd()
 
 /* If lengths are unequal (implying quotes somewhere), don't attempt
  * massage. Furthermore, complain if token started '!'... */
-    if (oldcom->bcurs - i != oldcom->toklen)
+    if (oldcom->bcurs - start_pos != oldcom->toklen)
     {
       if (verb == '!')
-        goto p1106;                /* Complain if was '!' */
+      {
+        complain_cvmba();
+        return;
+      }                            /* if (verb == '!') */
       else
-        goto p1109;                /* Don't attempt massage */
-    }                              /* if(oldcom->bcurs-i!=oldcom->toklen) */
+        SWITCH_ACTION(set__want_disply()); /* Don't attempt massage */
+    }                          /* if(oldcom->bcurs-start_pos!=oldcom->toklen) */
 /*
  * Massage '!' right now
  */
     if (verb == '!')
-      n = 1;                       /* Split off straight after ! */
-/*
- * Work along the token (which will have been converted to u/c)
- * looking for a non-alpha. If one found, calculate where in
- * SCREENEDIT buffer it would be, and insert a space there.
- */
+    {
+      split_pos = 1;               /* Split off straight after ! */
+      SWITCH_ACTION(do_the_massage());
+    }                              /* if (verb == '!') */
     else
     {
-      for (n = 1; n < oldcom->toklen; n++) /* Don't examine 1st char */
-      {
-        l = ubuf[n];
-        if (l < 'A')
-          goto p1111;              /* J found non-alpha */
-        if (l > 'Z')
-          goto p1111;              /* J found non-alpha */
-      }
-      goto p1109;                  /* No mass. to do if drop thro' */
-    }
-/*
- * p1111 - DO THE MASSAGE...
- */
-  p1111:
-    oldcom->bcurs = i + n;
-    insert = true;
-    ordch(SPACE, oldcom);
-  p1109:
-    if (USING_FILE && curmac < 0)
-      want_disply = false;         /* U-use & !macro */
-    else
-      want_disply = !BRIEF || curmac < 0;
-
-/* Defer displaying the command owing to a possible Q massage... */
-  p1003:
-    (void)scrdtk(5, 0, 0, oldcom); /* Reset command buffer */
-    scrdtk(1, (uint8_t *)ubuf, BUFMAX, oldcom);
-    if (oldcom->toklen > 12 && verb != ASTRSK) /* Verb too long */
-    {
-      if (want_disply)
-        disply(oldcom, true);      /* Display the command */
-      printf("Command verb too long");
-      rerdcm();
-      return;
-    }
-    i = (ubuf[0] & 037) - 1;       /* Get 1st char as a subscript */
-    if (verb == ASTRSK)            /* Was just an * comment */
-    {
-      if (want_disply)
-        disply(oldcom, true);
-      if (!cmsplt)                 /* No valid data in line */
-      {
-        newcom->bchars = 0;
-        newcom->bcurs = 0;
-      }
-      continue;                    /* Read next command */
-    }
-    break;                         /* Only repeat loop via continue */
+/* Work along the token (which will have been converted to u/c) looking for a
+ * non-alpha. If one found, calculate where in SCREENEDIT buffer it would be,
+ * and insert a space there. Don't examine the 1st char */
+      for (split_pos = 1; split_pos < oldcom->toklen; split_pos++)
+        if (ubuf[split_pos] < 'A' || ubuf[split_pos] > 'Z')
+          SWITCH_ACTION(do_the_massage()); /* Found non-alpha */
+      SWITCH_ACTION(set__want_disply()); /* No massage to do */
+    }                              /* if (verb == '!') else */
   }                                /* while(true) */
 
   if (verb == '!')                 /* Was system command */
@@ -285,42 +264,35 @@ scmnrd()
     if (want_disply)
       disply(oldcom, true);
     return;
-  }
+  }                                /* if (verb == '!') */
   if (verb == 'F')
   {
-/*
- * Code to deal with commands starting F
- */
+/* Code to deal with commands starting F */
     if (oldcom->toklen == 1)       /* Not unique abb'n */
     {
       if (want_disply)
         disply(oldcom, true);      /* Display the command */
-      printf("Command abbreviation not unique");
+      fputs("Command abbreviation not unique", stdout);
       rerdcm();
       return;
-    }
+    }                              /* if (oldcom->toklen == 1) */
     fanout = true;
 
     memmove(ubuf, ubuf + 1, --oldcom->toklen); /* Overlapping move */
     ubuf[oldcom->toklen] = '\0';
-    i = 5;                         /* In case not alpha VERB */
+    idx = 'F' & 037;               /* In case not alpha verb */
     verb = ubuf[0];                /* Get app'n standard verb */
     if (verb < 'A' || verb > 'Z')
-      goto p1205;                  /* J out of range */
+    {
+      complain_bad_command();
+      return;
+    }                              /* if (verb < 'A' || verb > 'Z') */
     verb = verb + 040;             /* Make lower case */
-    i = (verb & 037) + 25;         /* Get array subscript */
-  }
-  if (strncmp(ubuf, cmtabl[i], oldcom->toklen)) /* Not a abbr'n */
+    idx = (verb & 037) + 25;       /* Get array subscript */
+  }                                /* if (verb == 'F') */
+  if (strncmp(ubuf, cmtabl[idx], oldcom->toklen)) /* Not a abbr'n */
   {
-  p1205:
-    if (want_disply)
-      disply(oldcom, true);        /* Display the command */
-    printf("%s%c ", fanout ? "F" : "", (char)(verb & 0137));
-    if (cmtabl[i][0])
-      printf("is short for %s%s", fanout ? "F" : "", cmtabl[i]);
-    else
-      printf("is not a command");
-    rerdcm();
+    complain_bad_command();
     return;
   }
 /* Check for disallowed command if Fixed-Length Mode */
@@ -329,11 +301,11 @@ scmnrd()
   {
     if (want_disply)
       disply(oldcom, true);        /* Display the command */
-    printf("Command disallowed when FIXED LENGTH mode asserted");
+    fputs("Command disallowed when FIXED LENGTH mode asserted", stdout);
     rerdcm();
     return;
   }
-  i = oldcom->bcurs;               /* Changed by disply, Q massage */
+  savcurs = oldcom->bcurs;         /* Changed by disply, Q massage */
 /* Q COMMAND MASSAGE */
   if (verb == 'Q')
   {
@@ -344,45 +316,134 @@ scmnrd()
       oldcom->toklen > 1 && oldcom->bdata[oldcom->tokbeg] == '$')
     {
 /* First check for no more args */
-      k = oldcom->tokbeg;          /* Remember where filename starts */
+      file_start = oldcom->tokbeg; /* Remember where filename starts */
       (void)scrdtk(1, 0, 0, oldcom);
       if (oldcom->toktyp == eoltok)
       {
-        oldcom->bcurs = i;
-        oldcom->bdata[k] = SPACE;  /* Remove leading '$' */
+        oldcom->bcurs = savcurs;
+        oldcom->bdata[file_start] = SPACE; /* Remove leading '$' */
 /* Read arg no */
         (void)scrdtk(1, (uint8_t *)ubuf, BUFMAX, oldcom);
-        oldcom->bdata[k] = '$';    /* Reinstate leading '$' */
-        oldcom->tokbeg = k;
+        oldcom->bdata[file_start] = '$'; /* Reinstate leading '$' */
+        oldcom->tokbeg = file_start;
         if (oldcom->decok)         /* Ok decimal */
         {
 /* See if relative or absolute. Zero is always relative */
           if (!oldcom->decval || oldcom->plusf || oldcom->minusf)
-            l = argno + oldcom->decval;
+            wanted_arg = argno + oldcom->decval;
           else
-            l = oldcom->decval - 1; /* Wanted arg # */
-          if (l >= 0 && l + optind < argc)
+            wanted_arg = oldcom->decval - 1; /* Wanted arg # */
+          if (wanted_arg >= 0 && wanted_arg + optind < argc)
           {
             if (fmode & 0200)
-              argno = l;           /* If +# mode */
-            oldcom->bchars = k - 1; /* Truncate command line */
-            goto q1001;            /* Massage in argument */
-          }
-        }
-      }
-    }
+              argno = wanted_arg;  /* If +# mode */
+            oldcom->bchars = file_start - 1; /* Truncate command line */
+            massage_q_arg();       /* Massage in argument */
+          }             /* if (wanted_arg >= 0 && wanted_arg + optind < argc) */
+        }                          /* if (oldcom->decok) */
+      }                            /* if (oldcom->toktyp == eoltok) */
+    }                              /* if (oldcom->toktyp == nortok && ...) */
     else if (argno >= 0 && oldcom->toktyp == eoltok &&
-      (l = ++argno) + optind < argc)
-    {                              /* No command args & more file args */
-    q1001:
-      oldcom->bdata[oldcom->bchars++] = SPACE; /* Append a SPACE */
-      k = strlen(*(argv + optind + l));
-      strncpy((char *)&oldcom->bdata[oldcom->bchars], *(argv + optind + l), k);
-      oldcom->bchars += k;         /* Append next arg */
-    }
+      (wanted_arg = ++argno) + optind < argc)
+      massage_q_arg();
   }                                /* if (verb == 'Q') */
   if (want_disply)
     disply(oldcom, false);         /* Display the command */
-  oldcom->bcurs = i;
+  oldcom->bcurs = savcurs;
   return;
 }
+
+/* Static functions */
+
+/* ****************************** display_maybe ***************************** */
+
+static action
+display_maybe(void)
+{
+/* Defer displaying the command owing to a possible Q massage... */
+  (void)scrdtk(5, 0, 0, oldcom);   /* Reset command buffer */
+  scrdtk(1, (uint8_t *)ubuf, BUFMAX, oldcom);
+  if (oldcom->toklen > 12 && verb != ASTRSK) /* Verb too long */
+  {
+    if (want_disply)
+      disply(oldcom, true);        /* Display the command */
+    fputs("Command verb too long", stdout);
+    rerdcm();
+    return RETURN;
+  }
+  idx = (ubuf[0] & 037) - 1;       /* Get 1st char as a subscript */
+  if (verb == ASTRSK)              /* Was just an * comment */
+  {
+    if (want_disply)
+      disply(oldcom, true);
+    if (!cmsplt)                   /* No valid data in line */
+    {
+      newcom->bchars = 0;
+      newcom->bcurs = 0;
+    }
+    return CONTINUE;               /* Read next command */
+  }
+  return BREAK;                    /* Leave loop containing caller */
+}                                  /* static action display_maybe(void) */
+
+/* ****************************** massage_q_arg ***************************** */
+
+static void
+massage_q_arg(void)
+{
+  int alen;
+
+  oldcom->bdata[oldcom->bchars++] = SPACE; /* Append a SPACE */
+  alen = strlen(*(argv + optind + wanted_arg));
+  strncpy((char *)&oldcom->bdata[oldcom->bchars],
+    *(argv + optind + wanted_arg), alen);
+  oldcom->bchars += alen;          /* Append next arg */
+}                                  /* static void massage_q_arg(void) */
+
+/* ***************************** do_the_massage ***************************** */
+
+static action
+do_the_massage(void)
+{
+  oldcom->bcurs = start_pos + split_pos;
+  insert = true;
+  ordch(SPACE, oldcom);
+  return set__want_disply();
+}                                  /* static action do_the_massage(void) */
+
+/* **************************** set__want_disply **************************** */
+
+static action
+set__want_disply(void)
+{
+  if (USING_FILE && curmac < 0)
+    want_disply = false;           /* U-use & !macro */
+  else
+    want_disply = !BRIEF || curmac < 0;
+  return display_maybe();
+}                                  /* static action set__want_disply(void) */
+
+/* ************************** complain_bad_command ************************** */
+
+static void
+complain_bad_command(void)
+{
+  if (want_disply)
+    disply(oldcom, true);          /* Display the command */
+  printf("%s%c ", fanout ? "F" : "", (char)(verb & 0137));
+  if (cmtabl[idx][0])
+    printf("is short for %s%s", fanout ? "F" : "", cmtabl[idx]);
+  else
+    fputs("is not a command", stdout);
+  rerdcm();
+}                                  /* static void complain_bad_command(void) */
+
+/* ***************************** complain_cvmba ***************************** */
+
+static void
+complain_cvmba(void)
+{
+  newlin();
+  fputs("Command verb must be alphabetic", stdout);
+  rerdcm();
+}                                  /* static void complain_cvmba(void) */

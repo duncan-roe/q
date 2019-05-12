@@ -36,6 +36,9 @@
 #define STDOUT5FD 1
 #define STDERR5FD 2
 
+#define SWITCH_ACTION(x) { switch(x) { case RETURN: return; \
+  case BREAK: break; case CONTINUE: continue; } break; }
+
 /* Typedefs */
 
 typedef enum bool
@@ -63,6 +66,13 @@ typedef struct scrbuf5             /* Screenedit buffer */
   uint8_t bdata[Q_BUFSIZ];         /* Data for the line */
 }
 scrbuf5;
+
+typedef enum caller_action
+{
+  RETURN,
+  BREAK,
+  CONTINUE,
+} action;                          /* type def enum caller_action */
 
 /* Prototype */
 

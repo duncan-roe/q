@@ -874,13 +874,13 @@ main(int xargc, char **xargv)
 
 /* *************************** printf_eof_reached *************************** */
 
-  void printf_eof_reached(long ct, char *action)
+  void printf_eof_reached(long ct, char *action_str)
   {
     i4 = ct - i4 + 1;              /* Lines not actioned */
     printf("%s of file reached:- ", REVRSE ? "start" : "end");
     printf("%ld line%s ", i4 - 1, i4 == 2 ? "" : "s");
-    printf("%s\r", action);
-  }                         /* void printf_eof_reached(long ct, char *action) */
+    printf("%s\r", action_str);
+  }                     /* void printf_eof_reached(long ct, char *action_str) */
 
 /* ***************************** get_c_or_r_args **************************** */
 

@@ -27,7 +27,7 @@ INTERNALS
 	STARTED: More GIVE_UP macros - use error_exit as standard label
 	DONE: rework asg2 blocks (including xistcs.c)
 	STARTED: Use meaningful names instead of logtmp &c.
-	STARTED: Tidy scmnrd.c in particular
+	DONE: Tidy scmnrd.c in particular
 	STARTED: Be more careful what goes to stderr / stdin
 	STARTED: use stdint types
 	STARTED: Reduce number of goto stmts
