@@ -26,35 +26,23 @@
 void
 setcrs(int posn)
 {
-/*
- * LOCAL VARIABLES
- * ===============
- *
- * oldcrs - Former position of cursor
- * bsp    - # of chars if BACKSPACE
- * rtn    - # of chars if return plus fwd refresh
- * fwd    - # of chars to refresh fwd
- * ca     - # of chars to go to end of line then backspace
- * i,j &c - Indices and the like
- */
-  int i, oldcrs, bsp, rtn, fwd, ca;
+  int oldcrs;                      /* Former position of cursor */
+  int bsp;                         /* # of chars if backspace */
+  int rtn;                         /* # of chars if return plus fwd refresh */
+  int fwd;                         /* # of chars to refresh fwd */
+  int ca;                   /* # of chars to go to end of line then backspace */
   int absnum;                      /* # chars for "absolute" pos'n */
   char absbuf[16];                 /* Ec seq for absnum pos'n */
-  uint8_t *p;
-/*
- * Here we go!
- */
+
   crscnt = 0;                      /* No chars req'd yet */
   oldcrs = scurs;                  /* Remember where cursor was */
   scurs = posn;                    /* When finished, it will be */
   if (scurs == oldcrs)
     return;                        /* Cursor right already */
-/*
- * Fill buffer with backspaces
- */
-  p = crsbuf;
-  for (i = WCHRS; i > 0; i--)
-    *p++ = backsp;
+
+/* Fill buffer with backspaces */
+  memset(crsbuf, backsp, WCHRS);
+
 /* Find out how many chars to use with vt100 Ec seq, if VT100... */
   if (vt100)
   {
@@ -63,54 +51,53 @@ setcrs(int posn)
   }
   else
     absnum = 9999;                 /* Dummy high value */
-  if (scurs > oldcrs)
-    goto p1003;                    /* Move cursor forward */
-/*
- * Move cursor backwards
- */
-  bsp = oldcrs - scurs;            /* Set # bsp's req'd */
-  rtn = 1 + scurs;                 /* \r + refresh */
-  if (bsp <= rtn)
+  if (scurs < oldcrs)
+  {
+/* Move cursor backwards */
+    bsp = oldcrs - scurs;          /* Set # bsp's req'd */
+    rtn = 1 + scurs;               /* \r + refresh */
+    if (bsp <= rtn)
 /* Backspace or VT100 */
-  {
-    if (absnum < bsp)
-      goto p1101;                  /* J VT100 better */
-    crscnt = bsp;
-    return;                        /* Backspaces already moved in */
-  }
+    {
+      if (absnum < bsp)
+        memcpy(crsbuf, absbuf, crscnt = absnum); /* VT100 better */
+      else
+        crscnt = bsp;
+      return;                      /* Backspaces already moved in */
+    }
 /* F'wd refresh or VT100 */
-  if (absnum < rtn)
-  {
-  p1101:
-    memcpy((char *)crsbuf, absbuf, (size_t)absnum);
-    crscnt = absnum;
-  }
+    if (absnum < rtn)
+      memcpy(crsbuf, absbuf, crscnt = absnum);
+    else
+    {
+      crsbuf[0] = '\r';
+      if (scurs ^= 0)
+        memcpy((char *)&crsbuf[1], (char *)reqd, (size_t)scurs);
+      crscnt = rtn;                /* Set final # to do */
+    }
+    return;
+  }                                /* if (scurs < oldcrs) */
   else
   {
-    crsbuf[0] = '\r';
-    if (scurs ^= 0)
-      memcpy((char *)&crsbuf[1], (char *)reqd, (size_t)scurs);
-    crscnt = rtn;                  /* Set final # to do */
-  }
-  return;
-/*
- * P1003 - Cursor to be moved forward
- */
-p1003:
-  fwd = scurs - oldcrs;            /* # chars if refresh forward */
-  if (cacnt)                       /* If fast ^A available */
+/* Cursor to be moved forward */
+    fwd = scurs - oldcrs;          /* # chars if refresh forward */
+    if (cacnt)                     /* If fast ^A available */
 /* cacnt shouldn't be zero if VT100 is enabled, so no check here */
-  {
-    ca = cacnt + WCHRS - scurs;    /* # of chars if ^A then bsp */
-    if (ca < fwd)                  /* If ^A faster */
     {
-      crscnt = ca;                 /* Set no. of chars in sequence */
-      memcpy((char *)crsbuf, (char *)cachrs, (size_t)cacnt);
-      return;                      /* Finished */
+      ca = cacnt + WCHRS - scurs;  /* # of chars if ^A then bsp */
+      if (ca < fwd)                /* If ^A faster */
+      {
+        crscnt = ca;               /* Set no. of chars in sequence */
+        memcpy((char *)crsbuf, (char *)cachrs, (size_t)cacnt);
+        return;                    /* Finished */
+      }
     }
-  }
-  if (absnum < fwd)
-    goto p1101;                    /* J VT100 is faster */
-  crscnt = fwd;                    /* Set result */
-  memcpy((char *)crsbuf, (char *)&reqd[oldcrs], (size_t)fwd); /* Refresh */
+    if (absnum < fwd)
+      memcpy(crsbuf, absbuf, crscnt = absnum); /* VT100 is faster */
+    else
+    {
+      crscnt = fwd;                /* Set result */
+      memcpy((char *)crsbuf, (char *)&reqd[oldcrs], (size_t)fwd); /* Refresh */
+    }                              /* if (absnum < fwd) else */
+  }                                /* if (scurs < oldcrs) else */
 }
