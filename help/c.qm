@@ -37,17 +37,21 @@ N414 ^H^NG/^NS^N^<404>^X^NG*^NS^N^<404>^H^N^<405>
 #       split at n413, where n412 may jump to
 N407 ^NP2^N^<413>^N^<406>
 N413 ^Y^NG ^NS^N^<410>^Y^NG ^NS^N^<410>^F^?^N^<407>
-# n410: Check comment doesn't extend beyond cc72, split off if it does.
+# n410: Check comment doesn't extend beyond cc80, split off if it does.
 N410 ^Z^NP3^NL^J^N^<404>X^H^O^B^T^L^Jr-1 -2^J^N^<404>
 # n406: If before tab 2, insert spaces until at tab 2, if there is room
 N406 ^NB2^NS^N^<412>^Z^NP3^N^<412>^NB3^NL^J^N^<404>X^H^O^B^NE^E ^N^<406>
 # n405: Start of comment sequence. Move this comment to line start
-N405 ^L^J^N^<411>
+#       Call n424 to check for self-contained comment (ending "*/")
+N405 ^L^Jm-1^J^N^<424>
 # n411: if this line starts '*', indent it one space only. Otherwise,
 #       have the line re-examined as a normal line. We take some care
 #       that if the indent is already right, the the line is not
 #       modified.
-N411 ^[m-^J^NC^NU^E^NG*^NS^NL^NJ^<10>X^[g-1^J^N^<404>^NBc^NS^NL^NJ^<10>X^NPc^NS^N^<411>^L ^J^N^<411>
+N411 ^[m-^J^NC^NU^E^NG*^NS^NL^NJ^<10>X^[g-1^J^N^<404>^NBc^NS^NL^NJ^<10>X^NPc^NS^N^<424>^L ^Jm-1^J^N^<424>
+# n424 - decide whether to enter n411 or n404 next,
+#        depending on whether this line ends "*/"
+N424 ^Z^Y^NG/^NS^N^<411>^Y^NG*^NS^N^<411>^N^<404>
 # n412: The comment starts at cc36 (now). Just in case it started off
 #        there and was too long, check...
 N412 ^Z^NP3^NL^J^N^<404>X^H^O^B^N^<413>

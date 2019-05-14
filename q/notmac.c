@@ -57,8 +57,9 @@ notmac(bool err)
     if (curmac >= 0)
     {
       mctrst = false;
+      visbel();
       fprintf(stderr,
-        "\r\n\aStopped in macro 0%o, character %d\r\n", curmac, mcposn);
+        "\r\nStopped in macro 0%o, character %d\r\n", curmac, mcposn);
       if (scmacs[curmac])
       {
         showmac(curmac);

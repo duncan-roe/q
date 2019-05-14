@@ -11,7 +11,6 @@
 #include "fmode.h"
 /* */
 uint8_t xlatable[256];
-int tbstat;
 void
 xlateset()
 {

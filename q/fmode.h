@@ -1,8 +1,12 @@
 #ifndef FMODE_H
 #define FMODE_H
 /*
- * Copyright (C) 2014,2017 Duncan Roe
+ * Copyright (C) 2014,2017,2019 Duncan Roe
  */
+
+/* Headers required by this header */
+
+#include "prototypes.h"
 
 /* Macro definitions */
 
@@ -29,5 +33,7 @@
 
 extern unsigned long fmode;
 extern unsigned long zmode;        /* Copy of fmode by scmnrd */
+extern uint8_t xlatable[256];
 extern bool zmode_valid;
+extern int tbstat;
 #endif

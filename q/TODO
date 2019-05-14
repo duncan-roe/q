@@ -1,3 +1,6 @@
+Do not visbell more than once every 1/10 sec
+Add ~/bin/qm (list macros) to make install
+Create man page for qm
 DONE: q -v to not action FD Y
 FB to use clock_gettime (replaces gettimeofday) for 1/5 second interval
 FRecurse command to bring up q command line from w/in macro:

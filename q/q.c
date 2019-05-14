@@ -78,7 +78,6 @@ typedef enum qrc_state
 /* Externals that are not in any header */
 
 clock_t timlst;
-uint8_t fxtabl[128];
 scrbuf5 b1, b2, b3, b4;            /* 2 line & 2 command buffers */
 
 /* Instantiate externals */
@@ -110,6 +109,7 @@ long lintot = 0;
 long ptrpos = 0;
 uint8_t stdoutbuf[Q_BUFSIZ];
 uint8_t stderrbuf[Q_BUFSIZ];
+uint8_t fxtabl[128];
 
 /* Static Variables */
 

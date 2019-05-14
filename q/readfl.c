@@ -169,7 +169,10 @@ prclin(void)                       /* Build up line; return 1 for eof */
           if (state == 1)          /* Holding Cr */
             state = 0;             /* Discard Cr */
           if (state != 0)          /* Unexpected */
-            printf("\r\n\aUnexpected state %d at Nl\r\n", state);
+          {
+            visbel();
+            printf("\r\nUnexpected state %d at Nl\r\n", state);
+          }                        /* if (state != 0) */
           return 0;                /* Have line */
         }                          /* if(thisch=='\n') */
         else if (state == 1)       /* Holding on to Cr 2B stored now */

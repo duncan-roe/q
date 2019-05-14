@@ -23,8 +23,6 @@
 #include "prototypes.h"
 #include "fmode.h"
 /* */
-uint8_t xlatable[256];
-int tbstat;
 /* */
 bool
 lsub5a(uint8_t *srchstr, int srchlen, uint8_t *string,
@@ -36,7 +34,8 @@ lsub5a(uint8_t *srchstr, int srchlen, uint8_t *string,
 /* */
   if (first >= len)
   {
-    printf("\aFirst position out of range: first=%d, len=%d (lsub5a)\r\n",
+    visbel();
+    printf("First position out of range: first=%d, len=%d (lsub5a)\r\n",
       first, len);
     return false;
   }
