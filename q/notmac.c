@@ -34,7 +34,7 @@ notmac(bool err)
     while (USING_FILE)
       pop_stdin();
     if (!offline)
-      printf("(input from terminal)");
+      fputs("(input from terminal)", stdout);
   }                                /* if (err && USING_FILE) */
 
   if (!USING_FILE)                 /* Not in command file */

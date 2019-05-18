@@ -228,9 +228,9 @@ newmac()
       {
         if (oldval && !BRIEF && WARN_NONZERO_MEMORY)
         {
-          printf("%s", "Warning - value was previously ");
+          fputs("Warning - value was previously ", stdout);
           printf(Iformat, oldval);
-          printf("\r\n");
+          fputs("\r\n", stdout);
         }                     /* if (oldval && !BRIEF && WARN_NONZERO_MEMORY) */
         return 1;                  /* All chars parsed */
       }
@@ -253,9 +253,9 @@ newmac()
       {
         if (oldfpval != 0.0 && !BRIEF && WARN_NONZERO_MEMORY)
         {
-          printf("%s", "Warning - value was previously ");
+          fputs("Warning - value was previously ", stdout);
           printf(FPformat, oldfpval);
-          printf("\r\n");
+          fputs("\r\n", stdout);
         }
         return 1;                  /* OK */
       }                            /* if (!*endptr) */
@@ -316,6 +316,6 @@ newmac()
 
 /* Advise user if an existing macro being overwritten */
   if (scmacs[verb] && (curmac < 0 || !BRIEF))
-    printf("Warning - overwriting old macro\r\n");
+    fputs("Warning - overwriting old macro\r\n", stdout);
   return newmac2(false) ? 1 : 0;
 }

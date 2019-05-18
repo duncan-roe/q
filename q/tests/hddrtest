@@ -1,15 +1,19 @@
 #!/bin/bash -p
 # Test headers for needing to include headers
 #set -x
-[ $# -eq 1 ]|| { echo "Must have 1 header file as argument" >&2; return 1; }
+[ $# -ge 1 ]||{ echo "Must have at least 1 header file as argument" >&2; exit 1; }
 F=$(tempfile)
-cat >$F <<////
+mv $F $F.c
+while [ $# -ge 1 ]
+do
+  cat >$F.c <<////
 #include "$1"
 int main (int argc, char **argv)
 {
   return 0;
 }
 ////
-mv $F $F.c
-gcc -Wall -Wstrict-prototypes -Wmissing-prototypes -I .. $F.c
+  gcc -Wall -Wstrict-prototypes -Wmissing-prototypes -I .. $F.c
+  shift
+done
 rm -f $F.c a.out

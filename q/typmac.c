@@ -82,14 +82,14 @@ typmac(void)
     gotone = true;
     printf("%o %.17e ", i, FPU_memory[j]);
     printf(FPformat, FPU_memory[j]);
-    printf("\r\n");
+    fputs("\r\n", stdout);
   }                           /* for (i = 07000, j = 0; i <= 07777; i++, j++) */
   if (!gotone && !cntrlc)
   {
     if (alu_macros_only)
-      printf("No nonzero memory locations\r\n");
+      fputs("No nonzero memory locations\r\n", stdout);
     else
-      printf("No macros currently defined\r\n");
+      fputs("No macros currently defined\r\n", stdout);
   }                                /* if (!gotone && !cntrlc) */
   duplx5(false);
 }

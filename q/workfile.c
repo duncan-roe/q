@@ -321,7 +321,7 @@ gtofst(indxbk * ix, int offset)
   }                                /* if(offset<0||offset>ix->chars) */
   if (ix->blocks != -1)
   {
-    printf("\r\nBad call of gtofst: block is not mmapping\r\n");
+    fputs("\r\nBad call of gtofst: block is not mmapping\r\n", stdout);
     return NULL;
   }                                /* if(ix->blocks!=-1) */
 
@@ -361,7 +361,7 @@ gtofst(indxbk * ix, int offset)
 /* Split the mmapping block addressed by pointr such that poffst becomes zero
  * (pointr points to a block whose 1st non-deleted record is ptrpos)  */
 
-static int
+static bool
 splitb(void)
 /* The initial implementation simply duplicates the offset block where the split
  * is (except if the split is on the first line in that block). The 2 new groups
@@ -381,25 +381,25 @@ splitb(void)
 
   if (pointr->blocks != -1)
   {
-    printf
-      ("\r\nBad call of splitb: pointr does not address a mapping block\r\n");
-    return 0;                      /* Error */
+    fputs("\r\nBad call of splitb: pointr does not address a mapping block\r\n",
+      stdout);
+    return false;                  /* Error */
   }                                /* if(pointr->blocks!=-1) */
   if (!poffst)                     /* Nothing to do */
-    return 1;                      /* Success(?) */
+    return true;                   /* Success(?) */
 
 /* Discover address of splitting block. Use gtofst() to avoid duplicating code
  */
 
   if (!(us = gtofst(pointr, poffst)))
-    return 0;                      /* Shouldn't happen */
+    return false;                  /* Shouldn't happen */
 
 /* We will need a new index pair. Put it before the current group. The
  * duplicated block (if any) will be the last */
 
   sp = (void *)pointr->dtaptr;     /* Current supp blk */
   if (!(nix = get2(sp->filptr)))
-    return 0;                      /* No memory */
+    return false;                  /* No memory */
   qchain(nix, pointr);
 
 /* See if we need to duplicate a block. If so, force its creation by calling
@@ -410,7 +410,7 @@ splitb(void)
   if (offidx)                      /* Some deletes, so must duplicate block */
   {
     if (!gtofst(nix, 0))           /* No memory */
-      return 0;
+      return false;
     memcpy(xxoffs->offset, sof->offset, sizeof sof->offset);
     nix->chars = offidx;           /* Assume this is not 1st blk (no deletes) */
   }                                /* if(offidx) */
@@ -440,7 +440,7 @@ splitb(void)
   }                                /* if(auxptr==pointr&&(aoffst-=poffst)<0) */
 
   poffst = 0;
-  return 1;                        /* Success */
+  return true;                     /* Success */
 }                                  /* static int splitb(void) */
 
 /* ******************************* delete ****************************** */

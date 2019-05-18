@@ -8,6 +8,10 @@
  * Universal statements for segments accessing SCREENEDIT macros
  * */
 
+/* Headers required by this header */
+
+#include "prototypes.h"
+
 /* Macros */
 
 #define STKSIZ 512                 /* Should be enough for anybody */

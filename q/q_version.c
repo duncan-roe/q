@@ -11,8 +11,9 @@ q_version()
 
   if (argc != 2 || strcmp(argv[1], "-V"))
     return;
-  printf("Copyright (C) 1995-2018  Duncan Roe\r\n");
-  printf("License GPLv3+: GNU GPL version 3 or later "
-    "<http://gnu.org/licenses/gpl.html>\r\n");
-  printf("q comes with NO WARRANTY, to the extent permitted by law.\r\n");
+  fputs("Copyright (C) 1995-2019  Duncan Roe\r\n", stdout);
+  fputs("License GPLv3+: GNU GPL version 3 or later "
+    "<http://gnu.org/licenses/gpl.html>\r\n", stdout);
+  fputs("q comes with NO WARRANTY, to the extent permitted by law.\r\n",
+    stdout);
 }                                  /* q_version() */

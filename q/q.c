@@ -1416,11 +1416,11 @@ main(int xargc, char **xargv)
     }                              /* if (k == 0) else */
 
 /* GCC 8.1 complained when the next line was an sprintf. */
-/* To keep gcc quiet, we must test for overflow. */
+/* To keep gcc quiet, we tested for overflow. */
+/* But GCC 8.3.0 complained amnyway */
+/* So now we compile with -Wno-format-truncation. */
 /* If truncation happens, there should be a useful message... */
-    if (snprintf(tmtree, sizeof tmtree, "%s/%s", help_dir,
-      tmfile) >= sizeof tmtree)
-      ;
+    snprintf(tmtree, sizeof tmtree, "%s/%s", help_dir, tmfile);
     if (stat(tmtree, &statbuf))
     {
 /* Output a potted message if he "typed h for help" */

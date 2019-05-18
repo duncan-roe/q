@@ -98,7 +98,7 @@ showmac(int i)
         continue;
       }                       /* else if (ch >= FIRST_ALU_OP + num_ops && ... */
       else
-        printf("^N");
+        fputs("^N", stdout);
     }                              /* if (ctl_n_pending) */
     else
     {
@@ -125,6 +125,6 @@ showmac(int i)
     }
   }
   if (ctl_n_pending)
-    printf("^N");
+    fputs("^N", stdout);
   putchar('\n');
 }

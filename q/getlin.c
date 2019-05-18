@@ -11,8 +11,7 @@
  * Analyses the next token (which must not be NULL or EOL) to see
  * that it is a valid line # (in range 1 - # of lines). Errors are
  * reported if REPERR is true
- * Function value is true for good line #. The # itself is in the
- * common DECVAL.
+ * Function value is true for good line #. The # itself is in oldcom->decval
  *
  * Implementation note: uses the boolean eofok as an integer value:
  * so false must be zero and true must be 1
@@ -51,7 +50,7 @@ getlin(bool reperr, bool eofok)
   if (!(oldcom->decok))            /* Not decimal */
   {
     if (trytab(zbuf, oldcom))
-      goto p1005;                  /* J was a Tx (ok) */
+      goto have_a_number;          /* J was Tab x (ok) */
     if (oldcom->toklen == 3 && (toupper(zbuf[0]) == 'E') &&
       (toupper(zbuf[1]) == 'O') && (toupper(zbuf[2]) == 'F'))
     {
@@ -73,7 +72,7 @@ getlin(bool reperr, bool eofok)
     strcpy(ermess, "line # off start of file");
     GIVE_UP;
   }
-p1005:
+have_a_number:
   if (deferd && (wanted = oldcom->decval - lintot - eofok) > 0)
     dfread(wanted, NULL);
   if (oldcom->decval <= lintot + eofok)

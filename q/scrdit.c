@@ -26,204 +26,78 @@
 #include <sys/types.h>
 #include <sys/times.h>
 #include "prototypes.h"
-#include "macros.h"
+#include "backtick.h"
 #include "cmndcmmn.h"
 #include "scrnedit.h"
+#include "macros.h"
 #include "fmode.h"
 #include "tabs.h"
 #include "c1in.h"
 #include "alu.h"
-#include "backtick.h"
 
 /* Macros */
 
 #define GETNEXTCHR goto getnextchr
-#define BOL_OR_EOL goto bol_or_eol
-#define ERR_IF_MAC goto err_if_mac
-#define SOUNDALARM goto soundalarm
-#define TABOORANGE goto taboorange
-#define SKIP2MACCH goto skip2macch
-#define NORMALCHAR goto normalchar
-#define RANOFF_END goto ranoff_end
+#define BOL_OR_EOL {err = "Ran off beginning or end of line"; ERR_IF_MAC;}
+#define ERR_IF_MAC \
+  {if (curmac >= 0){if (err) fprintf(stderr, "\r\n%s. ", err); err = NULL; \
+  notmac(true);}SOUNDALARM;}
+#define SOUNDALARM \
+  {mctrst = fornj = gpseu = glast = false; visbel(); GETNEXTCHR;}
+#define TABOORANGE {if (curmac >= 0){fprintf(stderr, \
+  "\r\nTab ID %c or value in that tab out of range. ", thisch); notmac(true);}\
+  SOUNDALARM;}
+#define SKIP2MACCH {CHECK_HAS_MACCH(2); mcposn += 2; GETNEXTCHR;}
+#define NORMALCHAR \
+  {ordch(thisch, Curr); modlin = true; contp = false; GETNEXTCHR;}
+#define RANOFF_END {err = "^NA, ^NB, ^NC &c. too near macro end"; ERR_IF_MAC;}
 #define CHECK_HAS_MACCH(x) \
   do { if (curmac > 0 && mcposn > scmacs[curmac]->maclen - x) RANOFF_END; } \
   while(0)
-#define GET_FOLLOWING_CHAR goto get_following_char
-#define TEST_TAB goto test_tab
-#define CHECK_MACRO_END goto check_macro_end
-#define LEAVE_SCRDIT goto leave_scrdit
+#define GET_FOLLOWING_CHAR {glast = gpseu = true; GETNEXTCHR;}
+/* ^NB, ^NP, ^N[ & ^N] test if cursor / file position before/after tab */
+#define TEST_TAB {\
+  CHECK_HAS_MACCH(3);              /* Err if not tabid + 2 chars */ \
+  gtest = true;                    /* We are a position tester */ \
+  CHECK_MACRO_END;}
+/* ^NO,^NR,^NF,^NN - Remember or move to cursor or file position */
+#define CHECK_MACRO_END {CHECK_HAS_MACCH(1); \
+  gposn = true; /* Distinguish from ^G */ GET_FOLLOWING_CHAR;}
+#define LEAVE_SCRDIT {if (!(USING_FILE || nodup)) duplx5(true); return;}
+#define ERR(x) {fputs(x "\r\n", stderr); verb = 'J'; return;}
 
 /* Externals that are not in any header */
 
 uint8_t fxtabl[128];
 clock_t timlst;
 
-/* Initialise External Variables */
+/* Instantiate External Variables */
 
 scrbuf5 *last_Curr = NULL;
 
-/* *************************** print_failed_opcode ************************** */
-
-static void
-print_failed_opcode(uint16_t thisch)
-{
-  char *opcd = opcode_defs[alu_table_index[thisch - FIRST_ALU_OP]].name;
-
-  fprintf(stderr, "\r\nFailing opcode: ");
-  while (*opcd)
-    putc(toupper(*(uint8_t *)opcd++), stdout);
-}                                  /* print_failed_opcode) */
-
-/* ************************** get_effective_address ************************* */
-
-static bool
-get_effective_address(int addr)
-{
-  effaddr = addr;
-  if (index_next)
-  {
-    index_next = false;
-    effaddr += xreg;
-    if ((effaddr & 0777) != effaddr)
-    {
-      fprintf(stderr, "\r\nIndexing fault at 0%o. ", effaddr);
-      dump_registers(true);
-      notmac(true);
-      return false;
-    }                              /* if ((effaddr & 0777) != effaddr) */
-  }                                /* if (index_next) */
-  return true;
-}                                  /* get_effective_address() */
-
-/* ****************************** push_register ***************************** */
-
-static bool
-push_register(long val)
-{
-  if (++rsidx >= stack_size)
-  {
-    rsidx--;
-    fprintf(stderr, "%s",
-      "\r\nRegister stack overflow.\r\nFailing opcode: PSH\r\n");
-    dump_registers(true);
-    notmac(true);
-    return false;
-  }                                /* if (++rsidx >= stack_size) */
-  rs[rsidx] = val;
-  return true;
-}                                  /* push_register() */
-
-/* **************************** push_fp_register **************************** */
-
-static bool
-push_fp_register(double val)
-{
-  if (++fsidx >= stack_size)
-  {
-    fsidx--;
-    fprintf(stderr, "%s",
-      "\r\nFP register stack overflow.\r\nFailing opcode: PSHF\r\n");
-    dump_registers(true);
-    notmac(true);
-    return false;
-  }                                /* if (++fsidx >= stack_size) */
-  fs[fsidx] = val;
-  return true;
-}                                  /* push_fp_register() */
-
-/* ****************************** pop_register ****************************** */
-
-static bool
-pop_register(long *val)
-{
-  if (rsidx < 0)
-  {
-    fprintf(stderr, "%s",
-      "\r\nRegister stack underflow.\r\nFailing opcode: POP\r\n");
-    dump_registers(true);
-    notmac(true);
-    return false;
-  }                                /* if (rsidx < 0) */
-  *val = rs[rsidx--];
-  return true;
-}                                  /* pop_register() */
-
-/* ***************************** pop_fp_register **************************** */
-
-static bool
-pop_fp_register(double *val)
-{
-  if (fsidx < 0)
-  {
-    fprintf(stderr, "%s",
-      "\r\nFP register stack underflow.\r\nFailing opcode: POPF\r\n");
-    dump_registers(true);
-    notmac(true);
-    return false;
-  }                                /* if (fsidx < 0) */
-  *val = fs[fsidx--];
-  return true;
-}                                  /* pop_fp_register() */
-
-/* ********************************* get_inp ******************************** */
-
-bool
-get_inp(double *fval, long *val, long *len, char **err)
-{
-  char *endptr;                    /* 1st char after number */
-  uint8_t lastch;                  /* Dump for char we nullify */
-  int i;
-
-/* Skip whitespace (including tabs) */
-  for (i = last_Curr->bcurs; i < last_Curr->bchars; i++)
-    if (!isspace(last_Curr->bdata[i]))
-      break;
-  if (i == last_Curr->bchars)
-  {
-    *err = "No number before eol";
-    return false;
-  }                                /* if (i == last_Curr->bchars) */
-  if (!(isdigit(last_Curr->bdata[i]) || last_Curr->bdata[i] == '+' ||
-    last_Curr->bdata[i] == '-' || (fval && last_Curr->bdata[i] == '.')))
-  {
-    *err = "Next item on line is not a number";
-    return false;
-  }                                /* if (!(isdigit(last_Curr->bdata[i] ... */
-  last_Curr->bcurs = i;
-
-/* Force null termination so strtol() will stop at end */
-  lastch = last_Curr->bdata[last_Curr->bchars];
-  last_Curr->bdata[last_Curr->bchars] = 0;
-
-/* Get the value (cast is to conform with strtol prototype) */
-  errno = 0;
-  if (val)
-    *val = strtol((char *)last_Curr->bdata + i, &endptr, 0);
-  else
-    *fval = strtod((char *)last_Curr->bdata + i, &endptr);
-
-/* Reinstate zeroed char */
-  last_Curr->bdata[last_Curr->bchars] = lastch;
-
-/* Check for overflow. Only check errno (previously zeroed) */
-/* since LONG_MAX or LONG_MIN might be returned legitimately */
-  if (errno)
-  {
-    *err = strerror(errno);
-    return false;
-  }                                /* if (errno) */
-
-/* All OK. Return length and finish */
- *len = endptr - (char *)last_Curr->bdata - i;
-  return true;
-  return true;
-}                                  /* get_inp() */
+/* Static prototypes */
+static bool pop_fp_register(double *val);
+static bool pop_register(long *val);
+static bool push_fp_register(double val);
+static bool push_register(long val);
+static bool get_effective_address(int addr);
+static void print_failed_opcode(uint16_t thisch);
 
 /* ********************************* scrdit ********************************* */
 
 void
 scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
 {
+/* ARGUMENTS:-
+ * ===========
+ *
+ * Curr  - Current buffer to modify \ these are scrnedit buffers
+ * Prev  - Previous line modified   / as defined above
+ * prmpt - Prompt characters (if any) (string)
+ * pchrs - # of prompt chars (zero implies none and PRMPT not a valid
+ *                                  addr)
+ * in_cmd - => in command mode */
+
   uint8_t *p, *q;                  /* Scratch */
   char *c;                         /* Scratch */
   char *err = NULL;                /* Point to error text */
@@ -236,75 +110,32 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
   clock_t timnow;                  /* Time from TIMES */
   uint16_t thisch;                 /* Character being processed */
   uint8_t *indent_string = NULL;
-/*
- * PARAMETERS:-
- * ============
- *
- * Curr  - Current buffer to modify \ these are scrnedit buffers
- * Prev  - Previous line modified   / as defined above
- * prmpt - Prompt characters (if any) (string)
- * pchrs - # of prompt chars (zero implies none and PRMPT not a valid
- *                                  addr)
- * in_cmd - => in command mode
- */
-  bool contp = false, cntrlw = false, nseen = false, glast = false;
-  bool gpseu = false, gposn;
-  bool gwrit, gcurs, gtest, gpast;
-  bool gmacr, fornj = false;
-  bool gwthr = false;              /* WheTHeR macro exists or length */
-/*
- * LOCAL LOGICAL VARIABLES:
- * ========================
- *
- * cntrlw - true if ^W seen
- * contp  - true if last char ^P (nxt ch not special)
- * instmp - Holds actual value of INSERT whilst tabbing.
- * nseen  - If ^N last char so expect macro name
- * glast  - Last char input was ^G
- * gpseu  - GLAST actually set for pseudo macro ^NG
- * gposn  - Next char got by ^G mechanism is for a positioning pseudo
- * gwrit  - This pseudo macro remembers something
- * gcurs  - This pseudo macro deals with screen cursor
- * gtest  - This pseudo macro tests screen cursor position
- * gpast  - This pseudo macro tests screen cursor position past tab
- * gmacr  - This pseudo macro is actually ^NM (not ^NG)
- * gwthr  - This pseudo macro is actually ^NW (not ^NG)
- *
- *   Validate cursor &c
- */
+  bool contp = false;            /* true if last char ^P (nxt ch not special) */
+  bool cntrlw = false;             /* true if ^W seen */
+  bool nseen = false;              /* ^N last char so expect macro name */
+  bool glast = false;              /* Last char input was ^G */
+  bool gpseu = false;              /* GLAST actually set for pseudo ^NG */
+  bool gposn;    /* Next char got by ^G mechanism is for a positioning pseudo */
+  bool gwrit;                      /* This pseudo remembers something */
+  bool gcurs;                      /* This pseudo deals with screen cursor */
+  bool gtest;                     /* This pseudo tests screen cursor position */
+  bool gpast;            /* This pseudo tests screen cursor position past tab */
+  bool gmacr;                      /* This pseudo is actually ^NM (not ^NG) */
+  bool fornj = false;              /* Next char is offset for ^NJ (long jump) */
+  bool gwthr = false;    /* WheTHeR macro exists or length (is ^NW (not ^NG)) */
 
-/* Curr->bchars counts the trailing null but Curr->bmxch does not */
+/* Validate cursor &c.
+ * Curr->bchars counts the trailing null but Curr->bmxch does not */
   if ((olen = Curr->bchars) > Curr->bmxch + 1)
-  {
-    err = "Bad char cnt Curr line";
-  p1001:
-    fprintf(stderr, "%s\r\n", err);
-    err = NULL;
-    verb = 'J';                    /* Let user... */
-    return;                        /* ... salvage his edit. */
-  }
-
-/* J bad char cnt this line */
+    ERR("Bad char cnt Curr line");
   if (Curr->bcurs < 0)             /* Bad cursor this line */
-  {
-    err = "Curr curs<1";
-    goto p1001;
-  }
+    ERR("Curr curs<1");
   if (pchrs > PRMAX)               /* Prompt too big */
-  {
-    err = "Prompt>15 chars";
-    goto p1001;
-  }
-
-/* J cursor off end this line */
+    ERR("Prompt>15 chars");
   if (Curr->bcurs > Curr->bchars)
-  {
-    err = "Curr curs off end of info";
-    goto p1001;
-  }
-/*
- * Switch off XOFF if input from tty
- */
+    ERR("Curr curs off end of info");
+
+/* Switch off XOFF if input from tty */
   if (!USING_FILE)
   {
     if (curmac < 0)
@@ -315,21 +146,19 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
     else
       nodup = true;                /* So we don't do one on the way out */
   }                                /* if (!USING_FILE) */
-/*
- * Initialise common variables &c
- */
+
+/* Initialise some external variables */
   insert = modlin = endlin = false;
   pchars = pchrs;
   mxchrs = Curr->bchars;
   last_Curr = Curr;
   if (pchars)
-    strcpy((char *)prompt, (char *)prmpt); /* Move prompt to common area */
-/*
- * Normally we do no REFRSH if in an scmac, but if BRIEF is on
+    strcpy((char *)prompt, (char *)prmpt);
+
+/* Normally we do no REFRSH if in an scmac, but if BRIEF is on
  * we here refresh the prompt only (if editing a line)
  *  Speedup: so we don't bank up on TTY o/p (& CPU!), only display
- * new line # if .GT. 1/5 sec since last time ...
- */
+ * new line # if .GT. 1/5 sec since last time ... */
   if (curmac >= 0 && !in_cmd && BRIEF && !NONE && pchars)
   {
     timnow = times(&tloc);
@@ -341,11 +170,10 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
       sdsply();                    /* Display the line number */
     }                              /* if (timnow - timlst >= 20) */
   }                /* if (curmac >= 0 && !in_cmd && BRIEF && !NONE && pchars) */
-/*
- * If this is a new line and INDENT is on, pad out with appropriate
+
+/* If this is a new line and INDENT is on, pad out with appropriate
  * number of spaces. If not a new line and INDENT on, get new
- * indent position.
- */
+ * indent position. */
   if (INDENT)
   {
     if (!Curr->bchars)
@@ -828,37 +656,7 @@ getnextchr:
       thisch = gotoch;
       goto ctl_uparrow_joins;      /* Jump into the middle of ^G */
   }                                /* switch (thisch) */
-/*
- * Non-special character
- */
-normalchar:
-  ordch(thisch, Curr);             /* Insert or replace as appropriate */
-  modlin = true;                   /* Line has been changed */
-  contp = false;
-  GETNEXTCHR;                      /* Finish */
-bol_or_eol:
-  err = "Ran off beginning or end of line";
-err_if_mac:
-  if (curmac >= 0)
-  {
-    if (*err)
-      fprintf(stderr, "\r\n%s. ", err);
-    err = NULL;
-    notmac(true);
-  }
-soundalarm:
-  fornj = gpseu = glast = false;
-  visbel();                        /* O/p BEL since error */
-  mctrst = false;                  /* User no longer trusted */
-  GETNEXTCHR;                      /* End rubout */
-taboorange:
-  if (curmac >= 0)
-  {
-    fprintf(stderr, "\r\nTab ID %c or value in that tab out of range. ",
-      thisch);
-    notmac(true);
-  }
-  SOUNDALARM;
+  NORMALCHAR;
 p1502:
 /*
  * We have a putative macro char. May be ^P or ^W,
@@ -1168,19 +966,19 @@ p1905:
 
 /* If curmac was an immediate macro, that immediate macro is now available */
 /* for re-use, *unless* it is in the macro stack (so ^NU can return to it) */
-  if (curmac >= FIRST_IMMEDIATE_MACRO && curmac <= LAST_IMMEDIATE_MACRO)
-  {
-    bool found = false;
+    if (curmac >= FIRST_IMMEDIATE_MACRO && curmac <= LAST_IMMEDIATE_MACRO)
+    {
+      bool found = false;
 
-    for (i = mcnxfr - 1; i >= 0; i--)
-      if (mcstck[i].mcprev == curmac)
-      {
-        found = true;
-        break;
-      }                            /* if (scmacs[i].mcprev == curmac) */
-    if (!found)
-      immnxfr = curmac;
-  }                                /* if (curmac >= FIRST_IMMEDIATE_MACRO ... */
+      for (i = mcnxfr - 1; i >= 0; i--)
+        if (mcstck[i].mcprev == curmac)
+        {
+          found = true;
+          break;
+        }                          /* if (scmacs[i].mcprev == curmac) */
+      if (!found)
+        immnxfr = curmac;
+    }                              /* if (curmac >= FIRST_IMMEDIATE_MACRO ... */
     curmac = thisch;
   }                                /* if (!thisch && curmac > 0) else */
   GETNEXTCHR;
@@ -1209,10 +1007,7 @@ p1503:
       CHECK_HAS_MACCH(2);
       if (Curr->bcurs == Curr->bchars)
         GETNEXTCHR;                /* J at EOL */
-    skip2macch:
-      CHECK_HAS_MACCH(2);
-      mcposn += 2;                 /* Skip 2 */
-      GETNEXTCHR;
+      SKIP2MACCH;
 
     case 2:                        /* ^NB - obey if Before spec'd tab */
       gcurs = true;
@@ -1239,18 +1034,12 @@ p1503:
 
     case 7:                        /* ^NG - obey if Got next ch */
       CHECK_HAS_MACCH(3);          /* Need another char + something to obey */
-    get_following_char:
-      glast = gpseu = true;        /* So we will come back */
-      GETNEXTCHR;
+      GET_FOLLOWING_CHAR;
 
     case 9:             /* ^NI - Increment link (to make macro a conditional) */
 /* Error if < 2 chars left in macro, because it can't then do a ^NU */
       if (mcposn > scmacs[curmac]->maclen - 2)
-      {
-      ranoff_end:
-        err = "^NA, ^NB, ^NC &c. too near macro end";
-        ERR_IF_MAC;
-      }
+        RANOFF_END;
       if (mcnxfr == MCDTUM)
         GETNEXTCHR;                /* No-op if stack empty */
       h = curmac;                  /* Save current macro BRKPT ^NI invoked */
@@ -1312,7 +1101,8 @@ p1503:
     case 29:                       /* ^N] - Obey if file past spec'd tab */
       gpast = true;
       TEST_TAB;
-  }                                /* switch (thisch & 037) */
+
+    default:
 /* ^NH is not a pseudo */
 /* ^NK is not a pseudo */
 /* ^NQ is not a pseudo */
@@ -1320,23 +1110,13 @@ p1503:
 /* ^NY is not a pseudo */
 /* ^NZ is not a pseudo */
 /* ^N\ is not a pseudo and never will be (it gets used to signal error) */
-  if (curmac >= 0)
-  {
-    fprintf(stderr, "\r\nCalling undefined pseudo-macro \"%c\". ", thisch);
-    notmac(true);
-  }
-  SOUNDALARM;
-
-/* ^NB, ^NP, ^N[ & ^N] test if cursor / file position before/after tab */
-test_tab:
-  CHECK_HAS_MACCH(3);              /* Err if not tabid + 2 chars */
-  gtest = true;                    /* We are a position tester */
-
-/* ^NO,^NR,^NF,^NN - Remember or move to cursor or file position */
-check_macro_end:
-  CHECK_HAS_MACCH(1);             /* Error if was last character in the macro */
-  gposn = true;                    /* Distinguish from ^G */
-  GET_FOLLOWING_CHAR;              /* Get tab # */
+      if (curmac >= 0)
+      {
+        fprintf(stderr, "\r\nCalling undefined pseudo-macro \"%c\". ", thisch);
+        notmac(true);
+      }
+      SOUNDALARM;
+  }                                /* switch (thisch & 037) */
 /*
  * ^NU - Up from a macro s/r
  */
@@ -1646,7 +1426,6 @@ p1601:
         case 04015:                /* Backtick stderr */
           qreg = scmacs[STDERR_MACRO_IDX]->maclen - 2; /* Strip ^NU */
           break;
-
       }                            /* switch (thisch) */
     }                         /* else if (thisch >= 04000 && thisch <= 04015) */
 
@@ -1674,11 +1453,107 @@ p1601:
     !(thisch == SPACE && isspace(Curr->bdata[Curr->bcurs]) && MATCH_ANY_WHSP))
     SKIP2MACCH;                    /* Skip if mismatch */
   GETNEXTCHR;
-/*
- * leave_scrdit - Exit sequence. Reinstate XON if req'd...
- */
-leave_scrdit:
-  if (!(USING_FILE || nodup))
-    duplx5(true);                  /* enable XOFF */
-  return;
-}
+}                                  /* scrdit() */
+
+/* *************************** print_failed_opcode ************************** */
+
+static void
+print_failed_opcode(uint16_t thisch)
+{
+  char *opcd = opcode_defs[alu_table_index[thisch - FIRST_ALU_OP]].name;
+
+  fprintf(stderr, "\r\nFailing opcode: ");
+  while (*opcd)
+    putc(toupper(*(uint8_t *)opcd++), stdout);
+}                                  /* print_failed_opcode) */
+
+/* ************************** get_effective_address ************************* */
+
+static bool
+get_effective_address(int addr)
+{
+  effaddr = addr;
+  if (index_next)
+  {
+    index_next = false;
+    effaddr += xreg;
+    if ((effaddr & 0777) != effaddr)
+    {
+      fprintf(stderr, "\r\nIndexing fault at 0%o. ", effaddr);
+      dump_registers(true);
+      notmac(true);
+      return false;
+    }                              /* if ((effaddr & 0777) != effaddr) */
+  }                                /* if (index_next) */
+  return true;
+}                                  /* get_effective_address() */
+
+/* ****************************** push_register ***************************** */
+
+static bool
+push_register(long val)
+{
+  if (++rsidx >= stack_size)
+  {
+    rsidx--;
+    fprintf(stderr, "%s",
+      "\r\nRegister stack overflow.\r\nFailing opcode: PSH\r\n");
+    dump_registers(true);
+    notmac(true);
+    return false;
+  }                                /* if (++rsidx >= stack_size) */
+  rs[rsidx] = val;
+  return true;
+}                                  /* push_register() */
+
+/* **************************** push_fp_register **************************** */
+
+static bool
+push_fp_register(double val)
+{
+  if (++fsidx >= stack_size)
+  {
+    fsidx--;
+    fprintf(stderr, "%s",
+      "\r\nFP register stack overflow.\r\nFailing opcode: PSHF\r\n");
+    dump_registers(true);
+    notmac(true);
+    return false;
+  }                                /* if (++fsidx >= stack_size) */
+  fs[fsidx] = val;
+  return true;
+}                                  /* push_fp_register() */
+
+/* ****************************** pop_register ****************************** */
+
+static bool
+pop_register(long *val)
+{
+  if (rsidx < 0)
+  {
+    fprintf(stderr, "%s",
+      "\r\nRegister stack underflow.\r\nFailing opcode: POP\r\n");
+    dump_registers(true);
+    notmac(true);
+    return false;
+  }                                /* if (rsidx < 0) */
+  *val = rs[rsidx--];
+  return true;
+}                                  /* pop_register() */
+
+/* ***************************** pop_fp_register **************************** */
+
+static bool
+pop_fp_register(double *val)
+{
+  if (fsidx < 0)
+  {
+    fprintf(stderr, "%s",
+      "\r\nFP register stack underflow.\r\nFailing opcode: POPF\r\n");
+    dump_registers(true);
+    notmac(true);
+    return false;
+  }                                /* if (fsidx < 0) */
+  *val = fs[fsidx--];
+  return true;
+}                                  /* pop_fp_register() */

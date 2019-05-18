@@ -8,7 +8,11 @@
  * Universal Statements for Screenedit Subsystem Segments
  */
 
-/* Allow for up to 512 screen width - should be good for a while... */
+/* Headers required by this header */
+
+#include "prototypes.h"
+
+/* Allow for up to 4096 screen width - should be good for a while... */
 #define SCRMAX 4096
 #define PRSIZ 16
 #define PRMAX 15

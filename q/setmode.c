@@ -206,7 +206,7 @@ setmode()
         case 'T':                  /* Tab expand / compress */
           if (oldcom->plusf && (result & 040000))
           {
-            printf("Forcing fm -l\r\n");
+            fputs("Forcing fm -l\r\n", stdout);
             result &= ~040000;
           }                        /* if(oldcom->plusf&&(result&040000)) */
           if (oldcom->toklen == 2)
@@ -260,7 +260,7 @@ setmode()
           u = 040000;
           if (oldcom->plusf && (result & 014))
           {
-            printf("Forcing fm -t\r\n");
+            fputs("Forcing fm -t\r\n", stdout);
             result &= ~014;
           }                        /* if(oldcom->plusf&&(result&014)) */
           break;
@@ -295,7 +295,7 @@ setmode()
       goto bad_arg;                /* J not octal value */
     if (!octok)
     {
-      printf("Octal arg not allowed after symbolics");
+      fputs("Octal arg not allowed after symbolics", stdout);
       return false;
     }                              /* if(!octok) */
     result = oldcom->octval;

@@ -88,7 +88,7 @@ getblk(void)                       /* eof=getblk() */
       if (pbchars && lngwrn)
       {
         if (!binary)
-          printf("Warning - last line unterminated\r\n");
+          fputs("Warning - last line unterminated\r\n", stdout);
         endLin();                  /* Store this line */
       }                            /* if(pbchars) */
       return 1;                    /* Indicate eof */

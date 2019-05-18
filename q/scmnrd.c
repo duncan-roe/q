@@ -391,11 +391,10 @@ display_maybe(void)
 static void
 massage_q_arg(void)
 {
-  int alen;
+  int alen = strlen(*(argv + optind + wanted_arg));
 
   oldcom->bdata[oldcom->bchars++] = SPACE; /* Append a SPACE */
-  alen = strlen(*(argv + optind + wanted_arg));
-  strncpy((char *)&oldcom->bdata[oldcom->bchars],
+  memcpy((char *)&oldcom->bdata[oldcom->bchars], /* Don't want trlg NUL */
     *(argv + optind + wanted_arg), alen);
   oldcom->bchars += alen;          /* Append next arg */
 }                                  /* static void massage_q_arg(void) */

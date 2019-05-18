@@ -16,6 +16,10 @@
 #include "tabs.h"
 #include "alu.h"
 
+/* Macros */
+
+#define MY_RETURN(x) {buff[buflen] = saved_end; return x;}
+
 /* Static Variables */
 
 static uint16_t xbuf[Q_BUFSIZ];    /* Doesn't need to be on stack */
@@ -42,13 +46,13 @@ macdef(uint32_t mcnum, uint8_t *buff, int buflen, bool appnu)
       ALU_memory[idx] = long_result;
     check_endptr:
       if (!*endptr)
-        goto r_true;
+        MY_RETURN(true);
       if (buflen == 2 && toupper(buff[0]) == 'T' &&
         gettab(buff[1], false, &ALU_memory[idx], false))
-        goto r_true;
+        MY_RETURN(true);
       fprintf(stderr, "Illegal character '%c' in number \"%s\"", *endptr,
         (char *)buff);
-      goto r_false;
+      MY_RETURN(false);
     }                              /* if (!errno) */
 
 /* On error, try unsigned conversion of hex or octal like N-NEWMACRO does */
@@ -68,11 +72,11 @@ macdef(uint32_t mcnum, uint8_t *buff, int buflen, bool appnu)
           goto check_endptr;
         }                          /* if (!errno) */
         fprintf(stderr, "%s. %s (strtoul)", strerror(errno), (char *)buff);
-        goto r_false;
+        MY_RETURN(false);
       }                            /* if (*q == '0') */
     }                              /* if (errno == ERANGE) */
     fprintf(stderr, "%s. %s (strtol)", strerror(errno), (char *)buff);
-    goto r_false;
+    MY_RETURN(false);
   }                                /* if (mcnum >= 07000 && mcnum <= 07777) */
 
 /* Do the FPU macros here */
@@ -87,22 +91,16 @@ macdef(uint32_t mcnum, uint8_t *buff, int buflen, bool appnu)
     if (errno)
     {
       fprintf(stderr, "%s. %s (strtod)", strerror(errno), (char *)buff);
-      goto r_false;
+      MY_RETURN(false);
     }                              /* if (errno) */
     if (!*endptr)
-      goto r_true;
+      MY_RETURN(true);
     fprintf(stderr, "Illegal character '%c' in number \"%s\"", *endptr,
       (char *)buff);
-    goto r_false;
+    MY_RETURN(false);
   }                                /* if (mcnum >= 013000 && mcnum <= 013777) */
 
   for (i = 0; i < buflen; i++)
     xbuf[i] = buff[i];
   return macdefw(mcnum, xbuf, buflen, appnu);
-r_true:
-  buff[buflen] = saved_end;
-  return true;
-r_false:
-  buff[buflen] = saved_end;
-  return false;
 }

@@ -22,8 +22,7 @@
 #include <stdio.h>
 #include "prototypes.h"
 #include "fmode.h"
-/* */
-/* */
+
 bool
 lsub5a(uint8_t *srchstr, int srchlen, uint8_t *string,
   int first, int len, int *strtpos, int *endpos)
@@ -31,7 +30,7 @@ lsub5a(uint8_t *srchstr, int srchlen, uint8_t *string,
   uint8_t cfirst,                  /* 1st char to look for, u/c if casind */
    *p, *q, *r;                     /* Scratch */
   int i, k;                        /* Scratch */
-/* */
+
   if (first >= len)
   {
     visbel();
@@ -42,33 +41,28 @@ lsub5a(uint8_t *srchstr, int srchlen, uint8_t *string,
   if (tbstat != CASDEP)
     xlateset();                    /* Get table right */
   cfirst = xlatable[srchstr[0]];   /* Get 1st char */
-/*
- *  First off, look for match on 1st char
- */
+
+/*  Look for match on 1st char */
   p = string + first;
   for (i = len - first - srchlen + 1; i > 0; i--) /* # possible 1st matches */
   {
     if (xlatable[*p++] != cfirst)  /* Xlate for case (in)sensitive */
-      continue;                    /* J no match */
-/*
- *  Match on 1st char, try the rest
- */
+      continue;                    /* No match */
+
+/*  Have match on 1st char, try the rest */
     q = p;                         /* 1st of the rest */
     r = srchstr + 1;               /* 2nd char in search string */
-    for (k = srchlen - 1; k > 0; k--) /* J rest doesn't match */
+    for (k = srchlen - 1; k > 0; k--)
       if (xlatable[*q++] != xlatable[*r++])
-        goto p1001;
-/*
- * We have a match. Set return variables and leave...
- */
- *strtpos = p - string - 1;
- *endpos = *strtpos + srchlen - 1;
+        break;
+    if (k)
+      continue;
+
+/* Have match. Set return variables and leave... */
+    *strtpos = p - string - 1;
+    *endpos = *strtpos + srchlen - 1;
     return true;
-  p1001:
-    ;
-  }
-/*
- *  Not found string if get here
- */
+  }                               /* for (i = len - first - srchlen + 1; ...) */
+/* Not found string if get here */
   return false;
 }

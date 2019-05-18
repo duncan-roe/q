@@ -21,7 +21,7 @@ devnull_stdout()
 
   if (fmode & 01000)
   {
-    printf("\"fd y\" ignored (mode +v)\r\n");
+    fputs("\"fd y\" ignored (mode +v)\r\n", stdout);
   }                                /* if (fmode & 01000) */
   else
   {

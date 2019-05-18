@@ -20,7 +20,7 @@ pop_stdin()
 
   if (!USING_FILE)
   {
-    printf("%s", "Only allowed from U-Use file");
+    fputs("Only allowed from U-Use file", stdout);
     return false;
   }                                /* if (!USING_FILE) */
 

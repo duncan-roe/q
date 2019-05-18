@@ -26,13 +26,14 @@ ysno5a(char *mess, int key)
   char comlin[4];
   char *p;
   int i;
-/* */
-p10:
+
+  for(;;)
+  {
   printf("%s? ", mess);
   if (offline)
   {
-    printf("%s", "y\r\n");
-    return 1;
+    fputs("y\r\n", stdout);
+    return true;
   }                                /* if (offline) */
 /* Build a command line, forcing to upper case. BEL if it fills up */
 /* If run off end of u-use file, clean up and re-prompt */
@@ -42,43 +43,27 @@ p10:
     if (curmac > 0)
       notmac(false);
     newlin();
-    goto p10;
-  }
+    continue;
+  }                                /* if (!cl5get(comlin, 3, true, false)) */
   for (p = comlin - 1;;)
   {
     if (!*++p)
       break;
     *p = toupper(*p);
-  }
+  }                                /* for (p = comlin - 1;;) */
   if (!(i = strlen(comlin)))
   {
-/*
- * DEFAULT: A$NDEF=NONE, A$DNO='NO', A$DYES='YES'
- */
+/* DEFAULT: A5NDEF=NONE, A5DNO='NO', A5DYES='YES' */
     if (key == A5DYES)
-      goto p30;
+      return true;
     if (key == A5DNO)
-      goto p40;
-    goto p10;
-  }
-/*
- * CHECK FOR 'YES', 'OK', AND 'NO'
- */
-  if (strncmp(comlin, "NO", (size_t)i) == 0)
-    goto p40;
-  if (!(strncmp(comlin, "YES", (size_t)i) == 0 ||
-    strncmp(comlin, "OK", (size_t)i) == 0))
-    goto p10;
-/*
- * 'YES' OR 'OK'
- */
-p30:
-  i = 1;
-  return i;
-/*
- * 'NO'
- */
-p40:
-  i = 0;
-  return i;
-}
+      return false;
+    continue;
+  }                                /* if (!(i = strlen(comlin))) */
+/* Check for 'YES', 'OK' and 'NO' */
+  if (!strncmp(comlin, "NO", i))
+    return false;
+  if (!strncmp(comlin, "YES", i) || !strncmp(comlin, "OK", i))
+    return true;
+  }                                /* for(;;) */
+}                                  /* ysno5a() */

@@ -49,7 +49,7 @@ rerdcm()
     while (USING_FILE)
       pop_stdin();
     use_sccmd = noRereadIfMacro;
-    printf(", (input from terminal)");
+    fputs(", (input from terminal)", stdout);
   }
 
 /* Abandon any macro if undetectable error */

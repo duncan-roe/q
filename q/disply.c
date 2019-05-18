@@ -14,29 +14,28 @@
 #include "prototypes.h"
 #include "scrnedit.h"
 #include "fmode.h"
-/* */
+
 void
 disply(scrbuf5 *line, bool savecurs)
 {
   int oldcrs;                      /* Saved cursor value */
-/*
- * INITIAL TASKS
- */
+
+/* INITIAL TASKS */
   cdone = 0;                       /* Won't be set by SCRSET */
   partno = 1;                      /* Won't be set by SCRSET */
   endlin = true;                   /* We are DISPLY */
   oldcrs = line->bcurs;
   line->bcurs = line->bchars;      /* Force SCRSET to o/p the lot */
-/* */
-p1001:
-  refrsh(line);
-  newlin();
-  if (NOWRAP)
-    goto p1002;                    /* J only showing 1st 72 chars */
-  if (cdone != line->bchars)
-    goto p1001;
-/* J more to do */
-p1002:
+
+  do
+  {
+    refrsh(line);
+    newlin();
+    if (NOWRAP)
+      break;                       /* Only showing 1st screen width */
+  }                                /* do */
+  while (cdone != line->bchars);
+
   endlin = false;                  /* Finishing off */
   if (savecurs)
     line->bcurs = oldcrs;

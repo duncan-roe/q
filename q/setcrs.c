@@ -14,8 +14,8 @@
  *
  * Facilities of the device are used to minimise chars sent to screen
  * as follows (if available in all cases):-
- *    A) BACKSPACE
- *    B) RETURN
+ *    A) Backspace
+ *    B) Return
  *    C) Get to EOL (poss return, backspace etc.)
  * One of A) or B) must be available (not checked)
  */
