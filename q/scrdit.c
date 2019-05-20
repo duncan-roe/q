@@ -52,8 +52,7 @@
   {ordch(thisch, Curr); modlin = true; contp = false; GETNEXTCHR;}
 #define RANOFF_END {err = "^NA, ^NB, ^NC &c. too near macro end"; ERR_IF_MAC;}
 #define CHECK_HAS_MACCH(x) \
-  do { if (curmac > 0 && mcposn > scmacs[curmac]->maclen - x) RANOFF_END; } \
-  while(0)
+  {if (curmac > 0 && mcposn > scmacs[curmac]->maclen - x) RANOFF_END;}
 #define GET_FOLLOWING_CHAR {glast = gpseu = true; GETNEXTCHR;}
 /* ^NB, ^NP, ^N[ & ^N] test if cursor / file position before/after tab */
 #define TEST_TAB {\
@@ -62,7 +61,7 @@
   CHECK_MACRO_END;}
 /* ^NO,^NR,^NF,^NN - Remember or move to cursor or file position */
 #define CHECK_MACRO_END {CHECK_HAS_MACCH(1); \
-  gposn = true; /* Distinguish from ^G */ GET_FOLLOWING_CHAR;}
+  gposn = true;                   /* Distinguish from ^G */ GET_FOLLOWING_CHAR;}
 #define LEAVE_SCRDIT {if (!(USING_FILE || nodup)) duplx5(true); return;}
 #define ERR(x) {fputs(x "\r\n", stderr); verb = 'J'; return;}
 
@@ -76,12 +75,28 @@ clock_t timlst;
 scrbuf5 *last_Curr = NULL;
 
 /* Static prototypes */
+
+static action ctl_n_u_ctl_n_i_common(void);
+static action ctl_n_d_ctl_n_i_common(void);
+static action ctl_uparrow_ctl_g_common(scrbuf5 *Curr);
 static bool pop_fp_register(double *val);
 static bool pop_register(long *val);
 static bool push_fp_register(double val);
 static bool push_register(long val);
 static bool get_effective_address(int addr);
-static void print_failed_opcode(uint16_t thisch);
+static void print_failed_opcode(void);
+
+/* Static variables (used by some static functions) */
+
+static uint16_t thisch;            /* Character being processed */
+static int i;                      /* Loops &c. */
+static uint8_t *p;                 /* Loops &c. */
+static int gotoch;                 /* Char of last ^G */
+static char *err;                  /* Point to error text */
+static bool fornj;                 /* Next char is offset for ^NJ (long jump) */
+static bool gpseu;                 /* GLAST actually set for pseudo ^NG */
+static bool glast;                 /* Last char input was ^G */
+static int h, j, m;                /* Scratch variables */
 
 /* ********************************* scrdit ********************************* */
 
@@ -98,31 +113,34 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
  *                                  addr)
  * in_cmd - => in command mode */
 
-  uint8_t *p, *q;                  /* Scratch */
+  uint8_t *q;                      /* Scratch */
   char *c;                         /* Scratch */
-  char *err = NULL;                /* Point to error text */
   char tbuf[256];                  /* Scratch */
-  int i, j, k, h = 0, m = 0;       /* Scratch variables */
-  int gotoch = -1;                 /* Char of last ^G */
+  int k;                           /* Scratch */
   long i4;                         /* Scratch */
   long olen;                       /* Original line length */
   struct tms tloc;                 /* Junk from TIMES */
   clock_t timnow;                  /* Time from TIMES */
-  uint16_t thisch;                 /* Character being processed */
   uint8_t *indent_string = NULL;
   bool contp = false;            /* true if last char ^P (nxt ch not special) */
   bool cntrlw = false;             /* true if ^W seen */
   bool nseen = false;              /* ^N last char so expect macro name */
-  bool glast = false;              /* Last char input was ^G */
-  bool gpseu = false;              /* GLAST actually set for pseudo ^NG */
   bool gposn;    /* Next char got by ^G mechanism is for a positioning pseudo */
   bool gwrit;                      /* This pseudo remembers something */
   bool gcurs;                      /* This pseudo deals with screen cursor */
   bool gtest;                     /* This pseudo tests screen cursor position */
   bool gpast;            /* This pseudo tests screen cursor position past tab */
   bool gmacr;                      /* This pseudo is actually ^NM (not ^NG) */
-  bool fornj = false;              /* Next char is offset for ^NJ (long jump) */
   bool gwthr = false;    /* WheTHeR macro exists or length (is ^NW (not ^NG)) */
+
+/* [Re-]initialise static variables */
+  gotoch = -1;
+  err = NULL;
+  fornj = false;
+  gpseu = false;
+  glast = false;
+  h = 0;
+  m = 0;
 
 /* Validate cursor &c.
  * Curr->bchars counts the trailing null but Curr->bmxch does not */
@@ -263,20 +281,8 @@ getnextchr:
     glast = false;
     if (gpseu)
       goto p1601;                  /* J on if actually for pseudomac */
-  ctl_uparrow_joins:
-/* Search the rest of the line AFTER the current character */
-    i = Curr->bchars - Curr->bcurs - 1; /* # chars to search */
-    p = &Curr->bdata[Curr->bcurs]; /* Point to cursor char */
-    for (; i > 0; i--)
-    {
-      p++;
-      if (*p == thisch || (thisch == SPACE && isspace(*p) && MATCH_ANY_WHSP))
-        break;
-    }                              /* for (; i > 0; i--) */
-    if (i >= 0)
-      Curr->bcurs = Curr->bchars - i; /* Guard against -ve i */
-    gotoch = thisch;               /* Remember char for ^^ */
-    GETNEXTCHR;                    /* Finish ^G */
+    ctl_uparrow_ctl_g_common(Curr);
+    GETNEXTCHR;                    /* Finish ^G  / ^^ */
   }                                /* if (glast) */
   if (thisch == DEL)               /* Delete char before cursor */
   {
@@ -654,7 +660,8 @@ getnextchr:
         ERR_IF_MAC;
       }
       thisch = gotoch;
-      goto ctl_uparrow_joins;      /* Jump into the middle of ^G */
+      ctl_uparrow_ctl_g_common(Curr);
+      GETNEXTCHR;
   }                                /* switch (thisch) */
   NORMALCHAR;
 p1502:
@@ -930,7 +937,7 @@ p1905:
           mcposn = mcposn + 2;     /* Skip 2 */
           if (mcposn > scmacs[curmac]->maclen)
           {
-            print_failed_opcode(thisch);
+            print_failed_opcode();
             err = "ALU skip off macro end";
             ERR_IF_MAC;
           }                        /* if (mcposn > scmacs[curmac]->maclen) */
@@ -939,7 +946,7 @@ p1905:
       }                            /* if (exec_alu_opcode(thisch)) */
       else
       {
-        print_failed_opcode(thisch);
+        print_failed_opcode();
         fprintf(stderr, "\r\nRegister dump:-\r\n");
         dump_registers(false);
         ERR_IF_MAC;                /* It always will be in a macro */
@@ -1002,7 +1009,7 @@ p1503:
   gposn = gwrit = gcurs = gtest = gpast = gmacr = gwthr = false;
 
   switch (thisch & 037)
-  {                                /* Try for a pseudo u/c or h/c */
+  {                                /* Try for a pseudo u/c or l/c */
     case 1:                        /* ^NA - Obey if at EOL */
       CHECK_HAS_MACCH(2);
       if (Curr->bcurs == Curr->bchars)
@@ -1019,8 +1026,9 @@ p1503:
         SKIP2MACCH;
       GETNEXTCHR;
 
-    case 4:
-      goto p7604;
+    case 4:                    /* ^ND - go Down a level (macro as subroutine) */
+      ctl_n_d_ctl_n_i_common();
+      GETNEXTCHR;
 
     case 5:                        /* ^NE - reset insErt mode (^E) */
       insert = false;
@@ -1044,7 +1052,8 @@ p1503:
         GETNEXTCHR;                /* No-op if stack empty */
       h = curmac;                  /* Save current macro BRKPT ^NI invoked */
       m = mcposn;                  /* Save current macro position */
-      goto p1706;                  /* Do a dummy UP */
+      ctl_n_u_ctl_n_i_common();    /* Do a dummy UP */
+      GETNEXTCHR;
 
     case 10:                       /* ^NJ long (signed) Jump */
       CHECK_HAS_MACCH(1);          /* Must be 1 more char in macro */
@@ -1083,8 +1092,12 @@ p1503:
       mctrst = true;
       GETNEXTCHR;
 
-    case 21:
-      goto p7625;
+    case 21:                       /* ^NU - Up from a macro s/r */
+      if (mcnxfr == MCDTUM)
+        notmac(false);             /* Treat as exit if stack empty */
+      else
+        ctl_n_u_ctl_n_i_common();
+      GETNEXTCHR;
 
     case 23:              /* ^NW Whether macro exists or length (pushes to R) */
       CHECK_HAS_MACCH(1);
@@ -1117,83 +1130,6 @@ p1503:
       }
       SOUNDALARM;
   }                                /* switch (thisch & 037) */
-/*
- * ^NU - Up from a macro s/r
- */
-p7625:
-/* Treat as exit if stack empty */
-  if (mcnxfr == MCDTUM)
-  {
-    notmac(false);
-    GETNEXTCHR;
-  }                                /* if (mcnxfr == MCDTUM) */
-/*
- * P1706 - I joins here
- */
-p1706:
-  mcnxfr--;                        /* Previous stack entry */
-/*
- * Look for stack corruption
- */
-  i = mcstck[mcnxfr].mcprev;       /* Macro # */
-  j = mcstck[mcnxfr].mcposn;       /* Macro position */
-  if (i < 0 || i > TOPMAC || !scmacs[i] || j > scmacs[i]->maclen || j < 0)
-  {
-    fprintf(stderr, "\r\nReturn macro ^<%o>out of range or empty. ", i);
-    notmac(true);
-    SOUNDALARM;
-  }
-
-/* If leaving an immediate macro, this entry is now free */
-  if (curmac >= FIRST_IMMEDIATE_MACRO && curmac <= LAST_IMMEDIATE_MACRO)
-    immnxfr = curmac;
-
-  curmac = i;                      /* BRKPT resuming macro */
-  mcposn = j;                      /* Accept the popped values */
-
-/* If the frame we just freed was created by U-use, we must reinstate it. */
-/* Only z-enduse (possibly implied by u-usefile EOF) can free this frame. */
-/* Arrange that ^NI becomes a no-op, otherwise revert to the command source */
-/* (which can't be a macro). */
-  if (mcstck[mcnxfr].u_use)
-  {
-    mcnxfr++;
-    if (verb == 'I')
-    {
-/* Restore macro that issued ^NI */
-      curmac = h;
-      mcposn = m;
-    }
-    else
-      curmac = -1;
-  }                                /* if (mcstck[mcnxfr+1].u_use) */
-  else if (verb == 'I')
-    goto p7604;
-  GETNEXTCHR;
-/*
- * ^ND - go Down a level ( a macro as a subroutine)
- */
-p7604:
-  CHECK_HAS_MACCH(2);              /* Error if < 2 chars left in macro */
-  if (MCLMIT == mcnxfr)
-  {
-    err = "Macro stack depth limit exceeded";
-    ERR_IF_MAC;
-  }
-  mcstck[mcnxfr].mcprev = curmac;
-
-/* Return addr after following macro */
-  mcstck[mcnxfr].mcposn = mcposn + 2;
-  mcstck[mcnxfr].u_use = false;
-  mcnxfr++;                        /* Up stack pointer */
-
-  if (verb == 'I')
-  {
-/* Restore next macro in stack */
-    curmac = h;
-    mcposn = m;
-  }
-  GETNEXTCHR;
 /*
  * P1601 - Come here with ^NG char
  */
@@ -1458,14 +1394,14 @@ p1601:
 /* *************************** print_failed_opcode ************************** */
 
 static void
-print_failed_opcode(uint16_t thisch)
+print_failed_opcode(void)
 {
   char *opcd = opcode_defs[alu_table_index[thisch - FIRST_ALU_OP]].name;
 
   fprintf(stderr, "\r\nFailing opcode: ");
   while (*opcd)
     putc(toupper(*(uint8_t *)opcd++), stdout);
-}                                  /* print_failed_opcode) */
+}                                  /* print_failed_opcode() */
 
 /* ************************** get_effective_address ************************* */
 
@@ -1557,3 +1493,108 @@ pop_fp_register(double *val)
   *val = fs[fsidx--];
   return true;
 }                                  /* pop_fp_register() */
+
+/* ************************************************************************** */
+/* ************************************************************************** */
+/*                                                                            */
+/*          RE-DEFINE MACROS USED BY FOLLOWING STATIC FUNCTIONS               */
+/*                                                                            */
+/* ************************************************************************** */
+/* ************************************************************************** */
+
+#undef GETNEXTCHR
+#define GETNEXTCHR return CONTINUE
+#undef LEAVE_SCRDIT
+#define LEAVE_SCRDIT return RETURN;
+
+/* ************************ ctl_uparrow_ctl_g_common ************************ */
+
+static action
+ctl_uparrow_ctl_g_common(scrbuf5 *Curr)
+{
+/* Search the rest of the line AFTER the current character */
+  i = Curr->bchars - Curr->bcurs - 1; /* # chars to search */
+  p = &Curr->bdata[Curr->bcurs];   /* Point to cursor char */
+  for (; i > 0; i--)
+  {
+    p++;
+    if (*p == thisch || (thisch == SPACE && isspace(*p) && MATCH_ANY_WHSP))
+      break;
+  }                                /* for (; i > 0; i--) */
+  if (i >= 0)
+    Curr->bcurs = Curr->bchars - i; /* Guard against -ve i */
+  gotoch = thisch;                 /* Remember char for ^^ */
+  GETNEXTCHR;                      /* Finish ^G */
+}                                  /* ctl_uparrow_ctl_g_common() */
+
+/* ************************* ctl_n_d_ctl_n_i_common ************************* */
+
+static action
+ctl_n_d_ctl_n_i_common(void)
+{
+  CHECK_HAS_MACCH(2);              /* Error if < 2 chars left in macro */
+  if (MCLMIT == mcnxfr)
+  {
+    err = "Macro stack depth limit exceeded";
+    ERR_IF_MAC;
+  }
+  mcstck[mcnxfr].mcprev = curmac;
+
+/* Return addr after following macro */
+  mcstck[mcnxfr].mcposn = mcposn + 2;
+  mcstck[mcnxfr].u_use = false;
+  mcnxfr++;                        /* Up stack pointer */
+  return BREAK;                    /* ^NI has more to do */
+}                               /* static action ctl_n_d_ctl_n_i_common(void) */
+
+/* ************************* ctl_n_u_ctl_n_i_common ************************* */
+
+static action
+ctl_n_u_ctl_n_i_common(void)
+{
+  mcnxfr--;                        /* Previous stack entry */
+
+/* Look for stack corruption */
+  i = mcstck[mcnxfr].mcprev;       /* Macro # */
+  j = mcstck[mcnxfr].mcposn;       /* Macro position */
+  if (i < 0 || i > TOPMAC || !scmacs[i] || j > scmacs[i]->maclen || j < 0)
+  {
+    fprintf(stderr, "\r\nReturn macro ^<%o>out of range or empty. ", i);
+    notmac(true);
+    SOUNDALARM;
+  }
+
+/* If leaving an immediate macro, this entry is now free */
+  if (curmac >= FIRST_IMMEDIATE_MACRO && curmac <= LAST_IMMEDIATE_MACRO)
+    immnxfr = curmac;
+
+  curmac = i;                      /* BRKPT resuming macro */
+  mcposn = j;                      /* Accept the popped values */
+
+/* If the frame we just freed was created by U-use, we must reinstate it. */
+/* Only z-enduse (possibly implied by u-usefile EOF) can free this frame. */
+/* Arrange that ^NI becomes a no-op, otherwise revert to the command source */
+/* (which can't be a macro). */
+  if (mcstck[mcnxfr].u_use)
+  {
+    mcnxfr++;
+    if (verb == 'I')
+    {
+/* Restore macro that issued ^NI */
+      curmac = h;
+      mcposn = m;
+    }
+    else
+      curmac = -1;
+  }                                /* if (mcstck[mcnxfr+1].u_use) */
+  else if (verb == 'I')
+  {
+    if (ctl_n_d_ctl_n_i_common() == CONTINUE)
+      GETNEXTCHR;
+
+/* Restore next macro in stack */
+    curmac = h;
+    mcposn = m;
+  }                                /* else if (verb == 'I') */
+  GETNEXTCHR;
+}                                  /* ctl_n_u_ctl_n_i_common(void) */
