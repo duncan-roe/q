@@ -50,7 +50,7 @@ ltok5a(uint8_t *srchstr, int srchlen, uint8_t *string,
 
 /*  Look for match on 1st char */
   p = string + first;
-  for (i = len - first - srchlen + 1; i > 0; i--)       /* # possible 1st matches */
+  for (i = len - first - srchlen + 1; i > 0; i--) /* # possible 1st matches */
   {
     if (xlatable[*p++] != cfirst)  /* Xlate for case (in)sensitive */
       continue;                    /* J no match */
@@ -66,9 +66,11 @@ ltok5a(uint8_t *srchstr, int srchlen, uint8_t *string,
 /* 1st-char-match preceded by delimiter or at start of range. Check the rest */
     q = p;                         /* 1st of the rest */
     r = srchstr + 1;               /* 2nd char in search string */
-    for (k = srchlen - 1; k > 0; k--)   /* J rest doesn't match */
+    for (k = srchlen - 1; k > 0; k--) /* J rest doesn't match */
       if (xlatable[*q++] != xlatable[*r++])
-        return false;
+        break;
+    if (k)
+      continue;
 
 /* String is matched. Ensure token delimiter follows, or this is end of line */
     if (q != string + len)         /* If not at end */
@@ -80,7 +82,7 @@ ltok5a(uint8_t *srchstr, int srchlen, uint8_t *string,
     *strtpos = p - string - 1;
     *endpos = *strtpos + srchlen - 1;
     return true;
-  }                                /* for (i = len - first - srchlen + 1; ...) */
+  }                               /* for (i = len - first - srchlen + 1; ...) */
 /*  Not found string if get here */
   return false;
 }
