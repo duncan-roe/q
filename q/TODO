@@ -1,8 +1,8 @@
-Do not visbell more than once every 1/10 sec
+DONE: Do not visbell more than once every 1/10 sec
 Add ~/bin/qm (list macros) to make install
 Create man page for qm
 DONE: q -v to not action FD Y
-FB to use clock_gettime (replaces gettimeofday) for 1/5 second interval
+DONE: FB to use clock_gettime (replaces gettimeofday) for 1/5 second interval
 FRecurse command to bring up q command line from w/in macro:
  Q continues macro; FQ abandons
 Q -B to break long lines on token delimiter if length so far > 32(?)K
@@ -12,7 +12,7 @@ Give symbolic names to ALU memory locations e.g. k,0,i^J^<POP i>
 "q -l" to insert "fm +l" command before reading file
 Search up directory tree for .qrc
 Use .qrc associated with file to edit
-Do Delete properly (not as an edit)
+Do Delete properly (i.e. entirely inside workfile.c)
 ALU is always 64-bit (?)
 cater for >4G lines in L & Y
 Give some kind of acknowledgement to ^NF (& ^NO?)
@@ -35,6 +35,9 @@ INTERNALS
 	STARTED: use stdint types
 	DONE: Reduce number of goto stmts
 	DONE: return bad_rdtk() once H & L are subroutinised
+	STARTED: Eliminate FTN COMMON in favour of external / instantiate
+	Re-organise q.c for static fns at end
+	Maybe re-organise q.c for no internal fns
 Show what arguments Q started with (?)
 STARTED: Catalogue of useful macros
 New pseudomacro to replace "/*" with arbitrary seq: #, // &c (i.e. for ^O)

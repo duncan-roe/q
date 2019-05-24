@@ -68,11 +68,12 @@
 /* Externals that are not in any header */
 
 uint8_t fxtabl[128];
-clock_t timlst;
 
-/* Instantiate External Variables */
+/* Instantiate externals */
 
 scrbuf5 *last_Curr = NULL;
+double fbrief_interval = 0.1;
+double timlst = 0;
 
 /* Static prototypes */
 
@@ -132,9 +133,8 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
 
   uint8_t *q;                      /* Scratch */
   int k;                           /* Scratch */
+  double t;                        /* Scratch */
   long olen;                       /* Original line length */
-  struct tms tloc;                 /* Junk from TIMES */
-  clock_t timnow;                  /* Time from TIMES */
   uint8_t *indent_string = NULL;
   bool cntrlw = false;             /* true if ^W seen */
 
@@ -183,17 +183,14 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
 /* Normally we do no REFRSH if in an scmac, but if BRIEF is on
  * we here refresh the prompt only (if editing a line)
  *  Speedup: so we don't bank up on TTY o/p (& CPU!), only display
- * new line # if .GT. 1/5 sec since last time ... */
+ * new line # every fbrief_interval seconds ... */
   if (curmac >= 0 && !in_cmd && BRIEF && !NONE && pchars)
   {
-    timnow = times(&tloc);
-/* Assume a clock tick rate of 100 - not critical. We don't cater for
- * wraparound, currently... */
-    if (timnow - timlst >= 20)
+    if ((t = time_now()) - timlst >= fbrief_interval)
     {
-      timlst = timnow;             /* Displaying */
+      timlst = t;                  /* Displaying */
       sdsply();                    /* Display the line number */
-    }                              /* if (timnow - timlst >= 20) */
+    }                    /* if ((t = time_now()) - timlst >= fbrief_interval) */
   }                /* if (curmac >= 0 && !in_cmd && BRIEF && !NONE && pchars) */
 
 /* If this is a new line and INDENT is on, pad out with appropriate

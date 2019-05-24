@@ -6,8 +6,8 @@
 
 /* Headers */
 
-#include "errno.h"
-#include "string.h"
+#include <errno.h>
+#include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include "alu.h"

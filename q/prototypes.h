@@ -73,6 +73,7 @@ int cmd(char *buf, bool backtick);
 bool pop_stdin(void);
 void devnull_stdout(void);
 void visbel(void);
+double time_now(void);
 
 /* Global variables */
 

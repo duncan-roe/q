@@ -3,7 +3,7 @@
 /* c 1 i n . h */
 /*
  * Copyright (C) 1995, Duncan Roe & Associates P/L
- * Copyright (C) 2012,2014 Duncan Roe
+ * Copyright (C) 2012,2014,2019 Duncan Roe
  *
  * This header file contains items of interest to the character input
  * subsystem
@@ -33,5 +33,6 @@ extern int simulate_q_idx;
 extern char *end_seq;
 extern char *normal_end_sequence;
 extern char *xistics_end_sequence;
+extern double timlst;
 void change_attr(int fd, struct termios *wanted);
 #endif

@@ -209,6 +209,30 @@ fqversn(char **err)
 }                                  /* fqversn() */
 
 static bool
+psvbint(char **err)
+{
+  if (fsidx >= stack_size - 1)
+  {
+    *err = "FP register stack overflow";
+    return false;
+  }                                /* if (fsidx >= stack_size - 1) */
+  fs[++fsidx] = visbel_interval;
+  return true;
+}                                  /* psvbint() */
+
+static bool
+psfbint(char **err)
+{
+  if (fsidx >= stack_size - 1)
+  {
+    *err = "FP register stack overflow";
+    return false;
+  }                                /* if (fsidx >= stack_size - 1) */
+  fs[++fsidx] = fbrief_interval;
+  return true;
+}                                  /* psfbint() */
+
+static bool
 nop(char **err)
 {
   return true;
@@ -697,6 +721,24 @@ popnf(char **err)
 }                                  /* popnf() */
 
 static bool
+ppvbint(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  visbel_interval = fs[fsidx--];
+  return true;
+}                                  /* ppvbint() */
+
+static bool
+ppfbint(char **err)
+{
+  if (!f_valid(err))
+    return false;
+  fbrief_interval = fs[fsidx--];
+  return true;
+}                                  /* ppfbint() */
+
+static bool
 dupf(char **err)
 {
   if (!f_valid(err))
@@ -1162,6 +1204,10 @@ alu_opcode opcode_defs[] = {
   OPCODE(inpf, "Read next number in line, push value to F & length to R"),
   CAPTION("(leaves cursor on 1st char of number)"),
   OPCODE(fqversn, "Push Q version to F"),
+  OPCODE(psvbint, "Push Visible Bell Interval to F"),
+  OPCODE(ppvbint, "Pop F to Visible Bell Interval"),
+  OPCODE(psfbint, "Push Fbrief Interval to F"),
+  OPCODE(ppfbint, "Pop F to Fbrief Interval"),
   CAPTION(""),
   CAPTION("Immediate Data Instructions"),
   CAPTION("========= ==== ============"),

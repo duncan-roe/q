@@ -77,7 +77,6 @@ typedef enum qrc_state
 
 /* Externals that are not in any header */
 
-clock_t timlst;
 scrbuf5 b1, b2, b3, b4;            /* 2 line & 2 command buffers */
 
 /* Instantiate externals */
@@ -676,7 +675,7 @@ display_opcodes(void)
   char tbuf[16];
   char *p;
 
-  puts("\r"
+  puts("\r\n"
     "\t Instructions to Access Tabs\r\n"
     "\t ============ == ====== ====\r\n"
     "PSHTAB x Push value of tab x to R\r\n"
@@ -709,8 +708,6 @@ display_opcodes(void)
 int
 main(int xargc, char **xargv)
 {
-  clock_t timnow;
-  struct tms tloc;
   char oldkey[3];                  /* 1st param to FX command */
   char xkey[2], newkey[3];         /* 2nd param to FX command */
   char *r;                         /* Scratch */
@@ -2186,23 +2183,18 @@ main(int xargc, char **xargv)
       if (!NONE)                   /* Some display may be req'd */
       {
         bool want_display = true;
+        double t;
 
-/* If BRIEF, only display every 1/5th sec */
+/* If BRIEF, only display every fbrief_interval secs */
         if (BRIEF)                 /* only display if time to (or 1st) */
         {
-          if ((timnow = times(&tloc)) == -1)
-          {
-            perror("times");
-            putchar('\r');
-            return false;
-          }
-          if (timnow - timlst < 20)
+          if ((t = time_now()) - timlst < fbrief_interval)
             want_display = false;
           else
           {
-            timlst = timnow;       /* Displaying */
+            timlst = t;            /* Displaying */
             forych = true;         /* Tell PDSPLY short display */
-          }                        /* if (timnow - timlst < 20) else */
+          }          /* if ((t = time_now()) - timlst < fbrief_interval) else */
         }                          /* if(BRIEF) */
         if (want_display)
         {

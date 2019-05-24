@@ -8,10 +8,24 @@
 #include <stdlib.h>
 #include "prototypes.h"
 
+/* Instantiate externals */
+
+double visbel_interval = 0.15;
+
+/* Static Variables */
+
+static double time_last = 0;
+
 /* ********************************* visbel ********************************* */
 
 void
 visbel()
 {
-  system("tput flash 1 >&2 2>/dev/null");
+  double t;
+
+  if ((t = time_now()) - time_last >= visbel_interval)
+  {
+    system("tput flash 1 >&2 2>/dev/null");
+    time_last = t;
+  }                  /* if ((t = time_now()) - time_last  >= visbel_interval) */
 }                                  /* visbel() */
