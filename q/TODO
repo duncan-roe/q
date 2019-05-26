@@ -36,7 +36,7 @@ INTERNALS
 	DONE: Reduce number of goto stmts
 	DONE: return bad_rdtk() once H & L are subroutinised
 	DONE: Eliminate FTN COMMON in favour of extern / instantiate
-	Re-organise q.c for static fns at end
+	DONE: Re-organise q.c for static fns at end
 	Maybe re-organise q.c for no internal fns
 Show what arguments Q started with (?)
 STARTED: Catalogue of useful macros

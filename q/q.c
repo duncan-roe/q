@@ -145,576 +145,26 @@ static char pipe_temp_name[sizeof PIPE_NAME] = { 0 };
 static struct sigaction act;
 static int retcod;                 /* Short-term use */
 
-/* Static functions */
+/* Static prototypes */
 
-/* ********************************* pushmac ******************************** */
-
-static bool
-pushmac(bool set_u_use)
-{
-  if (mcnxfr == MCLMIT)
-    return false;
-  mcstck[mcnxfr].mcprev = curmac;
-  mcstck[mcnxfr].mcposn = mcposn;
-  mcstck[mcnxfr].u_use = set_u_use;
-  mcnxfr++;
-  return true;
-}                                  /* static bool pushmac(bool set_u_use) */
-/* ********************************** eolok ********************************* */
-
-/* Check no extra params */
-
-static bool
-eolok(void)
-{
-  scrdtk(1, (uint8_t *)NULL, 0, oldcom);
-  if (oldcom->toktyp == eoltok)    /* OK */
-    return true;
-  fputs("Too many arguments for this command", stdout);
-  return false;
-}                                  /* static bool eolok(void) */
-
-/* ******************************* get_answer ******************************* */
-
-/* Parse rest of line for yes / no indication */
-
-static q_yesno
-get_answer(void)
-{
-  if (scrdtk(1, (uint8_t *)ubuf, 6, oldcom))
-  {
-    fprintf(stderr, "%s. (scrdtk)", strerror(errno));
-    return Q_UNREC;
-  }                             /* if (scrdtk(1, (uint8_t *)ubuf, 6, oldcom)) */
-  if (oldcom->toktyp == eoltok)
-    return Q_MAYBE;
-  if (oldcom->toktyp != nortok)    /* I.e. null token */
-  {
-    fputs("Bad parameter for command", stdout);
-    return Q_UNREC;
-  }                                /* if (oldcom->toktyp != nortok) */
-  if (!eolok())
-    return Q_UNREC;
-  switch (toupper(ubuf[0]))
-  {
-    case 'O':
-      if (toupper(ubuf[1]) == 'N')
-        return Q_YES;
-      if (toupper(ubuf[1]) == 'F')
-        return Q_NO;
-      break;
-    case 'Y':
-    case 'T':
-      return Q_YES;
-    case 'F':
-    case 'N':
-      return Q_NO;
-  }
-  fputs("Parameter not recognised", stdout);
-  return Q_UNREC;
-}                                  /* get_answer(void) */
-
-/* ****************************** get_file_arg ****************************** */
-static bool
-get_file_arg(bool *no_file)
-{
-  if (scrdtk(2, (uint8_t *)ubuf, PTHMAX, oldcom)) /* Read a f/n */
-  {
-    fprintf(stderr, "%s. (scrdtk)\r\n", strerror(errno));
-    return false;
-  }
-  if (!(*no_file = oldcom->toktyp == eoltok))
-  {
-    if (oldcom->toktyp == nultok)
-      return false;
-    tildexpn(ubuf, PTHMAX);        /* Do tilde expansion */
-  }                            /* if (!(*no_file = oldcom->toktyp == eoltok)) */
-  return true;
-}                                  /* get_file_arg() */
-
-/* ****************************** get_opt_lines ***************************** */
-
-static bool
-get_opt_lines(long *result)
-{
-  if (getnum(false))               /* Format of optional # of lines OK */
-  {
-    *result = oldcom->decval;
-    if (oldcom->toktyp == eoltok || eolok()) /* EOL already or next */
-      return true;
-  }                                /* if(getnum(false)) */
-  return false;
-}                                  /* get_opt_lines() */
-
-/* ***************************** do_stat_symlink **************************** */
-
-static bool
-do_stat_symlink(void)
-{
-  int i;
-  uint8_t *p;
-
-/* For S B & Q, if the file exists then use its mode from now on. Don't complain
- * here if it doesn't exist. To check whether the file is a symlink, we need to
- * call readlink to find its real name. The only real error here is a symlink
- * loop */
-
-  errno = 0;                       /* Ensure valid */
-  if (!stat(ubuf, &statbuf))
-  {
-    tmode = statbuf.st_mode;
-    tgroup = statbuf.st_gid;
-    towner = statbuf.st_uid;
-  }                                /* if (!stat(ubuf, &statbuf)) */
-  else
-    tgroup = towner = 0;
-  if (!lstat(ubuf, &statbuf) && S_ISLNK(statbuf.st_mode) && errno != ELOOP)
-    for (;;)
-    {
-      if (0 < (i = readlink(ubuf, tmfile, (size_t)PTHSIZ)))
-      {                            /* S, B or Q on a symlink */
-        tmfile[i] = 0;             /* No trlg NUL from readlink */
-        if (tmfile[0] == '/' || tmfile[0] == '~')
-          strcpy(ubuf, tmfile);
-        else
-        {
-          p = (uint8_t *)strrchr(ubuf, '/'); /* Find last '/' if any */
-          if (!p)
-            p = (uint8_t *)ubuf - 1; /* Filename at ubuf start */
-          *(p + 1) = '\0';         /* Throw away filename */
-          strcat(ubuf, tmfile);    /* Append linked name */
-        }                          /* if(tmfile[0]=='/'||tmfile[0]=='~') else */
-        printf("Symbolic link resolves to %s", ubuf);
-        newlin();
-/* See if symlink points to another symlink... */
-        if (lstat(ubuf, &statbuf))
-          break;                   /* B link to a new file */
-        if (!S_ISLNK(statbuf.st_mode))
-          break;                   /* B now not on a symlink */
-      }                            /* if(0<(i=readlink(ubuf,tmfile,... */
-      else
-      {
-        fprintf(stderr, "%s. %s (readlink)", strerror(errno), ubuf);
-        return false;              /* Bad readlink */
-      }                            /* if(0<(i=readlink(ubuf,tmfile,... else */
-    }                              /* if(!lstat(ubuf,&statbuf)&&S_ISLNK(... */
-  if (!(errno || S_ISREG(statbuf.st_mode)))
-  {
-    fprintf(stderr, "Not a regular file. %s", ubuf);
-    return false;
-  }                                /* if(!S_ISREG(statbuf.st_mode)) */
-  return true;
-}                                  /* do_stat_symlink() */
-
-/* ******************************** open_buf ******************************** */
-
-static int
-open_buf(int flags, mode_t mode)
-{
-
-  SYSCALL(retcod, open(ubuf, flags, mode));
-  return retcod;
-}                                  /* open_buf() */
-
-/* ******************************** my_close ******************************** */
-
-static int
-my_close(int fd)
-{
-
-  SYSCALL(retcod, close(fd));
-  return retcod;
-}                                  /* my_close() */
-
-/* *************************** s_b_w_common_write *************************** */
-
-static bool
-s_b_w_common_write(void)
-{
-  if ((funit = open_buf(rdwr, tmode)) == -1)
-  {
-    fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
-    return false;                  /* Bad open */
-  }                             /* if ((funit = open_buf(rdwr, tmode)) == -1) */
-  if (fstat(funit, &statbuf))
-    fprintf(stderr, "%s. funit %d (fstat)", strerror(errno), funit);
-  else if (ismapd(statbuf.st_ino))
-    fprintf(stderr, "%s is mmap'd", ubuf);
-  else if (ftruncate(funit, 0))
-    fprintf(stderr, "%s. funit %d (ftruncate)", strerror(errno), funit);
-  else
-    writfl(wrtnum);                /* Write lines to o/p file */
-  if (fscode != 0)                 /* Some kind of failure above */
-    my_close(funit);
-  return fscode == 0;
-}                                  /* s_b_w_common_write() */
-
-/* ****************************** do_b_or_s ********************************* */
-static bool
-do_b_or_s(bool is_b)
-{
-  bool bspar;                      /* BACKUP/SAVE had a param */
-
-  savpos = ptrpos;                 /* So we can leave pos'n same at end */
-  setptr((long)1);                 /* Pos'n 1st line */
-  if (deferd)
-    dfread(LONG_MAX, NULL);        /* Ensure all file in */
-  wrtnum = lintot;                 /* Write all lines */
-  rdwr = O_WRONLY + O_CREAT;       /* Don't truncate yet in case mmap'd */
-  if (!get_file_arg(&nofile))
-    ERRRTN("Error in filename");
-  if (nofile)                      /* B or S no filename arg */
-  {
-    if (!pcnta[0])                 /* We have no default f/n */
-      ERRRTN("filename must be specified");
-    bspar = false;                 /* Don't have a param */
-    strcpy(ubuf, pcnta);    /* Duplicate f/n in ubuf so B-BACKUP can merge in */
-  bkup_with_fn_arg:               /*  B-Backup with a filename arg joins here */
-/*
- * Use TMFILE for name of backup file
- */
-    if (snprintf(tmfile, sizeof tmfile, "%s.%s", ubuf,
-      is_b ? "bu" : "tm") >= sizeof tmfile)
-      ERRRTN("Filename too long");
-
-/* ---------------------------------------------------- */
-/* We used to rely on link failing if the file existed. */
-/* But then, link() always fails in a DOS file system.  */
-/* So now we stat() the file to see if it exists,       */
-/* then use rename() if it doesn't.                     */
-/* (rename() would overwrite an old file)               */
-/* ---------------------------------------------------- */
-
-    while (!stat(tmfile, &statbuf))
-    {
-      if (is_b && !ysno5a("Do you want to delete the old backup file", A5NDEF))
-        ERRRTN("Need another filename to take backup");
-      if (unlink(tmfile))
-      {
-        fprintf(stderr, "%s. %s (unlink)", strerror(errno), tmfile);
-        my_close(funit);
-        return false;
-      }                            /* if(unlink(tmfile)) */
-      if (is_b)
-        fputs("Previous backup file deleted:- ", stdout);
-    }                              /* while (!stat(tmfile, &statbuf)) */
-    if (rename(ubuf, tmfile))      /* If rename fails */
-    {
-/* OK nofile if B with param */
-      if (bspar && errno == ENOENT)
-      {
-        puts("New file - no backup taken\r");
-        goto new_bkup_file;
-      }                            /* if(bspar&&(errno==ENOENT)) */
-      fprintf(stderr, "%s. %s to %s (rename)", strerror(errno), ubuf, tmfile);
-      my_close(funit);             /* In case anything left open */
-      return false;                /* Get corrected command */
-    }                              /* if (rename(ubuf, tmfile)) */
-/*
- * File renamed - now open new file of same type as original
- */
-    rdwr = O_WRONLY + O_CREAT + O_EXCL; /* Must be new file */
-    if (is_b)
-      printf("Backup file is %s\r\n", tmfile); /* Report backup f/n */
-  new_bkup_file:
-    if (!s_b_w_common_write())
-      return false;
-  }
-  else
-  {
-    if (!do_stat_symlink() || !eolok())
-      return false;
-    bspar = true;                  /* B or S has a parameter */
-/*
- * If B-BACKUP, back up supplied param anyway
- */
-    if (is_b)
-      goto bkup_with_fn_arg;       /* Join S&B with no params */
-    if (!s_b_w_common_write())
-      return false;
-  }
-  setptr(savpos);                  /* Repos'n file as before */
-  if (bspar)
-    strcpy(pcnta, ubuf);           /* We had a param. Set as dflt */
-  else if (!is_b)
-  {
-    printf("%s\r\n", pcnta);       /* Remind user what file he's editing */
-    if (unlink(tmfile) == -1)
-      fprintf(stderr, "%s. %s (unlink)\r\n", strerror(errno), tmfile);
-  }
-
-/* ---------------------------------------------------------------------- */
-/* Attempt to restore as many attributes of the original file as possible */
-/* current file attributes are in statbuf                                 */
-/* ---------------------------------------------------------------------- */
-
-  if (towner)                      /* If there *was* an original file */
-  {
-    fscode = 0;
-    if (tgroup != statbuf.st_gid)
-    {
-      if (chown(pcnta, -1, tgroup) == -1)
-      {
-        fscode = 1;
-        fprintf(stderr, "Warning - original group not restored\r\n");
-      }                            /* if (chown(pcnta, -1, tgroup) == -1) */
-    }                              /* if (tgroup != statbuf.st_gid) */
-    if (towner != statbuf.st_uid)
-    {
-/* Don't try to change user if group failed, but do warn */
-      if (fscode || chown(pcnta, towner, -1) == -1)
-      {
-        fscode = 1;
-        fprintf(stderr, "Warning - original owner not restored\r\n");
-      }                      /* if (fscode || chown(pcnta, towner, -1) == -1) */
-    }                              /* if (towner != statbuf.st_gid) */
-/* If there were no problems above, set any extra original mode bits */
-    if (tmode != statbuf.st_mode && (fscode || chmod(pcnta, tmode) == -1))
-      puts("Warning - original mode not restored\r");
-  }                                /* if (towner) */
-  mods = false;                    /* S or B succeeded */
-  return true;
-}                                  /* do_b_or_s() */
-
-/* ****************************** rm_pipe_temp ****************************** */
-
-static void
-rm_pipe_temp(void)
-{
-
-  if (*pipe_temp_name)
-  {
-    retcod = unlink(pipe_temp_name);
-    if (retcod == -1 && errno != ENOENT)
-      fprintf(stderr, "%s. %s (unlink)\r\n", strerror(errno), pipe_temp_name);
-  }                                /* if (pipe_temp_name && *pipe_temp_name) */
-}                                  /* rm_pipe_temp() */
-
-/* ************************ write_workfile_to_stdout ************************ */
-
-static void
-write_workfile_to_stdout(void)
-{
-/*
- * Because this is potentially lengthy, re -enable signals
- */
-  sigset_t omask = act.sa_mask;    /* Will have wanted bits 1st time thru */
-
-/* Before changing signal handlers ,delete the temp file */
-/* (it's mmpap'd) */
-  rm_pipe_temp();
-
-/* Reset TERM & INT to default actions */
-  act.sa_flags = 0;
-  act.sa_handler = SIG_DFL;
-  sigemptyset(&act.sa_mask);
-  sigaction(SIGINT, &act, NULL);
-  sigaction(SIGTERM, &act, NULL);
-
-/* Enable signals that will be blocked if we came here via a handler */
-  sigprocmask(SIG_UNBLOCK, &omask, NULL);
-/*
- * Do a subset of a regular save, to the original stdout
- */
-  setptr((long)1);                 /* Pos'n 1st line */
-  if (deferd)
-    dfread(LONG_MAX, NULL);        /* Ensure all file in */
-  funit = saved_pipe_stdout;
-  writfl(lintot);
-}                                  /* write_workfile_to_stdout() */
-
-/* ***************************** dev_null_stdout **************************** */
-
-static void
-dev_null_stdout(void)
-{
-
-  if (my_close(STDOUT5FD))
-  {
-    fprintf(stderr, "%s. fd %d (close)\n", strerror(errno), STDOUT5FD);
-    exit(1);
-  }                                /* if (my_close (STDOUT5FD)) */
-  SYSCALL(retcod, open("/dev/null", O_WRONLY));
-  if (retcod == -1)
-  {
-    fprintf(stderr, "%s. /dev/null (open)\n", strerror(errno));
-    exit(1);
-  }                                /* if (retcod == -1) */
-  if (retcod != STDOUT5FD)
-  {
-    fprintf(stderr, "/dev/null was opened on fd %d when it needed to be"
-      " opened on fd%d\n", retcod, STDOUT5FD);
-    exit(1);
-  }                                /* if (retcod != STDOUT5FD) */
-}                                  /* dev_null_stdout() */
-
-/* ******************************** make_node ******************************* */
-
-static alu_dict_ent *
-make_node(int initial_fn_idx)
-{
-  alu_dict_ent *result;
-
-  result = malloc(sizeof *result);
-  if (!result)
-  {
-    fprintf(stderr, "%s. (malloc)\n", strerror(errno));
-    exit(1);
-  }                                /* if (!result) */
-  memset(result, 0, sizeof *result);
-  result->fn_idx = initial_fn_idx;
-  return result;
-}                                  /* make_node() */
-
-/* ********************************* add_op ********************************* */
-
-static void
-add_op(alu_dict_ent * root, char *opcode)
-{
-  static int next_fn_idx = 0;
-  alu_dict_ent *ptr, *old_alt;
-  char thisch = toupper(*(uint8_t *)opcode);
-
-/* Return condition for the recursive function */
-  if (!thisch)
-  {
-    if (root->fn_idx != -1)
-    {
-      fprintf(stderr, "fn_idx (=%d) already claimed by another opcode!\r\n",
-        root->fn_idx);
-      exit(1);
-    }                              /* if (root->fn_idx != -1) */
-    root->fn_idx = next_fn_idx++;
-    return;
-  }                                /* if (!thisch) */
-
-  ptr = root;
-  while (ptr->letter != thisch)
-  {
-    if (ptr->alt)
-    {
-      if (thisch < ptr->alt->letter)
-      {
-        old_alt = ptr->alt;
-        ptr->alt = make_node(-3);
-        ptr = ptr->alt;
-        ptr->alt = old_alt;
-        ptr->letter = thisch;
-      }                            /* if (thisch < ptr->alt->letter) */
-      else
-        ptr = ptr->alt;
-    }                              /* if (ptr->alt) */
-    else
-    {
-      ptr->alt = make_node(-3);
-      ptr = ptr->alt;
-      ptr->letter = thisch;
-    }                              /* if (ptr->alt) else */
-  }                                /* while (ptr->letter != thisch) */
-  if (!ptr->next)
-    ptr->next = make_node(-1);
-
-/* Make the recursive call */
-  add_op(ptr->next, opcode + 1);
-  return;
-}                                  /* add_op() */
-
-/* ******************************** init_alu ******************************** */
-
-static void
-init_alu(void)
-{
-  int i, j;
-
-/* Allocate the register stack */
-  rs = malloc(stack_size * sizeof *rs);
-  if (!rs)
-  {
-    fprintf(stderr, "%s. (malloc)\n", strerror(errno));
-    exit(1);
-  }                                /* if (!rs) */
-  fs = malloc(stack_size * sizeof *fs);
-  if (!fs)
-  {
-    fprintf(stderr, "%s. (malloc)\n", strerror(errno));
-    exit(1);
-  }                                /* if (!fs) */
-
-/* Count how many opcodes there are */
-  for (i = num_alu_opcode_table_entries - 1; i >= 0; i--)
-    if (opcode_defs[i].func)
-      num_ops++;
-
-/* Allocate the array of function pointers for the run machine */
-  alu_table_index = malloc(sizeof *alu_table_index * num_ops);
-  if (!alu_table_index)
-  {
-    fprintf(stderr, "%s. (malloc)\n", strerror(errno));
-    exit(1);
-  }                                /* if (!alu_table_index) */
-
-/* Set up initial floating point format */
-  strcpy(FPformat, "%g");
-  strcpy(Iformat, "%ld");
-
-/* Set up initial date format */
-  strcpy(DTformat, "%F %T %z");
-
-/* Set up indicies and lookup dictionary */
-  for (i = 0, j = 0; i < num_alu_opcode_table_entries; i++)
-    if (opcode_defs[i].func)
-    {
-      alu_table_index[j++] = i;
-      add_op(&root_alu_dict_ent, opcode_defs[i].name);
-    }                              /* if (opcode_defs[i].func) */
-}                                  /* init_alu() */
-
-/* ******************************** bad_rdtk ******************************** */
-
-static bool
-bad_rdtk(void)
-{
-  fprintf(stderr, "%s. (scrdtk)", strerror(errno));
-/* Most callers were returning false next so let them return bad_rdtk instead */
-  return false;
-}                                  /* bad_rdtk(void) */
-
-/* ***************************** display_opcodes **************************** */
-static void
-display_opcodes(void)
-{
-  int i;
-  char tbuf[16];
-  char *p;
-
-  puts("\r\n"
-    "\t Instructions to Access Tabs\r\n"
-    "\t ============ == ====== ====\r\n"
-    "PSHTAB x Push value of tab x to R\r\n"
-    "\t (x is a tab ID; type of tab is not examined)\r\n"
-    "POPTAB x Pop R to set value of tab x;\r\n"
-    "\t (x is a tab ID; type of tab is from last SCPT / SFPT)\r\n"
-    "\r\n"
-    "\t Memory Reference Instructions\r\n"
-    "\t ====== ========= ============\r\n"
-    "PSH  xxx  Push contents of N7xxx to R\r\n"
-    "POP  xxx  Pop R to define N7xxx\r\n"
-    "PSHF xxx  Push contents of N13xxx to F\r\n"
-    "POPF xxx  Pop F to define N13xxx\r\n");
-
-  for (i = 0; i < num_alu_opcode_table_entries; i++)
-  {
-    if (opcode_defs[i].func)
-    {
-      strcpy(tbuf, opcode_defs[i].name);
-      for (p = tbuf; *p; p++)
-        *p = toupper(*(uint8_t *)p);
-      printf("%s\t %s\r\n", tbuf, opcode_defs[i].description);
-    }                              /* if (opcode_defs[i].func) */
-    else
-      printf("\t %s\r\n", opcode_defs[i].description);
-  }                     /* for (i = 0; i < num_alu_opcode_table_entries; i++) */
-}                                  /* display_opcodes() */
+static bool pushmac(bool set_u_use);
+static bool eolok(void);
+static q_yesno get_answer(void);
+static bool get_file_arg(bool *no_file);
+static bool get_opt_lines(long *result);
+static bool do_stat_symlink(void);
+static int open_buf(int flags, mode_t mode);
+static int my_close(int fd);
+static bool s_b_w_common_write(void);
+static bool do_b_or_s(bool is_b);
+static void rm_pipe_temp(void);
+static void write_workfile_to_stdout(void);
+static void dev_null_stdout(void);
+static alu_dict_ent * make_node(int initial_fn_idx);
+static void add_op(alu_dict_ent * root, char *opcode);
+static void init_alu(void);
+static bool bad_rdtk(void);
+static void display_opcodes(void);
 
 /* ********************************** main ********************************** */
 int
@@ -734,17 +184,17 @@ main(int xargc, char **xargv)
   int firstpos = 0;                /* First pos to search (L&Y) */
   int lastpos = 0;                 /* Last pos to search (L&Y) */ ;
   int colonline;                   /* Line number from <file>:<line> */
-/* */
+
 /* For those commands that take 2 #'s of lines */
   long count2 = 0;
   long i4, j4 = 0, k4 = 0;         /* Scratch */
   long revpos;                     /* Remembered pointer during backwards L */
   long xcount = 0;                 /* For V-View */
-/* */
+
   char oldstr[Q_BUFSIZ], newstr[Q_BUFSIZ]; /* YCHANGEALL. !!AMENDED USAGE!! */
   uint8_t *p;                      /* Scratch */
   char *colonpos;                  /* Pos'n of ":" in q filename */
-/* */
+
   bool splt;                       /* Last line ended ^T (for MODIFY) */
   bool logtmp = false, lgtmp3 = false; /* Scratch */
   bool display_wanted;
@@ -2246,7 +1696,7 @@ main(int xargc, char **xargv)
     return true;
   }                                /* bool do_zenduse(void) */
 
-/* ************************* END INTERNAL FUNCTIOBS ************************* */
+/* ************************* END INTERNAL FUNCTIONS ************************* */
 
 /* Initial Tasks */
   argc = xargc;                    /* Xfer invocation arg to common */
@@ -2407,9 +1857,8 @@ main(int xargc, char **xargv)
         "You may not give Q a file name when running in a pipe");
       return 1;
     }                              /* if (argno != -1) */
-/*
- * Deal with stdout
- */
+
+/* Deal with stdout */
     SYSCALL(saved_pipe_stdout, dup(STDOUT5FD));
     if (saved_pipe_stdout == -1)
     {
@@ -2430,9 +1879,8 @@ main(int xargc, char **xargv)
     }                              /* if (verbose_flag) */
     else
       dev_null_stdout();
-/*
- * Deal with stdin
- */
+
+/* Deal with stdin */
 
 /* Create & open a temporary file to buffer the entire pipe */
     strcpy(pipe_temp_name, PIPE_NAME);
@@ -2484,9 +1932,8 @@ main(int xargc, char **xargv)
     offline = true;
   }                           /* if (!isatty(STDIN5FD) && !isatty(STDOUT5FD)) */
   else
-/*
- * Not in a pipe
- */
+
+/* Not in a pipe */
   {
   not_pipe:
     if (!(P && Q) && !offline)
@@ -2510,9 +1957,8 @@ main(int xargc, char **xargv)
 /* Ctrl-C just sets a flag (rather than exitting) */
     piping = false;
   }                      /* if (!isatty(STDIN5FD) && !isatty(STDOUT5FD)) else */
-/*
- * Common initialisation
- */
+
+/* Common initialisation */
   cntrlc = false;                  /* Not yet seen ^C */
   ndel[0] = '\0';                  /* No FT commands yet */
   for (i = 127; i >= 0; i--)
@@ -2522,9 +1968,8 @@ main(int xargc, char **xargv)
   curr = &b3;
   prev = &b4;
   init5();                         /* Set half duplex &c */
-/*
- * Set up Screenedit buffers
- */
+
+/* Set up Screenedit buffers */
   oldcom->bcurs = 0;
   oldcom->bchars = 0;              /* Initialise OLDCOM only this once */
   prev->bchars = 0;
@@ -2533,7 +1978,7 @@ main(int xargc, char **xargv)
   newcom->bmxch = BUFMAX;
   curr->bmxch = BUFMAX;
   prev->bmxch = BUFMAX;
-/* */
+
   finitl();                        /* Initialise workfile system */
   sinitl();                        /* Initialise screen system */
   newlin();                        /* Screen displaying blanks */
@@ -2552,9 +1997,8 @@ main(int xargc, char **xargv)
   if (size5)
     printf("Noted screen dimensions %u x %u\r\n", col5, row5);
   orig_stdout = -1;                /* Haven't dup'd stdout */
-/*
- * Initially INDENT switched OFF
- */
+
+/* Initially INDENT switched OFF */
   ndntch = 0;                      /* For when it's first switched on */
   tbstat = -1;                     /* Xlation table not set up */
   stdidx = -1;                     /* No U-use file */
@@ -2593,7 +2037,8 @@ main(int xargc, char **xargv)
             break;
           case GIVE_UP:
             pop_stdin();
-/* The /etc/file should exist. so output an error message */
+
+/* The /etc file should exist. so output an error message */
             fprintf(stderr, "%s. %s (open) (Installation problem?)\r\n",
               strerror(errno), ubuf);
             break;
@@ -2646,8 +2091,8 @@ main(int xargc, char **xargv)
             oldcom->bcurs = 3;
             break;
           }                        /* if (initial_command != NULL) */
-/* Drop through */
-        case RUNNING:
+
+        case RUNNING:              /* Drop thru */
           sccmnd();                /* Read a command; set VERB */
           printf_wanted = false;
           break;
@@ -2662,6 +2107,7 @@ main(int xargc, char **xargv)
           if (piping)
             cmd_state = TRY_INITIAL_COMMAND;
           else
+
 /* assume if the first arg starts "+" and there is at least 1 more arg then the
  * first arg is a line number */
           {
@@ -2905,3 +2351,555 @@ main(int xargc, char **xargv)
     }                              /* if (!retcod) */
   }                                /* for(;;) */
 }                                  /* main() */
+
+/* ********************************* pushmac ******************************** */
+
+static bool pushmac(bool set_u_use)
+{
+  if (mcnxfr == MCLMIT)
+    return false;
+  mcstck[mcnxfr].mcprev = curmac;
+  mcstck[mcnxfr].mcposn = mcposn;
+  mcstck[mcnxfr].u_use = set_u_use;
+  mcnxfr++;
+  return true;
+}                                  /* static bool pushmac(bool set_u_use) */
+/* ********************************** eolok ********************************* */
+
+/* Check no extra params */
+
+static bool eolok(void)
+{
+  scrdtk(1, (uint8_t *)NULL, 0, oldcom);
+  if (oldcom->toktyp == eoltok)    /* OK */
+    return true;
+  fputs("Too many arguments for this command", stdout);
+  return false;
+}                                  /* static bool eolok(void) */
+
+/* ******************************* get_answer ******************************* */
+
+/* Parse rest of line for yes / no indication */
+
+static q_yesno get_answer(void)
+{
+  if (scrdtk(1, (uint8_t *)ubuf, 6, oldcom))
+  {
+    fprintf(stderr, "%s. (scrdtk)", strerror(errno));
+    return Q_UNREC;
+  }                             /* if (scrdtk(1, (uint8_t *)ubuf, 6, oldcom)) */
+  if (oldcom->toktyp == eoltok)
+    return Q_MAYBE;
+  if (oldcom->toktyp != nortok)    /* I.e. null token */
+  {
+    fputs("Bad parameter for command", stdout);
+    return Q_UNREC;
+  }                                /* if (oldcom->toktyp != nortok) */
+  if (!eolok())
+    return Q_UNREC;
+  switch (toupper(ubuf[0]))
+  {
+    case 'O':
+      if (toupper(ubuf[1]) == 'N')
+        return Q_YES;
+      if (toupper(ubuf[1]) == 'F')
+        return Q_NO;
+      break;
+    case 'Y':
+    case 'T':
+      return Q_YES;
+    case 'F':
+    case 'N':
+      return Q_NO;
+  }
+  fputs("Parameter not recognised", stdout);
+  return Q_UNREC;
+}                                  /* get_answer(void) */
+
+/* ****************************** get_file_arg ****************************** */
+static bool get_file_arg(bool *no_file)
+{
+  if (scrdtk(2, (uint8_t *)ubuf, PTHMAX, oldcom)) /* Read a f/n */
+  {
+    fprintf(stderr, "%s. (scrdtk)\r\n", strerror(errno));
+    return false;
+  }
+  if (!(*no_file = oldcom->toktyp == eoltok))
+  {
+    if (oldcom->toktyp == nultok)
+      return false;
+    tildexpn(ubuf, PTHMAX);        /* Do tilde expansion */
+  }                            /* if (!(*no_file = oldcom->toktyp == eoltok)) */
+  return true;
+}                                  /* get_file_arg() */
+
+/* ****************************** get_opt_lines ***************************** */
+
+static bool get_opt_lines(long *result)
+{
+  if (getnum(false))               /* Format of optional # of lines OK */
+  {
+    *result = oldcom->decval;
+    if (oldcom->toktyp == eoltok || eolok()) /* EOL already or next */
+      return true;
+  }                                /* if(getnum(false)) */
+  return false;
+}                                  /* get_opt_lines() */
+
+/* ***************************** do_stat_symlink **************************** */
+
+static bool do_stat_symlink(void)
+{
+  int i;
+  uint8_t *p;
+
+/* For S B & Q, if the file exists then use its mode from now on. Don't complain
+ * here if it doesn't exist. To check whether the file is a symlink, we need to
+ * call readlink to find its real name. The only real error here is a symlink
+ * loop */
+
+  errno = 0;                       /* Ensure valid */
+  if (!stat(ubuf, &statbuf))
+  {
+    tmode = statbuf.st_mode;
+    tgroup = statbuf.st_gid;
+    towner = statbuf.st_uid;
+  }                                /* if (!stat(ubuf, &statbuf)) */
+  else
+    tgroup = towner = 0;
+  if (!lstat(ubuf, &statbuf) && S_ISLNK(statbuf.st_mode) && errno != ELOOP)
+    for (;;)
+    {
+      if (0 < (i = readlink(ubuf, tmfile, (size_t)PTHSIZ)))
+      {                            /* S, B or Q on a symlink */
+        tmfile[i] = 0;             /* No trlg NUL from readlink */
+        if (tmfile[0] == '/' || tmfile[0] == '~')
+          strcpy(ubuf, tmfile);
+        else
+        {
+          p = (uint8_t *)strrchr(ubuf, '/'); /* Find last '/' if any */
+          if (!p)
+            p = (uint8_t *)ubuf - 1; /* Filename at ubuf start */
+          *(p + 1) = '\0';         /* Throw away filename */
+          strcat(ubuf, tmfile);    /* Append linked name */
+        }                          /* if(tmfile[0]=='/'||tmfile[0]=='~') else */
+        printf("Symbolic link resolves to %s", ubuf);
+        newlin();
+/* See if symlink points to another symlink... */
+        if (lstat(ubuf, &statbuf))
+          break;                   /* B link to a new file */
+        if (!S_ISLNK(statbuf.st_mode))
+          break;                   /* B now not on a symlink */
+      }                            /* if(0<(i=readlink(ubuf,tmfile,... */
+      else
+      {
+        fprintf(stderr, "%s. %s (readlink)", strerror(errno), ubuf);
+        return false;              /* Bad readlink */
+      }                            /* if(0<(i=readlink(ubuf,tmfile,... else */
+    }                              /* if(!lstat(ubuf,&statbuf)&&S_ISLNK(... */
+  if (!(errno || S_ISREG(statbuf.st_mode)))
+  {
+    fprintf(stderr, "Not a regular file. %s", ubuf);
+    return false;
+  }                                /* if(!S_ISREG(statbuf.st_mode)) */
+  return true;
+}                                  /* do_stat_symlink() */
+
+/* ******************************** open_buf ******************************** */
+
+static int open_buf(int flags, mode_t mode)
+{
+
+  SYSCALL(retcod, open(ubuf, flags, mode));
+  return retcod;
+}                                  /* open_buf() */
+
+/* ******************************** my_close ******************************** */
+
+static int my_close(int fd)
+{
+
+  SYSCALL(retcod, close(fd));
+  return retcod;
+}                                  /* my_close() */
+
+/* *************************** s_b_w_common_write *************************** */
+
+static bool s_b_w_common_write(void)
+{
+  if ((funit = open_buf(rdwr, tmode)) == -1)
+  {
+    fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
+    return false;                  /* Bad open */
+  }                             /* if ((funit = open_buf(rdwr, tmode)) == -1) */
+  if (fstat(funit, &statbuf))
+    fprintf(stderr, "%s. funit %d (fstat)", strerror(errno), funit);
+  else if (ismapd(statbuf.st_ino))
+    fprintf(stderr, "%s is mmap'd", ubuf);
+  else if (ftruncate(funit, 0))
+    fprintf(stderr, "%s. funit %d (ftruncate)", strerror(errno), funit);
+  else
+    writfl(wrtnum);                /* Write lines to o/p file */
+  if (fscode != 0)                 /* Some kind of failure above */
+    my_close(funit);
+  return fscode == 0;
+}                                  /* s_b_w_common_write() */
+
+/* ****************************** do_b_or_s ********************************* */
+
+static bool do_b_or_s(bool is_b)
+{
+  bool bspar;                      /* BACKUP/SAVE had a param */
+
+  savpos = ptrpos;                 /* So we can leave pos'n same at end */
+  setptr((long)1);                 /* Pos'n 1st line */
+  if (deferd)
+    dfread(LONG_MAX, NULL);        /* Ensure all file in */
+  wrtnum = lintot;                 /* Write all lines */
+  rdwr = O_WRONLY + O_CREAT;       /* Don't truncate yet in case mmap'd */
+  if (!get_file_arg(&nofile))
+    ERRRTN("Error in filename");
+  if (nofile)                      /* B or S no filename arg */
+  {
+    if (!pcnta[0])                 /* We have no default f/n */
+      ERRRTN("filename must be specified");
+    bspar = false;                 /* Don't have a param */
+    strcpy(ubuf, pcnta);    /* Duplicate f/n in ubuf so B-BACKUP can merge in */
+  bkup_with_fn_arg:               /*  B-Backup with a filename arg joins here */
+/*
+ * Use TMFILE for name of backup file
+ */
+    if (snprintf(tmfile, sizeof tmfile, "%s.%s", ubuf,
+      is_b ? "bu" : "tm") >= sizeof tmfile)
+      ERRRTN("Filename too long");
+
+/* ---------------------------------------------------- */
+/* We used to rely on link failing if the file existed. */
+/* But then, link() always fails in a DOS file system.  */
+/* So now we stat() the file to see if it exists,       */
+/* then use rename() if it doesn't.                     */
+/* (rename() would overwrite an old file)               */
+/* ---------------------------------------------------- */
+
+    while (!stat(tmfile, &statbuf))
+    {
+      if (is_b && !ysno5a("Do you want to delete the old backup file", A5NDEF))
+        ERRRTN("Need another filename to take backup");
+      if (unlink(tmfile))
+      {
+        fprintf(stderr, "%s. %s (unlink)", strerror(errno), tmfile);
+        my_close(funit);
+        return false;
+      }                            /* if(unlink(tmfile)) */
+      if (is_b)
+        fputs("Previous backup file deleted:- ", stdout);
+    }                              /* while (!stat(tmfile, &statbuf)) */
+    if (rename(ubuf, tmfile))      /* If rename fails */
+    {
+/* OK nofile if B with param */
+      if (bspar && errno == ENOENT)
+      {
+        puts("New file - no backup taken\r");
+        goto new_bkup_file;
+      }                            /* if(bspar&&(errno==ENOENT)) */
+      fprintf(stderr, "%s. %s to %s (rename)", strerror(errno), ubuf, tmfile);
+      my_close(funit);             /* In case anything left open */
+      return false;                /* Get corrected command */
+    }                              /* if (rename(ubuf, tmfile)) */
+/*
+ * File renamed - now open new file of same type as original
+ */
+    rdwr = O_WRONLY + O_CREAT + O_EXCL; /* Must be new file */
+    if (is_b)
+      printf("Backup file is %s\r\n", tmfile); /* Report backup f/n */
+  new_bkup_file:
+    if (!s_b_w_common_write())
+      return false;
+  }
+  else
+  {
+    if (!do_stat_symlink() || !eolok())
+      return false;
+    bspar = true;                  /* B or S has a parameter */
+/*
+ * If B-BACKUP, back up supplied param anyway
+ */
+    if (is_b)
+      goto bkup_with_fn_arg;       /* Join S&B with no params */
+    if (!s_b_w_common_write())
+      return false;
+  }
+  setptr(savpos);                  /* Repos'n file as before */
+  if (bspar)
+    strcpy(pcnta, ubuf);           /* We had a param. Set as dflt */
+  else if (!is_b)
+  {
+    printf("%s\r\n", pcnta);       /* Remind user what file he's editing */
+    if (unlink(tmfile) == -1)
+      fprintf(stderr, "%s. %s (unlink)\r\n", strerror(errno), tmfile);
+  }
+
+/* ---------------------------------------------------------------------- */
+/* Attempt to restore as many attributes of the original file as possible */
+/* current file attributes are in statbuf                                 */
+/* ---------------------------------------------------------------------- */
+
+  if (towner)                      /* If there *was* an original file */
+  {
+    fscode = 0;
+    if (tgroup != statbuf.st_gid)
+    {
+      if (chown(pcnta, -1, tgroup) == -1)
+      {
+        fscode = 1;
+        fprintf(stderr, "Warning - original group not restored\r\n");
+      }                            /* if (chown(pcnta, -1, tgroup) == -1) */
+    }                              /* if (tgroup != statbuf.st_gid) */
+    if (towner != statbuf.st_uid)
+    {
+/* Don't try to change user if group failed, but do warn */
+      if (fscode || chown(pcnta, towner, -1) == -1)
+      {
+        fscode = 1;
+        fprintf(stderr, "Warning - original owner not restored\r\n");
+      }                      /* if (fscode || chown(pcnta, towner, -1) == -1) */
+    }                              /* if (towner != statbuf.st_gid) */
+/* If there were no problems above, set any extra original mode bits */
+    if (tmode != statbuf.st_mode && (fscode || chmod(pcnta, tmode) == -1))
+      puts("Warning - original mode not restored\r");
+  }                                /* if (towner) */
+  mods = false;                    /* S or B succeeded */
+  return true;
+}                                  /* do_b_or_s() */
+
+/* ****************************** rm_pipe_temp ****************************** */
+
+static void rm_pipe_temp(void)
+{
+
+  if (*pipe_temp_name)
+  {
+    retcod = unlink(pipe_temp_name);
+    if (retcod == -1 && errno != ENOENT)
+      fprintf(stderr, "%s. %s (unlink)\r\n", strerror(errno), pipe_temp_name);
+  }                                /* if (pipe_temp_name && *pipe_temp_name) */
+}                                  /* rm_pipe_temp() */
+
+/* ************************ write_workfile_to_stdout ************************ */
+
+static void write_workfile_to_stdout(void)
+{
+/*
+ * Because this is potentially lengthy, re -enable signals
+ */
+  sigset_t omask = act.sa_mask;    /* Will have wanted bits 1st time thru */
+
+/* Before changing signal handlers ,delete the temp file */
+/* (it's mmpap'd) */
+  rm_pipe_temp();
+
+/* Reset TERM & INT to default actions */
+  act.sa_flags = 0;
+  act.sa_handler = SIG_DFL;
+  sigemptyset(&act.sa_mask);
+  sigaction(SIGINT, &act, NULL);
+  sigaction(SIGTERM, &act, NULL);
+
+/* Enable signals that will be blocked if we came here via a handler */
+  sigprocmask(SIG_UNBLOCK, &omask, NULL);
+/*
+ * Do a subset of a regular save, to the original stdout
+ */
+  setptr((long)1);                 /* Pos'n 1st line */
+  if (deferd)
+    dfread(LONG_MAX, NULL);        /* Ensure all file in */
+  funit = saved_pipe_stdout;
+  writfl(lintot);
+}                                  /* write_workfile_to_stdout() */
+
+/* ***************************** dev_null_stdout **************************** */
+
+static void dev_null_stdout(void)
+{
+
+  if (my_close(STDOUT5FD))
+  {
+    fprintf(stderr, "%s. fd %d (close)\n", strerror(errno), STDOUT5FD);
+    exit(1);
+  }                                /* if (my_close (STDOUT5FD)) */
+  SYSCALL(retcod, open("/dev/null", O_WRONLY));
+  if (retcod == -1)
+  {
+    fprintf(stderr, "%s. /dev/null (open)\n", strerror(errno));
+    exit(1);
+  }                                /* if (retcod == -1) */
+  if (retcod != STDOUT5FD)
+  {
+    fprintf(stderr, "/dev/null was opened on fd %d when it needed to be"
+      " opened on fd%d\n", retcod, STDOUT5FD);
+    exit(1);
+  }                                /* if (retcod != STDOUT5FD) */
+}                                  /* dev_null_stdout() */
+
+/* ******************************** make_node ******************************* */
+
+static alu_dict_ent * make_node(int initial_fn_idx)
+{
+  alu_dict_ent *result;
+
+  result = malloc(sizeof *result);
+  if (!result)
+  {
+    fprintf(stderr, "%s. (malloc)\n", strerror(errno));
+    exit(1);
+  }                                /* if (!result) */
+  memset(result, 0, sizeof *result);
+  result->fn_idx = initial_fn_idx;
+  return result;
+}                                  /* make_node() */
+
+/* ********************************* add_op ********************************* */
+
+static void add_op(alu_dict_ent * root, char *opcode)
+{
+  static int next_fn_idx = 0;
+  alu_dict_ent *ptr, *old_alt;
+  char thisch = toupper(*(uint8_t *)opcode);
+
+/* Return condition for the recursive function */
+  if (!thisch)
+  {
+    if (root->fn_idx != -1)
+    {
+      fprintf(stderr, "fn_idx (=%d) already claimed by another opcode!\r\n",
+        root->fn_idx);
+      exit(1);
+    }                              /* if (root->fn_idx != -1) */
+    root->fn_idx = next_fn_idx++;
+    return;
+  }                                /* if (!thisch) */
+
+  ptr = root;
+  while (ptr->letter != thisch)
+  {
+    if (ptr->alt)
+    {
+      if (thisch < ptr->alt->letter)
+      {
+        old_alt = ptr->alt;
+        ptr->alt = make_node(-3);
+        ptr = ptr->alt;
+        ptr->alt = old_alt;
+        ptr->letter = thisch;
+      }                            /* if (thisch < ptr->alt->letter) */
+      else
+        ptr = ptr->alt;
+    }                              /* if (ptr->alt) */
+    else
+    {
+      ptr->alt = make_node(-3);
+      ptr = ptr->alt;
+      ptr->letter = thisch;
+    }                              /* if (ptr->alt) else */
+  }                                /* while (ptr->letter != thisch) */
+  if (!ptr->next)
+    ptr->next = make_node(-1);
+
+/* Make the recursive call */
+  add_op(ptr->next, opcode + 1);
+  return;
+}                                  /* add_op() */
+
+/* ******************************** init_alu ******************************** */
+
+static void init_alu(void)
+{
+  int i, j;
+
+/* Allocate the register stack */
+  rs = malloc(stack_size * sizeof *rs);
+  if (!rs)
+  {
+    fprintf(stderr, "%s. (malloc)\n", strerror(errno));
+    exit(1);
+  }                                /* if (!rs) */
+  fs = malloc(stack_size * sizeof *fs);
+  if (!fs)
+  {
+    fprintf(stderr, "%s. (malloc)\n", strerror(errno));
+    exit(1);
+  }                                /* if (!fs) */
+
+/* Count how many opcodes there are */
+  for (i = num_alu_opcode_table_entries - 1; i >= 0; i--)
+    if (opcode_defs[i].func)
+      num_ops++;
+
+/* Allocate the array of function pointers for the run machine */
+  alu_table_index = malloc(sizeof *alu_table_index * num_ops);
+  if (!alu_table_index)
+  {
+    fprintf(stderr, "%s. (malloc)\n", strerror(errno));
+    exit(1);
+  }                                /* if (!alu_table_index) */
+
+/* Set up initial floating point format */
+  strcpy(FPformat, "%g");
+  strcpy(Iformat, "%ld");
+
+/* Set up initial date format */
+  strcpy(DTformat, "%F %T %z");
+
+/* Set up indicies and lookup dictionary */
+  for (i = 0, j = 0; i < num_alu_opcode_table_entries; i++)
+    if (opcode_defs[i].func)
+    {
+      alu_table_index[j++] = i;
+      add_op(&root_alu_dict_ent, opcode_defs[i].name);
+    }                              /* if (opcode_defs[i].func) */
+}                                  /* init_alu() */
+
+/* ******************************** bad_rdtk ******************************** */
+
+static bool bad_rdtk(void)
+{
+  fprintf(stderr, "%s. (scrdtk)", strerror(errno));
+/* Most callers were returning false next so let them return bad_rdtk instead */
+  return false;
+}                                  /* bad_rdtk(void) */
+
+/* ***************************** display_opcodes **************************** */
+static void display_opcodes(void)
+{
+  int i;
+  char tbuf[16];
+  char *p;
+
+  puts("\r\n"
+    "\t Instructions to Access Tabs\r\n"
+    "\t ============ == ====== ====\r\n"
+    "PSHTAB x Push value of tab x to R\r\n"
+    "\t (x is a tab ID; type of tab is not examined)\r\n"
+    "POPTAB x Pop R to set value of tab x;\r\n"
+    "\t (x is a tab ID; type of tab is from last SCPT / SFPT)\r\n"
+    "\r\n"
+    "\t Memory Reference Instructions\r\n"
+    "\t ====== ========= ============\r\n"
+    "PSH  xxx  Push contents of N7xxx to R\r\n"
+    "POP  xxx  Pop R to define N7xxx\r\n"
+    "PSHF xxx  Push contents of N13xxx to F\r\n"
+    "POPF xxx  Pop F to define N13xxx\r\n");
+
+  for (i = 0; i < num_alu_opcode_table_entries; i++)
+  {
+    if (opcode_defs[i].func)
+    {
+      strcpy(tbuf, opcode_defs[i].name);
+      for (p = tbuf; *p; p++)
+        *p = toupper(*(uint8_t *)p);
+      printf("%s\t %s\r\n", tbuf, opcode_defs[i].description);
+    }                              /* if (opcode_defs[i].func) */
+    else
+      printf("\t %s\r\n", opcode_defs[i].description);
+  }                     /* for (i = 0; i < num_alu_opcode_table_entries; i++) */
+}                                  /* display_opcodes() */
