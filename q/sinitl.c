@@ -1,7 +1,7 @@
 /* S I N I T L */
 /*
  * Copyright (C) 1981,2011 D. C. Roe
- * Copyright (C) 2012-2014 Duncan Roe
+ * Copyright (C) 2012-2014,2019 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -18,7 +18,7 @@
 #include "tabs.h"
 #include "c1in.h"
 
-/* Instantiate Externals */
+/* Instantiate externals */
 
 struct tabs tabs[NUM_TABS] = { {0} };
 
@@ -27,9 +27,7 @@ sinitl()
 {
 
   endlin = false;
-  bspace = true;
   backsp = '\b';                   /* Set variable to the default */
-  rtcnt = 1;
   vt100 = true;                    /* VT100 or X */
   cacnt = 0;                       /* No fast EOL */
   tabcnt = 3;

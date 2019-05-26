@@ -34,22 +34,22 @@ typedef struct
 macro5;
 
 /* Macro return stack */
-struct macinfo
+extern struct macinfo
 {
   int mcprev;
   int mcposn;
   bool u_use;
 } mcstck[STKSIZ];
 
-/* COMMON variables */
+/* External variables */
 
-macro5 *scmacs[TOPMAC + 1];        /* Pointers to macros */
-bool mctrst;                       /* Entrust user (various) */
-bool nodup;                        /* DUPLX$ done if false */
-int curmac;                        /* Macro being expanded */
-int mcposn;                        /* Pos'n in macro */
-int mcnxfr;                        /* Index of next free entry in stack */
-int immnxfr;                       /* Next free slot for an immediate macro */
+extern macro5 *scmacs[TOPMAC + 1]; /* Pointers to macros */
+extern bool mctrst;                /* Entrust user (various) */
+extern bool nodup;                 /* DUPLX$ done if false */
+extern int curmac;                 /* Macro being expanded */
+extern int mcposn;                 /* Pos'n in macro */
+extern int mcnxfr;                 /* Index of next free entry in stack */
+extern int immnxfr;                /* Next free slot for an immediate macro */
 
 /* Prototypes */
 

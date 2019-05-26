@@ -5,8 +5,10 @@
  *
  * This routine gets the next character from standard input. If we
  * hit EOF on a file, revert to the TTY
- *
  */
+
+/* Headers */
+
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -16,8 +18,15 @@
 #include "prototypes.h"
 #include "c1in.h"
 
+/* Instantiate externals */
+
 char *normal_end_sequence = "\033\033fq\n";
 char *end_seq;
+int buf5len, buf5idx, ttyfd, stdidx;
+bool size5;
+struct stdinfo stdinfo[OPEN_MAX];
+
+/* Static variables */
 
 static char buf5[BUF5MAX];
 

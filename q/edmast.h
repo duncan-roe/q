@@ -15,20 +15,20 @@
 void q_version(void);
 
 /* Variables */
-bool modify;                       /* Modifying rather than inserting */
-uint8_t prmpt[10];                 /* Prompt etc. */
-scrbuf5 *newcom;                   /* Accepts latest command */
-scrbuf5 *oldcom;                   /* Holds prev. (&returned) command */
-scrbuf5 *curr;                     /* Current line */
-scrbuf5 *prev;                     /* Previous (& returned) line */
-int pchrs;                         /* # of chrs in the prompt */
-long lstlin;                       /* Last parsed line # (for -TO) */
-int fscode;                        /* File system &c code */
-char ermess[Q_BUFSIZ];             /* Text of message from GETLIN */
-char ubuf[Q_BUFSIZ];               /* Utility buffer for general use */
-unsigned long dfltmode;
-int argc;                          /* Copy of invocation arg */
-char **argv;                       /* Copy of invocation arg */
-int argno;                         /* File # from cmdline (0-based) */
-char *sh;                          /* The shell we should use */
+extern bool modify;                /* Modifying rather than inserting */
+extern uint8_t prmpt[10];          /* Prompt etc. */
+extern scrbuf5 *newcom;            /* Accepts latest command */
+extern scrbuf5 *oldcom;            /* Holds prev. (&returned) command */
+extern scrbuf5 *curr;              /* Current line */
+extern scrbuf5 *prev;              /* Previous (& returned) line */
+extern int pchrs;                  /* # of chrs in the prompt */
+extern long lstlin;                /* Last parsed line # (for -TO) */
+extern int fscode;                 /* File system &c code */
+extern char ermess[Q_BUFSIZ];      /* Text of message from GETLIN */
+extern char ubuf[Q_BUFSIZ];        /* Utility buffer for general use */
+extern unsigned long dfltmode;
+extern int argc;                   /* Copy of invocation arg */
+extern char **argv;                /* Copy of invocation arg */
+extern int argno;                  /* File # from cmdline (0-based) */
+extern char *sh;                   /* The shell we should use */
 #endif

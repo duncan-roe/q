@@ -203,10 +203,13 @@ xistcs()
         continue;
 
       case 'B':                    /* Backspace */
+
+/* It turns out that no code outside this module checks bspace any more */
+/* so silently ignore attempts to change it. */
+/* (bspace was a boolean saying whether this terminal can backspace) */
+
         (void)scrdtk(1, buf, 4, &cmdbuf);
-        if (cmdbuf.toktyp == eoltok)
-          bspace = !bspace;
-        else
+        if (cmdbuf.toktyp != eoltok)
         {
           if (cmdbuf.toktyp != nortok)
           {
@@ -214,10 +217,9 @@ xistcs()
             ok = false;
             continue;
           }                        /* if (cmdbuf.toktyp != nortok) */
-/*
- * If we have been given an octal character, set this as the
- * backspace character from now on, and set bspace true ...
- */
+
+/* If we have been given an octal character, set this as the
+ * backspace character from now on */
           verb = buf[0];
           result = cmdbuf.octok;   /* In case we got an OCTNUM */
           octnum = cmdbuf.octval;  /* In case we got an OCTNUM */
@@ -234,23 +236,15 @@ xistcs()
               continue;
             }
             backsp = octnum;
-            bspace = true;
           }                        /* if (result) */
           else
           {
             switch (verb)
             {
-              case 'Y':
-                bspace = true;
-                break;
-              case 'T':
-                bspace = true;
-                break;
-              case 'N':
-                bspace = false;
-                break;
+              case 'Y':            /* Drop thru */
+              case 'T':            /* Drop thru */
+              case 'N':            /* Drop thru */
               case 'F':
-                bspace = false;
                 break;
               default:
                 msg = "param not recognised";
@@ -258,7 +252,7 @@ xistcs()
                 continue;
             }                      /* switch (verb) */
           }                        /* if (result) else */
-        }                          /* if (cmdbuf.toktyp == eoltok) else */
+        }                          /* if (cmdbuf.toktyp != eoltok) */
         ok = true;
         continue;
 

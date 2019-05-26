@@ -16,6 +16,9 @@
  * it can call itself via rerdcm(),
  * but always returns immediately after doing so
  */
+
+/* Headers */
+
 #include <stdio.h>
 #include <memory.h>
 #include <string.h>
@@ -30,12 +33,20 @@
 #include "c1in.h"
 
 /* Static prototypes */
+
 static void massage_q_arg(void);
 static void complain_bad_command(void);
 static action do_the_massage(void);
 static action set__want_disply(void);
 static action display_maybe(void);
 static void complain_cvmba(void);
+
+/* Instantiate externals */
+
+scrbuf5 cmthis;
+bool cmsplt, cmover;
+
+/* Static variables */
 
 static char *cmtabl[52] = {        /* Table of commands in full */
   "APPEND",
@@ -94,7 +105,6 @@ static char *cmtabl[52] = {        /* Table of commands in full */
   ""                               /* FZ */
 };
 
-/* General variables */
 static int idx;
 static bool want_disply;
 static int start_pos, split_pos;

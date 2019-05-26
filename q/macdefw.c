@@ -1,7 +1,7 @@
 /* M A C D E F W . C
  *
  * Copyright (C) 1994, Duncan Roe & Associates P/L
- * Copyright (C) 2012-2014 Duncan Roe
+ * Copyright (C) 2012-2014,2019 Duncan Roe
  *
  * This routine carries out the definition of a macro. Storage is
  * acquired if necessary - if inadequate storage was previously assigned
@@ -9,6 +9,9 @@
  * The input is an array of uint16_t integers, rather than
  * characters as for MACDEF
  */
+
+/* Headers */
+
 #include <stdio.h>
 #include <memory.h>
 #include <stdlib.h>
@@ -20,27 +23,16 @@
 
 #define GIVE_UP goto no_memory
 
-/* ******************************** get_scmac ******************************* */
+/* Static prototypes */
 
-static bool
-get_scmac(uint32_t mcnum)
-{
-  static uint8_t *hunk;            /* Large malloc'd hunk of memory */
-  static int hunk_left = 0;
+static bool get_scmac(uint32_t mcnum);
 
-  if (hunk_left < sizeof(macro5))
-  {
-    hunk = malloc(PAGE_SIZE);
-    if (!hunk)
-      return false;
-    hunk_left = PAGE_SIZE;
-  }                                /* if (hunk_left < sizeof(macro5)) */
-  scmacs[mcnum] = (macro5 *)hunk;
-  hunk += sizeof(macro5);
-  hunk_left -= sizeof(macro5);
-  memset(scmacs[mcnum], 0, sizeof(macro5));
-  return true;
-}                                  /* bool get_scmac(uint32_t mcnum) */
+/* Instantiate externals */
+
+macro5 *scmacs[TOPMAC + 1];
+bool mctrst, nodup;
+int curmac, mcposn, mcnxfr, immnxfr;
+struct macinfo mcstck[STKSIZ];
 
 /* ******************************** macdefw ******************************** */
 
@@ -82,3 +74,25 @@ macdefw(uint32_t mcnum, uint16_t *buf, int buflen, bool appnu)
   scmacs[mcnum]->maclen = i;
   return true;
 }
+
+/* ******************************** get_scmac ******************************* */
+
+static bool
+get_scmac(uint32_t mcnum)
+{
+  static uint8_t *hunk;            /* Large malloc'd hunk of memory */
+  static int hunk_left = 0;
+
+  if (hunk_left < sizeof(macro5))
+  {
+    hunk = malloc(PAGE_SIZE);
+    if (!hunk)
+      return false;
+    hunk_left = PAGE_SIZE;
+  }                                /* if (hunk_left < sizeof(macro5)) */
+  scmacs[mcnum] = (macro5 *)hunk;
+  hunk += sizeof(macro5);
+  hunk_left -= sizeof(macro5);
+  memset(scmacs[mcnum], 0, sizeof(macro5));
+  return true;
+}                                  /* bool get_scmac(uint32_t mcnum) */

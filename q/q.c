@@ -21,22 +21,22 @@
 #include <memory.h>
 #include <string.h>
 #include <limits.h>
-#include <sys/types.h>
-#include <sys/times.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <sys/types.h>
-#include <unistd.h>
-#include <stdlib.h>
+#include <sys/times.h>
+#include <sys/types.h>
+#include "isacharspecial.h"
 #include "prototypes.h"
+#include "backtick.h"
 #include "edmast.h"
 #include "macros.h"
+#include "q_pipe.h"
 #include "fmode.h"
 #include "c1in.h"
-#include "q_pipe.h"
 #include "alu.h"
-#include "isacharspecial.h"
-#include "backtick.h"
 
 /* Macros */
 
@@ -109,6 +109,18 @@ long ptrpos = 0;
 uint8_t stdoutbuf[Q_BUFSIZ];
 uint8_t stderrbuf[Q_BUFSIZ];
 uint8_t fxtabl[128];
+uint32_t verb, row5, col5;
+int ndntch, funit, orig_stdout;
+bool vt100, deferd, locerr, noRereadIfMacro, forych, lstvld, modlin, mods;
+bool binary, cntrlc, seenwinch;
+char pcnta[PTHSIZ], *macro_dir;
+bool modify;
+uint8_t prmpt[10];
+scrbuf5 *newcom, *oldcom, *curr, *prev;
+int pchrs, fscode, argc, argno;
+long lstlin;
+char ermess[Q_BUFSIZ], ubuf[Q_BUFSIZ], **argv, *sh;
+unsigned long dfltmode;
 
 /* Static Variables */
 

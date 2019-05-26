@@ -8,19 +8,27 @@
  * This header file contains items of interest to the character input
  * subsystem
  */
+
+/* Headers */
+
 #include "typedefs.h"
+
+/* Macros */
+
 #define BUF5MAX 40
 #ifndef OPEN_MAX
 #  define OPEN_MAX 2048            /* Surely more than anyone would want */
 #endif
 #define USING_FILE (bool)(stdidx >= 0)
-int buf5len, buf5idx;
-void init5(void), final5(void);
+
+/* External variables */
+
+extern int buf5len, buf5idx;
 extern struct termios tio5save, tio5;
-bool size5;                        /* Screen was sized */
-int ttyfd;                         /* fd to do iocltls on */
-int stdidx;
-struct
+extern bool size5;                 /* Screen was sized */
+extern int ttyfd;                  /* fd to do iocltls on */
+extern int stdidx;
+extern struct stdinfo
 {
   int funit;
   bool nullstdout;
@@ -34,5 +42,10 @@ extern char *end_seq;
 extern char *normal_end_sequence;
 extern char *xistics_end_sequence;
 extern double timlst;
+extern uint8_t fxtabl[128];        /* FX command implementation */
+
+/* Prototypes */
+
+void init5(void), final5(void);
 void change_attr(int fd, struct termios *wanted);
 #endif

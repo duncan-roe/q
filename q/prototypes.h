@@ -77,21 +77,22 @@ double time_now(void);
 
 /* Global variables */
 
-uint32_t verb;               /*Command Processing - COMANL, ONEOF, NEWMAC &c. */
-int ndntch;                        /* # of chars to indent */
-bool vt100;                        /* Enable VT100-style curpos */
-bool deferd;                       /* Deferred indexing of mmap'd input file */
-bool locerr;                       /* LOCATE error only - macro can detect */
-bool noRereadIfMacro;              /* Don't re-read command if in macro &c */
-bool forych;   /* PDSPLY only required to do a BRIEF display (for YCHANGEALL) */
-bool lstvld;                       /* "previous" buffer has valid data */
-bool modlin;                       /* This line has actually changed */
-bool mods;                         /* Mods done since last SAVE */
-bool binary;                       /* Q invoked -b */
-int funit;                         /* File i/o ptr */
-char pcnta[PTHSIZ];                /* Pathname we are editing */
-uint32_t row5, col5;               /* Screen / window geometry */
-bool cntrlc, seenwinch;
-char *macro_dir;                   /* Where macros are */
-int orig_stdout;                   /* stdout funit at start */
+extern uint32_t verb;        /*Command Processing - COMANL, ONEOF, NEWMAC &c. */
+extern int ndntch;                 /* # of chars to indent */
+extern bool vt100;                 /* Enable VT100-style curpos */
+extern bool deferd;                /* Deferred indexing of mmap'd input file */
+extern bool locerr;                /* LOCATE error only - macro can detect */
+extern bool noRereadIfMacro;       /* Don't re-read command if in macro &c */
+extern bool forych;             /* PDSPLY only required to do a BRIEF display */
+extern bool lstvld;                /* "previous" buffer has valid data */
+extern bool modlin;                /* This line has actually changed */
+extern bool mods;                  /* Mods done since last SAVE */
+extern bool binary;                /* Q invoked -b */
+extern int funit;                  /* File i/o ptr */
+extern char pcnta[PTHSIZ];         /* Pathname we are editing */
+extern uint32_t row5, col5;        /* Screen / window geometry */
+extern bool cntrlc;                /* SIGINT handler invoked */
+extern bool seenwinch;             /* SIGWINCH handler invoked */
+extern char *macro_dir;            /* Where macros are */
+extern int orig_stdout;            /* stdout funit at start */
 #endif

@@ -72,7 +72,7 @@ setcrs(int posn)
     {
       crsbuf[0] = '\r';
       if (scurs ^= 0)
-        memcpy((char *)&crsbuf[1], (char *)reqd, (size_t)scurs);
+        memcpy(&crsbuf[1], reqd, scurs);
       crscnt = rtn;                /* Set final # to do */
     }
     return;
@@ -88,7 +88,7 @@ setcrs(int posn)
       if (ca < fwd)                /* If ^A faster */
       {
         crscnt = ca;               /* Set no. of chars in sequence */
-        memcpy((char *)crsbuf, (char *)cachrs, (size_t)cacnt);
+        memcpy(crsbuf, cachrs, cacnt);
         return;                    /* Finished */
       }
     }
@@ -97,7 +97,7 @@ setcrs(int posn)
     else
     {
       crscnt = fwd;                /* Set result */
-      memcpy((char *)crsbuf, (char *)&reqd[oldcrs], (size_t)fwd); /* Refresh */
+      memcpy(crsbuf, &reqd[oldcrs], fwd); /* Refresh */
     }                              /* if (absnum < fwd) else */
   }                                /* if (scurs < oldcrs) else */
 }

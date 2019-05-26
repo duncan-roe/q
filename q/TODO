@@ -21,7 +21,7 @@ Can set actual amount for "1 line forward / back" half-page / full-page
 Properly reinstate output optimisation (old hack removed as "quick fix")
  needs select() /poll()
  needs nanosleep when outputting chars
- needs circular(?) buffer for input chars
+ needs stack of buffers per U-use [and F-freprompt] for input chars
  get per-char delay from stty baud rate
  reinstate setting per-char delay (useful for testing)
 INTERNALS
@@ -35,7 +35,7 @@ INTERNALS
 	STARTED: use stdint types
 	DONE: Reduce number of goto stmts
 	DONE: return bad_rdtk() once H & L are subroutinised
-	STARTED: Eliminate FTN COMMON in favour of external / instantiate
+	DONE: Eliminate FTN COMMON in favour of extern / instantiate
 	Re-organise q.c for static fns at end
 	Maybe re-organise q.c for no internal fns
 Show what arguments Q started with (?)

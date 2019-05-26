@@ -65,15 +65,15 @@
 #define LEAVE_SCRDIT {if (!(USING_FILE || nodup)) duplx5(true); return;}
 #define ERR(x) {fputs(x "\r\n", stderr); verb = 'J'; return;}
 
-/* Externals that are not in any header */
-
-uint8_t fxtabl[128];
-
 /* Instantiate externals */
 
 scrbuf5 *last_Curr = NULL;
 double fbrief_interval = 0.1;
 double timlst = 0;
+uint8_t screen[SCRMAX], reqd[SCRMAX], prompt[PRSIZ], crsbuf[SCRMAX], backsp;
+uint8_t cachrs[PRSIZ];
+int cursr, scurs, pchars, crscnt, cacnt, tabcnt, cdone, partno, mxchrs;
+bool insert, rfrsh, endlin;
 
 /* Static prototypes */
 

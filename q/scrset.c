@@ -33,6 +33,7 @@ scrset(scrbuf5 *line)
   int i, j;                        /* Loop indices */
   int thisch;                      /* Char being dealt with */
   uint8_t *p;
+  int icurs;                       /* Pos'n on screen of last char done */
 
 /* Initial Tasks:- */
   if (!endlin)                     /* No disply() initialising yet */
