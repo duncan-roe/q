@@ -124,6 +124,25 @@ unsigned long dfltmode;
 
 /* Static Variables */
 
+static int colonline;              /* Line number from <file>:<line> */
+static command_state cmd_state;
+static bool verbose_flag;          /* -v seen */
+static long count2;            /* For those commands that take 2 #'s of lines */
+static int locpos;              /* Position in line of string found by LOCATE */
+static long revpos;                /* Remembered pointer during backwards L */
+static bool is_locate;
+static bool splt;                  /* Last line ended ^T (for MODIFY) */
+static bool display_wanted;
+static bool repos;                 /* We are R-REPOSITION (not C-COPY) */
+static char xkey[3];               /* 2nd param to FX command */
+static char ndel[33];              /* Table of non-delimiters FL & FY */
+static int lastpos;                /* Last pos to search (L&Y) */ ;
+static int minlen;                 /* Min line length (L&Y) */
+static int firstpos;               /* First pos to search (L&Y) */
+static long count;
+static int h, i, j, k, m;          /* Scratch */
+static long i4, j4, k4;            /* Scratch */
+static bool tokens;                /* Token search yes/no */
 static char *help_dir;
 static char *help_cmd;
 static char *etc_dir;
@@ -147,6 +166,54 @@ static int retcod;                 /* Short-term use */
 
 /* Static prototypes */
 
+static bool do_fdevnull(void);
+static bool do_fimmediate_macro(void);
+static bool do_fmode(void);
+static bool do_fnone(void);
+static bool do_forget(void);
+static bool do_ftokenchar(void);
+static bool do_fverbose(void);
+static bool do_fxchange(void);
+static bool do_goto(void);
+static bool do_help(void);
+static bool do_insert(void);
+static bool do_join(void);
+static bool do_locate(void);
+static bool do_modify(void);
+static bool do_newmacro(void);
+static bool do_o_ff_or_fc(unsigned long bit);
+static bool do_print(void);
+static bool do_quit(void);
+static bool do_reposition(void);
+static bool do_shell_command(void);
+static bool do_tabset(void);
+static bool do_usefile(void);
+static bool do_view(void);
+static bool do_writefile(void);
+static bool do_xistics(void);
+static bool do_copy(void);
+static bool do_delete(void);
+static bool do_enter(void);
+static bool do_fbrief(void);
+static bool do_append(void);
+static void A_I_common(void);
+static bool E_Q_common(void);
+static void P_V_common(void);
+static void J_L_common(void);
+static void J_L_M_common(void);
+static void display_and_update_file(void);
+static bool A_I_M_common(void);
+static bool finish_c_or_r(char *which);
+static bool get_c_or_r_args(void);
+static void report_control_c(void);
+static int get_num(bool okzero, long *result);
+static bool valid_FX_arg(void);
+static void move_cursor_back(void);
+static void printf_eof_reached(long ct, char *action_str);
+static void print_scanned_lines(long which);
+static bool get_search_columns(void);
+static bool do_ychangeall(void);
+static bool do_zenduse(void);
 static bool pushmac(bool set_u_use);
 static bool eolok(void);
 static q_yesno get_answer(void);
@@ -160,7 +227,7 @@ static bool do_b_or_s(bool is_b);
 static void rm_pipe_temp(void);
 static void write_workfile_to_stdout(void);
 static void dev_null_stdout(void);
-static alu_dict_ent * make_node(int initial_fn_idx);
+static alu_dict_ent *make_node(int initial_fn_idx);
 static void add_op(alu_dict_ent * root, char *opcode);
 static void init_alu(void);
 static bool bad_rdtk(void);
@@ -170,1533 +237,26 @@ static void display_opcodes(void);
 int
 main(int xargc, char **xargv)
 {
-  char oldkey[3];                  /* 1st param to FX command */
-  char xkey[2], newkey[3];         /* 2nd param to FX command */
-  char *r;                         /* Scratch */
-  char ndel[33];                   /* Table of non-delimiters FL & FY */
-  int i, j, k = 0, h, m, n, dummy; /* Scratch - I most so */
-  int oldlen = 0;                  /* Length of OLDSTR */
-  int newlen = 0;                  /* Length of NEWSTR */
-  int ydiff = 0;                   /* OLDLEN-NEWLEN */
-  int yposn;                       /* How far we are along a line (Y) */
-  int locpos;                   /* Position in line of string found by LOCATE */
-  int minlen = 0;                  /* Min line length (L&Y) */
-  int firstpos = 0;                /* First pos to search (L&Y) */
-  int lastpos = 0;                 /* Last pos to search (L&Y) */ ;
-  int colonline;                   /* Line number from <file>:<line> */
-
-/* For those commands that take 2 #'s of lines */
-  long count2 = 0;
-  long i4, j4 = 0, k4 = 0;         /* Scratch */
-  long revpos;                     /* Remembered pointer during backwards L */
-  long xcount = 0;                 /* For V-View */
-
-  char oldstr[Q_BUFSIZ], newstr[Q_BUFSIZ]; /* YCHANGEALL. !!AMENDED USAGE!! */
-  uint8_t *p;                      /* Scratch */
-  char *colonpos;                  /* Pos'n of ":" in q filename */
-
-  bool splt;                       /* Last line ended ^T (for MODIFY) */
-  bool logtmp = false, lgtmp3 = false; /* Scratch */
-  bool display_wanted;
-  bool is_locate;
-  bool repos = false;              /* We are R-REPOSITION (not C-COPY) */
-  bool linmod;                     /* This line modified (Y) */
-  bool tokens = false;             /* Token search yes/no */
   bool do_rc = true;
   bool errflg = false;             /* Illegal switch seen */
   bool vrsflg = false;             /* -V seen */
   bool aluflg = false;             /* -A seen */
   bool quiet_flag = false;         /* -q seen */
-  bool verbose_flag = false;       /* -v seen */
-  command_state cmd_state = TRY_INITIAL_COMMAND;
   qrc_state e_state = LOCAL;
-  bool fullv = false;              /* Full VIEW wanted */
   char *initial_command = NULL;
   bool P, Q;                      /* For determining whether we are in a pipe */
-  long count;
 
-/* INTERNAL FUNCTIONS */
-
-/* ****************************** valid_FX_arg ****************************** */
-
-  bool valid_FX_arg(void)
-  {
-    if (oldcom->toklen == 0)
-    {
-      fputs("Null argument not allowed", stdout);
-      return false;
-    }                              /* if (oldcom->toklen == 0) */
-    if (oldcom->toklen != 2)       /* Can't be ^<char> */
-    {
-      k = xkey[0];                 /* Convert to subscript */
-      if (k >= 128)
-      {
-        fputs("parity-high \"keys\" not allowed", stdout);
-        return false;
-      }                            /* if (k >= 128) */
-    }                              /* if (oldcom->toklen != 2) */
-    else
-    {
-      if (xkey[0] != CARAT)
-      {
-        fputs("may only have single char or ^ char", stdout);
-        return false;
-      }                            /* if (xkey[0] != CARAT) */
-      k = xkey[1];                 /* Isolate putative control */
-      if (k >= 0100 && k <= 0137)  /* A real control char */
-        k = k - 0100;              /* Control char to subscript */
-      else if (k == ASTRSK)        /* ^* (real uparrow) */
-        k = CARAT;
-      else if (k == QM)            /* ^? (Rubout) */
-        k = 127;
-      else
-      {
-        fputs("Illegal control character representation", stdout);
-        return false;
-      }
-    }                              /* if (oldcom->toklen != 2) else */
-    if (k > 31 && k != 127)
-      puts("Warning: non-control char as argument\r");
-    return true;
-  }                                /* bool valid_FX_arg(void) */
-
-/* ********************************* get_num ******************************** */
-
-  int get_num(bool okzero, long *result)
-/* Returns: 1: no number found and 1 returned in result
- *          0: number found and returned in result
- *         -1: error */
-  {
-    if (!getnum(okzero))
-      return -1;                   /* Format err on # of lines */
-    *result = oldcom->decval;      /* getnum() assures validity */
-    return oldcom->toktyp != nortok;
-  }                                /* int get_num(bool okzero, long *result) */
-
-/* **************************** report_control_c **************************** */
-
-  void report_control_c(void)
-  {
-    puts("Quit,\r");
-    if (!USING_FILE && curmac < 0)
-      cntrlc = false;              /* Forget ^C now unless macro */
-  }                                /* void report_control_c(void) */
-
-/* *************************** print_scanned_lines ************************** */
-
-  void print_scanned_lines(long which)
-  {
-    printf(" %ld lines ", which - i4);
-    fputs("scanned", stdout);
-    newlin();
-    setptr(savpos);                /* Restore file pos'n */
-  }                                /* void print_scanned_lines(void) */
-
-/* **************************** move_cursor_back **************************** */
-
-  void move_cursor_back(void)
-  {
-/* Reset screen cursor */
-    (void)scrdtk(5, (uint8_t *)NULL, 0, oldcom);
-
-/* Move past command & 1st param */
-    (void)scrdtk(1, (uint8_t *)NULL, 0, oldcom);
-    (void)scrdtk(1, (uint8_t *)NULL, 0, oldcom);
-  }                                /* void move_cursor_back(void) */
-
-/* *************************** get_search_columns *************************** */
-
-  bool get_search_columns(void)
-  {
-    if (!getnum(false))            /* Get 1st pos to search */
-      return false;
-    firstpos = oldcom->decval - 1; /* Columns start at 0 */
-    if (!getnum(false))            /* Get last pos'n */
-      return false;
-    if (oldcom->toktyp != nortok)
-      lastpos = BUFMAX;            /* BUFMAX does not include trlg null */
-    else
-    {
-      lastpos = oldcom->decval - 1; /* Last start position */
-      if (lastpos < firstpos)      /* Impossible combination of columns */
-      {
-        puts("Last pos'n < first\r");
-        return false;
-      }                            /* if(lastpos < firstpos) */
-      lastpos += h;                /* Add search length to get wanted length */
-    }                              /* if (oldcom->toktyp != nortok) else */
-    minlen = firstpos + h;         /* Get minimum line length to search */
-    if (!eolok())
-      return false;
-    return true;
-  }                                /* bool get_search_columns(void) */
-
-/* *************************** printf_eof_reached *************************** */
-
-  void printf_eof_reached(long ct, char *action_str)
-  {
-    i4 = ct - i4 + 1;              /* Lines not actioned */
-    printf("%s of file reached:- ", REVRSE ? "start" : "end");
-    printf("%ld line%s ", i4 - 1, i4 == 2 ? "" : "s");
-    printf("%s\r", action_str);
-  }                     /* void printf_eof_reached(long ct, char *action_str) */
-
-/* ***************************** get_c_or_r_args **************************** */
-
-  bool get_c_or_r_args(void)
-  {
-    if (!getlin(true, false))      /* Bad source */
-    {
-      fputs(" in source line", stdout);
-      return false;
-    }
-    k4 = oldcom->decval;           /* Remember source */
-    if (!getlin(true, true))       /* Bad dest'n */
-    {
-      fputs(" in dest'n line", stdout);
-      return false;
-    }
-    j4 = oldcom->decval;           /* Remember dest'n */
-    lstlin = k4;                   /* -TO refers from source line */
-    if (j4 == k4)                  /* Error if equal */
-    {
-      fputs("Source and destination line #'s must be different", stdout);
-      return false;
-    }
-    return true;
-  }                                /* bool get_c_or_r_args(void) */
-
-/* ****************************** finish_c_or_r ***************************** */
-
-  bool finish_c_or_r(char *which)
-  {
-    if (!get_opt_lines(&count))
-      return false;
-    setptr(j4);                    /* Set main ptr at dest'n */
-
-/* Note:- When setting both pointers, always set AUX second */
-    setaux(k4);                    /* Set AUX ptr at source */
-
-    for (i4 = count; i4 > 0; i4--)
-    {
-      if (rdlin(prev, true))       /* Read AUX */
-      {
-        if (repos)
-          delete(true);            /* For reposition only, delete line read */
-        inslin(prev);
-      }                            /* if (rdlin(prev, true)) */
-      else
-      {
-        printf_eof_reached(count, which);
-        newlin();
-        break;
-      }                            /* if (rdlin(prev, true)) else */
-    }
-    return true;                   /* Finished C or R */
-  }                                /* bool finish_c_or_r(char *which) */
-
-/* ************************* display_and_update_file ************************ */
-
-  void display_and_update_file(void)
-  {
-    if ((modify || splt) && modlin)
-      delete(false);               /* Delete CHANGED existing line */
-    if (display_wanted)
-      disply(prev, false);         /* Display final line */
-    if (!(modify || splt) || modlin)
-      inslin(prev);                /* Insert changed or new line */
-    splt = false;                  /* Not a split this time */
-  }                                /* void display_and_update_file(void) */
-
-/* ****************************** A_I_M_common ****************************** */
-
-  bool A_I_M_common(void)
-  {
-    bool repeat;
-
-    do
-    {
-/* Get user out of INSERT/APPEND/MODIFY is ^C has been typed */
-      if (cntrlc)
-      {
-        report_control_c();
-        return true;
-      }                            /* if (cntrlc) */
-      repeat = false;
-      scrdit(curr, prev, (char *)prmpt, pchrs, false); /* Edit the line */
-      display_wanted = curmac < 0 || !BRIEF;
-      switch (verb)                /* Check EOL type */
-      {
-        case 'J':
-          display_and_update_file();
-          break;
-
-/* ESC. If we were changing an existing line, display the original */
-        case '[':
-          if (modify || splt)
-          {
-            if (display_wanted)
-            {
-              setptr(ptrpos - 1);
-              rdlin(prev, false);
-              disply(prev, false);
-            }                      /* if(display_wanted) */
-            splt = false;
-          }                        /* if(modify||splt) */
-          if (REVRSE && is_locate) /* "L"ocate backwards */
-            setptr(revpos);
-          return true;
-
-        case 'T':
-          display_and_update_file();
-          splt = true;             /* Force a delete next time */
-          inslin(curr);            /* In case ESC next time */
-          sprmpt(ptrpos - 1);
-          repeat = true;           /* New line for all 3 (A,I,M) */
-          break;
-
-        default:
-          fputs("Internal error - EOL char not recognised", stdout);
-          newlin();
-          return true;
-      }                            /* switch (verb) */
-    }                              /* do */
-    while (repeat);
-    return false;
-  }                                /* bool A_I_M_common(void) */
-
-/* ****************************** J_L_M_common ****************************** */
-
-  void J_L_M_common(void)
-  {
-    for (i = count; i > 0; i--)
-    {
-      if (!rdlin(curr, false))     /* Get lin to mod / EOF */
-      {
-        puts("E - O - F\r");
-        return;
-      }                            /* if(!rdlin(curr, false)) */
-      curr->bcurs = locpos;        /* In case just come from LOCATE */
-      locpos = 0;                  /* In case just come from LOCATE */
-      sprmpt(ptrpos - 1);          /* Set up prompt lin # just read */
-      if (A_I_M_common())
-        return;
-    }
-/* If doing a reverse locate, move pointer back to where locate was, ready for
- * the next one. Also has to be done after Ec) */
-    if (is_locate && REVRSE)
-      setptr(revpos);
-  }                                /* void J_L_M_common(void) */
-
-/* ******************************* J_L_common ******************************* */
-
-  void J_L_common(void)
-  {
-    lstvld = false;                /* Previous line not valid */
-    modify = true;                 /* For "M"odify code */
-    J_L_M_common();
-  }                                /* void J_L_common(void) */
-
-/* ******************************* P_V_common ******************************* */
-
-  void P_V_common(void)
-  {
-    for (i = count; i > 0; i--)
-    {
-      if (!rdlin(curr, false))     /* EOF. Normal ptr */
-      {
-        puts(" E - O - F\r");
-        break;
-      }
-      sprmpt(ptrpos - 1);
-      pdsply(curr, prmpt, pchrs);
-      if (cntrlc || (i > 1 && kbd5())) /* User wants out */
-      {
-        newlin();
-        puts(" *** keyboard interrupt *** \r");
-        cntrlc = false;
-        break;
-      }
-    }
-  }                                /* void P_V_common(void) */
-
-/* ******************************* E_Q_common ******************************* */
-
-  bool E_Q_common(void)
-  {
-    savpos = ptrpos;               /* Return here with file open. read it... */
-
-/* Use mmap if requested */
-
-    if (fmode & 02000 && (verb != 'E' || fmode & 020000))
-    {
-      if (fstat(funit, &statbuf))
-      {
-        fprintf(stderr, "%s. funit %d (fstat)", strerror(errno), funit);
-        my_close(funit);           /* Bad fstat */
-        return false;
-      }                            /* if(fstat(funit,&statbuf)) */
-      if (statbuf.st_size)
-      {
-        if ((p = mmap(NULL, statbuf.st_size, PROT_READ, MAP_PRIVATE
-#ifdef MAP_DENYWRITE
-          | MAP_DENYWRITE    /* Doesn't appear to work (need MAP_EXECUTABLE?) */
-#endif
-          , funit, (off_t) 0)) == (void *)-1)
-        {
-          fprintf(stderr, "%s. funit %d (mmap)", strerror(errno), funit);
-          my_close(funit);
-          return false;
-        }                          /* if(!(p=mmap(NULL,statbuf.st_size... */
-        mapfil(statbuf.st_ino, statbuf.st_size, p);
-      }                            /* if(statbuf.st_size) */
-      else
-        puts("0 lines read.\r");
-    }                              /* if(fmode&02000&&... */
-    else
-      readfl();
-    if (my_close(funit))           /* Failure */
-      fprintf(stderr, "%s. funit %d (close)", strerror(errno), funit);
-    setptr(savpos);
-    return true;
-  }                                /* bool E_Q_common(void) */
-
-/* ******************************* A_I_common ******************************* */
-
-  void A_I_common(void)
-  {
-    modify = false;
-    lstvld = false;                /* Previous line not valid */
-    for (;;)
-    {
-      curr->bchars = 0;
-      curr->bcurs = 0;             /* Set up new empty line */
-      sprmpt(ptrpos);              /* PROMPT = # of new line */
-      if (A_I_M_common())
-        return;
-    }                              /* for (;;) */
-  }                                /* void A_I_common(void) */
-
-/* IMPLEMENT Q COMMANDS (In alphabetical order) */
-
-/* ******************************** do_append ******************************* */
-
-  bool do_append(void)
-  {
-    if (!eolok())
-      return false;
-    if (deferd)                    /* File not all read in yet */
-      dfread(LONG_MAX, NULL);
-    setptr(lintot + 1);            /* Ptr after last line in file */
-    A_I_common();
-    return true;
-  }                                /* bool do_append(void) */
-
-/* ********************************* do_copy ******************************** */
-
-  bool do_copy(void)
-  {
-    repos = false;                 /* C-COPY, not R-REPOS */
-    if (!get_c_or_r_args())
-      return false;
-    if (finish_c_or_r("copied"))
-      return true;                 /* End C */
-    return false;
-  }                                /* bool do_copy(void) */
-
-/* ******************************** do_delete ******************************* */
-
-  bool do_delete(void)
-  {
-    if (!getlin(true, false))
-      return false;                /* J bad line # */
-    k4 = oldcom->decval + 1;       /* Pos here for each delete */
-    if (!get_opt_lines(&count))
-      return false;
-    clrfgt();                      /* In case lines from last D */
-    for (i4 = count; i4 > 0; i4--)
-    {
-
-/* Check if there are deferred lines and try to get one if so. We need to
- * re-check lintot: "deferd" will get cleared in the process if the last line
- * was unterminated */
-      if (k4 == lintot + 2 && !(deferd && (dfread(1, NULL), k4 != lintot + 2)))
-      {
-        printf_eof_reached(count, "deleted");
-        newlin();
-        break;
-      }                            /* if (k4 == lintot + 2 && ...) */
-      else
-      {
-        setptr(k4);                /* Pos 1 past 1st line to go */
-        delete(false);             /* Knock off line. Use normal ptr */
-      }                            /* if (k4 == lintot + 2 && ...) else */
-    }
-    return true;                   /* Finished if get here */
-  }                                /* bool do_delete(void) */
-
-/* ******************************** do_enter ******************************** */
-
-  bool do_enter(void)
-  {
-    if (!get_file_arg(&nofile) || nofile)
-      ERRRTN("Error in filename");
-    if (!eolok())
-      return false;
-    if ((funit = open_buf(O_RDONLY, 0)) == -1)
-    {
-      fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
-      return false;                /* Bad open */
-    }                       /* if ((funit = open_buf(O_RDONLY, tmode)) == -1) */
-    return E_Q_common();
-  }                                /* bool do_enter(void) */
-
-/* ******************************** do_fbrief ******************************* */
-
-  bool do_fbrief(void)
-  {
-    if (!eolok())
-      return false;
-    if (!(fmode & 01000))
-    {
-      fmode |= 010000000000;
-      fmode &= 017777777777;
-    }                              /* if (!(fmode & 01000)) */
-    else
-      PRINTF_IGNORED;
-    return true;                   /* Finished */
-  }                                /* bool do_fbrief(void) */
-
-/* ******************************* do_fdevnull ****************************** */
-
-  bool do_fdevnull(void)
-  {
-    if (verbose_flag)              /* FD ineffective in q -v */
-    {
-      PRINTF_IGNORED;
-      return true;
-    }                              /* if (verbose_flag) */
-    switch (get_answer())
-    {
-      case Q_UNREC:
-        return false;
-      case Q_MAYBE:
-      case Q_NO:
-        restore_stdout();
-        break;
-      case Q_YES:
-        if (USING_FILE)
-        {
-          devnull_stdout();
-          break;
-        }                          /* if (USING_FILE) */
-        else
-        {
-          fputs("fd y is not available from the keyboard", stdout);
-          return false;
-        }
-    }                              /* switch (get_answer()) */
-    return true;
-  }                                /* bool do_fdevnull(void) */
-
-/* *************************** do_fimmediate_macro ************************** */
-
-  bool do_fimmediate_macro(void)
-  {
-    if (scrdtk(4, (uint8_t *)ubuf, BUFMAX, oldcom))
-    {
-      perror("SCRDTK of macro text");
-      fprintf(stderr, "\rUnexpected error");
-      return false;
-    }
-/* Decide which macro this will be. */
-/* Some nesting of FI macros is allowed, */
-/* to support e.g. nested U-use files which contain FI cmds */
-    if (immnxfr > LAST_IMMEDIATE_MACRO)
-    {
-      fputs("Too many nested FI commands", stdout);
-      return false;
-    }
-    verb = immnxfr++;
-    if (!newmac2(true))
-      return false;
-
-/* FI does an implied ^ND */
-    if (curmac >= 0 && !pushmac(false))
-      return false;
-
-    curmac = verb;
-    mcposn = 0;
-    return true;
-  }                                /* bool do_fimmediate_macro(void) */
-
-/* ******************************** do_fmode ******************************** */
-
-  bool do_fmode(void)
-  {
-    return setmode();
-  }                                /* bool do_fmode(void) */
-
-/* ******************************** do_fnone ******************************** */
-
-  bool do_fnone(void)
-  {
-    if (!eolok())
-      return false;
-    if (fmode & 01000)
-      PRINTF_IGNORED;
-    else
-      fmode |= 030000000000u;
-    return true;                   /* Finished */
-  }                                /* bool do_fnone(void) */
-
-/* ******************************** do_forget ******************************* */
-
-  bool do_forget(void)
-  {
-    if (!eolok())
-      return false;
-    forget();                      /* Implemented by workfile */
-    return true;
-  }                                /* bool do_forget(void) */
-
-/* ****************************** do_ftokenchar ***************************** */
-
-  bool do_ftokenchar(void)
-  {
-    if (strlen(ndel) >= 32)
-    {
-      fputs("no room for further entries", stdout);
-      return false;
-    }
-    if (scrdtk(1, (uint8_t *)ubuf, 40, oldcom)) /* Get character to add */
-      return bad_rdtk();
-    if (oldcom->toktyp == eoltok)
-    {
-      fputs("command requires a parameter", stdout);
-      return false;
-    }
-    if (oldcom->toklen != 1)
-    {
-      fputs("parameter must be single character", stdout);
-      return false;
-    }
-    if (!eolok())
-      return false;
-    strcat(ndel, ubuf);
-    return true;
-  }                                /* bool do_ftokenchar(void) */
-
-/* ******************************* do_fverbose ****************************** */
-
-  bool do_fverbose(void)
-  {
-    if (!eolok())
-      return false;
-    fmode &= 07777777777;
-    return true;                   /* Finished */
-  }                                /* bool do_fverbose(void) */
-
-/* ******************************* do_fxchange ****************************** */
-
-  bool do_fxchange(void)
-  {
-    if (scrdtk(2, (uint8_t *)oldkey, 3, oldcom))
-      return bad_rdtk();
-    if (oldcom->toktyp == eoltok)  /* Empty line */
-    {
-/* FX with no params - Re-initialise the table, subject to
- *                     confirmation */
-      if (!ysno5a("Re-initialise keyboard table to default - ok", A5NDEF))
-        return true;               /* Finish if changed his mind */
-      for (i = 127; i >= 0; i--)
-        fxtabl[i] = i;             /* No FX commands yet */
-      return true;                 /* Finished after reset */
-    }                              /* if (oldcom->toktyp != eoltok) */
-    xkey[0] = oldkey[0];
-    xkey[1] = oldkey[1];
-    if (!valid_FX_arg())
-      return false;
-    oldkey[0] = k;                 /* Now a subscript */
-    if (scrdtk(2, (uint8_t *)newkey, 3, oldcom))
-      return bad_rdtk();
-    if (oldcom->toktyp == eoltok)
-    {
-      fputs("FX must have 2 parameters", stdout);
-      return false;
-    }
-    xkey[0] = newkey[0];
-    xkey[1] = newkey[1];
-    if (!valid_FX_arg())
-      return false;
-    newkey[0] = k;                 /* Now a subscript */
-    if (!eolok())
-      return false;
-    i = fxtabl[(int)oldkey[0]];
-    fxtabl[(int)oldkey[0]] = fxtabl[(int)newkey[0]];
-    fxtabl[(int)newkey[0]] = i;
-    return true;
-  }                                /* bool do_fxchange(void) */
-
-/* ********************************* do_goto ******************************** */
-
-  bool do_goto(void)
-  {
-    if (getlin(true, true) && eolok())
-    {
-      setptr(oldcom->decval);
-      return true;                 /* Finished GOTO */
-    }                              /* if(getlin(true, ... */
-    return false;
-  }                                /* bool do_goto(void) */
-
-/* ********************************* do_help ******************************** */
-
-  bool do_help(void)
-  {
-/* We have some extra work here, because HELP doesn't actually take
- * a filename, and doesn't want one. */
-    if (scrdtk(2, (uint8_t *)tmfile, 17, oldcom))
-      return bad_rdtk();
-    k = oldcom->toklen;            /* Get length of HELP topic */
-    if (!eolok())
-      return false;
-    if (k == 0)                    /* No topic given */
-    {
-      k = 1;
-      tmfile[0] = '#';             /* Dummy topic of "#" */
-      tmfile[1] = '\0';
-    }                              /* if (k == 0) */
-    else
-    {
-      for (i = k - 1; i >= 0; i--)
-        if (tmfile[i] >= 'A' && tmfile[i] <= 'Z')
-          tmfile[i] = tolower(tmfile[i]); /* No u/c filenames allowed */
-    }                              /* if (k == 0) else */
-
-/* GCC 8.1 complained when the next line was an sprintf. */
-/* To keep gcc quiet, we tested for overflow. */
-/* But GCC 8.3.0 complained amnyway */
-/* So now we compile with -Wno-format-truncation. */
-/* If truncation happens, there should be a useful message... */
-    snprintf(tmtree, sizeof tmtree, "%s/%s", help_dir, tmfile);
-    if (stat(tmtree, &statbuf))
-    {
-/* Output a potted message if he "typed h for help" */
-      if (tmfile[0] == '#' && tmfile[1] == 0)
-      {
-        puts("\r");
-        puts("Sorry - I can't find my HELP files.\r");
-        puts("If you have them installed somewhere,\r"
-          "please put that path in your shell environment"
-          " with the name Q_HELP_DIR.\r\n\n");
-        return true;
-      }
-      fprintf(stderr, "%s. %s (HELP)", strerror(errno), tmtree);
-      return false;
-    }
-    sprintf(ubuf, "%s %s", help_cmd, tmtree);
-    final5();                      /* For some pagers */
-    if (system(ubuf) < 0)
-    {
-      fprintf(stderr, "%s. %s (system)", strerror(errno), ubuf);
-      init5();
-      return false;
-    }
-    init5();
-    return true;                   /* Finished */
-  }                                /* bool do_help(void) */
-
-/* ******************************** do_insert ******************************* */
-
-  bool do_insert(void)
-  {
-    if (!getlin(true, true))
-      return false;                /* J line # u/s */
-    setptr(oldcom->decval);        /* Get ready to insert */
-    if (!eolok())                  /* Extra params */
-      return false;
-    A_I_common();
-    return true;
-  }                                /* bool do_insert(void) */
-
-/* ********************************* do_join ******************************** */
-
-  bool do_join(void)
-  {
-    if (!getlin(true, false))
-      return false;                /* J bad line # */
-    setptr(oldcom->decval);        /* Pos'n on line to be joined onto */
-    if ((retcod = get_num(false, &count2)) < 0)
-      return false;
-    lstlin = -1;                   /* Not allowed -TO */
-    if (!get_opt_lines(&count))
-      return false;
-
-/* At eof? */
-    if (ptrpos >= lintot && !(deferd && (dfread(1, NULL), ptrpos < lintot)))
-    {
-      if (curmac < 0 || !BRIEF)    /* Message wanted */
-        puts("Can't join anything - no lines follow\r");
-      return true;                 /* Next command */
-    }                              /* if(ptrpos>=lintot&&... */
-    rdlin(prev, false);            /* 1st line */
-    delete(false);                 /* Del lin before normal ptr */
-    for (i4 = count2; i4 > 0; i4--)
-    {
-      if (!rdlin(curr, false))     /* If eof */
-      {
-        printf_eof_reached(count2, "joined");
-        break;
-      }
-      j = curr->bchars + prev->bchars;
-      if (j > prev->bmxch)         /* Overflowed line capacity */
-      {
-        setptr(ptrpos - 1);
-        fputs("joining next line would exceed line size :- ", stdout);
-        printf("%ld lines ", i4 - 1);
-        puts("joined\r");
-        break;
-      }                            /* if (j > prev->bmxch) */
-      r = (char *)&prev->bdata[prev->bchars]; /* Appending posn */
-      prev->bchars = j;            /* New length */
-      delete(false);               /* Delete line just read */
-/* Append line just read */
-      memcpy(r, (char *)curr->bdata, (size_t)curr->bchars);
-    }
-    inslin(prev);                  /* Put composed line back */
-    setptr(ptrpos - 1);
-    J_L_common();
-    return true;
-  }                                /* bool do_join(void) */
-
-/* ******************************** do_locate ******************************* */
-
-  bool do_locate(void)
-  {
-    is_locate = true;
-    tokens = verb == 'l';          /* Whether FL */
-    if (REVRSE)
-      revpos = ptrpos;
-    display_wanted = !BRIEF || curmac < 0; /* Display error messages if true */
-    if (REVRSE ? ptrpos <= 1 : ptrpos > lintot && !(deferd &&
-      (dfread(1, NULL), ptrpos <= lintot)))
-    {
-      if (display_wanted)
-        printf("At %s of file already - no lines to search\r\n",
-          REVRSE ? "start" : "end");
-      return true;                 /* Next command */
-    }                              /* if(REVRSE?ptrpos<=1:ptrpos>lintot&&... */
-
-/* Get the string to locate.
- * The string is read to the ermess array,
- * as ubuf will get overwritten and we aren't going to use getlin,
- * so ermess is spare. */
-    if (scrdtk(2, (uint8_t *)ermess, BUFMAX, oldcom))
-      return bad_rdtk();
-    if (oldcom->toktyp == eoltok || !(h = oldcom->toklen))
-    {
-      fputs("Null string to locate", stdout);
-      return false;
-    }
-
-    lstlin = ptrpos;               /* -TO rel currnt line */
-    if ((retcod = get_num(false, &count2)) < 0) /* Get number lines to search */
-      return false;
-    if (retcod)                    /* No number given */
-    {
-      if (REVRSE)
-        count2 = ptrpos - 1;
-      else if (deferd)
-        count2 = LONG_MAX;
-      else
-        count2 = lintot - ptrpos + 1;
-    }                              /* if (retcod) */
-    lstlin = -1;                   /* Not allowed -TO */
-    if (get_num(false, &count) < 0) /* Get # lines to mod on location */
-      return false;
-    if (!get_search_columns())
-      return false;
-    savpos = ptrpos;               /* Remember pos in case no match */
-
-/* Start of search */
-
-    for (i4 = count2; i4 > 0; i4--)
-    {
-      if (cntrlc)                  /* User abort */
-      {
-        cntrlc = false;            /* ^C noticed */
-        fputs("Command abandoned :-", stdout);
-        print_scanned_lines(count2);
-        return true;
-      }                            /* if(cntrlc) */
-      if (REVRSE && revpos > 1)
-      {
-        setptr(--revpos);          /* Read previous line */
-        rdlin(curr, false);        /* "can't" hit eof */
-      }                            /* if(REVRSE) */
-      else if ((REVRSE && revpos <= 1) || !rdlin(curr, false)) /* If eof */
-      {
-        if (display_wanted && count2 != LONG_MAX) /* Message wanted */
-          printf_eof_reached(count2, "searched");
-        break;                     /* for(i4=count2;i4>0;i4--) */
-      }                            /* if(!rdlin(curr, false)) */
-      m = curr->bchars;
-      if (m < minlen)
-        continue;                  /* Skip search if too short */
-      if (m > lastpos)
-        m = lastpos;               /* Get length to search */
-      if (tokens ? ltok5a((uint8_t *)ermess, h, curr->bdata, firstpos, m,
-        &locpos, &dummy, (uint8_t *)ndel) : lsub5a((uint8_t *)ermess,
-        h, curr->bdata, firstpos, m, &locpos, &dummy))
-      {                            /* Line located */
-        if (REVRSE)
-          setptr(revpos);
-        else
-          setptr(ptrpos - 1);
-        J_L_common();              /* End L & J - carry on as M */
-        return true;
-      }                            /* if((tokens?ltok5a((... */
-    }                              /* for(i4=count2;i4>0;i4--) */
-
-/* Didn't locate it if we get here */
-
-    setptr(savpos);                /* Move pointer back */
-    locpos = 0;                    /* zeroised by lstr5a */
-    if (display_wanted)
-      fputs("Specified string not found", stdout);
-    locerr = true;                 /* Picked up by RERDCM */
-    move_cursor_back();
-    return false;
-  }                                /* bool do_locate(void) */
-
-/* ******************************** do_modify ******************************* */
-
-  bool do_modify(void)
-  {
-    modify = true;
-    if (getlin(false, false))
-    {
-      j4 = oldcom->decval;         /* 1st line to be altered */
-      lstvld = false;              /* Previous line not valid */
-      if (!get_opt_lines(&count))
-        return false;
-    }
-    else
-    {
-      locerr = true;               /* An scmac can detect this error */
-      if (curmac < 0 || !BRIEF)    /* Report err unless brief macro */
-        fprintf(stderr, "%s", ermess);
-      return false;
-    }
-    setptr(j4);                    /* Position on 1st line to alter */
-    J_L_M_common();
-    return true;
-  }                                /* bool do_modify(void) */
-
-/* ******************************* do_newmacro ****************************** */
-
-  bool do_newmacro(void)
-  {
-    i = newmac();
-    if (i < 0)                     /* Token was "-" */
-    {
-      scrdtk(2, (uint8_t *)ubuf, BUFMAX, oldcom);
-      if (oldcom->toktyp == eoltok)
-        typmac();
-      else
-      {
-        if (!eolok())
-        {
-          alu_macros_only = false;
-          return false;
-        }                          /* if (!eolok()) */
-/* Need to preserve stdout for this */
-        if (orig_stdout == -1)
-        {
-          SYSCALL(orig_stdout, dup(1));
-        }                          /* if (orig_stdout == -1) */
-        if (orig_stdout == -1)
-        {
-          fprintf(stderr, "\r\n%s. (dup(1))\r\n", strerror(errno));
-          refrsh(NULL);
-          alu_macros_only = false;
-          return false;
-        }                          /* if (orig_stdout == -1) */
-        else
-        {
-          SYSCALL(i, close(1));
-          SYSCALL(i, open_buf(O_WRONLY | O_CREAT | O_TRUNC, 0666));
-          if (i == 1)
-          {
-            lstmac();
-            i = 0;                 /* Success */
-          }                        /* if (i == 1) */
-          else
-            i = errno;
-          restore_stdout();
-          if (i)
-            fprintf(stderr, "%s. %s (freopen)", strerror(i), ubuf);
-          i = !i;                  /* Required below */
-        }                          /* if (orig_stdout == -1) else */
-      }                            /* if (oldcom->toktyp == eoltok) else */
-      alu_macros_only = false;
-    }                              /* if (i < 0) */
-    return i != 0;
-  }                                /* bool do_newmacro(void) */
-
-/* ****************************** do_o_ff_or_fc ***************************** */
-
-  bool do_o_ff_or_fc(unsigned long bit)
-  {
-    logtmp = fmode & bit;
-    switch (get_answer())
-    {
-      case Q_YES:
-        logtmp = true;
-        break;
-      case Q_NO:
-        logtmp = false;
-        break;
-      case Q_MAYBE:
-        logtmp = !logtmp;
-        break;
-      case Q_UNREC:
-        return false;
-    }                              /* switch (answer) */
-    if (logtmp)
-      fmode |= bit;
-    else
-      fmode &= ~bit;
-    return true;
-  }                                /* bool do_o_ff_or_fc(unsigned long bit) */
-
-/* ******************************** do_print ******************************** */
-
-  bool do_print(void)
-  {
-    lstlin = ptrpos;               /* -TO strt curr lin */
-    if (!get_opt_lines(&count))
-      return false;
-    P_V_common();
-    return true;                   /* Finished P */
-  }                                /* bool do_print(void) */
-
-/* ********************************* do_quit ******************************** */
-
-  bool do_quit(void)
-  {
-/* We accept a filename - starts user off editing a fresh file */
-
-    if (mods &&
-      !ysno5a
-      ("file modified since last b-backup/s-save, ok to quit (y,n,Cr [n])",
-      A5DNO))
-      return true;                 /* J user changed his mind */
-    Tcl_DumpActiveMemory("t5mem");
-    if (!get_file_arg(&nofile))
-      ERRRTN("Error in filename");
-    if (nofile)
-    {
-/* If in a macro, only action solitary Q if mode says so.
- * Otherwise, convert to ^NU... */
-      if (curmac >= 0 && !(fmode & 0100) && verb == 'Q')
-      {
-        macdef(64, (uint8_t *)"", 0, true); /* Macro is ^NU only */
-        curmac = 64;
-        mcposn = 0;
-        return true;
-      }
-      exit(0);                     /* ACTUALLY EXIT Q */
-    }
-    rdwr = O_RDONLY;
-    q_new_file = false;            /* Q-QUIT into existing file */
-  colontrunc:
-    if (!do_stat_symlink() || !eolok())
-      return false;
-  try_open:
-    if ((funit = open_buf(rdwr, tmode)) == -1)
-    {
-/*
- * The file may not exist as user wishes to create a new one.
- * Or the file may not exist because it's of the form <filename>:<line number>
- */
-      if (errno == ENOENT && !q_new_file)
-      {
-        if (cmd_state == RUNNING || cmd_state == TRY_INITIAL_COMMAND)
-        {
-          if ((colonpos = strchr(ubuf, ':')) &&
-            sscanf(colonpos + 1, "%d", &colonline) == 1)
-          {
-            cmd_state = HAVE_LINE_NUMBER; /* line # in colonline */
-            *colonpos = '\0';      /* Truncate filename */
-            if (!do_stat_symlink() || !eolok())
-            {
-              cmd_state = RUNNING;
-              return false;
-            }                      /* if (!do_stat_symlink() || !eolok()) */
-            goto colontrunc;       /* Try with truncated ubuf */
-          }                        /* if((colonpos=strchr(ubuf,':'))&&... */
-        }                          /* if (cmd_state == RUNNING) */
-/* Just tried truncating at ":" */
-        else if (cmd_state == HAVE_LINE_NUMBER)
-          *colonpos = ':';         /* Undo truncation */
-        cmd_state = RUNNING;
-
-/* Look for Q command-line option that is enabled while running */
-        if (strlen(ubuf) == 2 && ubuf[0] == '-' && ( /* Could be option */
-          ubuf[1] == 'A' ||        /* Display opcodes */
-          ubuf[1] == 'V'))         /* Display version */
-        {
-          switch (ubuf[1])
-          {
-            case 'A':
-              display_opcodes();
-              break;
-
-            case 'V':
-              q_version();
-              break;
-          }                        /* switch (ubuf[1]) */
-          return true;
-        }                          /* if (strlen(ubuf) == 2 && ... */
-
-        if (ysno5a("Do you want to create a new file (y,n,Cr [n])", A5DNO))
-        {
-          cmd_state = TRY_INITIAL_COMMAND;
-          q_new_file = true;       /* Q-QUIT into new file */
-          rdwr = O_WRONLY + O_CREAT + O_EXCL; /* File should *not* exist */
-          goto try_open;           /* So create file */
-/* if(ysno5a("Do you want to create a new file (y,n,Cr [n])",A5DNO)) */
-        }
-      }                            /* if (errno == ENOENT && !q_new_file) */
-      fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
-      return false;                /* Bad open */
-    }                           /* if ((funit = open_buf(rdwr, tmode)) == -1) */
-
-    if (q_new_file)                /* Have just created file for Q-QUIT */
-    {
-      mods = false;                /* No mods to new file yet */
-      my_close(funit);             /* New empty file open in wrong mode */
-    }                              /* if(q_new_file) */
-    finitl();                      /* Erases old file but keeps segments */
-/*
- * Set up new default for S&B
- */
-    (void)strcpy(pcnta, ubuf);     /* Filename & length now remembered */
-    if (q_new_file)                /* Q-QUIT into new file */
-      return true;                 /* Read next command */
-    if (!E_Q_common())
-      return false;
-    mods = false;                  /* No mods to new file yet */
-    return true;
-  }                                /* bool do_quit(void) */
-
-/* ****************************** do_reposition ***************************** */
-
-  bool do_reposition(void)
-  {
-    repos = true;
-    if (!get_c_or_r_args())
-      return false;
-    if (k4 == j4 - 1)
-    {
-      fputs("moving a line to before the next line is a no-op", stdout);
-      return false;
-    }
-    if (finish_c_or_r("repositioned"))
-      return true;
-    return false;
-  }                                /* bool do_reposition(void) */
-
-/* **************************** do_shell_command **************************** */
-
-  bool do_shell_command(void)
-  {
-    if (do_cmd())
-    {
-      fputs("bad luck", stdout);
-      noRereadIfMacro = true;
-      move_cursor_back();          /* Error has been reported */
-      return false;
-    }
-    if (cntrlc)
-    {
-      newlin();
-      report_control_c();
-    }                              /* if (cntrlc) */
-    return true;
-  }                                /* bool do_shell_command(void); */
-
-/* ******************************** do_tabset ******************************* */
-
-  bool do_tabset(void)
-  {
-    return tabset(oldcom);  /* Enter SCREENEDIT subsystem to complete command */
-  }                                /* bool do_tabset(void) */
-
-/* ******************************* do_usefile ******************************* */
-
-  bool do_usefile(void)
-  {
-    if (!get_file_arg(&nofile) || nofile)
-      ERRRTN("Error in filename");
-    if (!eolok())
-      return false;
-    duplx5(true);                  /* Assert XOFF recognition */
-
-/* NULLSTDOUT setting is same as parent */
-    stdinfo[stdidx + 1].nullstdout =
-      stdidx < 0 ? false : stdinfo[stdidx].nullstdout;
-
-/* Save current stdin */
-    stdidx++;
-    SYSCALL(stdinfo[stdidx].funit, dup(0));
-    if (stdinfo[stdidx].funit == -1)
-    {
-      stdidx--;
-      fprintf(stderr, "%s. (dup(0))", strerror(errno));
-      return false;
-    }                              /* if (stdinfo[stdidx].funit == -1) */
-
-/* Close funit 0 */
-    SYSCALL(i, close(0));
-
-/* Open new input source */
-    SYSCALL(i, open_buf(O_RDONLY, 0));
-    if (i == -1)
-    {
-      pop_stdin();
-      fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
-      return false;
-    }                              /* if (i == -1) */
-
-/* Verify new input opened on funit 0. Try to rectify if not */
-    if (i)
-    {
-      SYSCALL(j, dup2(i, 0));
-      if (j == -1)
-      {
-        fprintf(stderr, "%s.(dup2(%d, 0))", strerror(errno), i);
-        SYSCALL(j, close(i));
-        pop_stdin();
-        return false;
-      }                            /* if (j == -1) */
-      SYSCALL(j, close(i));
-    }                              /* if (i) */
-
-/* If invoked from a macro, suspend that macro */
-    if (curmac >= 0)
-    {
-      if (!pushmac(true))
-        return false;
-      curmac = -1;
-      stdinfo[stdidx].frommac = true;
-    }                              /* if (curmac >= 0) */
-    else
-      stdinfo[stdidx].frommac = false;
-
-    buf5len = 0;                   /* Flush any input left over */
-    return true;
-  }                                /* bool do_usefile(void) */
-
-/* ********************************* do_view ******************************** */
-
-  bool do_view(void)
-  {
-/* Print n lines before current line, then current line, then n lines
- * after. N may be specified as zero - show current line only.
- * If no n, assume enough lines to completely fill the screen.
- * Afterwards, move pointer back to posn of entry. */
-
-    xcount = 0;                    /* Only show requested # */
-    lstlin = -1;                   /* Not allowed -TO */
-    fullv = false;                 /* Assume not just "V" */
-    if ((retcod = get_num(true, &count)) < 0)
-      return false;
-    if (retcod)                    /* No number given */
-    {
-      fullv = true;                /* Try very hard to fill screen */
-      count = (row5 / 2) - 1;      /* No count given so assume 1/2 screen */
-      xcount = row5 & 1;           /* Extra line if odd screen length */
-    }                              /* if(retcod) */
-
-/* Check there are no more args */
-    if (!eolok())
-      return false;
-
-    if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
-    {
-      puts("THE FILE IS EMPTY\r");
-      return true;                 /* End V */
-    }
-    k4 = ptrpos;                   /* Remember pos'n */
-    j4 = k4 - count;
-    if (j4 < 1)
-      j4 = 1;                      /* J4=1st line to list */
-    setptr(j4);
-    j4 = k4 + count + xcount;      /* Extra line if odd length */
-    if (j4 > lintot && deferd)
-      dfread(j4 - lintot, NULL);   /* Not -1, want that extra line */
-    if (j4 > lintot + 1)
-      j4 = lintot + 1;             /* J4=last line to list */
-    count = j4 - ptrpos + 1;       /* Set up # lines to print */
-/* Want to fill screen but not enough lines yet */
-    if (fullv && count < row5 - 1)
-    {
-      if (ptrpos == 1)             /* Viewing from file start */
-      {
-        if (deferd && lintot < row5)
-          dfread(row5, NULL);      /* Ensure lintot is adequate */
-        count = lintot + 1 >= row5 - 1 ? row5 - 1 : lintot + 1;
-      }                            /* if(ptrpos==1) */
-      else                         /* Viewing to file end */
-      {
-        if (deferd)
-          dfread(row5, NULL);      /* Ensure lintot is adequate */
-        j4 = lintot + 3 - row5;
-        if (j4 < 1)
-          j4 = 1;
-        setptr(j4);
-        count = lintot + 3 - j4;
-      }                            /* if(ptrpos==1) else */
-    }
-    P_V_common();                  /* Print them */
-    setptr(k4);                    /* Reposition */
-    return true;                   /* Finished */
-  }                                /* bool do_view(void) */
-
-/* ****************************** do_writefile ****************************** */
-
-  bool do_writefile(void)
-  {
-    long line_number_saved;
-
-    if (!get_file_arg(&nofile) || nofile)
-      ERRRTN("Error in filename");
-    if (!getlin(true, false))
-      return false;                /* J line # u/s */
-
-/* Can't do setptr here because that breaks relative line numbering. */
-/* But ... must save returned decimal number before calling scrdtk again */
-
-    line_number_saved = oldcom->decval;
-    if (!get_opt_lines(&count) || !eolok())
-      return false;
-    setptr(line_number_saved);     /* Get ready to write */
-    wrtnum = count;
-    rdwr = O_WRONLY + O_CREAT;
-    return s_b_w_common_write();
-  }                                /* bool do_writefile(void) */
-
-/* ******************************* do_xistics ******************************* */
-
-  bool do_xistics(void)
-  {
-    if (!eolok())
-      return false;
-    puts("Switching off screenedit mode\r");
-    xistcs();                      /* So set them */
-    puts("Re-enabling screenedit\r");
-    return true;                   /* Finished X */
-  }                                /* bool do_xistics(void) */
-
-/* ****************************** do_ychangeall ***************************** */
-
-  bool do_ychangeall(void)
-  {
-/*
- * Y or FY - Change all occurrences of 1 string to another
- */
-    tokens = verb == 'y';          /* Differentiate fy */
-    if (scrdtk(2, (uint8_t *)oldstr, BUFMAX, oldcom))
-      return bad_rdtk();
-    if (oldcom->toktyp == eoltok || !(oldlen = oldcom->toklen))
-    {
-      fputs("Null string to replace", stdout);
-      return false;
-    }
-
-/* Get string with which to replace it */
-    if (scrdtk(2, (uint8_t *)newstr, BUFMAX, oldcom))
-      return bad_rdtk();
-    newlen = oldcom->toklen;
-    ydiff = newlen - oldlen;
-
-/* strings must be equal length if Fixed-Length mode */
-    if (ydiff && fmode & 0400)
-    {
-      fputs("Replace string must be same length in FIXED LENGTH mode", stdout);
-      return false;
-    }
-
-    if (oldcom->toktyp == eoltok)
-      j4 = 1;
-    else
-    {
-      if (getlin(false, false))
-        j4 = oldcom->decval;
-      else
-      {
-        if (oldcom->toktyp == nortok)
-        {
-          fprintf(stderr, "%s", ermess);
-          return false;
-        }                          /* if (oldcom->toktyp == nortok) */
-        j4 = 1;                    /* Start looking at line 1 */
-      }                            /* if (getlin(false, false)) else */
-      if (!getnum(false))          /* Get # lines, 0 not allowed */
-        return false;
-    }                              /* if (oldcom->toktyp == eoltok) else */
-    if (oldcom->toktyp != nortok)  /* No number given */
-      count = deferd ? LONG_MAX : lintot + 1 - j4; /* Process to eof */
-    else
-      count = oldcom->decval;
-    lstlin = -1;                   /* -TO not allowed for column pos'ns */
-    h = oldlen;                    /* Req'd by code for L-LOCATE */
-    if (!get_search_columns())     /* Look for 1st & last pos'ns in line */
-      return false;
-    if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
-    {
-      fputs("Empty file - can't changeall any lines", stdout);
-      return false;
-    }
-
-/* We act on BRIEF or NONE if in a macro without question. Otherwise, BRIEF or
- * NONE is queried, and we reset to VERBOSE if we don't get confirmation */
-    if (curmac < 0 && BRIEF &&
-      !ysno5a("Use brief/none in this command (y,n,Cr [n])", A5DNO))
-    {
-      puts("Reverting to verbose\r");
-      fmode &= 07777777777;
-    }
-
-    savpos = ptrpos;               /* Remember so we can get back */
-    setptr(j4);                    /* First line to look at */
-    lgtmp3 = false;                /* No lines changed yet */
-/*
- * Main loop on specified lines
- */
-    for (i4 = count; i4 > 0; i4--)
-    {
-      if (cntrlc)                  /* User has interrupted */
-      {
-        cntrlc = false;            /* ^C noticed */
-        fputs("Command abandoned :-", stdout);
-        print_scanned_lines(count);
-        return true;               /* Leave Y */
-      }                            /* if (cntrlc) */
-      if (!rdlin(curr, false))     /* Eof on main pointer */
-      {
-        if (count == LONG_MAX)     /* Was going to deferred eof */
-          break;                   /* for(i4=count;i4>0;i4--) */
-        printf_eof_reached(count, "scanned");
-        newlin();
-        setptr(savpos);            /* Restore file pos'n */
-        return true;               /* Leave Y */
-      }
-
-/* Initial tasks for each line */
-      yposn = firstpos;            /* Search from 1st position spec'd */
-      linmod = false;              /* No match this line yet */
-      if (curr->bchars < minlen)
-        continue;                  /* J line shorter than minimum */
-      n = 0;
-      if (curr->bchars > lastpos)
-        n = curr->bchars - lastpos; /* N=# at end not to search */
-
-      do
-      {
-        if (tokens)
-          retcod =
-            ltok5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn,
-            curr->bchars - n, &h, &m, (uint8_t *)ndel);
-        else
-          retcod =
-            lsub5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn,
-            curr->bchars - n, &h, &m);
-        if (!retcod)
-          break;
-        if (curr->bchars + ydiff > curr->bmxch) /* Would exceed line capacity */
-        {
-          savpos = ptrpos - 1;     /* Point to too big line */
-          fputs("Next line would exceed max size:-", stdout);
-          print_scanned_lines(count);
-          return true;
-        }                          /* if (curr->bchars + ydiff > curr->bmxch) */
-        memmove(&curr->bdata[m + 1 + ydiff], &curr->bdata[m + 1],
-          curr->bchars - m - 1);
-
-/* Move in new string if not null */
-        if (newlen != 0)
-          memcpy((char *)&curr->bdata[h], (char *)newstr, (size_t)newlen);
-        curr->bchars = curr->bchars + ydiff; /* Get new line length */
-        linmod = true;             /* This line has been modified */
-        yposn = m + 1 + ydiff;     /* Resume search after new string */
-
-/* Seek more occurrences if room */
-      }
-      while (curr->bchars - n - yposn >= oldlen);
-
-      if (!linmod)
-        continue;                  /* J no mods to this line */
-      linmod = false;
-      lgtmp3 = true;               /* A line changed now */
-      if (!NONE)                   /* Some display may be req'd */
-      {
-        bool want_display = true;
-        double t;
-
-/* If BRIEF, only display every fbrief_interval secs */
-        if (BRIEF)                 /* only display if time to (or 1st) */
-        {
-          if ((t = time_now()) - timlst < fbrief_interval)
-            want_display = false;
-          else
-          {
-            timlst = t;            /* Displaying */
-            forych = true;         /* Tell PDSPLY short display */
-          }          /* if ((t = time_now()) - timlst < fbrief_interval) else */
-        }                          /* if(BRIEF) */
-        if (want_display)
-        {
-          sprmpt(ptrpos - 1);      /* set up line # */
-          pdsply(curr, prmpt, pchrs); /* Display the modified line */
-        }                          /* if (want_display) */
-      }                            /* if(!NONE) */
-      delete(false);               /* Remove old version of line */
-      inslin(curr);                /* Insert new version */
-    }                              /* for(i4=count;i4>0;i4--) */
-    setptr(savpos);                /* End Y */
-    if (!lgtmp3)
-    {
-      if (curmac < 0 || !BRIEF)
-        fputs("specified string not found", stdout);
-      locerr = true;               /* Picked up by RERDCM */
-      move_cursor_back();
-      return false;
-    }                              /* if (!lgtmp3) */
-    return true;
-  }                                /* bool do_ychangeall(void) */
-
-/* ******************************* do_zenduse ******************************* */
-
-  bool do_zenduse(void)
-  {
-    if (!eolok() || !pop_stdin())
-      return false;
-
-/* If U-use was in a macro, resume that macro */
-    if (stdinfo[stdidx + 1].frommac)
-    {
-      mcnxfr--;
-      curmac = mcstck[mcnxfr].mcprev;
-      mcposn = mcstck[mcnxfr].mcposn;
-    }                              /* if (stdinfo[stdidx + 1].frommac) */
-    return true;
-  }                                /* bool do_zenduse(void) */
-
-/* ************************* END INTERNAL FUNCTIONS ************************* */
+/* [Re-]initialise static variables */
+
+  tokens = false;
+  repos = false;
+  k = 0;
+  lastpos = 0;
+  minlen = 0;
+  firstpos = 0;
+  j4 = k4 = 0;
+  count2 = 0;
+  verbose_flag = false;
 
 /* Initial Tasks */
   argc = xargc;                    /* Xfer invocation arg to common */
@@ -1713,6 +273,7 @@ main(int xargc, char **xargv)
   macdefw(STDERR_MACRO_IDX, NULL, 0, true);
 
 /* Pick up any option arguments and set cmd_state if more args follow */
+  cmd_state = TRY_INITIAL_COMMAND;
   while ((i = getopt(argc, argv, "AVbdei:mnoqtv")) != -1)
     switch (i)
     {
@@ -1932,7 +493,6 @@ main(int xargc, char **xargv)
     offline = true;
   }                           /* if (!isatty(STDIN5FD) && !isatty(STDOUT5FD)) */
   else
-
 /* Not in a pipe */
   {
   not_pipe:
@@ -2107,7 +667,6 @@ main(int xargc, char **xargv)
           if (piping)
             cmd_state = TRY_INITIAL_COMMAND;
           else
-
 /* assume if the first arg starts "+" and there is at least 1 more arg then the
  * first arg is a line number */
           {
@@ -2354,7 +913,8 @@ main(int xargc, char **xargv)
 
 /* ********************************* pushmac ******************************** */
 
-static bool pushmac(bool set_u_use)
+static bool
+pushmac(bool set_u_use)
 {
   if (mcnxfr == MCLMIT)
     return false;
@@ -2368,7 +928,8 @@ static bool pushmac(bool set_u_use)
 
 /* Check no extra params */
 
-static bool eolok(void)
+static bool
+eolok(void)
 {
   scrdtk(1, (uint8_t *)NULL, 0, oldcom);
   if (oldcom->toktyp == eoltok)    /* OK */
@@ -2381,7 +942,8 @@ static bool eolok(void)
 
 /* Parse rest of line for yes / no indication */
 
-static q_yesno get_answer(void)
+static q_yesno
+get_answer(void)
 {
   if (scrdtk(1, (uint8_t *)ubuf, 6, oldcom))
   {
@@ -2417,7 +979,8 @@ static q_yesno get_answer(void)
 }                                  /* get_answer(void) */
 
 /* ****************************** get_file_arg ****************************** */
-static bool get_file_arg(bool *no_file)
+static bool
+get_file_arg(bool *no_file)
 {
   if (scrdtk(2, (uint8_t *)ubuf, PTHMAX, oldcom)) /* Read a f/n */
   {
@@ -2435,7 +998,8 @@ static bool get_file_arg(bool *no_file)
 
 /* ****************************** get_opt_lines ***************************** */
 
-static bool get_opt_lines(long *result)
+static bool
+get_opt_lines(long *result)
 {
   if (getnum(false))               /* Format of optional # of lines OK */
   {
@@ -2448,9 +1012,9 @@ static bool get_opt_lines(long *result)
 
 /* ***************************** do_stat_symlink **************************** */
 
-static bool do_stat_symlink(void)
+static bool
+do_stat_symlink(void)
 {
-  int i;
   uint8_t *p;
 
 /* For S B & Q, if the file exists then use its mode from now on. Don't complain
@@ -2507,7 +1071,8 @@ static bool do_stat_symlink(void)
 
 /* ******************************** open_buf ******************************** */
 
-static int open_buf(int flags, mode_t mode)
+static int
+open_buf(int flags, mode_t mode)
 {
 
   SYSCALL(retcod, open(ubuf, flags, mode));
@@ -2516,7 +1081,8 @@ static int open_buf(int flags, mode_t mode)
 
 /* ******************************** my_close ******************************** */
 
-static int my_close(int fd)
+static int
+my_close(int fd)
 {
 
   SYSCALL(retcod, close(fd));
@@ -2525,7 +1091,8 @@ static int my_close(int fd)
 
 /* *************************** s_b_w_common_write *************************** */
 
-static bool s_b_w_common_write(void)
+static bool
+s_b_w_common_write(void)
 {
   if ((funit = open_buf(rdwr, tmode)) == -1)
   {
@@ -2547,7 +1114,8 @@ static bool s_b_w_common_write(void)
 
 /* ****************************** do_b_or_s ********************************* */
 
-static bool do_b_or_s(bool is_b)
+static bool
+do_b_or_s(bool is_b)
 {
   bool bspar;                      /* BACKUP/SAVE had a param */
 
@@ -2674,7 +1242,8 @@ static bool do_b_or_s(bool is_b)
 
 /* ****************************** rm_pipe_temp ****************************** */
 
-static void rm_pipe_temp(void)
+static void
+rm_pipe_temp(void)
 {
 
   if (*pipe_temp_name)
@@ -2687,7 +1256,8 @@ static void rm_pipe_temp(void)
 
 /* ************************ write_workfile_to_stdout ************************ */
 
-static void write_workfile_to_stdout(void)
+static void
+write_workfile_to_stdout(void)
 {
 /*
  * Because this is potentially lengthy, re -enable signals
@@ -2719,7 +1289,8 @@ static void write_workfile_to_stdout(void)
 
 /* ***************************** dev_null_stdout **************************** */
 
-static void dev_null_stdout(void)
+static void
+dev_null_stdout(void)
 {
 
   if (my_close(STDOUT5FD))
@@ -2743,7 +1314,8 @@ static void dev_null_stdout(void)
 
 /* ******************************** make_node ******************************* */
 
-static alu_dict_ent * make_node(int initial_fn_idx)
+static alu_dict_ent *
+make_node(int initial_fn_idx)
 {
   alu_dict_ent *result;
 
@@ -2760,7 +1332,8 @@ static alu_dict_ent * make_node(int initial_fn_idx)
 
 /* ********************************* add_op ********************************* */
 
-static void add_op(alu_dict_ent * root, char *opcode)
+static void
+add_op(alu_dict_ent * root, char *opcode)
 {
   static int next_fn_idx = 0;
   alu_dict_ent *ptr, *old_alt;
@@ -2812,9 +1385,10 @@ static void add_op(alu_dict_ent * root, char *opcode)
 
 /* ******************************** init_alu ******************************** */
 
-static void init_alu(void)
+static void
+init_alu(void)
 {
-  int i, j;
+  int g;
 
 /* Allocate the register stack */
   rs = malloc(stack_size * sizeof *rs);
@@ -2851,17 +1425,18 @@ static void init_alu(void)
   strcpy(DTformat, "%F %T %z");
 
 /* Set up indicies and lookup dictionary */
-  for (i = 0, j = 0; i < num_alu_opcode_table_entries; i++)
+  for (i = 0, g = 0; i < num_alu_opcode_table_entries; i++)
     if (opcode_defs[i].func)
     {
-      alu_table_index[j++] = i;
+      alu_table_index[g++] = i;
       add_op(&root_alu_dict_ent, opcode_defs[i].name);
     }                              /* if (opcode_defs[i].func) */
 }                                  /* init_alu() */
 
 /* ******************************** bad_rdtk ******************************** */
 
-static bool bad_rdtk(void)
+static bool
+bad_rdtk(void)
 {
   fprintf(stderr, "%s. (scrdtk)", strerror(errno));
 /* Most callers were returning false next so let them return bad_rdtk instead */
@@ -2869,9 +1444,9 @@ static bool bad_rdtk(void)
 }                                  /* bad_rdtk(void) */
 
 /* ***************************** display_opcodes **************************** */
-static void display_opcodes(void)
+static void
+display_opcodes(void)
 {
-  int i;
   char tbuf[16];
   char *p;
 
@@ -2903,3 +1478,1554 @@ static void display_opcodes(void)
       printf("\t %s\r\n", opcode_defs[i].description);
   }                     /* for (i = 0; i < num_alu_opcode_table_entries; i++) */
 }                                  /* display_opcodes() */
+
+/* ******************************* do_zenduse ******************************* */
+
+static bool
+do_zenduse(void)
+{
+  if (!eolok() || !pop_stdin())
+    return false;
+
+/* If U-use was in a macro, resume that macro */
+  if (stdinfo[stdidx + 1].frommac)
+  {
+    mcnxfr--;
+    curmac = mcstck[mcnxfr].mcprev;
+    mcposn = mcstck[mcnxfr].mcposn;
+  }                                /* if (stdinfo[stdidx + 1].frommac) */
+  return true;
+}                                  /* bool do_zenduse(void) */
+
+/* ****************************** do_ychangeall ***************************** */
+
+static bool
+do_ychangeall(void)
+{
+
+/* Y or FY - Change all occurrences of 1 string to another */
+
+  bool linmod;                     /* This line modified (Y) */
+  int yposn;                       /* How far we are along a line (Y) */
+  int ydiff = 0;                   /* OLDLEN-NEWLEN */
+  int newlen = 0;                  /* Length of NEWSTR */
+  int oldlen = 0;                  /* Length of OLDSTR */
+  char oldstr[Q_BUFSIZ], newstr[Q_BUFSIZ]; /* YCHANGEALL. !!AMENDED USAGE!! */
+  bool lines_changed = false;
+  int n;
+
+  tokens = verb == 'y';            /* Differentiate fy */
+  if (scrdtk(2, (uint8_t *)oldstr, BUFMAX, oldcom))
+    return bad_rdtk();
+  if (oldcom->toktyp == eoltok || !(oldlen = oldcom->toklen))
+  {
+    fputs("Null string to replace", stdout);
+    return false;
+  }
+
+/* Get string with which to replace it */
+  if (scrdtk(2, (uint8_t *)newstr, BUFMAX, oldcom))
+    return bad_rdtk();
+  newlen = oldcom->toklen;
+  ydiff = newlen - oldlen;
+
+/* strings must be equal length if Fixed-Length mode */
+  if (ydiff && fmode & 0400)
+  {
+    fputs("Replace string must be same length in FIXED LENGTH mode", stdout);
+    return false;
+  }
+
+  if (oldcom->toktyp == eoltok)
+    j4 = 1;
+  else
+  {
+    if (getlin(false, false))
+      j4 = oldcom->decval;
+    else
+    {
+      if (oldcom->toktyp == nortok)
+      {
+        fprintf(stderr, "%s", ermess);
+        return false;
+      }                            /* if (oldcom->toktyp == nortok) */
+      j4 = 1;                      /* Start looking at line 1 */
+    }                              /* if (getlin(false, false)) else */
+    if (!getnum(false))            /* Get # lines, 0 not allowed */
+      return false;
+  }                                /* if (oldcom->toktyp == eoltok) else */
+  if (oldcom->toktyp != nortok)    /* No number given */
+    count = deferd ? LONG_MAX : lintot + 1 - j4; /* Process to eof */
+  else
+    count = oldcom->decval;
+  lstlin = -1;                     /* -TO not allowed for column pos'ns */
+  h = oldlen;                      /* Req'd by code for L-LOCATE */
+  if (!get_search_columns())       /* Look for 1st & last pos'ns in line */
+    return false;
+  if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
+  {
+    fputs("Empty file - can't changeall any lines", stdout);
+    return false;
+  }
+
+/* We act on BRIEF or NONE if in a macro without question. Otherwise, BRIEF or
+ * NONE is queried, and we reset to VERBOSE if we don't get confirmation */
+  if (curmac < 0 && BRIEF &&
+    !ysno5a("Use brief/none in this command (y,n,Cr [n])", A5DNO))
+  {
+    puts("Reverting to verbose\r");
+    fmode &= 07777777777;
+  }
+
+  savpos = ptrpos;                 /* Remember so we can get back */
+  setptr(j4);                      /* First line to look at */
+  lines_changed = false;
+/*
+ * Main loop on specified lines
+ */
+  for (i4 = count; i4 > 0; i4--)
+  {
+    if (cntrlc)                    /* User has interrupted */
+    {
+      cntrlc = false;              /* ^C noticed */
+      fputs("Command abandoned :-", stdout);
+      print_scanned_lines(count);
+      return true;                 /* Leave Y */
+    }                              /* if (cntrlc) */
+    if (!rdlin(curr, false))       /* Eof on main pointer */
+    {
+      if (count == LONG_MAX)       /* Was going to deferred eof */
+        break;                     /* for(i4=count;i4>0;i4--) */
+      printf_eof_reached(count, "scanned");
+      newlin();
+      setptr(savpos);              /* Restore file pos'n */
+      return true;                 /* Leave Y */
+    }
+
+/* Initial tasks for each line */
+    yposn = firstpos;              /* Search from 1st position spec'd */
+    linmod = false;                /* No match this line yet */
+    if (curr->bchars < minlen)
+      continue;                    /* J line shorter than minimum */
+    n = 0;
+    if (curr->bchars > lastpos)
+      n = curr->bchars - lastpos;  /* N=# at end not to search */
+
+    do
+    {
+      if (tokens)
+        retcod =
+          ltok5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn,
+          curr->bchars - n, &h, &m, (uint8_t *)ndel);
+      else
+        retcod =
+          lsub5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn,
+          curr->bchars - n, &h, &m);
+      if (!retcod)
+        break;
+      if (curr->bchars + ydiff > curr->bmxch) /* Would exceed line capacity */
+      {
+        savpos = ptrpos - 1;       /* Point to too big line */
+        fputs("Next line would exceed max size:-", stdout);
+        print_scanned_lines(count);
+        return true;
+      }                            /* if (curr->bchars + ydiff > curr->bmxch) */
+      memmove(&curr->bdata[m + 1 + ydiff], &curr->bdata[m + 1],
+        curr->bchars - m - 1);
+
+/* Move in new string if not null */
+      if (newlen != 0)
+        memcpy((char *)&curr->bdata[h], (char *)newstr, (size_t)newlen);
+      curr->bchars = curr->bchars + ydiff; /* Get new line length */
+      linmod = true;               /* This line has been modified */
+      yposn = m + 1 + ydiff;       /* Resume search after new string */
+
+/* Seek more occurrences if room */
+    }
+    while (curr->bchars - n - yposn >= oldlen);
+
+    if (!linmod)
+      continue;                    /* J no mods to this line */
+    linmod = false;
+    lines_changed = true;
+    if (!NONE)                     /* Some display may be req'd */
+    {
+      bool want_display = true;
+      double t;
+
+/* If BRIEF, only display every fbrief_interval secs */
+      if (BRIEF)                   /* only display if time to (or 1st) */
+      {
+        if ((t = time_now()) - timlst < fbrief_interval)
+          want_display = false;
+        else
+        {
+          timlst = t;              /* Displaying */
+          forych = true;           /* Tell PDSPLY short display */
+        }            /* if ((t = time_now()) - timlst < fbrief_interval) else */
+      }                            /* if(BRIEF) */
+      if (want_display)
+      {
+        sprmpt(ptrpos - 1);        /* set up line # */
+        pdsply(curr, prmpt, pchrs); /* Display the modified line */
+      }                            /* if (want_display) */
+    }                              /* if(!NONE) */
+    delete(false);                 /* Remove old version of line */
+    inslin(curr);                  /* Insert new version */
+  }                                /* for(i4=count;i4>0;i4--) */
+  setptr(savpos);                  /* End Y */
+  if (!lines_changed)
+  {
+    if (curmac < 0 || !BRIEF)
+      fputs("specified string not found", stdout);
+    locerr = true;                 /* Picked up by RERDCM */
+    move_cursor_back();
+    return false;
+  }                                /* if (!lines_changed) */
+  return true;
+}                                  /* bool do_ychangeall(void) */
+
+/* *************************** get_search_columns *************************** */
+
+static bool
+get_search_columns(void)
+{
+  if (!getnum(false))              /* Get 1st pos to search */
+    return false;
+  firstpos = oldcom->decval - 1;   /* Columns start at 0 */
+  if (!getnum(false))              /* Get last pos'n */
+    return false;
+  if (oldcom->toktyp != nortok)
+    lastpos = BUFMAX;              /* BUFMAX does not include trlg null */
+  else
+  {
+    lastpos = oldcom->decval - 1;  /* Last start position */
+    if (lastpos < firstpos)        /* Impossible combination of columns */
+    {
+      puts("Last pos'n < first\r");
+      return false;
+    }                              /* if(lastpos < firstpos) */
+    lastpos += h;                  /* Add search length to get wanted length */
+  }                                /* if (oldcom->toktyp != nortok) else */
+  minlen = firstpos + h;           /* Get minimum line length to search */
+  if (!eolok())
+    return false;
+  return true;
+}                                  /* bool get_search_columns(void) */
+
+/* *************************** print_scanned_lines ************************** */
+
+static void
+print_scanned_lines(long which)
+{
+  printf(" %ld lines ", which - i4);
+  fputs("scanned", stdout);
+  newlin();
+  setptr(savpos);                  /* Restore file pos'n */
+}                                  /* void print_scanned_lines(void) */
+
+/* *************************** printf_eof_reached *************************** */
+
+static void
+printf_eof_reached(long ct, char *action_str)
+{
+  i4 = ct - i4 + 1;                /* Lines not actioned */
+  printf("%s of file reached:- ", REVRSE ? "start" : "end");
+  printf("%ld line%s ", i4 - 1, i4 == 2 ? "" : "s");
+  printf("%s\r", action_str);
+}                       /* void printf_eof_reached(long ct, char *action_str) */
+
+/* **************************** move_cursor_back **************************** */
+
+static void
+move_cursor_back(void)
+{
+/* Reset screen cursor */
+  (void)scrdtk(5, (uint8_t *)NULL, 0, oldcom);
+
+/* Move past command & 1st param */
+  (void)scrdtk(1, (uint8_t *)NULL, 0, oldcom);
+  (void)scrdtk(1, (uint8_t *)NULL, 0, oldcom);
+}                                  /* void move_cursor_back(void) */
+
+/* ****************************** valid_FX_arg ****************************** */
+
+static bool
+valid_FX_arg(void)
+{
+  if (oldcom->toklen == 0)
+  {
+    fputs("Null argument not allowed", stdout);
+    return false;
+  }                                /* if (oldcom->toklen == 0) */
+  if (oldcom->toklen != 2)         /* Can't be ^<char> */
+  {
+    k = xkey[0];                   /* Convert to subscript */
+    if (k >= 128)
+    {
+      fputs("parity-high \"keys\" not allowed", stdout);
+      return false;
+    }                              /* if (k >= 128) */
+  }                                /* if (oldcom->toklen != 2) */
+  else
+  {
+    if (xkey[0] != CARAT)
+    {
+      fputs("may only have single char or ^ char", stdout);
+      return false;
+    }                              /* if (xkey[0] != CARAT) */
+    k = xkey[1];                   /* Isolate putative control */
+    if (k >= 0100 && k <= 0137)    /* A real control char */
+      k = k - 0100;                /* Control char to subscript */
+    else if (k == ASTRSK)          /* ^* (real uparrow) */
+      k = CARAT;
+    else if (k == QM)              /* ^? (Rubout) */
+      k = 127;
+    else
+    {
+      fputs("Illegal control character representation", stdout);
+      return false;
+    }
+  }                                /* if (oldcom->toklen != 2) else */
+  if (k > 31 && k != 127)
+    puts("Warning: non-control char as argument\r");
+  return true;
+}                                  /* bool valid_FX_arg(void) */
+
+/* ********************************* get_num ******************************** */
+
+static int
+get_num(bool okzero, long *result)
+/* Returns: 1: no number found and 1 returned in result
+ *          0: number found and returned in result
+ *         -1: error */
+{
+  if (!getnum(okzero))
+    return -1;                     /* Format err on # of lines */
+  *result = oldcom->decval;        /* getnum() assures validity */
+  return oldcom->toktyp != nortok;
+}                                  /* int get_num(bool okzero, long *result) */
+
+/* **************************** report_control_c **************************** */
+
+static void
+report_control_c(void)
+{
+  puts("Quit,\r");
+  if (!USING_FILE && curmac < 0)
+    cntrlc = false;                /* Forget ^C now unless macro */
+}                                  /* void report_control_c(void) */
+
+/* ***************************** get_c_or_r_args **************************** */
+
+static bool
+get_c_or_r_args(void)
+{
+  if (!getlin(true, false))        /* Bad source */
+  {
+    fputs(" in source line", stdout);
+    return false;
+  }
+  k4 = oldcom->decval;             /* Remember source */
+  if (!getlin(true, true))         /* Bad dest'n */
+  {
+    fputs(" in dest'n line", stdout);
+    return false;
+  }
+  j4 = oldcom->decval;             /* Remember dest'n */
+  lstlin = k4;                     /* -TO refers from source line */
+  if (j4 == k4)                    /* Error if equal */
+  {
+    fputs("Source and destination line #'s must be different", stdout);
+    return false;
+  }
+  return true;
+}                                  /* bool get_c_or_r_args(void) */
+
+/* ****************************** finish_c_or_r ***************************** */
+
+static bool
+finish_c_or_r(char *which)
+{
+  if (!get_opt_lines(&count))
+    return false;
+  setptr(j4);                      /* Set main ptr at dest'n */
+
+/* Note:- When setting both pointers, always set AUX second */
+  setaux(k4);                      /* Set AUX ptr at source */
+
+  for (i4 = count; i4 > 0; i4--)
+  {
+    if (rdlin(prev, true))         /* Read AUX */
+    {
+      if (repos)
+        delete(true);              /* For reposition only, delete line read */
+      inslin(prev);
+    }                              /* if (rdlin(prev, true)) */
+    else
+    {
+      printf_eof_reached(count, which);
+      newlin();
+      break;
+    }                              /* if (rdlin(prev, true)) else */
+  }
+  return true;                     /* Finished C or R */
+}                                  /* bool finish_c_or_r(char *which) */
+
+/* ****************************** A_I_M_common ****************************** */
+
+static bool
+A_I_M_common(void)
+{
+  bool repeat;
+
+  do
+  {
+/* Get user out of INSERT/APPEND/MODIFY is ^C has been typed */
+    if (cntrlc)
+    {
+      report_control_c();
+      return true;
+    }                              /* if (cntrlc) */
+    repeat = false;
+    scrdit(curr, prev, (char *)prmpt, pchrs, false); /* Edit the line */
+    display_wanted = curmac < 0 || !BRIEF;
+    switch (verb)                  /* Check EOL type */
+    {
+      case 'J':
+        display_and_update_file();
+        break;
+
+/* ESC. If we were changing an existing line, display the original */
+      case '[':
+        if (modify || splt)
+        {
+          if (display_wanted)
+          {
+            setptr(ptrpos - 1);
+            rdlin(prev, false);
+            disply(prev, false);
+          }                        /* if(display_wanted) */
+          splt = false;
+        }                          /* if(modify||splt) */
+        if (REVRSE && is_locate)   /* "L"ocate backwards */
+          setptr(revpos);
+        return true;
+
+      case 'T':
+        display_and_update_file();
+        splt = true;               /* Force a delete next time */
+        inslin(curr);              /* In case ESC next time */
+        sprmpt(ptrpos - 1);
+        repeat = true;             /* New line for all 3 (A,I,M) */
+        break;
+
+      default:
+        fputs("Internal error - EOL char not recognised", stdout);
+        newlin();
+        return true;
+    }                              /* switch (verb) */
+  }                                /* do */
+  while (repeat);
+  return false;
+}                                  /* bool A_I_M_common(void) */
+
+/* ************************* display_and_update_file ************************ */
+
+static void
+display_and_update_file(void)
+{
+  if ((modify || splt) && modlin)
+    delete(false);                 /* Delete CHANGED existing line */
+  if (display_wanted)
+    disply(prev, false);           /* Display final line */
+  if (!(modify || splt) || modlin)
+    inslin(prev);                  /* Insert changed or new line */
+  splt = false;                    /* Not a split this time */
+}                                  /* void display_and_update_file(void) */
+
+/* ****************************** J_L_M_common ****************************** */
+
+static void
+J_L_M_common(void)
+{
+  for (i = count; i > 0; i--)
+  {
+    if (!rdlin(curr, false))       /* Get lin to mod / EOF */
+    {
+      puts("E - O - F\r");
+      return;
+    }                              /* if(!rdlin(curr, false)) */
+    curr->bcurs = locpos;          /* In case just come from LOCATE */
+    locpos = 0;                    /* In case just come from LOCATE */
+    sprmpt(ptrpos - 1);            /* Set up prompt lin # just read */
+    if (A_I_M_common())
+      return;
+  }
+/* If doing a reverse locate, move pointer back to where locate was, ready for
+ * the next one. Also has to be done after Ec) */
+  if (is_locate && REVRSE)
+    setptr(revpos);
+}                                  /* void J_L_M_common(void) */
+
+/* ******************************* J_L_common ******************************* */
+
+static void
+J_L_common(void)
+{
+  lstvld = false;                  /* Previous line not valid */
+  modify = true;                   /* For "M"odify code */
+  J_L_M_common();
+}                                  /* void J_L_common(void) */
+
+/* ******************************* P_V_common ******************************* */
+
+static void
+P_V_common(void)
+{
+  for (i = count; i > 0; i--)
+  {
+    if (!rdlin(curr, false))       /* EOF. Normal ptr */
+    {
+      puts(" E - O - F\r");
+      break;
+    }
+    sprmpt(ptrpos - 1);
+    pdsply(curr, prmpt, pchrs);
+    if (cntrlc || (i > 1 && kbd5())) /* User wants out */
+    {
+      newlin();
+      puts(" *** keyboard interrupt *** \r");
+      cntrlc = false;
+      break;
+    }
+  }
+}                                  /* void P_V_common(void) */
+
+/* ******************************* E_Q_common ******************************* */
+
+static bool
+E_Q_common(void)
+{
+  uint8_t *p;                      /* Scratch */
+
+  savpos = ptrpos;                 /* Return here with file open. read it... */
+
+/* Use mmap if requested */
+
+  if (fmode & 02000 && (verb != 'E' || fmode & 020000))
+  {
+    if (fstat(funit, &statbuf))
+    {
+      fprintf(stderr, "%s. funit %d (fstat)", strerror(errno), funit);
+      my_close(funit);             /* Bad fstat */
+      return false;
+    }                              /* if(fstat(funit,&statbuf)) */
+    if (statbuf.st_size)
+    {
+      if ((p = mmap(NULL, statbuf.st_size, PROT_READ, MAP_PRIVATE
+#ifdef MAP_DENYWRITE
+        | MAP_DENYWRITE      /* Doesn't appear to work (need MAP_EXECUTABLE?) */
+#endif
+        , funit, (off_t) 0)) == (void *)-1)
+      {
+        fprintf(stderr, "%s. funit %d (mmap)", strerror(errno), funit);
+        my_close(funit);
+        return false;
+      }                            /* if(!(p=mmap(NULL,statbuf.st_size... */
+      mapfil(statbuf.st_ino, statbuf.st_size, p);
+    }                              /* if(statbuf.st_size) */
+    else
+      puts("0 lines read.\r");
+  }                                /* if(fmode&02000&&... */
+  else
+    readfl();
+  if (my_close(funit))             /* Failure */
+    fprintf(stderr, "%s. funit %d (close)", strerror(errno), funit);
+  setptr(savpos);
+  return true;
+}                                  /* bool E_Q_common(void) */
+
+/* ******************************* A_I_common ******************************* */
+
+static void
+A_I_common(void)
+{
+  modify = false;
+  lstvld = false;                  /* Previous line not valid */
+  for (;;)
+  {
+    curr->bchars = 0;
+    curr->bcurs = 0;               /* Set up new empty line */
+    sprmpt(ptrpos);                /* PROMPT = # of new line */
+    if (A_I_M_common())
+      return;
+  }                                /* for (;;) */
+}                                  /* void A_I_common(void) */
+
+/* IMPLEMENT Q COMMANDS (In alphabetical order) */
+
+/* ******************************** do_append ******************************* */
+
+static bool
+do_append(void)
+{
+  if (!eolok())
+    return false;
+  if (deferd)                      /* File not all read in yet */
+    dfread(LONG_MAX, NULL);
+  setptr(lintot + 1);              /* Ptr after last line in file */
+  A_I_common();
+  return true;
+}                                  /* bool do_append(void) */
+
+/* ********************************* do_copy ******************************** */
+
+static bool
+do_copy(void)
+{
+  repos = false;                   /* C-COPY, not R-REPOS */
+  if (!get_c_or_r_args())
+    return false;
+  if (finish_c_or_r("copied"))
+    return true;                   /* End C */
+  return false;
+}                                  /* bool do_copy(void) */
+
+/* ******************************** do_delete ******************************* */
+
+static bool
+do_delete(void)
+{
+  if (!getlin(true, false))
+    return false;                  /* J bad line # */
+  k4 = oldcom->decval + 1;         /* Pos here for each delete */
+  if (!get_opt_lines(&count))
+    return false;
+  clrfgt();                        /* In case lines from last D */
+  for (i4 = count; i4 > 0; i4--)
+  {
+
+/* Check if there are deferred lines and try to get one if so. We need to
+ * re-check lintot: "deferd" will get cleared in the process if the last line
+ * was unterminated */
+    if (k4 == lintot + 2 && !(deferd && (dfread(1, NULL), k4 != lintot + 2)))
+    {
+      printf_eof_reached(count, "deleted");
+      newlin();
+      break;
+    }                              /* if (k4 == lintot + 2 && ...) */
+    else
+    {
+      setptr(k4);                  /* Pos 1 past 1st line to go */
+      delete(false);               /* Knock off line. Use normal ptr */
+    }                              /* if (k4 == lintot + 2 && ...) else */
+  }
+  return true;                     /* Finished if get here */
+}                                  /* bool do_delete(void) */
+
+/* ******************************** do_enter ******************************** */
+
+static bool
+do_enter(void)
+{
+  if (!get_file_arg(&nofile) || nofile)
+    ERRRTN("Error in filename");
+  if (!eolok())
+    return false;
+  if ((funit = open_buf(O_RDONLY, 0)) == -1)
+  {
+    fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
+    return false;                  /* Bad open */
+  }                         /* if ((funit = open_buf(O_RDONLY, tmode)) == -1) */
+  return E_Q_common();
+}                                  /* bool do_enter(void) */
+
+/* ******************************** do_fbrief ******************************* */
+
+static bool
+do_fbrief(void)
+{
+  if (!eolok())
+    return false;
+  if (!(fmode & 01000))
+  {
+    fmode |= 010000000000;
+    fmode &= 017777777777;
+  }                                /* if (!(fmode & 01000)) */
+  else
+    PRINTF_IGNORED;
+  return true;                     /* Finished */
+}                                  /* bool do_fbrief(void) */
+
+/* ******************************* do_fdevnull ****************************** */
+
+static bool
+do_fdevnull(void)
+{
+  if (verbose_flag)                /* FD ineffective in q -v */
+  {
+    PRINTF_IGNORED;
+    return true;
+  }                                /* if (verbose_flag) */
+  switch (get_answer())
+  {
+    case Q_UNREC:
+      return false;
+    case Q_MAYBE:
+    case Q_NO:
+      restore_stdout();
+      break;
+    case Q_YES:
+      if (USING_FILE)
+      {
+        devnull_stdout();
+        break;
+      }                            /* if (USING_FILE) */
+      else
+      {
+        fputs("fd y is not available from the keyboard", stdout);
+        return false;
+      }
+  }                                /* switch (get_answer()) */
+  return true;
+}                                  /* bool do_fdevnull(void) */
+
+/* *************************** do_fimmediate_macro ************************** */
+
+static bool
+do_fimmediate_macro(void)
+{
+  if (scrdtk(4, (uint8_t *)ubuf, BUFMAX, oldcom))
+  {
+    perror("SCRDTK of macro text");
+    fprintf(stderr, "\rUnexpected error");
+    return false;
+  }
+/* Decide which macro this will be. */
+/* Some nesting of FI macros is allowed, */
+/* to support e.g. nested U-use files which contain FI cmds */
+  if (immnxfr > LAST_IMMEDIATE_MACRO)
+  {
+    fputs("Too many nested FI commands", stdout);
+    return false;
+  }
+  verb = immnxfr++;
+  if (!newmac2(true))
+    return false;
+
+/* FI does an implied ^ND */
+  if (curmac >= 0 && !pushmac(false))
+    return false;
+
+  curmac = verb;
+  mcposn = 0;
+  return true;
+}                                  /* bool do_fimmediate_macro(void) */
+
+/* ******************************** do_fmode ******************************** */
+
+static bool
+do_fmode(void)
+{
+  return setmode();
+}                                  /* bool do_fmode(void) */
+
+/* ******************************** do_fnone ******************************** */
+
+static bool
+do_fnone(void)
+{
+  if (!eolok())
+    return false;
+  if (fmode & 01000)
+    PRINTF_IGNORED;
+  else
+    fmode |= 030000000000u;
+  return true;                     /* Finished */
+}                                  /* bool do_fnone(void) */
+
+/* ******************************** do_forget ******************************* */
+
+static bool
+do_forget(void)
+{
+  if (!eolok())
+    return false;
+  forget();                        /* Implemented by workfile */
+  return true;
+}                                  /* bool do_forget(void) */
+
+/* ****************************** do_ftokenchar ***************************** */
+
+static bool
+do_ftokenchar(void)
+{
+  if (strlen(ndel) >= 32)
+  {
+    fputs("no room for further entries", stdout);
+    return false;
+  }
+  if (scrdtk(1, (uint8_t *)ubuf, 40, oldcom)) /* Get character to add */
+    return bad_rdtk();
+  if (oldcom->toktyp == eoltok)
+  {
+    fputs("command requires a parameter", stdout);
+    return false;
+  }
+  if (oldcom->toklen != 1)
+  {
+    fputs("parameter must be single character", stdout);
+    return false;
+  }
+  if (!eolok())
+    return false;
+  strcat(ndel, ubuf);
+  return true;
+}                                  /* bool do_ftokenchar(void) */
+
+/* ******************************* do_fverbose ****************************** */
+
+static bool
+do_fverbose(void)
+{
+  if (!eolok())
+    return false;
+  fmode &= 07777777777;
+  return true;                     /* Finished */
+}                                  /* bool do_fverbose(void) */
+
+/* ******************************* do_fxchange ****************************** */
+
+static bool
+do_fxchange(void)
+{
+  char oldkey[3];                  /* 1st param to FX command */
+  char newkey[3];                  /* 2nd param to FX command */
+
+  if (scrdtk(2, (uint8_t *)oldkey, 3, oldcom))
+    return bad_rdtk();
+  if (oldcom->toktyp == eoltok)    /* Empty line */
+  {
+/* FX with no params - Re-initialise the table, subject to
+ *                     confirmation */
+    if (!ysno5a("Re-initialise keyboard table to default - ok", A5NDEF))
+      return true;                 /* Finish if changed his mind */
+    for (i = 127; i >= 0; i--)
+      fxtabl[i] = i;               /* No FX commands yet */
+    return true;                   /* Finished after reset */
+  }                                /* if (oldcom->toktyp != eoltok) */
+  xkey[0] = oldkey[0];
+  xkey[1] = oldkey[1];
+  if (!valid_FX_arg())
+    return false;
+  oldkey[0] = k;                   /* Now a subscript */
+  if (scrdtk(2, (uint8_t *)newkey, 3, oldcom))
+    return bad_rdtk();
+  if (oldcom->toktyp == eoltok)
+  {
+    fputs("FX must have 2 parameters", stdout);
+    return false;
+  }
+  xkey[0] = newkey[0];
+  xkey[1] = newkey[1];
+  if (!valid_FX_arg())
+    return false;
+  newkey[0] = k;                   /* Now a subscript */
+  if (!eolok())
+    return false;
+  i = fxtabl[(int)oldkey[0]];
+  fxtabl[(int)oldkey[0]] = fxtabl[(int)newkey[0]];
+  fxtabl[(int)newkey[0]] = i;
+  return true;
+}                                  /* bool do_fxchange(void) */
+
+/* ********************************* do_goto ******************************** */
+
+static bool
+do_goto(void)
+{
+  if (getlin(true, true) && eolok())
+  {
+    setptr(oldcom->decval);
+    return true;                   /* Finished GOTO */
+  }                                /* if(getlin(true, ... */
+  return false;
+}                                  /* bool do_goto(void) */
+
+/* ********************************* do_help ******************************** */
+
+static bool
+do_help(void)
+{
+/* We have some extra work here, because HELP doesn't actually take
+ * a filename, and doesn't want one. */
+  if (scrdtk(2, (uint8_t *)tmfile, 17, oldcom))
+    return bad_rdtk();
+  k = oldcom->toklen;              /* Get length of HELP topic */
+  if (!eolok())
+    return false;
+  if (k == 0)                      /* No topic given */
+  {
+    k = 1;
+    tmfile[0] = '#';               /* Dummy topic of "#" */
+    tmfile[1] = '\0';
+  }                                /* if (k == 0) */
+  else
+  {
+    for (i = k - 1; i >= 0; i--)
+      if (tmfile[i] >= 'A' && tmfile[i] <= 'Z')
+        tmfile[i] = tolower(tmfile[i]); /* No u/c filenames allowed */
+  }                                /* if (k == 0) else */
+
+/* GCC 8.1 complained when the next line was an sprintf. */
+/* To keep gcc quiet, we tested for overflow. */
+/* But GCC 8.3.0 complained amnyway */
+/* So now we compile with -Wno-format-truncation. */
+/* If truncation happens, there should be a useful message... */
+  snprintf(tmtree, sizeof tmtree, "%s/%s", help_dir, tmfile);
+  if (stat(tmtree, &statbuf))
+  {
+/* Output a potted message if he "typed h for help" */
+    if (tmfile[0] == '#' && tmfile[1] == 0)
+    {
+      puts("\r");
+      puts("Sorry - I can't find my HELP files.\r");
+      puts("If you have them installed somewhere,\r"
+        "please put that path in your shell environment"
+        " with the name Q_HELP_DIR.\r\n\n");
+      return true;
+    }
+    fprintf(stderr, "%s. %s (HELP)", strerror(errno), tmtree);
+    return false;
+  }
+  sprintf(ubuf, "%s %s", help_cmd, tmtree);
+  final5();                        /* For some pagers */
+  if (system(ubuf) < 0)
+  {
+    fprintf(stderr, "%s. %s (system)", strerror(errno), ubuf);
+    init5();
+    return false;
+  }
+  init5();
+  return true;                     /* Finished */
+}                                  /* bool do_help(void) */
+
+/* ******************************** do_insert ******************************* */
+
+static bool
+do_insert(void)
+{
+  if (!getlin(true, true))
+    return false;                  /* J line # u/s */
+  setptr(oldcom->decval);          /* Get ready to insert */
+  if (!eolok())                    /* Extra params */
+    return false;
+  A_I_common();
+  return true;
+}                                  /* bool do_insert(void) */
+
+/* ********************************* do_join ******************************** */
+
+static bool
+do_join(void)
+{
+  char *r;                         /* Scratch */
+
+  if (!getlin(true, false))
+    return false;                  /* J bad line # */
+  setptr(oldcom->decval);          /* Pos'n on line to be joined onto */
+  if ((retcod = get_num(false, &count2)) < 0)
+    return false;
+  lstlin = -1;                     /* Not allowed -TO */
+  if (!get_opt_lines(&count))
+    return false;
+
+/* At eof? */
+  if (ptrpos >= lintot && !(deferd && (dfread(1, NULL), ptrpos < lintot)))
+  {
+    if (curmac < 0 || !BRIEF)      /* Message wanted */
+      puts("Can't join anything - no lines follow\r");
+    return true;                   /* Next command */
+  }                                /* if(ptrpos>=lintot&&... */
+  rdlin(prev, false);              /* 1st line */
+  delete(false);                   /* Del lin before normal ptr */
+  for (i4 = count2; i4 > 0; i4--)
+  {
+    if (!rdlin(curr, false))       /* If eof */
+    {
+      printf_eof_reached(count2, "joined");
+      break;
+    }
+    j = curr->bchars + prev->bchars;
+    if (j > prev->bmxch)           /* Overflowed line capacity */
+    {
+      setptr(ptrpos - 1);
+      fputs("joining next line would exceed line size :- ", stdout);
+      printf("%ld lines ", i4 - 1);
+      puts("joined\r");
+      break;
+    }                              /* if (j > prev->bmxch) */
+    r = (char *)&prev->bdata[prev->bchars]; /* Appending posn */
+    prev->bchars = j;              /* New length */
+    delete(false);                 /* Delete line just read */
+/* Append line just read */
+    memcpy(r, (char *)curr->bdata, (size_t)curr->bchars);
+  }
+  inslin(prev);                    /* Put composed line back */
+  setptr(ptrpos - 1);
+  J_L_common();
+  return true;
+}                                  /* bool do_join(void) */
+
+/* ******************************** do_locate ******************************* */
+
+static bool
+do_locate(void)
+{
+  int dummy;                       /* Unwanted result from ltok5a / lsub5a */
+  is_locate = true;
+  tokens = verb == 'l';            /* Whether FL */
+  if (REVRSE)
+    revpos = ptrpos;
+  display_wanted = !BRIEF || curmac < 0; /* Display error messages if true */
+  if (REVRSE ? ptrpos <= 1 : ptrpos > lintot && !(deferd &&
+    (dfread(1, NULL), ptrpos <= lintot)))
+  {
+    if (display_wanted)
+      printf("At %s of file already - no lines to search\r\n",
+        REVRSE ? "start" : "end");
+    return true;                   /* Next command */
+  }                                /* if(REVRSE?ptrpos<=1:ptrpos>lintot&&... */
+
+/* Get the string to locate.
+ * The string is read to the ermess array,
+ * as ubuf will get overwritten and we aren't going to use getlin,
+ * so ermess is spare. */
+  if (scrdtk(2, (uint8_t *)ermess, BUFMAX, oldcom))
+    return bad_rdtk();
+  if (oldcom->toktyp == eoltok || !(h = oldcom->toklen))
+  {
+    fputs("Null string to locate", stdout);
+    return false;
+  }
+
+  lstlin = ptrpos;                 /* -TO rel currnt line */
+  if ((retcod = get_num(false, &count2)) < 0) /* Get number lines to search */
+    return false;
+  if (retcod)                      /* No number given */
+  {
+    if (REVRSE)
+      count2 = ptrpos - 1;
+    else if (deferd)
+      count2 = LONG_MAX;
+    else
+      count2 = lintot - ptrpos + 1;
+  }                                /* if (retcod) */
+  lstlin = -1;                     /* Not allowed -TO */
+  if (get_num(false, &count) < 0)  /* Get # lines to mod on location */
+    return false;
+  if (!get_search_columns())
+    return false;
+  savpos = ptrpos;                 /* Remember pos in case no match */
+
+/* Start of search */
+
+  for (i4 = count2; i4 > 0; i4--)
+  {
+    if (cntrlc)                    /* User abort */
+    {
+      cntrlc = false;              /* ^C noticed */
+      fputs("Command abandoned :-", stdout);
+      print_scanned_lines(count2);
+      return true;
+    }                              /* if(cntrlc) */
+    if (REVRSE && revpos > 1)
+    {
+      setptr(--revpos);            /* Read previous line */
+      rdlin(curr, false);          /* "can't" hit eof */
+    }                              /* if(REVRSE) */
+    else if ((REVRSE && revpos <= 1) || !rdlin(curr, false)) /* If eof */
+    {
+      if (display_wanted && count2 != LONG_MAX) /* Message wanted */
+        printf_eof_reached(count2, "searched");
+      break;                       /* for(i4=count2;i4>0;i4--) */
+    }                              /* if(!rdlin(curr, false)) */
+    m = curr->bchars;
+    if (m < minlen)
+      continue;                    /* Skip search if too short */
+    if (m > lastpos)
+      m = lastpos;                 /* Get length to search */
+    if (tokens ? ltok5a((uint8_t *)ermess, h, curr->bdata, firstpos, m,
+      &locpos, &dummy, (uint8_t *)ndel) : lsub5a((uint8_t *)ermess,
+      h, curr->bdata, firstpos, m, &locpos, &dummy))
+    {                              /* Line located */
+      if (REVRSE)
+        setptr(revpos);
+      else
+        setptr(ptrpos - 1);
+      J_L_common();                /* End L & J - carry on as M */
+      return true;
+    }                              /* if((tokens?ltok5a((... */
+  }                                /* for(i4=count2;i4>0;i4--) */
+
+/* Didn't locate it if we get here */
+
+  setptr(savpos);                  /* Move pointer back */
+  locpos = 0;                      /* zeroised by lstr5a */
+  if (display_wanted)
+    fputs("Specified string not found", stdout);
+  locerr = true;                   /* Picked up by RERDCM */
+  move_cursor_back();
+  return false;
+}                                  /* bool do_locate(void) */
+
+/* ******************************** do_modify ******************************* */
+
+static bool
+do_modify(void)
+{
+  modify = true;
+  if (getlin(false, false))
+  {
+    j4 = oldcom->decval;           /* 1st line to be altered */
+    lstvld = false;                /* Previous line not valid */
+    if (!get_opt_lines(&count))
+      return false;
+  }
+  else
+  {
+    locerr = true;                 /* An scmac can detect this error */
+    if (curmac < 0 || !BRIEF)      /* Report err unless brief macro */
+      fprintf(stderr, "%s", ermess);
+    return false;
+  }
+  setptr(j4);                      /* Position on 1st line to alter */
+  J_L_M_common();
+  return true;
+}                                  /* bool do_modify(void) */
+
+/* ******************************* do_newmacro ****************************** */
+
+static bool
+do_newmacro(void)
+{
+  i = newmac();
+  if (i < 0)                       /* Token was "-" */
+  {
+    scrdtk(2, (uint8_t *)ubuf, BUFMAX, oldcom);
+    if (oldcom->toktyp == eoltok)
+      typmac();
+    else
+    {
+      if (!eolok())
+      {
+        alu_macros_only = false;
+        return false;
+      }                            /* if (!eolok()) */
+/* Need to preserve stdout for this */
+      if (orig_stdout == -1)
+      {
+        SYSCALL(orig_stdout, dup(1));
+      }                            /* if (orig_stdout == -1) */
+      if (orig_stdout == -1)
+      {
+        fprintf(stderr, "\r\n%s. (dup(1))\r\n", strerror(errno));
+        refrsh(NULL);
+        alu_macros_only = false;
+        return false;
+      }                            /* if (orig_stdout == -1) */
+      else
+      {
+        SYSCALL(i, close(1));
+        SYSCALL(i, open_buf(O_WRONLY | O_CREAT | O_TRUNC, 0666));
+        if (i == 1)
+        {
+          lstmac();
+          i = 0;                   /* Success */
+        }                          /* if (i == 1) */
+        else
+          i = errno;
+        restore_stdout();
+        if (i)
+          fprintf(stderr, "%s. %s (freopen)", strerror(i), ubuf);
+        i = !i;                    /* Required below */
+      }                            /* if (orig_stdout == -1) else */
+    }                              /* if (oldcom->toktyp == eoltok) else */
+    alu_macros_only = false;
+  }                                /* if (i < 0) */
+  return i != 0;
+}                                  /* bool do_newmacro(void) */
+
+/* ****************************** do_o_ff_or_fc ***************************** */
+
+static bool
+do_o_ff_or_fc(unsigned long bit)
+{
+  bool bit_is_set = false;
+
+  bit_is_set = fmode & bit;
+  switch (get_answer())
+  {
+    case Q_YES:
+      bit_is_set = true;
+      break;
+    case Q_NO:
+      bit_is_set = false;
+      break;
+    case Q_MAYBE:
+      bit_is_set = !bit_is_set;
+      break;
+    case Q_UNREC:
+      return false;
+  }                                /* switch (answer) */
+  if (bit_is_set)
+    fmode |= bit;
+  else
+    fmode &= ~bit;
+  return true;
+}                                  /* bool do_o_ff_or_fc(unsigned long bit) */
+
+/* ******************************** do_print ******************************** */
+
+static bool
+do_print(void)
+{
+  lstlin = ptrpos;                 /* -TO strt curr lin */
+  if (!get_opt_lines(&count))
+    return false;
+  P_V_common();
+  return true;                     /* Finished P */
+}                                  /* bool do_print(void) */
+
+/* ********************************* do_quit ******************************** */
+
+static bool
+do_quit(void)
+{
+  char *colonpos;                  /* Pos'n of ":" in q filename */
+
+/* We accept a filename - starts user off editing a fresh file */
+
+  if (mods &&
+    !ysno5a
+    ("file modified since last b-backup/s-save, ok to quit (y,n,Cr [n])",
+    A5DNO))
+    return true;                   /* J user changed his mind */
+  Tcl_DumpActiveMemory("t5mem");
+  if (!get_file_arg(&nofile))
+    ERRRTN("Error in filename");
+  if (nofile)
+  {
+/* If in a macro, only action solitary Q if mode says so.
+ * Otherwise, convert to ^NU... */
+    if (curmac >= 0 && !(fmode & 0100) && verb == 'Q')
+    {
+      macdef(64, (uint8_t *)"", 0, true); /* Macro is ^NU only */
+      curmac = 64;
+      mcposn = 0;
+      return true;
+    }
+    exit(0);                       /* ACTUALLY EXIT Q */
+  }
+  rdwr = O_RDONLY;
+  q_new_file = false;              /* Q-QUIT into existing file */
+colontrunc:
+  if (!do_stat_symlink() || !eolok())
+    return false;
+try_open:
+  if ((funit = open_buf(rdwr, tmode)) == -1)
+  {
+/*
+ * The file may not exist as user wishes to create a new one.
+ * Or the file may not exist because it's of the form <filename>:<line number>
+ */
+    if (errno == ENOENT && !q_new_file)
+    {
+      if (cmd_state == RUNNING || cmd_state == TRY_INITIAL_COMMAND)
+      {
+        if ((colonpos = strchr(ubuf, ':')) &&
+          sscanf(colonpos + 1, "%d", &colonline) == 1)
+        {
+          cmd_state = HAVE_LINE_NUMBER; /* line # in colonline */
+          *colonpos = '\0';        /* Truncate filename */
+          if (!do_stat_symlink() || !eolok())
+          {
+            cmd_state = RUNNING;
+            return false;
+          }                        /* if (!do_stat_symlink() || !eolok()) */
+          goto colontrunc;         /* Try with truncated ubuf */
+        }                          /* if((colonpos=strchr(ubuf,':'))&&... */
+      }                            /* if (cmd_state == RUNNING) */
+/* Just tried truncating at ":" */
+      else if (cmd_state == HAVE_LINE_NUMBER)
+        *colonpos = ':';           /* Undo truncation */
+      cmd_state = RUNNING;
+
+/* Look for Q command-line option that is enabled while running */
+      if (strlen(ubuf) == 2 && ubuf[0] == '-' && ( /* Could be option */
+        ubuf[1] == 'A' ||          /* Display opcodes */
+        ubuf[1] == 'V'))           /* Display version */
+      {
+        switch (ubuf[1])
+        {
+          case 'A':
+            display_opcodes();
+            break;
+
+          case 'V':
+            q_version();
+            break;
+        }                          /* switch (ubuf[1]) */
+        return true;
+      }                            /* if (strlen(ubuf) == 2 && ... */
+
+      if (ysno5a("Do you want to create a new file (y,n,Cr [n])", A5DNO))
+      {
+        cmd_state = TRY_INITIAL_COMMAND;
+        q_new_file = true;         /* Q-QUIT into new file */
+        rdwr = O_WRONLY + O_CREAT + O_EXCL; /* File should *not* exist */
+        goto try_open;             /* So create file */
+/* if(ysno5a("Do you want to create a new file (y,n,Cr [n])",A5DNO)) */
+      }
+    }                              /* if (errno == ENOENT && !q_new_file) */
+    fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
+    return false;                  /* Bad open */
+  }                             /* if ((funit = open_buf(rdwr, tmode)) == -1) */
+
+  if (q_new_file)                  /* Have just created file for Q-QUIT */
+  {
+    mods = false;                  /* No mods to new file yet */
+    my_close(funit);               /* New empty file open in wrong mode */
+  }                                /* if(q_new_file) */
+  finitl();                        /* Erases old file but keeps segments */
+/*
+ * Set up new default for S&B
+ */
+  (void)strcpy(pcnta, ubuf);       /* Filename & length now remembered */
+  if (q_new_file)                  /* Q-QUIT into new file */
+    return true;                   /* Read next command */
+  if (!E_Q_common())
+    return false;
+  mods = false;                    /* No mods to new file yet */
+  return true;
+}                                  /* bool do_quit(void) */
+
+/* ****************************** do_reposition ***************************** */
+
+static bool
+do_reposition(void)
+{
+  repos = true;
+  if (!get_c_or_r_args())
+    return false;
+  if (k4 == j4 - 1)
+  {
+    fputs("moving a line to before the next line is a no-op", stdout);
+    return false;
+  }
+  if (finish_c_or_r("repositioned"))
+    return true;
+  return false;
+}                                  /* bool do_reposition(void) */
+
+/* **************************** do_shell_command **************************** */
+
+static bool
+do_shell_command(void)
+{
+  if (do_cmd())
+  {
+    fputs("bad luck", stdout);
+    noRereadIfMacro = true;
+    move_cursor_back();            /* Error has been reported */
+    return false;
+  }
+  if (cntrlc)
+  {
+    newlin();
+    report_control_c();
+  }                                /* if (cntrlc) */
+  return true;
+}                                  /* bool do_shell_command(void); */
+
+/* ******************************** do_tabset ******************************* */
+
+static bool
+do_tabset(void)
+{
+  return tabset(oldcom);    /* Enter SCREENEDIT subsystem to complete command */
+}                                  /* bool do_tabset(void) */
+
+/* ******************************* do_usefile ******************************* */
+
+static bool
+do_usefile(void)
+{
+  if (!get_file_arg(&nofile) || nofile)
+    ERRRTN("Error in filename");
+  if (!eolok())
+    return false;
+  duplx5(true);                    /* Assert XOFF recognition */
+
+/* NULLSTDOUT setting is same as parent */
+  stdinfo[stdidx + 1].nullstdout =
+    stdidx < 0 ? false : stdinfo[stdidx].nullstdout;
+
+/* Save current stdin */
+  stdidx++;
+  SYSCALL(stdinfo[stdidx].funit, dup(0));
+  if (stdinfo[stdidx].funit == -1)
+  {
+    stdidx--;
+    fprintf(stderr, "%s. (dup(0))", strerror(errno));
+    return false;
+  }                                /* if (stdinfo[stdidx].funit == -1) */
+
+/* Close funit 0 */
+  SYSCALL(i, close(0));
+
+/* Open new input source */
+  SYSCALL(i, open_buf(O_RDONLY, 0));
+  if (i == -1)
+  {
+    pop_stdin();
+    fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
+    return false;
+  }                                /* if (i == -1) */
+
+/* Verify new input opened on funit 0. Try to rectify if not */
+  if (i)
+  {
+    SYSCALL(j, dup2(i, 0));
+    if (j == -1)
+    {
+      fprintf(stderr, "%s.(dup2(%d, 0))", strerror(errno), i);
+      SYSCALL(j, close(i));
+      pop_stdin();
+      return false;
+    }                              /* if (j == -1) */
+    SYSCALL(j, close(i));
+  }                                /* if (i) */
+
+/* If invoked from a macro, suspend that macro */
+  if (curmac >= 0)
+  {
+    if (!pushmac(true))
+      return false;
+    curmac = -1;
+    stdinfo[stdidx].frommac = true;
+  }                                /* if (curmac >= 0) */
+  else
+    stdinfo[stdidx].frommac = false;
+
+  buf5len = 0;                     /* Flush any input left over */
+  return true;
+}                                  /* bool do_usefile(void) */
+
+/* ********************************* do_view ******************************** */
+
+static bool
+do_view(void)
+{
+  bool fullv = false;              /* Full VIEW wanted */
+  long xcount = 0;                 /* For V-View */
+
+/* Print n lines before current line, then current line, then n lines
+ * after. N may be specified as zero - show current line only.
+ * If no n, assume enough lines to completely fill the screen.
+ * Afterwards, move pointer back to posn of entry. */
+
+  xcount = 0;                      /* Only show requested # */
+  lstlin = -1;                     /* Not allowed -TO */
+  fullv = false;                   /* Assume not just "V" */
+  if ((retcod = get_num(true, &count)) < 0)
+    return false;
+  if (retcod)                      /* No number given */
+  {
+    fullv = true;                  /* Try very hard to fill screen */
+    count = (row5 / 2) - 1;        /* No count given so assume 1/2 screen */
+    xcount = row5 & 1;             /* Extra line if odd screen length */
+  }                                /* if(retcod) */
+
+/* Check there are no more args */
+  if (!eolok())
+    return false;
+
+  if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
+  {
+    puts("THE FILE IS EMPTY\r");
+    return true;                   /* End V */
+  }
+  k4 = ptrpos;                     /* Remember pos'n */
+  j4 = k4 - count;
+  if (j4 < 1)
+    j4 = 1;                        /* J4=1st line to list */
+  setptr(j4);
+  j4 = k4 + count + xcount;        /* Extra line if odd length */
+  if (j4 > lintot && deferd)
+    dfread(j4 - lintot, NULL);     /* Not -1, want that extra line */
+  if (j4 > lintot + 1)
+    j4 = lintot + 1;               /* J4=last line to list */
+  count = j4 - ptrpos + 1;         /* Set up # lines to print */
+/* Want to fill screen but not enough lines yet */
+  if (fullv && count < row5 - 1)
+  {
+    if (ptrpos == 1)               /* Viewing from file start */
+    {
+      if (deferd && lintot < row5)
+        dfread(row5, NULL);        /* Ensure lintot is adequate */
+      count = lintot + 1 >= row5 - 1 ? row5 - 1 : lintot + 1;
+    }                              /* if(ptrpos==1) */
+    else                           /* Viewing to file end */
+    {
+      if (deferd)
+        dfread(row5, NULL);        /* Ensure lintot is adequate */
+      j4 = lintot + 3 - row5;
+      if (j4 < 1)
+        j4 = 1;
+      setptr(j4);
+      count = lintot + 3 - j4;
+    }                              /* if(ptrpos==1) else */
+  }
+  P_V_common();                    /* Print them */
+  setptr(k4);                      /* Reposition */
+  return true;                     /* Finished */
+}                                  /* bool do_view(void) */
+
+/* ****************************** do_writefile ****************************** */
+
+static bool
+do_writefile(void)
+{
+  long line_number_saved;
+
+  if (!get_file_arg(&nofile) || nofile)
+    ERRRTN("Error in filename");
+  if (!getlin(true, false))
+    return false;                  /* J line # u/s */
+
+/* Can't do setptr here because that breaks relative line numbering. */
+/* But ... must save returned decimal number before calling scrdtk again */
+
+  line_number_saved = oldcom->decval;
+  if (!get_opt_lines(&count) || !eolok())
+    return false;
+  setptr(line_number_saved);       /* Get ready to write */
+  wrtnum = count;
+  rdwr = O_WRONLY + O_CREAT;
+  return s_b_w_common_write();
+}                                  /* bool do_writefile(void) */
+
+/* ******************************* do_xistics ******************************* */
+
+static bool
+do_xistics(void)
+{
+  if (!eolok())
+    return false;
+  puts("Switching off screenedit mode\r");
+  xistcs();                        /* So set them */
+  puts("Re-enabling screenedit\r");
+  return true;                     /* Finished X */
+}                                  /* bool do_xistics(void) */

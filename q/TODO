@@ -29,7 +29,7 @@ INTERNALS
 	DONE: Fix runindent label squashes
 	DONE: More GIVE_UP macros - use error_exit as standard label
 	DONE: rework asg2 blocks (including xistcs.c)
-	STARTED: Use meaningful names instead of logtmp &c.
+	DONE: Use meaningful names instead of logtmp &c.
 	DONE: Tidy scmnrd.c in particular
 	STARTED: Be more careful what goes to stderr / stdin
 	STARTED: use stdint types
@@ -37,7 +37,7 @@ INTERNALS
 	DONE: return bad_rdtk() once H & L are subroutinised
 	DONE: Eliminate FTN COMMON in favour of extern / instantiate
 	DONE: Re-organise q.c for static fns at end
-	Maybe re-organise q.c for no internal fns
+	DONE: Maybe re-organise q.c for no internal fns
 Show what arguments Q started with (?)
 STARTED: Catalogue of useful macros
 New pseudomacro to replace "/*" with arbitrary seq: #, // &c (i.e. for ^O)
