@@ -1,2 +1,0 @@
-ggo q -a "-bnv "'"-i!cd tests^J!cp splittest t5^Jq t5^J"'"</dev/pts/$my_pty >/dev/pts/$my_pty 2>&1" "set max-value-size sizeof (struct scrbuf5)" b\ scrdit.c:634 "cond 2 in_cmd==false" c
-ggo q -a "-bnv "'"-i!cd tests^J!cp splittest t5^Jq t5^J"'"</dev/pts/$my_pty >/dev/pts/$my_pty 2>&1" "set max-value-size sizeof (struct scrbuf5)" b\ scrdit.c:639 c

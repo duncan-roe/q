@@ -20,8 +20,8 @@
 
 /* Instantiate externals */
 
-char *normal_end_sequence = "\033\033fq\n";
-char *end_seq;
+const char *const normal_end_sequence = "\033\033fq\n";
+const char *end_seq;
 int buf5len, buf5idx, ttyfd, stdidx;
 bool size5;
 struct stdinfo stdinfo[OPEN_MAX];

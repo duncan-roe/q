@@ -27,78 +27,37 @@
 #include "c1in.h"
 #include "tabsiz.h"
 
-char *xistics_end_sequence = "\025x\n";
+/* Static prototypes */
+
+static bool eolok(void);
+static bool good_octnum(void);
+static bool get_result(void);
+
+/* Static variables */
+static int octnum;                 /* Returned value */
+
+static scrbuf5 cmdbuf;
+static uint8_t buf[5];
+static char *msg;
+static int result;                 /* Returned value */
+static const char *const xistics_end_sequence = "\025x\n";
 
 void
 xistcs()
 {
-  scrbuf5 cmdbuf;
-  uint8_t buf[5], *p = NULL;
-  int result = 0;                  /* Returned value */
-  int octnum = 0;                  /* Returned value */
+  uint8_t *p = NULL;
   int j, k = 0;                    /* Scratch */
-  char *msg;
   bool ok = true;
-
-/* INTERNAL FUNCTIONS */
-
-/* ******************************* get_result ******************************* */
-
-  bool get_result(void)
-  {
-    if (scrdtk(1, buf, 5, &cmdbuf))
-    {
-      fprintf(stderr, "%s. decno (scrdtk)\r\n", strerror(errno));
-      msg = "Error - see above";
-      return false;
-    }                              /* if (scrdtk(1, buf, 5, &cmdbuf)) */
-    if (cmdbuf.toktyp == eoltok)
-    {
-      result = 0;
-      return true;                 /* Finish if EOL */
-    }                              /* if (cmdbuf.toktyp == eoltok) */
-    if (cmdbuf.toktyp != nortok)
-    {
-      msg = "Null decno illegal";
-      return false;
-    }                              /* if (cmdbuf.toktyp != nortok) */
-    if (!cmdbuf.decok)
-    {
-      msg = "Bad decno";
-      return false;
-    }                              /* if (!cmdbuf.decok) */
-    result = cmdbuf.decval;        /* All checks OK: set result */
-    return true;
-  }                                /* bool get_result(void) */
-
-/* ******************************* good_octnum ****************************** */
-
-  bool good_octnum(void)
-  {
-    if (octnum < 0200)
-      return true;                 /* J a char */
-    fprintf(stderr, "%*s", cmdbuf.toklen, buf);
-    msg = " not octal for any char";
-    return false;
-  }                                /* bool good_octnum(void) */
-
-/* ********************************** eolok ********************************* */
-
-  bool eolok(void)
-  {
-    (void)scrdtk(1, 0, 0, &cmdbuf);
-    if (cmdbuf.toktyp == eoltok)
-      return true;                 /* J EOL (OK) */
-    msg = "Spurious params - command not done";
-    return false;
-  }                                /* bool eolok(void) */
-
-/* END INTERNAL FUNCTIONS */
-
-  end_seq = xistics_end_sequence;
 
 /* On entry, we are back to normal duplex. Don't read commands via
  * Screenedit system, as this is suspect until characteristics are sorted out */
+
+/* [Re-]initialise static variables */
+
+  result = 0;
+  octnum = 0;
+
+  end_seq = xistics_end_sequence;
 
   for (;;)
   {
@@ -300,3 +259,57 @@ xistcs()
     }
   }                                /* for(;;) */
 }                                  /* main() */
+
+/* ******************************* get_result ******************************* */
+
+static bool
+get_result(void)
+{
+  if (scrdtk(1, buf, 5, &cmdbuf))
+  {
+    fprintf(stderr, "%s. decno (scrdtk)\r\n", strerror(errno));
+    msg = "Error - see above";
+    return false;
+  }                                /* if (scrdtk(1, buf, 5, &cmdbuf)) */
+  if (cmdbuf.toktyp == eoltok)
+  {
+    result = 0;
+    return true;                   /* Finish if EOL */
+  }                                /* if (cmdbuf.toktyp == eoltok) */
+  if (cmdbuf.toktyp != nortok)
+  {
+    msg = "Null decno illegal";
+    return false;
+  }                                /* if (cmdbuf.toktyp != nortok) */
+  if (!cmdbuf.decok)
+  {
+    msg = "Bad decno";
+    return false;
+  }                                /* if (!cmdbuf.decok) */
+  result = cmdbuf.decval;          /* All checks OK: set result */
+  return true;
+}                                  /* bool get_result(void) */
+
+/* ******************************* good_octnum ****************************** */
+
+static bool
+good_octnum(void)
+{
+  if (octnum < 0200)
+    return true;                   /* J a char */
+  fprintf(stderr, "%*s", cmdbuf.toklen, buf);
+  msg = " not octal for any char";
+  return false;
+}                                  /* bool good_octnum(void) */
+
+/* ********************************** eolok ********************************* */
+
+static bool
+eolok(void)
+{
+  (void)scrdtk(1, 0, 0, &cmdbuf);
+  if (cmdbuf.toktyp == eoltok)
+    return true;                   /* J EOL (OK) */
+  msg = "Spurious params - command not done";
+  return false;
+}                                  /* bool eolok(void) */

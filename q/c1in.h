@@ -38,9 +38,8 @@ stdinfo[OPEN_MAX];
 extern bool offline;
 extern bool simulate_q;
 extern int simulate_q_idx;
-extern char *end_seq;
-extern char *normal_end_sequence;
-extern char *xistics_end_sequence;
+extern const char *end_seq;
+extern const char *const normal_end_sequence;
 extern double timlst;
 extern uint8_t fxtabl[128];        /* FX command implementation */
 

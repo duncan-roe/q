@@ -1,7 +1,6 @@
 # Macros of use when developing q
 
-#n040 !CFLAGS=-O2 make -j3 ^J^NU
-#n040 !CFLAGS="-O2 -Wno-format-truncation" make -j3 ^J^NU
 n040 !make -j3 ^J^NU
+n040 !CFLAGS="-O2 -Wno-format-truncation" make -j3 ^J^NU
 # n213 (^N^W^K) Insert static prototype at front
 n213 ^NC^N\^NM^<1577>^J^[^NFag1^Jl Static' 'prototypes^J^NC^N\^[m-^J^Z^T^ND^N^<1577>;^Jg ta^J^NU

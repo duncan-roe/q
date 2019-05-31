@@ -325,12 +325,12 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
     if (thisch >= SPACE)
       NORMALCHAR;                  /* J not a control */
     verb = thisch + 0100;          /* 'J' for ^J, &c. */
-    switch (thisch)
+    switch (verb)
     {
-      case 0:                      /* NUL - (ignored) */
+      case '@':                    /* NUL - (ignored) */
         GETNEXTCHR;
 
-      case 1:                      /* ^A - Again/Append */
+      case 'A':                    /* Again/Append */
 
 /* If more info in previous line than current, append previous excess
  * to current, then in either case move cursor to follow last char */
@@ -353,7 +353,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
         Curr->bcurs = Curr->bchars; /* Put cursor at end */
         GETNEXTCHR;                /* Finish ^A */
 
-      case 2:                      /* ^B - Word back */
+      case 'B':                    /* word Back */
 
 /* Go back to the start of this word or back to the start of the
  * previous word if at the start of this one. Words are delimited by any
@@ -381,7 +381,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
         Curr->bcurs = i + k;       /* Start of line + room */
         GETNEXTCHR;                /* Finish ^B */
 
-      case 4:                      /* ^D - Right hand rubout */
+      case 'D':                    /* Delete char under cursor */
         if (Curr->bcurs == Curr->bchars)
         {
           err = "^D at EOL";
@@ -396,11 +396,11 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
         Curr->bchars = j;          /* Reduce # of chars */
         GETNEXTCHR;
 
-      case 5:                      /* ^E - Enter/Leave insert mode */
+      case 'E':                    /* enter/leave insErt mode */
         insert = !insert;
         GETNEXTCHR;                /* End insert */
 
-      case 6:                      /* ^F - Forward to start next word */
+      case 'F':                    /* Forward to start next word */
         k = Curr->bchars - Curr->bcurs; /* k - how far we can move forward */
 /* If on non-space, move forward to space, unless at EOL now... */
         p = &Curr->bdata[Curr->bcurs];
@@ -424,16 +424,16 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
         Curr->bcurs = Curr->bchars - k;
         GETNEXTCHR;
 
-      case 7:                      /* ^G - Goto next character */
+      case 'G':                    /* Goto next character */
         glast = true;
         gpseu = false;             /* Not in pseudo macro */
         GETNEXTCHR;                /* Will be back shortly */
 
-      case 8:                      /* ^H - Home */
+      case 'H':                    /* Home */
         Curr->bcurs = INDENT ? ndntch : 0; /* Reset cursor */
         GETNEXTCHR;
 
-      case 9:                      /* ^I - Insert a tab */
+      case 'I':                    /* (tab key) Insert a tab */
 
 /* Insert enough spaces to get to next tab posn if there is one, otherwise
  * insert 1 space. Once inserted, there is no remembrance that this was a tab -
@@ -479,16 +479,16 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
         err = "Line full";
         ERR_IF_MAC;
 
-      case 13:                     /* ^M - End of line */
+      case 'M':                    /* end of line */
         verb = 'J';                /* Treat as Nl: drop thru to ^J */
 
-      case 10:                     /* ^J - End of line: drop thru to ^T */
-        k = Curr->bchars;          /* TESTS/55.17.ggo */
+      case 'J':                    /* end of line: drop thru to ^T */
 
-      case 20:                     /* ^T - Split line */
-        if (verb == 'T')           /* If not a drop-thru */
+      case 'T':                    /* spliT line */
+        k = Curr->bchars;         /* Belongs after case 'J' but gcc complains */
+        if (verb == 'T')           /* Not a drop-thru */
         {
-          k = Curr->bcurs;         /* TESTS/55.17.ggo */
+          k = Curr->bcurs;
           modlin = modlin || (k < Curr->bchars); /* modlin unless ^T at EOL */
         }                          /* if (verb == 'T') */
 
@@ -512,7 +512,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
         if (verb == 'J')
           LEAVE_SCRDIT;            /* Finish if was n/l else drop thru to ^L */
 
-      case 12:                     /* ^L - Left hand kill */
+      case 'L':                    /* Left hand kill */
 
 /* If indenting and at the indent point kill the indent, otherwise
  * kill back to the indent point only.
@@ -549,16 +549,16 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
           LEAVE_SCRDIT;            /* Return if end of ^T */
         GETNEXTCHR;                /* Finish ^L */
 
-      case 11:                     /* ^K - Kill */
+      case 'K':                    /* Kill */
         Curr->bchars = Curr->bcurs;
         modlin = true;             /* Line has been changed */
         GETNEXTCHR;                /* Finished ^K */
 
-      case 14:                     /* ^N - expaNd macro */
+      case 'N':                    /* expaNd macro */
         nseen = true;
         GETNEXTCHR;
 
-      case 15:                     /* ^O - cOmment modify */
+      case 'O':                    /* cOmment modify */
         k = Curr->bcurs;           /* Cursor pos'n */
         p = Curr->bdata + k;       /* 1st char to check */
         i = Curr->bchars - k - 1;  /* Chars to check for "/" */
@@ -584,15 +584,15 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
         Curr->bcurs = Curr->bchars; /* Set cursor to E.O.L. */
         GETNEXTCHR;
 
-      case 3:                      /* drop thru */
+      case 'C':                    /* drop thru */
 
-      case 16:                     /* ^P (or ^C) - next char not special */
+      case 'P':                    /* next char not sPecial */
         contp = true;
         GETNEXTCHR;
 
-      case 19:                     /* drop thru: ^S - Lower -> upper */
+      case 'S':                    /* drop thru: ^S - Lower -> upper */
 
-      case 17:                     /* ^Q - Rest of line upper -> lower */
+      case 'Q':                    /* rest of line upper -> lower */
       {
         int (*cvt) (int);
 
@@ -610,7 +610,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
         GETNEXTCHR;                /* Finished ^Q */
       }
 
-      case 18:                     /* ^R - Reveal all of line */
+      case 'R':                    /* Reveal all of line */
 
 /* Fudge in case recovering from accidental ESC - if no chars typed
  * reveal max possible BUF chars. BUT,,, don't reveal trailing null
@@ -629,23 +629,23 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
         Curr->bcurs = mxchrs;
         GETNEXTCHR;                /* Finish ^R */
 
-      case 21:                     /* ^U - Cancel */
+      case 'U':                    /* Undo (cancel) */
         i = INDENT ? ndntch : 0;
         if (Curr->bchars != i)
           modlin = true;           /* Cancel empty line not a mod */
         Curr->bchars = Curr->bcurs = i;
         GETNEXTCHR;                /* Finish ^U */
 
-      case 22:                    /* re-display line to recoVer from whatever */
+      case 'V':                   /* re-display line to recoVer from whatever */
         newlin();
         GETNEXTCHR;                /* Finish ^V */
 
-      case 23:                     /* ^W - Next char With parity bit on */
+      case 'W':                    /* next char With parity bit on */
         cntrlw = true;
         contp = true;
         GETNEXTCHR;
 
-      case 24:                     /* ^X - Move cursor 1 forward */
+      case 'X':                    /* move cursor 1 forward */
 /* Append space if at EOL */
         if (Curr->bcurs != Curr->bchars)
           Curr->bcurs++;           /* Move cursor fwd */
@@ -656,7 +656,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
         }                          /* If (curr->bcurs != curr->bchars) else */
         GETNEXTCHR;                /* Finish ^X */
 
-      case 25:                     /* ^Y - Cursor back 1 */
+      case 'Y':                    /* cursor back 1 */
         k = Curr->bcurs;           /* Not allowed into indent area however */
         i = INDENT ? ndntch : 0;
         if (k == i)                /* At start or indent already */
@@ -664,14 +664,14 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
         Curr->bcurs--;
         GETNEXTCHR;                /* Finish ^Y */
 
-      case 26:                     /* ^Z - Go to end current line */
+      case 'Z':                    /* go to end current line */
         Curr->bcurs = Curr->bchars;
         GETNEXTCHR;                /* Finish ^Z */
 
-      case 27:                     /* ESC - Abandon */
+      case '[':                    /* ESC - Abandon */
         LEAVE_SCRDIT;              /* Simply exit */
 
-      case 30:                     /* ^^ - repeat ^G */
+      case '^':                    /* repeat ^G */
         if (gotoch == -1)          /* No Prev ^G */
         {
           err = "^^ no previous ^G";

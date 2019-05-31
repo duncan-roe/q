@@ -2703,7 +2703,7 @@ do_print(void)
 static bool
 do_quit(void)
 {
-  char *colonpos;                  /* Pos'n of ":" in q filename */
+  char *colonpos = NULL;           /* Pos'n of ":" in q filename */
 
 /* We accept a filename - starts user off editing a fresh file */
 
