@@ -75,7 +75,7 @@ rerdcm()
 /* If command massaging means the two commands won't fit back in,
  * reinstate the original */
     if (newcom->bchars + oldcom->bchars > BUFMAX)
-      memcpy((char *)oldcom, (char *)&cmthis, sizeof(scrbuf5));
+      memcpy(oldcom, &cmthis, sizeof(scrbuf5));
 /*
  * Move up the 2nd half unless null. May be an overlapping move.
  * Move the trailing zero byte as well (count is thus 1 higher)
@@ -103,7 +103,7 @@ rerdcm()
  */
     oldcom->bcurs = oldcom->tokbeg;
 /* Transfer whole buffer owing to massage */
-    memcpy((char *)newcom, (char *)oldcom, sizeof(scrbuf5));
+    memcpy(newcom, oldcom, sizeof(scrbuf5));
   }
   scmnrd();                        /* Get update */
   return;

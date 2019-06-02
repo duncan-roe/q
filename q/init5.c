@@ -1,7 +1,7 @@
 /* I N I T 5 . C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2011-2014 Duncan Roe
+ * Copyright (C) 2011-2014,2019 Duncan Roe
  *
  * This routine initialises the terminal i/o system.
  */
@@ -59,7 +59,7 @@ init5()
       }
       else
       {
-        memcpy((char *)&tio5, (char *)&tio5save, sizeof(struct termios));
+        memcpy(&tio5, &tio5save, sizeof(struct termios));
 /* Ensure terminal will be reset on exit */
         atexit(final5);
 /* Enable the ISTRIP flag */

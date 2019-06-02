@@ -502,7 +502,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
         }
 
 /* Copy 1st part (^T) or all (^J) of line to previous buffer */
-        memcpy(Prev->bdata, Curr->bdata, k);
+        memcpy((char *)Prev->bdata, (char *)Curr->bdata, (size_t)k);
         Prev->bchars = k;
         Prev->bdata[k] = '\0';     /* Null terminate */
         Prev->bcurs = 0;

@@ -1,3 +1,4 @@
+File bug report on gcc -O2 optimisation failure
 DONE: Do not visbell more than once every 1/10 sec
 Add ~/bin/qm (list macros) to make install
 Create man page for qm

@@ -161,7 +161,7 @@ scmnrd()
       cmsplt = true;               /* We have a split */
 
 /* Save in case massage exceeds total capacity */
-      memcpy((char *)&cmthis, (char *)oldcom, sizeof(scrbuf5));
+      memcpy(&cmthis, oldcom, sizeof(scrbuf5));
       newcom->bcurs = 0;           /* Leave cursor at strt new line */
     }                              /* if (verb == 'T') */
 /*
@@ -404,7 +404,7 @@ massage_q_arg(void)
   int alen = strlen(*(argv + optind + wanted_arg));
 
   oldcom->bdata[oldcom->bchars++] = SPACE; /* Append a SPACE */
-  memcpy((char *)&oldcom->bdata[oldcom->bchars], /* Don't want trlg NUL */
+  memcpy(&oldcom->bdata[oldcom->bchars], /* Don't want trlg NUL */
     *(argv + optind + wanted_arg), alen);
   oldcom->bchars += alen;          /* Append next arg */
 }                                  /* static void massage_q_arg(void) */

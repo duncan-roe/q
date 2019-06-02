@@ -34,11 +34,11 @@ static bool good_octnum(void);
 static bool get_result(void);
 
 /* Static variables */
-static int octnum;                 /* Returned value */
 
+static int octnum;                 /* Returned value */
 static scrbuf5 cmdbuf;
 static uint8_t buf[5];
-static char *msg;
+static const char *msg;
 static int result;                 /* Returned value */
 static const char *const xistics_end_sequence = "\025x\n";
 
@@ -53,7 +53,6 @@ xistcs()
  * Screenedit system, as this is suspect until characteristics are sorted out */
 
 /* [Re-]initialise static variables */
-
   result = 0;
   octnum = 0;
 
@@ -256,7 +255,7 @@ xistcs()
         msg = " is not a recognised characteristic";
         ok = false;
         continue;
-    }
+    }                              /* switch (verb) */
   }                                /* for(;;) */
 }                                  /* main() */
 

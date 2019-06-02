@@ -1635,7 +1635,7 @@ do_ychangeall(void)
 
 /* Move in new string if not null */
       if (newlen != 0)
-        memcpy((char *)&curr->bdata[h], (char *)newstr, (size_t)newlen);
+        memcpy(&curr->bdata[h], newstr, newlen);
       curr->bchars = curr->bchars + ydiff; /* Get new line length */
       linmod = true;               /* This line has been modified */
       yposn = m + 1 + ydiff;       /* Resume search after new string */
