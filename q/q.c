@@ -1881,7 +1881,7 @@ A_I_M_common(void)
 
   do
   {
-/* Get user out of INSERT/APPEND/MODIFY is ^C has been typed */
+/* Get user out of INSERT/APPEND/MODIFY if ^C has been typed */
     if (cntrlc)
     {
       report_control_c();

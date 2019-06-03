@@ -369,11 +369,11 @@ splitb(void)
  * LATER could do some reorganising in the split to possibly free a block or 2
  */
 {
-  ofstbk *sof;                     /* Spliting offset block */
+  ofstbk *sof;                     /* Splitting offset block */
   ofstbk *nof;                     /* New offset block */
   indxbk *nix;                     /* New index block */
   suppbk *nsp;                     /* New supp block */
-  suppbk *sp;                      /* Old supp block */
+  volatile suppbk *sp;             /* Old supp block */
   uint16_t *us;                    /* Scratch */
   int offidx;                      /* Index of offset in this block */
 
