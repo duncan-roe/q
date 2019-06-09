@@ -149,7 +149,7 @@ N1002 ^NC^NS^N\^[^NFb^ND^N^<4000>^NM^<1022>^[^NU ; Env save #2
 # PSH 0   ; retrieve saved max tab a
 # POPTAB a; set tab a to retrieved value
 # POPN    ; throw away diff that we tested
-# POP 0   : restore contents of memory location 0
+# POP 0   ; restore contents of memory location 0
 N1011 ^NC^NS^N\^<PSH 0>^<SFPT>^<PSHTAB a>^<PSHNBLN>^<A1>^<DUP>^<POP 0>^<SUB>^<SLT>^NL^<PSH 0>^<POPTAB a>^<POPN>^<POP 0>g ta^Jfm^ND^N^<1021>^J^NU ; Env restore #1
 N1012 ^NC^NS^N\^<PSH 0>^<SFPT>^<PSHTAB b>^<PSHNBLN>^<A1>^<DUP>^<POP 0>^<SUB>^<SLT>^NL^<PSH 0>^<POPTAB b>^<POPN>^<POP 0>g tb^Jfm^ND^N^<1022>^J^NU ; Env restore #2
 N1021 !!SCRATCH - USED BY ENV DUMP #1

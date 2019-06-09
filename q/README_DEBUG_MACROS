@@ -140,7 +140,7 @@ N705 is entered when the cursor was past tab 2. It either splits the line at the
 preceding word boundary or, if there is only a single word in the line, lets the
 line stay as-is.
 After ^B[word back] cursor is at line start: ^NP1[cursor past tab 1] is false
-so don'r obey ^NS[skip 2] and jump no N701.
+so don't obey ^NS[skip 2] and jump to N701.
 
 <Enter> confirms jump to N701
   701 ^J^NC^NU^NA^N^<706>^NG>^N^<700>^N^<702> ;Leave lines starting "> " alone
@@ -170,8 +170,8 @@ sleep 100000
 
 ggo $(type -p q) -a "-n -iu,${k:-.qrc}^Jfv^Jfm+v^J $j </dev/pts/$my_pty \
   >/dev/pts/$my_pty 2>&1" "set max-value-size sizeof (struct scrbuf5)" \
-  b\ scrdit.c:893 commands silent "echo starting macro" p/o\ thisch end \
+  b\ scrdit.c:1621 commands silent "echo starting macro" p/o\ thisch end \
   "cond 2 (thisch < 0101 || thisch > 0132) && thisch < 04000 && thisch != 255" \
-  b\ scrdit.c:1256 commands silent "echo ^NI invoked\\n" end \
-  b\ scrdit.c:1371 commands silent "echo resuming macro" p/o\ i end \
+  b\ scrdit.c:1223 commands silent "echo ^NI invoked\\n" end \
+  b\ scrdit.c:864 commands silent "echo resuming macro" p/o\ i end \
   'cond 4 verb != '"'I' && (curmac < FIRST_PSEUDO || curmac > LAST_PSEUDO)" c

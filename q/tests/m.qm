@@ -1,1 +1,4 @@
 n 040 !cat ^ND^N^<4002>^J^NU
+# n204 - make long t5
+n204 ^NC^NS^N\^<PS1>^<PS2P20>^<SUB>^<PS1>^<POPRF>^<PPFBINT>a^J^ND^N^<1501>^<POP 0>^[^NU
+n1501 ^<PSHLNNB>^<POP 0>^ND^N^<7000>^J^<S1>^<SNE>^NU^N^@

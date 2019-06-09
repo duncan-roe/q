@@ -1,0 +1,6 @@
+#!/bin/bash -p
+# Make t5 a fairly large (over 1M lines) file. Line content is line number
+#set -x
+rm -f t5
+touch t5
+q -i'fb^J^ND^N^<204>^[fv^Js^J' t5
