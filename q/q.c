@@ -126,7 +126,8 @@ unsigned long dfltmode;
 
 static int colonline;              /* Line number from <file>:<line> */
 static command_state cmd_state;
-static bool verbose_flag;          /* -v seen */
+static bool verbose_flag = false;  /* -v seen */
+static bool very_verbose_flag = false; /* -vv seen */
 static long count2;            /* For those commands that take 2 #'s of lines */
 static int locpos;              /* Position in line of string found by LOCATE */
 static long revpos;                /* Remembered pointer during backwards L */
@@ -256,7 +257,6 @@ main(int xargc, char **xargv)
   firstpos = 0;
   j4 = k4 = 0;
   count2 = 0;
-  verbose_flag = false;
 
 /* Initial Tasks */
   argc = xargc;                    /* Xfer invocation arg to common */
@@ -323,7 +323,10 @@ main(int xargc, char **xargv)
         break;
 
       case 'v':
-        verbose_flag = true;
+        if (verbose_flag)
+          very_verbose_flag = true;
+        else
+          verbose_flag = true;
         break;
 
       case '?':
@@ -2163,11 +2166,11 @@ do_fbrief(void)
 static bool
 do_fdevnull(void)
 {
-  if (verbose_flag)                /* FD ineffective in q -v */
+  if (very_verbose_flag)           /* FD ineffective in q -vv */
   {
     PRINTF_IGNORED;
     return true;
-  }                                /* if (verbose_flag) */
+  }                                /* if (very_verbose_flag) */
   switch (get_answer())
   {
     case Q_UNREC:

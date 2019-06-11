@@ -48,6 +48,9 @@ argument to tell Q what to do. -q is forced on when Q runs in a pipe.
 output redirected to files). -v then causes everything that would otherwise have
 gone to stdout to be sent to stderr.
 
+-vv (very verbose) (-v option given twice) tells Q to ignore FD-FDEVNULL
+commands. This works whether in a pipe or not.
+
 -A (ALU) causes Q to output the currently supported ALU (and FPU) opcodes. If -A
 is the only command-line argument, Q then exits.
 
