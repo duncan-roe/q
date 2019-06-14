@@ -9,10 +9,10 @@
  * Support from Des Fitzgerald & Associates gratefully acknowledged.
  * Project started 1980.
  *
- * This is the Master Q module
- *
- *
- */
+ * This is the Master Q module */
+
+/* Headers */
+
 #include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>

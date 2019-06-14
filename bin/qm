@@ -1,0 +1,47 @@
+#!/bin/sh
+#set -x
+
+# Check for -a option (display alternative format)
+[ $# -gt 0 -a "$1" = -a ] && { alt_form=true; shift; } || alt_form=false
+
+if [ $# -eq 1 ]
+then
+  D="$1"
+elif [ $# -eq 0 ]
+then
+  D="."
+else
+  echo "Usage: $(basename $0) [-a] [dir | file]" >&2
+  exit 1
+fi
+if [ -d $D ]
+then
+(
+  cd $D
+  if $alt_form
+  then
+    F=$(mktemp)
+    q -qoin-,$F^J
+    cat $F|cut -f2- -d' '
+    rm $F
+  else
+    cat /dev/null | q -vin-^J 2>&1 | \
+      q -nifl:^J^NC^NU^[d1,-,-2^Ja^J^[d-1^Jy,^P^M^J | cat
+  fi
+)
+elif [ -f $D ]
+then
+  if $alt_form
+  then
+    F=$(mktemp)
+    q -nqoiu,$D^Jn-,$F^J
+    cat $F|cut -f2- -d' '
+    rm $F
+  else
+    cat /dev/null | q -nviu,$D^Jn-^J 2>&1 | \
+      q -nifl:^J^NC^NU^[d1,-,-2^Ja^J^[d-1^Jy,^P^M^J | cat
+  fi
+else
+  echo "$D is neither a directory nor a regular file" >&2
+  exit 1
+fi
