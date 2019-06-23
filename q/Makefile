@@ -9,7 +9,7 @@ CPPFLAGS = $(shell getconf LFS_CFLAGS 2>/dev/null)\
 -DETC_DIR=\"$(ETC_DIR)\"
 CFLAGS := $(CFLAGS) -g3 -ggdb\
 -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wstrict-prototypes \
--Wmissing-prototypes -Wstrict-aliasing
+-Wmissing-prototypes -Wstrict-aliasing -Wno-format-truncation
 q : $(OBJ)
 	$(CC) $^ -o $@ $(LIBS)
 clean :

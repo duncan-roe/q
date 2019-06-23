@@ -1,8 +1,9 @@
-In INSTALL, maybe advise against compiling -O2
+Audit macros to not use alpha tab ids (preferably use tabs 75 - 80)
+workfile.c, readfl.c & maybe others to have #pragma to turn off optimising
 DONE: Do not visbell more than once every 1/10 sec
-Add ~/bin/qm (list macros) to make install
+DONE: Add ~/bin/qm (list macros) to make install
 Create man page for qm
-DONE: q -v to not action FD Y
+DONE: q -v to not action FD Y (Changed to q -vv)
 DONE: FB to use clock_gettime (replaces gettimeofday) for 1/5 second interval
 FRecurse command to bring up q command line from w/in macro:
  Q continues macro; FQ abandons

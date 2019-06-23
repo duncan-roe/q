@@ -15,13 +15,13 @@
 #include <stdio.h>
 #include <memory.h>
 #include <stdlib.h>
-#include <sys/user.h>
 #include "prototypes.h"
 #include "macros.h"
 
 /* Macros */
 
 #define GIVE_UP goto no_memory
+#define Q_PAGE_SIZE 8192           /* Just a guess */
 
 /* Static prototypes */
 
@@ -85,10 +85,10 @@ get_scmac(uint32_t mcnum)
 
   if (hunk_left < sizeof(macro5))
   {
-    hunk = malloc(PAGE_SIZE);
+    hunk = malloc(Q_PAGE_SIZE);
     if (!hunk)
       return false;
-    hunk_left = PAGE_SIZE;
+    hunk_left = Q_PAGE_SIZE;
   }                                /* if (hunk_left < sizeof(macro5)) */
   scmacs[mcnum] = (macro5 *)hunk;
   hunk += sizeof(macro5);

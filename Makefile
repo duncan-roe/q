@@ -12,12 +12,12 @@ q:
 clean:
 	cd  q && $(MAKE) clean
 
-install: q install_help install_doc install_etc
-	mkdir -p $(DESTDIR)$(BINDIR) && \
-cp --preserve=timestamps,mode q/q $(DESTDIR)$(BINDIR)
+install: q install_help install_doc install_etc install_bin
 
-install_help:
-	mkdir -p $(DESTDIR)$(HELP_DIR) && cp -a help/* $(DESTDIR)$(HELP_DIR)
+install_bin:
+	mkdir -p $(DESTDIR)$(BINDIR) && \
+cp --preserve=timestamps,mode bin/qm $(DESTDIR)$(BINDIR); \
+cp --preserve=timestamps,mode q/q $(DESTDIR)$(BINDIR)
 
 install_doc:
 	mkdir -p $(DESTDIR)$(DOCDIR)/q && \
@@ -32,8 +32,11 @@ cp --preserve=timestamps $$i/*.? $(DESTDIR)$(MANDIR)/$$(basename $$i); done
 install_etc:
 	mkdir -p $(DESTDIR)$(ETC_DIR) && cp -a etc/* $(DESTDIR)$(ETC_DIR)
 
+install_help:
+	mkdir -p $(DESTDIR)$(HELP_DIR) && cp -a help/* $(DESTDIR)$(HELP_DIR)
+
 uninstall:
-	rm $(DESTDIR)$(BINDIR)/q; \
+	rm $(DESTDIR)$(BINDIR)/q; rm $(DESTDIR)$(BINDIR)/qm; \
 for i in help/*; do rm $(DESTDIR)$(HELP_DIR)/$$(basename $$i); done; \
 rmdir $(DESTDIR)$(HELP_DIR); \
 rm -r $(DESTDIR)$(DOCDIR)/q/; \
