@@ -49,15 +49,20 @@
  * The lengths of the larger blocks are deliberately powers of 2. A "page"
  * (large power of 2) of blocks is allocated at a time, to avoid the overhead
  * of numerous small malloc's is avoided. mallopt is no longer used, even if
- * available. To some extent, the startegy may minimise page faults when moving
+ * available. To some extent, the strategy may minimise page faults when moving
  * through the file. This will be more the case if malloc is "page aware",
  * aligning the returned block when the request is an integral multiple of the
  * hardware page size.
  *
- * The workfile system can handle lines of any length, though q enforces an
- * arbitrary limit, currently 2000. The workfile system tracks the number of the
- * current line and the total number of lines.
+ * The workfile system can handle lines up to length 64K - 1. The workfile
+ * system tracks the number of the current line and the total number of lines.
  */
+/* Pragmas */
+
+#pragma GCC optimize 0             /* Avoid having to guess volatiles */
+
+/* Headers */
+
 #include <stdio.h>
 #include <memory.h>
 #include <malloc.h>
@@ -68,16 +73,20 @@
 #include "prototypes.h"
 #include "fmode.h"
 
-#define NOM_PAGE 8192              /* Largest known pagesize on any system */
-#define FULLPAGES (NOM_PAGE/sizeof(void*)-2)
+/* Macros */
 
-#define OFF_DIM ((1024-2*sizeof(void*))/sizeof(uint16_t))
+#define NOM_PAGE 8192              /* Largest known pagesize on any system */
+#define FULLPAGES (NOM_PAGE / sizeof(void*) - 2)
+#define OFF_DIM ((1024 - 2 * sizeof(void*)) / sizeof(uint16_t))
+
+/* Typedefs */
 
 typedef struct databk
 {
   struct databk *next;
   uint8_t data1[BLKCAP];           /* Actually a BPTR when free */
 } databk;
+
 typedef struct indxbk
 {
   struct indxbk *next;
@@ -86,12 +95,14 @@ typedef struct indxbk
   short blocks;
   uint16_t chars;                  /* Chars in last data block */
 } indxbk;
+
 typedef struct ofstbk
 {
   struct ofstbk *next;
   struct ofstbk *prev;
   uint16_t offset[OFF_DIM];
 } ofstbk;
+
 typedef struct suppbk
 {
   ofstbk *next;
@@ -101,12 +112,14 @@ typedef struct suppbk
   unsigned long mode;
   short dlrecs;
 } suppbk;
+
 typedef struct pagebk
 {
   struct pagebk *next;
   struct pagebk *prev;
   void *pages[FULLPAGES];
 } pagebk;
+
 typedef struct mapbk
 {
   struct mapbk *next;
@@ -115,11 +128,13 @@ typedef struct mapbk
   unsigned long length;
   unsigned long inode;
 } mapbk;
+
 typedef struct chainbase
 {
   struct chainbase *next;
   struct chainbase *prev;
 } chainbase;
+
 typedef struct hddr                /* Used by the chaining routines */
 {
   struct hddr *next;
@@ -296,7 +311,7 @@ get2(uint8_t *linptr)
 
 /* ******************************* gtofst ****************************** */
 
-/* Given an mmapping index block and line offset, return the address of the
+/* Given a mmapping index block and line offset, return the address of the
  * short offset for that line. The line # may be at most one more than the # in
  * the group: that is how we append. The address of the offset block found is
  * available to other functions in this compilation unit as xxoffs */
@@ -358,16 +373,15 @@ gtofst(indxbk * ix, int offset)
 
 /* ******************************* splitb ****************************** */
 
+static bool
+splitb(void)
+
 /* Split the mmapping block addressed by pointr such that poffst becomes zero
  * (pointr points to a block whose 1st non-deleted record is ptrpos)  */
 
-static bool
-splitb(void)
 /* The initial implementation simply duplicates the offset block where the split
  * is (except if the split is on the first line in that block). The 2 new groups
- * have the same file addresses, and block contents are unaltered.
- * LATER could do some reorganising in the split to possibly free a block or 2
- */
+ * have the same file addresses, and block contents are unaltered. */
 {
   ofstbk *sof;                     /* Splitting offset block */
   ofstbk *nof;                     /* New offset block */
@@ -395,7 +409,7 @@ splitb(void)
     return false;                  /* Shouldn't happen */
 
 /* We will need a new index pair. Put it before the current group. The
- * duplicated block (if any) will be the last */
+ * duplicated offsets block (if any) will be the last */
 
   sp = (void *)pointr->dtaptr;     /* Current supp blk */
   if (!(nix = get2(sp->filptr)))
@@ -432,9 +446,9 @@ splitb(void)
 
 /* Fix up the aux pointer, if it was in the split group */
 
-/* Aux line now in previous group */
   if (auxptr == pointr && (aoffst -= poffst) < 0)
   {
+/* Aux line now in previous group */
     auxptr = auxptr->prev;
     aoffst += auxptr->chars;
   }                                /* if(auxptr==pointr&&(aoffst-=poffst)<0) */

@@ -6,6 +6,7 @@
 /* Headers */
 
 #include <math.h>
+#include <time.h>
 #include <string.h>
 #include "alu.h"
 #include "fmode.h"
@@ -231,6 +232,18 @@ psfbint(char **err)
   fs[++fsidx] = fbrief_interval;
   return true;
 }                                  /* psfbint() */
+
+static bool
+psclock(char **err)
+{
+  if (fsidx >= stack_size - 1)
+  {
+    *err = "FP register stack overflow";
+    return false;
+  }                                /* if (fsidx >= stack_size - 1) */
+  fs[++fsidx] = clock() / (double)CLOCKS_PER_SEC;
+  return true;
+}                                  /* psclock() */
 
 static bool
 nop(char **err)
@@ -1208,6 +1221,7 @@ alu_opcode opcode_defs[] = {
   OPCODE(ppvbint, "Pop F to Visible Bell Interval"),
   OPCODE(psfbint, "Push Fbrief Interval to F"),
   OPCODE(ppfbint, "Pop F to Fbrief Interval"),
+  OPCODE(psclock, "Push result from clock(3) to F as seconds"),
   CAPTION(""),
   CAPTION("Immediate Data Instructions"),
   CAPTION("========= ==== ============"),

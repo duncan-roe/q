@@ -1,6 +1,17 @@
 #!/bin/bash -p
 # Make t5 a fairly large (over 1M lines) file. Line content is line number
+# Optional arg is power of 2 of lines wanted if 14 - 31 (PS2Pdd opcode)
+# else lines wanted (must be power of 2 <=8192)
 #set -x
 rm -f t5
 touch t5
-q -i'fb^J^ND^N^<204>^[fv^Js^J' t5
+if [ $# -eq 1 ]
+then
+  [ $1 -ge 2 ] || { echo "Illegal argument: $1 (would loop forever)" >&2; exit 1; }
+  [ $1 -ge 14 -a $1 -le 31 ] && instrn=PS2P$1 || instrn=PS$1
+  macdef="n1577 ^*<$instrn>^*NU^*J^J"
+else
+  macdef=""
+fi
+the_rest='fb^J^ND^N^<204>^[fv^Js^J'
+q -oi"$macdef$the_rest" t5

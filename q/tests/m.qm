@@ -1,4 +1,11 @@
 n 040 !cat ^ND^N^<4002>^J^NU
-# n204 - make long t5
-n204 ^NC^NS^N\^<PS1>^<PS2P20>^<SUB>^<PS1>^<POPRF>^<PPFBINT>a^J^ND^N^<1501>^<POP 0>^[^NU
-n1501 ^<PSHLNNB>^<POP 0>^ND^N^<7000>^J^<S1>^<SNE>^NU^N^@
+# n204 - make long t5.
+# The trailing NUL on each line is so gdb only shows 1 line for a pointer to mmap'd memory.
+# Without trailing NUL chars, gdb 7.11.1 loops on such a pointer in a 4M line file
+# (created by PS2P22).
+n204 ^NC^NS^N\^<PS1>^ND^N^<1577>^<SUB>^<PS1>^<POPRF>^<PPFBINT>a^J^ND^N^<1501>^<POP 0>^[^NU
+n1501 ^<PSHLNNB>^<POP 0>^ND^N^<7000>^P^@^J^<S1>^<SNE>^NU^N^@
+n1577 ^<PS2P22>^NU ; Change to load wanted power of 2 for file size
+
+# n205 (^N^W^E): test time to delete 2M lines (and purce forgotten queue)
+n205 ^NC^NS^N\^<PSCLOCK>d1000000 2000000^J^<PSCLOCK>^<SUBF>^<POPF 0>^<PSCLOCK>d1^J^<PSCLOCK>^<SUBF>^<DUPF>^<POPF 1>^<PSHF 0>^<ADDF>^<POPF 2>!echo -e "\nTime to delete:\t\t^ND^N^<13000> seconds\nTime to clear forget:\t^ND^N^<13001> seconds\nTotal time:\t\t^ND^N^<13002> seconds."^J^NU
