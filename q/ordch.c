@@ -26,8 +26,6 @@ ordch(uint8_t chr, scrbuf5 *scbuf)
  * chr   - the character
  * scbuf  - pointer to the scrnedit buffer
  */
-  int i, k;                        /* Scratch */
-  uint8_t *p, *q;
   bool done = false;
 /*
  * Apart from SCRDIT on encountering a tab (^I),
@@ -75,12 +73,9 @@ ordch(uint8_t chr, scrbuf5 *scbuf)
     if (scbuf->bcurs < scbuf->bchars) /* A real insert */
     {
 /* We have to zot the r/h portion of line (incl. cursor chr) up 1. */
-/* Use a FOR loop to do the overlapping r/h move */
-      p = &scbuf->bdata[scbuf->bchars - 1]; /* Last pick up char */
-      q = &scbuf->bdata[scbuf->bchars]; /* Last set down char */
-      k = scbuf->bchars - scbuf->bcurs; /* # chars to move */
-      for (i = 0; i < k; i++)
-        *q-- = *p--;
+/* Use memmove to do the overlapping r/h move */
+      memmove(&scbuf->bdata[scbuf->bcurs + 1],
+        &scbuf->bdata[scbuf->bcurs], scbuf->bchars - scbuf->bcurs);
     }
     scbuf->bchars++;               /* Increase line length */
     if (mxchrs < scbuf->bchars)
