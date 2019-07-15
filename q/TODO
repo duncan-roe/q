@@ -1,5 +1,5 @@
 Audit macros to not use alpha tab ids (preferably use tabs 75 - 80)
-workfile.c, readfl.c & maybe others to have #pragma to turn off optimising
+DONE: workfile.c, readfl.c & maybe others to have #pragma to turn off optimising
 DONE: Do not visbell more than once every 1/10 sec
 DONE: Add ~/bin/qm (list macros) to make install
 Create man page for qm

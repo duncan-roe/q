@@ -140,9 +140,13 @@ typedef struct hddr                /* Used by the chaining routines */
   struct hddr *next;
   struct hddr *prev;
 } hddr;                            /* typedef struct hddr */
-/*
- * Data private to workfile system
- */
+
+/* Static prototypes */
+
+static void move_chain(void *firstblk, void *lastblk, void *beforeblk);
+
+/* Data private to workfile system */
+
 static indxbk *pointr;             /* W/F ptr addr */
 static indxbk *auxptr;             /* W/F aux ptr addr */
 static ofstbk *xxoffs;        /* Offset block containing last gtofst() result */
@@ -169,10 +173,10 @@ static int frmdel = 0;      /* modifies inslin action when called from delete */
 /*
  * Error messages and other constants that are always accessed by
  */
-static char
-  *e1 = "!Total lines in file now -ve[DELETE]\r",
-  *e2 = "Nothing to forget\r",
-  *e3 = "!Pointer move request outside file - ignored [SETPTR]\r";
+static const char
+  *const e1 = "!Total lines in file now -ve[DELETE]\r",
+  *const e2 = "Nothing to forget\r",
+  *const e3 = "!Pointer move request outside file - ignored [SETPTR]\r";
 /*
  *  Brief externally visible subroutine specifications:-
  *
@@ -226,8 +230,8 @@ auxxch(void)
 static void *
 qunchn(void *blk)
 {
-  ((hddr *) blk)->next->prev = ((hddr *) blk)->prev;
-  ((hddr *) blk)->prev->next = ((hddr *) blk)->next;
+  ((hddr *)blk)->next->prev = ((hddr *)blk)->prev;
+  ((hddr *)blk)->prev->next = ((hddr *)blk)->next;
   return blk;
 }                                  /* static void qunchn(void*blk) */
 
@@ -238,10 +242,10 @@ qunchn(void *blk)
 static void
 qchain(void *new, void *old)
 {
-  ((hddr *) new)->next = (hddr *) old;
-  ((hddr *) new)->prev = ((hddr *) old)->prev;
-  ((hddr *) old)->prev->next = (hddr *) new;
-  ((hddr *) old)->prev = (hddr *) new;
+  ((hddr *)new)->next = (hddr *)old;
+  ((hddr *)new)->prev = ((hddr *)old)->prev;
+  ((hddr *)old)->prev->next = (hddr *)new;
+  ((hddr *)old)->prev = (hddr *)new;
 }                                  /* static void qchain(void*old,void,new) */
 
 /* ******************************* getmem ****************************** */
@@ -271,7 +275,7 @@ getmem(chainbase *cb, size_t sz, char *desc)
       lastpages = 0;               /* No entries in this block */
       continue;                    /* for(;;) */
     }                              /* if(bpage.next==&bpage) */
-    ((pagebk *) bpage.prev)->pages[lastpages++] = pg; /* Record new page */
+    ((pagebk *)bpage.prev)->pages[lastpages++] = pg; /* Record new page */
     for (roomleft = NOM_PAGE; roomleft >= sz; pg += sz, roomleft -= sz)
       qchain(pg, cb);              /* Add the next chunk to the chain */
     return qunchn(cb->prev);
@@ -317,7 +321,7 @@ get2(uint8_t *linptr)
  * available to other functions in this compilation unit as xxoffs */
 
 static uint16_t *
-gtofst(indxbk * ix, int offset)
+gtofst(indxbk *ix, int offset)
 {
   suppbk *sp;                      /* Scratch */
   int absoff;                      /* Offset including deleted lines */
@@ -375,10 +379,8 @@ gtofst(indxbk * ix, int offset)
 
 static bool
 splitb(void)
-
 /* Split the mmapping block addressed by pointr such that poffst becomes zero
  * (pointr points to a block whose 1st non-deleted record is ptrpos)  */
-
 /* The initial implementation simply duplicates the offset block where the split
  * is (except if the split is on the first line in that block). The 2 new groups
  * have the same file addresses, and block contents are unaltered. */
@@ -541,7 +543,7 @@ delete(bool aux)
     }                              /* if(++sp->dlrecs==OFF_DIM) */
     if (!pointr->chars)            /* Group is now empty */
     {
-      if (sp->next != (ofstbk *) sp) /* Holding on to last offsets block */
+      if (sp->next != (ofstbk *)sp) /* Holding on to last offsets block */
         qchain(qunchn(sp->next), &bofree); /* Free offsets block */
       if (pointr == auxptr)        /* auxptr was probably invalid anyway */
       {
@@ -601,25 +603,18 @@ clrfgt()
   {
     if (!(count = ix->blocks))     /* Empty line */
       continue;
-/*
- * Free data blocks in this line
- */
+
+/* Free data blocks in this line */
     for (dt = ix->dtaptr; count > 0; count--, dt = nxtdt)
     {
       nxtdt = dt->next;            /* Addr next block in chain */
       qchain(dt, &bdfree);         /* Chain B4 free data block base */
     }
   }
-/*
- * Free the index blocks in the forgotten chain, by moving the forgotten chain
- * into free chain in one go. Then empty the forgotten chain
- */
-  bifree.prev->next = bfrgt.next;
-  bfrgt.next->prev = bifree.prev;  /* It <- last blk in free chain */
-  bfrgt.prev->next = &bifree;      /* Last frgtn -> free base */
-  bifree.prev = bfrgt.prev;        /* Free base <- last frgtn blk */
-  bfrgt.next = &bfrgt;
-  bfrgt.prev = &bfrgt;
+
+/* Free the index blocks in the forgotten chain, by moving the forgotten chain
+ * into free chain in one go */
+  move_chain(bfrgt.next, bfrgt.prev, &bifree);
 }
 
 /* ******************************* inslin ****************************** */
@@ -673,7 +668,7 @@ inslin(scrbuf5 *a1)
   ix->blocks = 0;                  /* No blocks in last block */
   ix->chars = 0;                   /* No chars in last block */
   ix->dtaptr = NULL;               /* Null pointer */
-  dt = (databk *) & ix->dtaptr;    /* Where addr 1st data blk is 2 go */
+  dt = (databk *)&ix->dtaptr;      /* Where addr 1st data blk is 2 go */
 
 /* Get line length, if it will fit where pointer would go then put it there */
 
@@ -1116,3 +1111,15 @@ ismapd(ino_t inode)
       break;
   return mp != (void *)&bmap;
 }                                  /* int ismapd(ino_t inode) */
+/* ******************************* move_chain ******************************* */
+
+static void
+move_chain(void *firstblk, void *lastblk, void *beforeblk)
+{
+  ((hddr *)lastblk)->next->prev = ((hddr *)firstblk)->prev;
+  ((hddr *)firstblk)->prev->next = ((hddr *)lastblk)->next;
+  ((hddr *)firstblk)->prev = ((hddr *)beforeblk)->prev;
+  ((hddr *)lastblk)->next = (hddr *)beforeblk;
+  ((hddr *)beforeblk)->prev->next = (hddr *)firstblk;
+  ((hddr *)beforeblk)->prev = (hddr *)lastblk;
+}                                  /* move_chain() */
