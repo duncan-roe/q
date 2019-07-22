@@ -529,9 +529,11 @@ delete(bool aux, long num2del, bool forgettable)
   {
     auxpos -= num2del;
     if (auxpos <= ptrpos)
+    {
       auxpos = (long)(auxptr = NULL);
-    else
-      setaux(auxpos);
+      if (aux)
+        puts("Nulling pointr!\r");
+    }                              /* if (auxpos <= ptrpos) */
   }                                /* if (auxpos > ptrpos) */
 
   if (aux)                         /* Was aux delete */
