@@ -48,7 +48,7 @@ void refrsh(scrbuf5 *xline);
 void scrset(scrbuf5 *line);
 void setcrs(int posn);
 void setptr(long a1);
-void delete(bool aux);
+void delete(bool aux, long num2del, bool forgettable);
 void clrfgt(void);
 void inslin(scrbuf5 *a1);
 void forget(void);

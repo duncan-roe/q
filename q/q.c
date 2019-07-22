@@ -1267,7 +1267,7 @@ write_workfile_to_stdout(void)
  */
   sigset_t omask = act.sa_mask;    /* Will have wanted bits 1st time thru */
 
-/* Before changing signal handlers ,delete the temp file */
+/* Before changing signal handlers, delete the temp file */
 /* (it's mmpap'd) */
   rm_pipe_temp();
 
@@ -1673,7 +1673,7 @@ do_ychangeall(void)
         pdsply(curr, prmpt, pchrs); /* Display the modified line */
       }                            /* if (want_display) */
     }                              /* if(!NONE) */
-    delete(false);                 /* Remove old version of line */
+    delete(false, 1, false);       /* Remove old version of line */
     inslin(curr);                  /* Insert new version */
   }                                /* for(i4=count;i4>0;i4--) */
   setptr(savpos);                  /* End Y */
@@ -1862,7 +1862,7 @@ finish_c_or_r(char *which)
     if (rdlin(prev, true))         /* Read AUX */
     {
       if (repos)
-        delete(true);              /* For reposition only, delete line read */
+        delete(true, 1, false);    /* For reposition only, delete line read */
       inslin(prev);
     }                              /* if (rdlin(prev, true)) */
     else
@@ -1939,12 +1939,12 @@ static void
 display_and_update_file(void)
 {
   if ((modify || splt) && modlin)
-    delete(false);                 /* Delete CHANGED existing line */
+    delete(false, 1, false);       /* Delete CHANGED existing line */
   if (display_wanted)
     disply(prev, false);           /* Display final line */
   if (!(modify || splt) || modlin)
     inslin(prev);                  /* Insert changed or new line */
-  splt = false;                    /* Not a split this time */
+  splt = false;                    /* Not a split any more */
 }                                  /* void display_and_update_file(void) */
 
 /* ****************************** J_L_M_common ****************************** */
@@ -2102,28 +2102,23 @@ do_delete(void)
 {
   if (!getlin(true, false))
     return false;                  /* J bad line # */
-  k4 = oldcom->decval + 1;         /* Pos here for each delete */
+  k4 = oldcom->decval + 1;         /* Pos here for delete */
   if (!get_opt_lines(&count))
     return false;
-  clrfgt();                        /* In case lines from last D */
-  for (i4 = count; i4 > 0; i4--)
+  if (k4 - 2 + count > lintot)
   {
-
-/* Check if there are deferred lines and try to get one if so. We need to
- * re-check lintot: "deferd" will get cleared in the process if the last line
- * was unterminated */
-    if (k4 == lintot + 2 && !(deferd && (dfread(1, NULL), k4 != lintot + 2)))
+    if (deferd)
+      dfread(k4 - 2 + count - lintot, NULL);
+    if (k4 - 2 + count > lintot)
     {
-      printf_eof_reached(count, "deleted");
+      count = lintot - k4 + 2;
+      printf("end of file reached:- %ld line%s deleted\r", count,
+        count == 1 ? "" : "s");
       newlin();
-      break;
-    }                              /* if (k4 == lintot + 2 && ...) */
-    else
-    {
-      setptr(k4);                  /* Pos 1 past 1st line to go */
-      delete(false);               /* Knock off line. Use normal ptr */
-    }                              /* if (k4 == lintot + 2 && ...) else */
-  }
+    }                              /* if (k4 -2 + count >lintot) */
+  }                                /* if (k4 -2 + count >lintot) */
+  setptr(k4);                      /* Pos 1 past 1st line to go */
+  delete(false, count, true);      /* Knock off line(s). Use normal ptr */
   return true;                     /* Finished if get here */
 }                                  /* bool do_delete(void) */
 
@@ -2452,7 +2447,7 @@ do_join(void)
     return true;                   /* Next command */
   }                                /* if(ptrpos>=lintot&&... */
   rdlin(prev, false);              /* 1st line */
-  delete(false);                   /* Del lin before normal ptr */
+  delete(false, 1, false);         /* Del lin before normal ptr */
   for (i4 = count2; i4 > 0; i4--)
   {
     if (!rdlin(curr, false))       /* If eof */
@@ -2471,7 +2466,7 @@ do_join(void)
     }                              /* if (j > prev->bmxch) */
     r = (char *)&prev->bdata[prev->bchars]; /* Appending posn */
     prev->bchars = j;              /* New length */
-    delete(false);                 /* Delete line just read */
+    delete(false, 1, false);       /* Delete line just read */
 /* Append line just read */
     memcpy(r, (char *)curr->bdata, (size_t)curr->bchars);
   }

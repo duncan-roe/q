@@ -165,20 +165,13 @@ static chainbase bofree;           /* Free offsets block chainbase */
 static chainbase bpage;            /* Allocated page database */
 static chainbase bmap;             /* Mapped file database (uses data blks) */
 static long forpos;                /* 1st line # in forgotten chain */
-static long auxpos;                /* Line # of aux ptr */
+static long auxpos = 0;            /* Line # of aux ptr */
 static short count;                /* Used by clrfgt, inslin, rdlin &c */
 static int lastpages;              /* # entries in last pagebk */
 static int first = 1;              /* First-time flag for finitl */
-static int frmdel = 0;      /* modifies inslin action when called from delete */
-/*
- * Error messages and other constants that are always accessed by
- */
-static const char
-  *const e1 = "!Total lines in file now -ve[DELETE]\r",
-  *const e2 = "Nothing to forget\r",
-  *const e3 = "!Pointer move request outside file - ignored [SETPTR]\r";
-/*
- *  Brief externally visible subroutine specifications:-
+static long fortot = 0;            /* # lines in forgotten chain */
+
+/*  Brief externally visible subroutine specifications:-
  *
  * finitl [re-]initialises the workfile system
  *
@@ -462,8 +455,27 @@ splitb(void)
 /* ******************************* delete ****************************** */
 
 void
-delete(bool aux)
+delete(bool aux, long num2del, bool forgettable)
 {
+/* On entry, the pointer is 1 line after the first line to delete */
+
+  long savpos[2];                  /* Saved ptrpos */
+  indxbk *savptr[2];               /* Saved pointr */
+  long nextpos;                    /* 1st line that is not deleted */
+
+/* Delete lines, starting at line before that addressed by pointr */
+
+/* If line to not stay on forgotten chain, num2del m.b. 1 */
+  if (!forgettable || aux)
+  {
+    if (num2del != 1)
+    {
+      fprintf(stderr,
+        "\r\nSERIOUS ERROR: !forgettable or aux & num2del != 1\r\n");
+      return;
+    }                              /* if (num2del != 1) */
+  }                                /* if (forgettable) */
+
   mods = true;                     /* File has been modified */
   if (aux)                         /* Delete line before aux pointer */
   {
@@ -472,114 +484,58 @@ delete(bool aux)
     auxxch();                      /* Exchange pointers &c. */
   }                                /* if(aux) */
 
-/* If the line to be deleted is in an mmapping block, read its contents, remove
- * the mmapping line and  insert the in-memory copy, which is all the rest of
- * the routine can deal with. If an aux delete, just insert an empty line, since
- * such deletes can never be FOrgotten */
+/* The first line to delete and the line after the last line to delete both
+ * need to be at the start of a group (no-op if either not memory-mapped) */
 
-  if ((pointr->blocks < 0 && poffst) || pointr->prev->blocks < 0)
+  setptr(ptrpos - 1);              /* Point to 1st line 2B deleted */
+  if (pointr->blocks < 0 && poffst && !splitb())
+    return;                        /* No memory for splitb() */
+  savpos[0] = ptrpos;
+  nextpos = ptrpos + num2del;      /* 1st un-deleted line */
+
+  setptr(nextpos);
+  if (pointr->blocks < 0 && poffst && !splitb())
+    return;                        /* No memory for splitb() */
+  savpos[1] = ptrpos;
+  savptr[1] = pointr;
+
+  setptr(savpos[0]);
+  savptr[0] = pointr;
+
+/* Move deleted lines to the forgotten chain whether forgettable or not. */
+
+/* If we're going to leave stuff in the forgotten chain, */
+/* better make sure it's empty first */
+  if (forgettable && fortot)
+    clrfgt();
+
+/* pointr is addressing the first index block that is going to be removed, */
+/* so need to move it elsewhere. */
+/* Point at the first line that will not be deleted, then reduce ptrpos. */
+  setptr(savpos[1]);
+  ptrpos -= num2del;
+
+  move_chain(savptr[0], savptr[1]->prev, &bfrgt);
+  fortot = num2del;
+  forpos = savpos[0];
+  lintot -= num2del;
+  if (!forgettable)
+    clrfgt();
+  setptr(savpos[0]);               /* Decrement line # */
+
+/* If aux was after pointer, decrease aux. If that moves aux before pointer, */
+/* aux was in deleted range so invalidate it */
+  if (auxpos > ptrpos)
   {
-    scrbuf5 scrbuf;                /* For reading mmapping line */
-    suppbk *sp;                    /* For reading & deleting mmapping line */
-
-/* For deleting e.g. line 1, the pointer will be at line 2. We need the pointer
- * to be at line 1 so we can get its contents, and delete the mmap'd copy */
-
-    if (pointr->blocks < 0 && poffst)
-      poffst--;
+    auxpos -= num2del;
+    if (auxpos <= ptrpos)
+      auxpos = (long)(auxptr = NULL);
     else
-    {
-      pointr = pointr->prev;
-      poffst = pointr->chars - 1;
-    }                              /* if(poffst) else */
-    sp = (void *)pointr->dtaptr;
-    if (aux)                       /* Dummy line will do */
-      scrbuf.bchars = 0;
-    else                           /* Need real line contents */
-      memrec(sp->filptr + *gtofst(pointr, poffst), sp->endptr, sp->mode,
-        &scrbuf);
+      setaux(auxpos);
+  }                                /* if (auxpos > ptrpos) */
 
-/* If the target line isn't the first in its group, split the group, then delete
- * the mmapping line. Then, insert the in-memory copy. inslin itself will not
- * have to split an mmap'd group in this case */
-
-    if (poffst && !splitb()) /* No memory for split: put pointer back & leave */
-    {
-      if (poffst == pointr->chars - 1)
-      {
-        pointr = pointr->next;
-        poffst = 0;
-      }                            /* if(poffst==pointr->chars-1) */
-      else
-        poffst++;
-      return;
-    }                              /* if(poffst||!splitb()) */
-    ptrpos--;                      /* Pointer is back 1 line */
-    lintot--;                      /* 1 line less in file */
-    pointr->chars--;               /* 1 less line in group */
-
-/* If the aux pointer was pointing to the block where we are deleting, fix it if
- * we can else invalidate it */
-
-    if (auxptr == pointr)
-    {
-      if (aoffst)
-        aoffst--;
-      else
-      {
-        auxptr = NULL;
-        if (aux)
-          fprintf(stderr,
-            "\r\nSERIOUS ERROR: aux del invalidated pointr (#1)\r\n");
-      }                            /* if(aoffst) else */
-    }                              /* if(auxptr==pointr) */
-
-/* Replace the mmapping line with an in-memory copy */
-
-    if (++sp->dlrecs == OFF_DIM)   /* 1 more deleted record in group */
-    {                              /* All lines in offsets blk now deleted */
-      qchain(qunchn(sp->next), &bofree); /* Free offsets block */
-      sp->dlrecs = 0;              /* No deleted lines in next block */
-    }                              /* if(++sp->dlrecs==OFF_DIM) */
-    if (!pointr->chars)            /* Group is now empty */
-    {
-      if (sp->next != (ofstbk *)sp) /* Holding on to last offsets block */
-        qchain(qunchn(sp->next), &bofree); /* Free offsets block */
-      if (pointr == auxptr)        /* auxptr was probably invalid anyway */
-      {
-        auxptr = NULL;
-        if (aux)
-          fprintf(stderr,
-            "\r\nSERIOUS ERROR: aux del invalidated pointr (#2)\r\n");
-      }                            /* if(pointr==auxptr) */
-      pointr = pointr->next;       /* Point to 1st line of next group */
-      qchain(sp, &bdfree);         /* Return supp blk */
-      qchain(qunchn(pointr->prev), &bifree); /* Return index blk */
-    }                              /* if(!pointr->chars) */
-    frmdel = 1;                    /* Stop inslin calling clrfgt &c */
-    inslin(&scrbuf);               /* Will increment ptrpos & lintot again */
-    frmdel = 0;
-  }                                /* if(pointr->blocks<0)&&... */
-
-/* Decrement line #. See if adding lines to forgotten chain. If not, ditch old
- * forgotten lines */
-
-  if (--ptrpos != forpos)          /* We'll be there after this delete */
-  {
-    clrfgt();                      /* Ditch old forgotten lines */
-    forpos = ptrpos;               /* Set addr forgotten lines */
-  }
-  qchain(qunchn(pointr->prev), &bfrgt); /* Move from work to end frgt */
   if (aux)                         /* Was aux delete */
     auxxch();                      /* Restore pointers &c. */
-/*
- * Decrease # of lines in w/f
- */
-  if (!lintot)                     /* Lines would go -ve */
-    puts(e1);
-  else
-    lintot--;                      /* Down # of lines */
-  return;
 }
 
 /* ******************************* clrfgt ****************************** */
@@ -592,25 +548,37 @@ clrfgt()
 {
   indxbk *ix;                      /* Scratch */
   databk *dt, *nxtdt;              /* Scratch */
+  suppbk *sp;                      /* Scratch */
 
 /* There is a ring of index blocks, with data blocks hanging off them.
  * First of all, free the data blocks... */
 
   forpos = 0;                      /* Invalidate */
+  fortot = 0;                      /* Forgotten chain (will be) empty */
   if (bfrgt.next == &bfrgt)        /* Ring is empty */
     return;
   for (ix = (void *)bfrgt.next; ix != (void *)&bfrgt; ix = ix->next)
   {
-    if (!(count = ix->blocks))     /* Empty line */
-      continue;
+    if (ix->blocks < 0)            /* Memory-mapped line group */
+    {
+      sp = (void *)ix->dtaptr;
+      if (sp->next != (ofstbk *)sp) /* Is it possible to have no blocks? */
+        move_chain(sp->next, sp->prev, &bofree);
+      qchain(sp, &bdfree);         /* Return supp blk */
+    }                              /* if (ix->blocks < 0) */
+    else                           /* In-memory line */
+    {
+      if (!(count = ix->blocks))   /* Empty line */
+        continue;
 
 /* Free data blocks in this line */
-    for (dt = ix->dtaptr; count > 0; count--, dt = nxtdt)
-    {
-      nxtdt = dt->next;            /* Addr next block in chain */
-      qchain(dt, &bdfree);         /* Chain B4 free data block base */
-    }
-  }
+      for (dt = ix->dtaptr; count > 0; count--, dt = nxtdt)
+      {
+        nxtdt = dt->next;          /* Addr next block in chain */
+        qchain(dt, &bdfree);       /* Chain B4 free data block base */
+      }                            /* for (dt = ix->dtaptr; ... */
+    }                              /* if (ix->blocks < 0) else */
+  }                                /* for (ix = (void *)bfrgt.next; ... */
 
 /* Free the index blocks in the forgotten chain, by moving the forgotten chain
  * into free chain in one go */
@@ -633,7 +601,7 @@ inslin(scrbuf5 *a1)
     return;                        /* No memory for split block */
 
   mods = true;                     /* File being modified */
-  if (!frmdel)                     /* Regular call (not from delete) */
+  if (fortot)
     clrfgt();                      /* Empty forgotten chain */
 /*
  * Insert a new line before the workfile pointer; update # lines; if auxptr was
@@ -645,22 +613,15 @@ inslin(scrbuf5 *a1)
   lintot++;                        /* Update total lines */
   ptrpos++;                        /* Update line # */
 
-/* Don't do the following adjustments on calls from delete, because delete
- * undoes the insert almost straight away */
-
-  if (!frmdel)
-  {
-
 /* If apparently inserting before the aux pointer, increment it */
 
-    if (auxpos >= ptrpos)
-      auxpos++;
+  if (auxpos >= ptrpos)
+    auxpos++;
 
 /* If inserting at the Aux pointer, update it to point to the new line */
 
-    if (pointr == auxptr && (pointr->blocks >= 0 || aoffst == poffst))
-      auxptr = ix;                 /* In-memory so aoffset now irrelevant */
-  }                                /* if(!frmdel) */
+  if (pointr == auxptr && (pointr->blocks >= 0 || aoffst == poffst))
+    auxptr = ix;                   /* In-memory so aoffset now irrelevant */
 /*
  * Partially set up block, in case we take a fault when try to get
  * 1st data block.
@@ -789,30 +750,28 @@ rdlin(scrbuf5 *a1, bool aux)
 void
 forget()
 {
-  long fortot = 0;                 /* # lines recovered yet */
-/*  */
-  for (; bfrgt.next != (void *)&bfrgt;)
-  {
-    setptr(forpos);                /* Pos'n to insert next line */
-/* May need to split the block (e.g. if V since D read deferred lines) */
-    if (poffst && pointr->blocks == -1 && !splitb())
-      return;                      /* If no memory for split */
-    qchain(qunchn(bfrgt.prev), pointr); /* Top forgotten line back to w/f */
-    lintot++;                      /* 1 more line in file */
-    fortot++;                      /* 1 more line retrieved */
-    ptrpos++;                      /* Pointer has been forced on 1 */
-  }                                /* Try for another line */
-/*
- * No lines in forgotten chain now. If there never were any, say so otherwise
- * position to first rescued line and say how many we have just rescued
- */
   if (!fortot)
-    puts(e2);
-  else
   {
-    setptr(forpos);
-    printf("%ld lines reinstated from line %ld\r\n", fortot, forpos);
-  }
+    puts("Nothing to forget\r");
+    return;
+  }                                /* if (!fortot) */
+  setptr(forpos);                  /* Pos'n to insert lines */
+
+/* Should mever need to split this block (since the line before it was deleted)
+ * so output a warning if we do */
+  if (pointr->blocks == -1 && poffst)
+  {
+    puts("Unexpected call of splitb()!!\r");
+    if (!splitb())
+      return;                      /* If no memory for split */
+  }                                /* if (pointr->blocks == -1 && poffst) */
+  move_chain(bfrgt.next, bfrgt.prev, pointr);
+  lintot += fortot;
+  ptrpos += fortot;
+  setptr(forpos);
+  printf("%ld line%s reinstated from line %ld\r\n", fortot,
+    fortot == 1 ? "" : "s", forpos);
+  forpos = fortot = 0;             /* Forgotten chain now empty */
 }
 
 /* ******************************* setptr ****************************** */
@@ -829,7 +788,7 @@ setptr(long a1)
  */
   if (a1 <= 0 || a1 > lintot + 1)  /* arg <= 0 or > line total + 1 (illegal) */
   {
-    puts(e3);
+    puts("!Pointer move request outside file - ignored [SETPTR]\r");
     return;
   }
 /*

@@ -1,0 +1,2 @@
+*                                                       ; Item(s) tested       ; Expected result
+fi !tests/mkbigfile 64^Jq t5^Jfm+r^Jd60 5^Js^J^NX ; Y  D off EOF reports "end" ; end of file reached:- 4 lines deleted
