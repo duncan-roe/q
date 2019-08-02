@@ -1,10 +1,14 @@
-When debugging Q, I find it easiest to have gdb running in 1 terminal session
-with all of q's input and output going to and coming from another. Also I use
+When debugging Q, I find it easiest to have gdb running in one terminal session
+with all of Q's input and output going to and coming from another. Also I use
 "ggo" from the "command_line_tools" repository adjacent to that for Q.
 
 For the benefit of anyone who doesn't have command_line_tools installed, there
-is a copy of ggo in the help files directory. You can symlink or copy this into
-your PATH, or substitute e.g. /usr/local/share/q/ggo into the template below.
+is a copy of ggo in Q's documentation directory. You can symlink or copy this
+into your PATH, or substitute e.g. ./ggo into the template below.
+
+ggo relies on expect. Some distributions come without expect by default. If
+yours is one of these then you will need to install expect from the
+distribution's repository if you haven't already.
 
 In the session that is to act as Q's display, do the following:
 
@@ -12,25 +16,29 @@ In the session that is to act as Q's display, do the following:
 >   PID TTY          TIME CMD
 >  2385 pts/0    00:00:00 bash
 >  4606 pts/0    00:00:00 ps
-> 13:05:42$ sleep 10000
+> 13:05:42$ sleep 1000000
 
 Note the pts number returned by the ps command. Issue the sleep command to stop
 the shell from grabbing input.
 
-In the session where you want to run gdb, do the following (substituting the
-relevant pts number)(only 1 line of typing):
+In the session where you want to run gdb, do the following 2 things:
 
-> 13:14:56$ ggo q -a '</dev/pts/0 >/dev/pts/0 2>&1' c
-> spawn gdb -n
-> GNU gdb (GDB) 7.5
-> Copyright (C) 2012 Free Software Foundation, Inc.
-> License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
-> This is free software: you are free to change and redistribute it.
-> There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
-> and "show warranty" for details.
-> This GDB was configured as "i486-slackware-linux".
-> For bug reporting instructions, please see:
-> <http://www.gnu.org/software/gdb/bugs/>.
+1. Enter "export my_pty={*your* pts from ps above}"
+
+2. Select&paste the ggo template below.
+   2a. If you want to pass arguments to q, insert them after the leading
+       double-quote and followed by a space, e.g.
+         ggo q -a "myfile </dev/pts/$my_pty...
+   2b. If you want to set breakpoints or issue other gdb commands before
+       running Q, put them before the trailing "c" in the ggo command.
+       The trailing "c" is itself a gdb command to continue after hitting the
+       breakpoint which ggo always sets at "main". You need to use shell escapes
+       when setting breakpoints - see README_DEBUG_MACROS for some examples.
+   Now touch Enter
+
+Expect to see something like the following:
+
+> spawn gdb -n -q
 > (gdb) file q
 > Reading symbols from /home/dunc/q/q/q...done.
 > (gdb) set print null-stop
@@ -38,23 +46,19 @@ relevant pts number)(only 1 line of typing):
 > (gdb) set print elements 0
 > (gdb) set height 0
 > (gdb) set print pretty
-> (gdb) set confirm off
 > (gdb) set unwindonsignal on
 > (gdb) b main
-> Breakpoint 1 at 0x804b414: file q.c, line 120.
+> Breakpoint 1 at 0x403e20: file q.c, line 240.
 > (gdb) run </dev/pts/0 >/dev/pts/0 2>&1
 > Starting program: /home/dunc/q/q/q </dev/pts/0 >/dev/pts/0 2>&1
-> warning: Could not load shared library symbols for linux-gate.so.1.
-> Do you need "set solib-search-path" or "set sysroot"?
+> [Thread debugging using libthread_db enabled]
+> Using host libthread_db library "/lib64/libthread_db.so.1".
 >
-> Breakpoint 1, main (xargc=1, xargv=0xbfffedf4) at q.c:120
-> 120       int newl = 0;             /* Label to go if Nl (MOD, INS, AP) */
+> Breakpoint 1, main (xargc=1, xargv=0x7fffffffd7b8) at q.c:240
+> 240     {
 > (gdb) c
 > Continuing.
-
-Insert any breakpoints you want set initially before the trailing "c" in the ggo
-command. The trailing "c" is itself a gdb command to continue after hitting the
-breakpoint which ggo always sets at "main".
+> Detaching after fork from child process 2417.
 
 To interrupt Q / gdb, enter ^C *in the gdb session*. Do NOT enter ^C in the Q
 display session: it will have no effect on Q but it WILL terminate sleep.
@@ -73,4 +77,4 @@ shell prompt again:
 > 13:43:30$
 Handy template (export my_pty first):
 
-ggo q -a "</dev/pts/$my_pty >/dev/pts/$my_pty 2>&1" "set max-value-size sizeof (struct scrbuf5)" c
+ggo q -a "</dev/pts/$my_pty >/dev/pts/$my_pty 2>&1" c

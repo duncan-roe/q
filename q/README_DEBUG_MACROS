@@ -5,36 +5,95 @@ This README describes how to debug Q macros using gdb.
 I originally planned to incorporate a macro debugger inside Q, but have shelved
 that in favour of using gdb.
 
-The example that follows debugs the ^N^A macro in the word.qm system macro set.
-This is the macro that aligns text to fit inside tab 2.
-It starts the most complex macro program in the Q distribution.
+RUNNING THE MACRO DEBUGGER
+======= === ===== ========
+
+The Q macro debugger is based on running Q under the source level debugger gdb.
+If you are familiar with doing that (e.g. from following README_DEBUG) then feel
+free to skip on to the PREPARATION section below.
+
+When debugging Q, I find it easiest to have gdb running in one terminal session
+with all of Q's input and output going to and coming from another. Also I use
+"ggo" from the "command_line_tools" repository adjacent to that for Q.
+
+For the benefit of anyone who doesn't have command_line_tools installed, there
+is a copy of ggo in Q's documentation directory. You can symlink or copy this
+into your PATH, or substitute e.g. ./ggo into the template below.
+
+ggo relies on expect. Some distributions come without expect by default. If
+yours is one of these then you will need to install expect from the
+distribution's repository if you haven't already.
+
+In the session that is to act as Q's display, do the following:
+
+> 22:10:13$ ps
+>   PID TTY          TIME CMD
+>  2385 pts/0    00:00:00 bash
+>  4606 pts/0    00:00:00 ps
+> 13:05:42$ sleep 1000000
+
+Note the pts number returned by the ps command. Issue the sleep command to stop
+the shell from grabbing input.
+
+In the session where you want to run gdb, do the following 3 things:
+
+1. (Assuming you plan to run the tutorial example) go to Q's doc dir, e.g.
+   cd /usr/local/share/doc/q
+
+2. Enter "export my_pty={*your* pts from ps above}"
+
+3. Select&paste one of the ggo templates in this document. If ggo isn't
+   installed, reference the copy in Q's doc dir.
+   This step is covered in the tutorial, no need to do it right now.
 
 PREPARATION
 ===========
 
-Be sure to have read and become familiar README_DEBUG before reading on.
-In addition to the 2 terminal sessions mentioned there, you will likely want
-a session where you can peruse the currently loaded macro table.
+As well as the gdb and Q display sessions mentioned above (or in README_DEBUG),
+you will want a session where you can browse the currently loaded macro table.
+Recommended is "qm -a" piped into "less". Qm's "-a" (alternate format) option
+displays all macro names in octal, the way gdb shows them.
+
+For best results, the Q display session should be at least 88 characters wide.
+
 In general you won't need another terminal session in which to examine source.
 In fact, these instructions work when source is not available.
-But if you plan to do advanced stuff, like set a watchpoint on th ALU R
+But if you plan to do advanced stuff, like set a watchpoint on the ALU R
 register, then you will want source.
-You might want an extra terminal window where you can browse word.qm,
-e.g. for the comments therein.
 
-To get a current macro table: follow the instructions in the q_macros man page,
-except changed to:
-cat /dev/null|q -nviu,'^ND^N^<4003>'/wordmacs^Jn-^J (then 2>&1... as before).
+You might want an extra terminal window where you can browse macro definition
+files, e.g. for the comments therein. The distributed macro files are in Q's
+data directory, default /usr/local/share/q. Inside a Q session, the command
+  fi ^ND^N^<4003>
+will display this directory.
+
+TUTORIAL
+========
+
+This tutorial debugs the ^N^A macro in the word.qm system macro set.
+The macro aligns text to fit inside tab 2.
+It starts the most complex macro program in the Q distribution.
+
+This tutorial uses files in Q's documentation directory (a.k.a. Q's doc dir).
+The location of this directory depends on how Q was installed:
+the "make install" default is /usr/local/share/doc/q.
+You should run your gdb session cd'd to this directory. From now on, files
+without pathnames are in that directory.
+
+Your macro browsing session can be cd'd anywhere, but it's simplest to have it
+also cd'd to Q's doc dir. Assuming that, enter:
+  qm -a help_dot_qrc | less
+to browse the macros that the tutorial will load.
+If cd'd elsewhere, prepend the path of help_dot_qrc
+(default /usr/local/share/doc/q/).
 
 The ^N^A macro is defined on the line starting "N A ..." in word.qm,
-and shows up as line 1 in the macro table (macro ^A).
-The gdb session always reports macros by octal number, so ^A becomes 01.
+and shows up as line 1 in the macro table (macro 001).
 
 ggo comes with command_line_tools but if you don't have that then there is a
-copy in ${prefix}/share/q, where {prefix} is usually /usr/local or /usr.
-The template assumes ggo is in the PATH.
+copy in Q's doc dir. The tutorial template uses this copy.
 
-The file ${prefix}/share/q/macro_debug_sample exercises the ^N^A macro suite.
+The file macro_debug_sample exercises the ^N^A macro suite.
 If you have write access to macro_debug_sample, it would be preferable to
 make a copy and work on that.
 Either "export j=macro_debug_sample" before running ggo or enter
@@ -44,18 +103,30 @@ Either "export j=macro_debug_sample" before running ggo or enter
 RUN A SESSION
 === = =======
 
-Using the COMMAND TEMPLATES below, export variables and issue the ggo command.
+Using the templates below, export variables and issue the ggo command.
 Q will start in your debug window. Optionally, set up your macro table window as
 per PREPARATION above.
 
-In the debug window, enter "v" to view the file you are working on. If it's
+export my_pty=   # Complete this from ps output
+export j=macro_debug_sample
+export k=help_dot_qrc
+./ggo $(type -p q) -a \
+  "$([ -n "$k" ] && echo "-n -iu,$k^J" || echo "-i")fv^Jfm+v^J $j \
+  </dev/pts/$my_pty >/dev/pts/$my_pty 2>&1" \
+  b\ scrdit.c:1621 commands silent "echo starting macro" p/o\ thisch end \
+  "cond 2 (thisch < 0101 || thisch > 0132) && thisch < 04000 && thisch != 255" \
+  b\ scrdit.c:1223 commands silent "echo ^NI invoked\\n" end \
+  b\ scrdit.c:864 commands silent "echo resuming macro" p/o\ i end \
+  'cond 4 verb != '"'I' && (curmac < FIRST_PSEUDO || curmac > LAST_PSEUDO)" c
+
+In the Q display window, enter "v" to view the file you are working on. If it's
 empty (so you didn't export j as the file to edit) you can edit the file now by
 entering "q macro_debug_sample".
 
 START DEBUGGING
 ===== =========
 
-In the debug window, type Control-N followed by Control-A (^N^A).
+In the Q display window, type Control-N followed by Control-A (^N^A).
 Observe in the gdb window there is the new message "starting macro$1 = 01".
 "$1 = " is an artifact of gdb which I couldn't eliminate - try to ignore it and
 read the message as "starting macro 01".
@@ -79,17 +150,18 @@ Return).
 For more information about pseudomacros, enter the Q command "h pm", but NOT NOW
 - you're in he middle of debugging a macro ;)
 
-In the debug window, touch <Enter> to continue on to the next macro. You see
+In the gdb window, touch <Enter> to continue on to the next macro. You see
 macro 01 (^A) being resumed.
 This tells you that N1001 or some macro it jumped to has issued ^NU.
 
-Before moving on, take a look at the definition of N1001 in the macro table.
+Before moving on, take a look at the definition of N1001 in the macro table
+(key /^1001 into the browsing window, assuming you are using less).
 Observe that N1001 called N4000 but gdb didn't tell us that. Macros in the low
 04000's are what is called "active pseudomacros" or "active pseodos". Their
 actions are also documented in "h pm" (NOT NOW...:).
 Unlike regular pseudomacros, active pseudos execute the action of ^NU on
 completion so can be called using ^ND.
-The ggo command template below assumes you don't want to see calls to
+The ggo command template above assumes you don't want to see calls to
 pseudomacros (you wouldn't see returns from them anyway) by the gdb command
   cond 2 (thisch < 0101 || thisch > 0132) && thisch < 04000
 The ALU opcodes occupy the higher part of the 04000 range and it's possible you
@@ -160,16 +232,24 @@ get you the Q prompt.
 COMMAND TEMPLATES
 ======= =========
 
+(The sample exports for j & k assume CWD is ${doc_prefix}/q)
+
+(The ggo template below shows ^N^@ (restart current macro) as a call to macro 0.
+ If you would prefer to see it as a call to the actual macro, change
+  p/o\ thisch
+ to
+  "p/o thisch ? thisch : curmac"
+ in the "starting macro" breakpoint).
+
 export my_pty as the tty as in README_DEBUG
 export j as the file to edit (if you have one)(e.g. export j=macro_debug_sample)
-export k as the rc file with which q should start
-  (defaults to .qrc: next line assumes .qrc eventually loads word.qm).
-cat /dev/null|q -nviu,'^ND^N^<4003>'/wordmacs^Jn-^J 2>&1|
-q -nifl:^J^NC^NU^[d1,-,-2^Ja^J^[d-1^Jy,^P^M^J|less
+export k as the rc file with which q should start (e.g. export k=help_dot_qrc)
+  (if k is not set, Q uses its default startup file)
 sleep 100000
 
-ggo $(type -p q) -a "-n -iu,${k:-.qrc}^Jfv^Jfm+v^J $j </dev/pts/$my_pty \
-  >/dev/pts/$my_pty 2>&1" "set max-value-size sizeof (struct scrbuf5)" \
+ggo $(type -p q) -a \
+  "$([ -n "$k" ] && echo "-n -iu,$k^J" || echo "-i")fv^Jfm+v^J $j \
+  </dev/pts/$my_pty >/dev/pts/$my_pty 2>&1" \
   b\ scrdit.c:1621 commands silent "echo starting macro" p/o\ thisch end \
   "cond 2 (thisch < 0101 || thisch > 0132) && thisch < 04000 && thisch != 255" \
   b\ scrdit.c:1223 commands silent "echo ^NI invoked\\n" end \

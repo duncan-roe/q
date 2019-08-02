@@ -14,7 +14,7 @@ Give symbolic names to ALU memory locations e.g. k,0,i^J^<POP i>
 "q -l" to insert "fm +l" command before reading file
 Search up directory tree for .qrc
 Use .qrc associated with file to edit
-Do Delete properly (i.e. entirely inside workfile.c)
+DONE: Do Delete properly (i.e. entirely inside workfile.c)
 ALU is always 64-bit (?)
 cater for >4G lines in L & Y
 Give some kind of acknowledgement to ^NF (& ^NO?)

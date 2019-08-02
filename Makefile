@@ -4,7 +4,8 @@ include config.mak
 
 SHELL := /bin/bash
 
-.PHONY: q clean install install_help install_doc install_etc uninstall
+.PHONY: q clean install install_help install_doc install_etc install_bin \
+  uninstall
 
 q:
 	cd q && $(MAKE)
@@ -14,7 +15,7 @@ clean:
 
 install: q install_help install_doc install_etc install_bin
 
-install_bin:
+install_bin: q
 	mkdir -p $(DESTDIR)$(BINDIR) && \
 cp --preserve=timestamps,mode bin/qm $(DESTDIR)$(BINDIR); \
 cp --preserve=timestamps,mode q/q $(DESTDIR)$(BINDIR)
