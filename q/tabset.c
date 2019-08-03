@@ -39,18 +39,18 @@ tabset(scrbuf5 *scbuf)
       break;
     if (scbuf->toktyp == nultok)
     {
-      (void)write(1, "null tabs not allowed", 21);
+      fputs("null tabs not allowed", stderr);
       GIVE_UP;
     }                              /* if (scbuf->toktyp == nultok) */
     if ((scbuf->decok) == 0)
     {
-      (void)write(1, "bad decimal number", 18);
+      fputs("bad decimal number", stderr);
       GIVE_UP;
     }                              /* if ((scbuf->decok) == 0) */
 /* LATER - insert a check for -ve tab values or zero */
     if (i > 0 && scbuf->decval <= temp[i - 1])
     {
-      (void)write(1, "tabs not in ascending order", 27);
+      fputs("tabs not in ascending order", stderr);
       GIVE_UP;
     }                              /* if (scbuf->decval <= temp[i - 1]) */
     temp[i] = scbuf->decval;       /* Remember this tab */

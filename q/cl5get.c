@@ -59,7 +59,7 @@ cl5get(char *buf, int bufcap, bool action_eof, bool read_macros)
         if (nchars > 0)
         {
           nchars--;
-          (void)write(1, "\10 \10", 3);
+          fputs("\10 \10", stderr);
         }
         continue;
       }

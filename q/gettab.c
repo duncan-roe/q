@@ -51,6 +51,6 @@ gettab(uint8_t tabid, bool filpos, long *i4, bool return_index)
   *i4 = tabs[i].value;             /* Get a value */
   return true;
 errlbl:
-  write(1, " or ", 4);
+  fputs(" or ", stderr);
   return false;
 }

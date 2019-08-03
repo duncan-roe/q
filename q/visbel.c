@@ -3,6 +3,10 @@
  * Copyright (C) 2019 Duncan Roe
  */
 
+/* Pragmas */
+
+#pragma GCC diagnostic ignored "-Wunused-result" /* Don't care about system() */
+
 /* Headers */
 
 #include <stdlib.h>

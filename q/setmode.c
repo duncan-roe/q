@@ -73,13 +73,13 @@ setmode()
             putchar('d');
             break;
           case 1:
-            (void)write(1, "+dr, -dw", 8);
+            fputs("+dr, -dw", stderr);
             break;
           case 2:
-            (void)write(1, "-dr, +dw", 8);
+            fputs("-dr, +dw", stderr);
             break;
         }                          /* switch((int)result&03) */
-        (void)write(1, ", ", 2);
+        fputs(", ", stderr);
         switch (i = (int)result & 014)
         {
           case 0:
@@ -88,98 +88,98 @@ setmode()
             putchar('t');
             break;
           case 04:
-            (void)write(1, "+tr, -tw", 8);
+            fputs("+tr, -tw", stderr);
             break;
           case 010:
-            (void)write(1, "-tr, +tw", 8);
+            fputs("-tr, +tw", stderr);
             break;
         }                          /* switch((int)result&014) */
-        (void)write(1, ", ", 2);
+        fputs(", ", stderr);
         c = result & 020 ? '+' : '-';
         putchar(c);
         putchar('s');
-        (void)write(1, ", ", 2);
+        fputs(", ", stderr);
         c = result & 040 ? '+' : '-';
         putchar(c);
         putchar('*');
-        (void)write(1, ", ", 2);
+        fputs(", ", stderr);
         c = result & 0100 ? '+' : '-';
         putchar(c);
         putchar('q');
-        (void)write(1, ", ", 2);
+        fputs(", ", stderr);
         c = result & 0200 ? '+' : '-';
         putchar(c);
         putchar('#');
-        (void)write(1, ", ", 2);
+        fputs(", ", stderr);
         c = result & 0400 ? '+' : '-';
         putchar(c);
         putchar('f');
-        (void)write(1, ", ", 2);
+        fputs(", ", stderr);
         c = result & 01000 ? '+' : '-';
         putchar(c);
         putchar('v');
-        (void)write(1, ", ", 2);
+        fputs(", ", stderr);
         c = result & 02000 ? '+' : '-';
         putchar(c);
         putchar('m');
-        (void)write(1, ", ", 2);
+        fputs(", ", stderr);
         c = result & 04000 ? '+' : '-';
         putchar(c);
         putchar('r');
-        (void)write(1, ", ", 2);
+        fputs(", ", stderr);
         c = result & 010000 ? '+' : '-';
         putchar(c);
         putchar('e');
-        (void)write(1, ", ", 2);
+        fputs(", ", stderr);
         c = result & 020000 ? '+' : '-';
         putchar(c);
         putchar('n');
-        (void)write(1, ", ", 2);
+        fputs(", ", stderr);
         c = result & 040000 ? '+' : '-';
         putchar(c);
         putchar('l');
-        (void)write(1, ", ", 2);
+        fputs(", ", stderr);
         c = result & 0100000 ? '+' : '-';
         putchar(c);
         putchar('h');
-        (void)write(1, ", ", 2);
+        fputs(", ", stderr);
         c = result & 0200000 ? '+' : '-';
         putchar(c);
         putchar('i');
-        (void)write(1, ", ", 2);
+        fputs(", ", stderr);
         c = result & 0400000 ? '+' : '-';
         putchar(c);
         putchar('w');
-        (void)write(1, ", ", 2);
+        fputs(", ", stderr);
         c = result & 01000000 ? '+' : '-';
         putchar(c);
         putchar('a');
-        (void)write(1, "\r\n", 2);
+        fputs("\r\n", stderr);
         switch ((int)(result >> 30 & 3))
         {
           case 0:
-            (void)write(1, "verbose", 7);
+            fputs("verbose", stderr);
             break;
           case 1:
-            (void)write(1, "brief", 5);
+            fputs("brief", stderr);
             break;
           case 3:
-            (void)write(1, "none", 4);
+            fputs("none", stderr);
             break;
         }                          /* switch((int)(result>>30&3)) */
-        (void)write(1, ", ", 2);
+        fputs(", ", stderr);
         if (!INDENT)
-          (void)write(1, "not ", 4);
-        (void)write(1, "indenting", 9);
-        (void)write(1, ", case-", 7);
+          fputs("not ", stderr);
+        fputs("indenting", stderr);
+        fputs(", case-", stderr);
         if (CASDEP)
           putchar('d');
         else
-          (void)write(1, "ind", 3);
+          fputs("ind", stderr);
         printf("ependent L&Y, FF o%s", NOWRAP ? "n" : "ff");
         printf(", ALU stores %s-position tabs",
           STORE_FILE_POS ? "file" : "cursor");
-        (void)write(1, ".\r\n", 3);
+        fputs(".\r\n", stderr);
         continue;
       }                            /* if(oldcom->toklen==1) */
       octok = 0;                   /* No more octal args allowed */
