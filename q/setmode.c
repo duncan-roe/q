@@ -27,9 +27,9 @@ setmode()
     if (scrdtk(1, (uint8_t *)ubuf, 12, oldcom))
     {
       perror("setmode - scrdtk");
-      putchar('\r');
+      fputs("\r", stderr);
     bad_arg:
-      printf("Bad argument: %s", ubuf);
+      fprintf(stderr, "Bad argument: %s", ubuf);
       return false;
     }                              /* if(scrdtk(1,(uint8_t *)ubuf,12,oldcom)) */
     switch (oldcom->toktyp)
@@ -73,13 +73,13 @@ setmode()
             putchar('d');
             break;
           case 1:
-            fputs("+dr, -dw", stderr);
+            fputs("+dr, -dw", stdout);
             break;
           case 2:
-            fputs("-dr, +dw", stderr);
+            fputs("-dr, +dw", stdout);
             break;
         }                          /* switch((int)result&03) */
-        fputs(", ", stderr);
+        fputs(", ", stdout);
         switch (i = (int)result & 014)
         {
           case 0:
@@ -88,98 +88,98 @@ setmode()
             putchar('t');
             break;
           case 04:
-            fputs("+tr, -tw", stderr);
+            fputs("+tr, -tw", stdout);
             break;
           case 010:
-            fputs("-tr, +tw", stderr);
+            fputs("-tr, +tw", stdout);
             break;
         }                          /* switch((int)result&014) */
-        fputs(", ", stderr);
+        fputs(", ", stdout);
         c = result & 020 ? '+' : '-';
         putchar(c);
         putchar('s');
-        fputs(", ", stderr);
+        fputs(", ", stdout);
         c = result & 040 ? '+' : '-';
         putchar(c);
         putchar('*');
-        fputs(", ", stderr);
+        fputs(", ", stdout);
         c = result & 0100 ? '+' : '-';
         putchar(c);
         putchar('q');
-        fputs(", ", stderr);
+        fputs(", ", stdout);
         c = result & 0200 ? '+' : '-';
         putchar(c);
         putchar('#');
-        fputs(", ", stderr);
+        fputs(", ", stdout);
         c = result & 0400 ? '+' : '-';
         putchar(c);
         putchar('f');
-        fputs(", ", stderr);
+        fputs(", ", stdout);
         c = result & 01000 ? '+' : '-';
         putchar(c);
         putchar('v');
-        fputs(", ", stderr);
+        fputs(", ", stdout);
         c = result & 02000 ? '+' : '-';
         putchar(c);
         putchar('m');
-        fputs(", ", stderr);
+        fputs(", ", stdout);
         c = result & 04000 ? '+' : '-';
         putchar(c);
         putchar('r');
-        fputs(", ", stderr);
+        fputs(", ", stdout);
         c = result & 010000 ? '+' : '-';
         putchar(c);
         putchar('e');
-        fputs(", ", stderr);
+        fputs(", ", stdout);
         c = result & 020000 ? '+' : '-';
         putchar(c);
         putchar('n');
-        fputs(", ", stderr);
+        fputs(", ", stdout);
         c = result & 040000 ? '+' : '-';
         putchar(c);
         putchar('l');
-        fputs(", ", stderr);
+        fputs(", ", stdout);
         c = result & 0100000 ? '+' : '-';
         putchar(c);
         putchar('h');
-        fputs(", ", stderr);
+        fputs(", ", stdout);
         c = result & 0200000 ? '+' : '-';
         putchar(c);
         putchar('i');
-        fputs(", ", stderr);
+        fputs(", ", stdout);
         c = result & 0400000 ? '+' : '-';
         putchar(c);
         putchar('w');
-        fputs(", ", stderr);
+        fputs(", ", stdout);
         c = result & 01000000 ? '+' : '-';
         putchar(c);
         putchar('a');
-        fputs("\r\n", stderr);
+        fputs("\r\n", stdout);
         switch ((int)(result >> 30 & 3))
         {
           case 0:
-            fputs("verbose", stderr);
+            fputs("verbose", stdout);
             break;
           case 1:
-            fputs("brief", stderr);
+            fputs("brief", stdout);
             break;
           case 3:
-            fputs("none", stderr);
+            fputs("none", stdout);
             break;
         }                          /* switch((int)(result>>30&3)) */
-        fputs(", ", stderr);
+        fputs(", ", stdout);
         if (!INDENT)
-          fputs("not ", stderr);
-        fputs("indenting", stderr);
-        fputs(", case-", stderr);
+          fputs("not ", stdout);
+        fputs("indenting", stdout);
+        fputs(", case-", stdout);
         if (CASDEP)
           putchar('d');
         else
-          fputs("ind", stderr);
+          fputs("ind", stdout);
         printf("ependent L&Y, FF o%s", NOWRAP ? "n" : "ff");
         printf(", ALU stores %s-position tabs",
           STORE_FILE_POS ? "file" : "cursor");
-        fputs(".\r\n", stderr);
+        fputs(".\r\n", stdout);
         continue;
       }                            /* if(oldcom->toklen==1) */
       octok = 0;                   /* No more octal args allowed */

@@ -59,7 +59,7 @@ cl5get(char *buf, int bufcap, bool action_eof, bool read_macros)
         if (nchars > 0)
         {
           nchars--;
-          fputs("\10 \10", stderr);
+          fputs("\b \b", stdout);
         }
         continue;
       }
@@ -70,7 +70,7 @@ cl5get(char *buf, int bufcap, bool action_eof, bool read_macros)
         continue;
       }
     }
-    if (nchars == bufcap)
+    if (nchars == bufcap - 1)      /* -1 since we nul-terminate */
     {
       visbel();                    /* Bell */
       continue;
