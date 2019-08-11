@@ -528,7 +528,7 @@ delete(bool aux, long num2del, bool forgettable)
   if (auxpos > ptrpos)
   {
     auxpos -= num2del;
-    if (auxpos <= ptrpos)
+    if (auxpos < ptrpos)           /* < not <=, tests/56.48: r3 5 */
     {
       auxpos = (long)(auxptr = NULL);
       if (aux)
