@@ -523,19 +523,6 @@ delete(bool aux, long num2del, bool forgettable)
     clrfgt();
   setptr(savpos[0]);               /* Decrement line # */
 
-/* If aux was after pointer, decrease aux. If that moves aux before pointer, */
-/* aux was in deleted range so invalidate it */
-  if (auxpos > ptrpos)
-  {
-    auxpos -= num2del;
-    if (auxpos < ptrpos)           /* < not <=, tests/56.48: r3 5 */
-    {
-      auxpos = (long)(auxptr = NULL);
-      if (aux)
-        puts("Nulling pointr!\r");
-    }                              /* if (auxpos <= ptrpos) */
-  }                                /* if (auxpos > ptrpos) */
-
   if (aux)                         /* Was aux delete */
     auxxch();                      /* Restore pointers &c. */
 }
