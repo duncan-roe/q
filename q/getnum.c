@@ -23,7 +23,7 @@
   do { fprintf(stderr, "%s%s", x, " # of lines"); return false; } while (0)
 /* */
 bool
-getnum(bool okzero)
+getnum(bool okzero, bool filpos)
 {
   uint8_t zbuf[14];
 /* */
@@ -41,7 +41,7 @@ getnum(bool okzero)
       if (!oldcom->decok)
       {
       tryfortaborto:
-        if (trytab(zbuf, oldcom))  /* Was a 'Tx' or -TO <something> (OK) */
+        if (trytab(zbuf, oldcom, filpos)) /* Was 'Tx' or -TO <something> (OK) */
           break;                   /* switch(oldcom->toktyp) */
         GIVE_UP("bad decimal");
       }                            /* if(!oldcom->decok) */

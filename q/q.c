@@ -1004,12 +1004,12 @@ get_file_arg(bool *no_file)
 static bool
 get_opt_lines(long *result)
 {
-  if (getnum(false))               /* Format of optional # of lines OK */
+  if (getnum(false, true))         /* Format of optional # of lines OK */
   {
     *result = oldcom->decval;
     if (oldcom->toktyp == eoltok || eolok()) /* EOL already or next */
       return true;
-  }                                /* if(getnum(false)) */
+  }                                /* if(getnum()) */
   return false;
 }                                  /* get_opt_lines() */
 
@@ -1554,7 +1554,7 @@ do_ychangeall(void)
       }                            /* if (oldcom->toktyp == nortok) */
       j4 = 1;                      /* Start looking at line 1 */
     }                              /* if (getlin(false, false)) else */
-    if (!getnum(false))            /* Get # lines, 0 not allowed */
+    if (!getnum(false, true))      /* Get # lines, 0 not allowed */
       return false;
   }                                /* if (oldcom->toktyp == eoltok) else */
   if (oldcom->toktyp != nortok)    /* No number given */
@@ -1693,10 +1693,10 @@ do_ychangeall(void)
 static bool
 get_search_columns(void)
 {
-  if (!getnum(false))              /* Get 1st pos to search */
+  if (!getnum(false, false))       /* Get 1st pos to search */
     return false;
   firstpos = oldcom->decval - 1;   /* Columns start at 0 */
-  if (!getnum(false))              /* Get last pos'n */
+  if (!getnum(false, false))       /* Get last pos'n */
     return false;
   if (oldcom->toktyp != nortok)
     lastpos = BUFMAX;              /* BUFMAX does not include trlg null */
@@ -1803,7 +1803,7 @@ get_num(bool okzero, long *result)
  *          0: number found and returned in result
  *         -1: error */
 {
-  if (!getnum(okzero))
+  if (!getnum(okzero, true))
     return -1;                     /* Format err on # of lines */
   *result = oldcom->decval;        /* getnum() assures validity */
   return oldcom->toktyp != nortok;

@@ -49,7 +49,7 @@ getlin(bool reperr, bool eofok)
   }
   if (!(oldcom->decok))            /* Not decimal */
   {
-    if (trytab(zbuf, oldcom))
+    if (trytab(zbuf, oldcom, true))
       goto have_a_number;          /* J was Tab x (ok) */
     if (oldcom->toklen == 3 && (toupper(zbuf[0]) == 'E') &&
       (toupper(zbuf[1]) == 'O') && (toupper(zbuf[2]) == 'F'))

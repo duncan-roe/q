@@ -25,7 +25,7 @@
 #define GIVE_UP goto errlbl
 
 bool
-trytab(uint8_t *zbuf, scrbuf5 *scline)
+trytab(uint8_t *zbuf, scrbuf5 *scline, bool filpos)
 {
   long savlst;                     /* Former value of LSTLIN */
 
@@ -51,7 +51,7 @@ trytab(uint8_t *zbuf, scrbuf5 *scline)
 /* Not -TO, try for a Tab ID */
   if (scline->toklen != 2 || toupper(zbuf[0]) != 'T')
     return false;
-  return gettab(zbuf[1], true, &scline->decval, false);
+  return gettab(zbuf[1], filpos, &scline->decval, false);
 errlbl:
   fprintf(stderr, " or ");
   return 0;
