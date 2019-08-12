@@ -108,8 +108,9 @@ When running in a pipe, \f3q\f1 accumulates data from stdin until end of file
 before doing anything else.
 On exit, \f3q\f1 writes the edited file to stdout.
 The mandatory \f3-i\f1 \fIinitial_macro\fR should not try to save the file.
-stdin and / or stdout may be redirected from / to a file rather than a pipe:
-the rule is that stdin and stdout must either both be a tty or both not be.
+stdin may be redirected from a file rather than a pipe:
+the rule is that if stdin is not a tty and the \fB-o\fR option was not given,
+then \fBq\fR assumes it is running in a pipe.
 .br
 Running in a pipe automatically asserts the \fB-o\fR and \fB-q\fR options -
 see \fBOPTIONS\fR below.

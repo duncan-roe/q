@@ -400,9 +400,13 @@ main(int xargc, char **xargv)
 /* Check for running in a pipe (or with redirection), but not if -o */
   if(offline)
     goto not_pipe;
+
+/* If stdin is not a terminal, assume we are to act as in a pipe. */
+/* We don't then care about stdout (c.f. -o) */
+
   P = isatty(STDIN5FD);
   Q = isatty(STDOUT5FD);
-  if (!P && !Q)
+  if (!P)
   {
     if (initial_command == NULL)
     {
@@ -411,10 +415,6 @@ main(int xargc, char **xargv)
       return 1;
     }                              /* if (initial_command == NULL) */
 
-/* If either stdin or stdout is a character special (typically /dev/null),
- * we are not in fact in a pipe.*/
-    if (isacharspecial(STDIN5FD) || isacharspecial(STDOUT5FD))
-      goto not_pipe;
     if (argno != -1)
     {
       fprintf(stderr, "%s\n",
@@ -494,7 +494,7 @@ main(int xargc, char **xargv)
 
 /* Never ask for input from stdin */
     offline = true;
-  }                           /* if (!isatty(STDIN5FD) && !isatty(STDOUT5FD)) */
+  }                           /* if (!P) */
   else
 /* Not in a pipe */
   {
@@ -502,7 +502,7 @@ main(int xargc, char **xargv)
     if (!(P && Q) && !offline)
     {
       fprintf(stderr, "%s\n",
-        "stdin & stdout must either both be a tty or both not");
+        "stdin & stdout must both be a tty unless q -o");
       return 1;
     }                        /* if (!(isatty(STDIN5FD) && isatty(STDOUT5FD))) */
 
@@ -519,7 +519,7 @@ main(int xargc, char **xargv)
 
 /* Ctrl-C just sets a flag (rather than exitting) */
     piping = false;
-  }                      /* if (!isatty(STDIN5FD) && !isatty(STDOUT5FD)) else */
+  }                      /* if (!P) else */
 
 /* Common initialisation */
   cntrlc = false;                  /* Not yet seen ^C */
