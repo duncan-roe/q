@@ -390,16 +390,16 @@ main(int xargc, char **xargv)
   sigemptyset(&act.sa_mask);
   sigaddset(&act.sa_mask, SIGINT);
   sigaddset(&act.sa_mask, SIGTERM);
-#ifdef SIGWINCH
-  sigaddset(&act.sa_mask, SIGWINCH);
-#endif
   sigaction(SIGINT, &act, NULL);
   sigaction(SIGTERM, &act, NULL);
 #ifdef SIGWINCH
+  sigaddset(&act.sa_mask, SIGWINCH);
   sigaction(SIGWINCH, &act, NULL);
 #endif
 
-/* Check for running in a pipe (or with redirection) */
+/* Check for running in a pipe (or with redirection), but not if -o */
+  if(offline)
+    goto not_pipe;
   P = isatty(STDIN5FD);
   Q = isatty(STDOUT5FD);
   if (!P && !Q)

@@ -111,13 +111,11 @@ The mandatory \f3-i\f1 \fIinitial_macro\fR should not try to save the file.
 stdin and / or stdout may be redirected from / to a file rather than a pipe:
 the rule is that stdin and stdout must either both be a tty or both not be.
 .br
-Running in a pipe automatically asserts the \fB-o\fR option (work \fIO\fRffline:
-\fBq\fR automatically issues \fBS-SAVE\fR and \fBQ-QUIT\fR commands
-when it would otherwise prompt for user input).
+Running in a pipe automatically asserts the \fB-o\fR and \fB-q\fR options -
+see \fBOPTIONS\fR below.
 .br
-Running in a pipe also asserts the \fB-q\fR option (run \fIQ\fRuietly: stdout is
-discarded (by redirection to \fB/dev/null\fR)).
-This discarded output can be made visible by giving the \fB-v\fR option
+To see the output that \fB-q\fR would otherwise discard,
+give the \fB-v\fR option
 (run \fIV\fRerbosely: stdout is instead redirected to stderr).
 .RE
 .SH OPTIONS
@@ -179,10 +177,15 @@ to guard against a catastrophe while writing).
 see \fBStartup file\fR above.
 .TP
 .BI \-o
-see \fBRunning q in a pipe\fR above.
+work \fIO\fRffline: \fBq\fR automatically issues \fBS-SAVE\fR and
+\fBQ-QUIT\fR commands when it would otherwise prompt for user input).
+.br
+Note that if \fB-o\fR appears on the command line, \fBq\fR will never act as if
+running in a pipe. This covers the situation where a shell script in a pipeline
+wants to invoke \fBq -o\fR.
 .TP
 .BI \-q
-see \fBRunning q in a pipe\fR above.
+run \fIQ\fRuietly: stdout is discarded (by redirection to \fB/dev/null\fR).
 .TP
 .BI \-t
 Toggles Tab expansion when reading files.
@@ -191,8 +194,10 @@ With the default macro set loaded, Tab expansion is Off.
 .TP
 .BI \-v
 see \fBRunning q in a pipe\fR above.
-But if \fB-v\fR is given twice, FD-FDEVNULL commands are ignored whether in a
-pipe or not.
+.TP
+.BI \-vv
+Ignore FD-FDEVNULL commands whether in a pipe or not. Implies \fB-v\fR
+if running in a pipe.
 .SH CONTROL KEYS
 (\fB^A\fR stands for \fBCtrl-A\fR, and so on)
 .TP

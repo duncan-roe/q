@@ -1,2 +1,2 @@
-*                                                       ; Item(s) tested       ; Expected result
-fi !tests/mkbigfile 64^Jq t5^Jr20 40^Jv0^Js^J^NX ; v0 shows wrong line number; 40 40^@
+#                                                ; Item(s) tested             ; Expected result
+fi !tests/mkbigfile 64^Jq t5^Jr20 40^Jv0^Js^J^NX ; v0 shows wrong line number ; 40 40^@

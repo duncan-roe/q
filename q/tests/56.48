@@ -1,2 +1,2 @@
-*                                                       ; Item(s) tested       ; Expected result
+#                                             ; Item(s) tested  ; Expected result
 fi !tests/mkbigfile 8^Jq t5^Jr3 5^Jv0^Js^J^NX ; r 3 5 segfaults ; 5 5^@
