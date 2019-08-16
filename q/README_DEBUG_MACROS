@@ -253,5 +253,6 @@ ggo $(type -p q) -a \
   b\ scrdit.c:1621 commands silent "echo starting macro" p/o\ thisch end \
   "cond 2 (thisch < 0101 || thisch > 0132) && thisch < 04000 && thisch != 255" \
   b\ scrdit.c:1223 commands silent "echo ^NI invoked\\n" end \
+  "set max-value-size sizeof (struct scrbuf5)" \
   b\ scrdit.c:864 commands silent "echo resuming macro" p/o\ i end \
   'cond 4 verb != '"'I' && (curmac < FIRST_PSEUDO || curmac > LAST_PSEUDO)" c

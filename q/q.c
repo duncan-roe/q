@@ -398,7 +398,7 @@ main(int xargc, char **xargv)
 #endif
 
 /* Check for running in a pipe (or with redirection), but not if -o */
-  if(offline)
+  if (offline)
     goto not_pipe;
 
 /* If stdin is not a terminal, assume we are to act as in a pipe. */
@@ -494,17 +494,16 @@ main(int xargc, char **xargv)
 
 /* Never ask for input from stdin */
     offline = true;
-  }                           /* if (!P) */
+  }                                /* if (!P) */
   else
 /* Not in a pipe */
   {
   not_pipe:
-    if (!(P && Q) && !offline)
+    if (!offline && !(P && Q))     /* P and Q not set if !offline */
     {
-      fprintf(stderr, "%s\n",
-        "stdin & stdout must both be a tty unless q -o");
+      fprintf(stderr, "%s\n", "stdin & stdout must both be a tty unless q -o");
       return 1;
-    }                        /* if (!(isatty(STDIN5FD) && isatty(STDOUT5FD))) */
+    }                              /* if (!offline && !(P && Q)) */
 
 /* Implement quiet operation if requested */
     if (quiet_flag)
@@ -519,7 +518,7 @@ main(int xargc, char **xargv)
 
 /* Ctrl-C just sets a flag (rather than exitting) */
     piping = false;
-  }                      /* if (!P) else */
+  }                                /* if (!P) else */
 
 /* Common initialisation */
   cntrlc = false;                  /* Not yet seen ^C */
@@ -2353,6 +2352,9 @@ do_goto(void)
 
 /* ********************************* do_help ******************************** */
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation"
+
 static bool
 do_help(void)
 {
@@ -2408,6 +2410,8 @@ do_help(void)
   init5();
   return true;                     /* Finished */
 }                                  /* bool do_help(void) */
+
+#pragma GCC diagnostic pop
 
 /* ******************************** do_insert ******************************* */
 
