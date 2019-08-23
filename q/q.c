@@ -2353,6 +2353,7 @@ do_goto(void)
 /* ********************************* do_help ******************************** */
 
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wformat-truncation"
 
 static bool
