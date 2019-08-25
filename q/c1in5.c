@@ -23,7 +23,7 @@
 const char *const normal_end_sequence = "\033\033fq\n";
 const char *end_seq;
 int buf5len, buf5idx, ttyfd, stdidx;
-bool size5;
+bool size5 = false;
 struct stdinfo stdinfo[OPEN_MAX];
 
 /* Static variables */

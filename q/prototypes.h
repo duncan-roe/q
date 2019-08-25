@@ -90,7 +90,6 @@ extern bool mods;                  /* Mods done since last SAVE */
 extern bool binary;                /* Q invoked -b */
 extern int funit;                  /* File i/o ptr */
 extern char pcnta[PTHSIZ];         /* Pathname we are editing */
-extern uint32_t row5, col5;        /* Screen / window geometry */
 extern bool cntrlc;                /* SIGINT handler invoked */
 extern bool seenwinch;             /* SIGWINCH handler invoked */
 extern char *macro_dir;            /* Where macros are */

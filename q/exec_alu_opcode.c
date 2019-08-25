@@ -90,6 +90,22 @@ f_valid2(char **err)
 }                                  /* f_valid() */
 
 static bool
+pshwdth(char **err)
+{
+  if (!room(err))
+    return false;
+  return push(col5, err);
+}                                  /* pshwdth) */
+
+static bool
+pshhght(char **err)
+{
+  if (!room(err))
+    return false;
+  return push(row5, err);
+}                                  /* pshhght) */
+
+static bool
 pshtbsz(char **err)
 {
   if (!room(err))
@@ -1199,6 +1215,8 @@ alu_opcode opcode_defs[] = {
   OPCODE(pshlnnb, "Push line number to R (same as ^NF / PSHTAB)"),
   OPCODE(pshtbsz, "Push number of spaces between tabstops in file to R"),
   OPCODE(poptbsz, "Pop R to number of spaces between tabstops in file"),
+  OPCODE(pshwdth, "Push screen width to R"),
+  OPCODE(pshhght, "Push screen height to R"),
   CAPTION(""),
   CAPTION("Instructions that Modify F"),
   CAPTION("============ ==== ====== ="),

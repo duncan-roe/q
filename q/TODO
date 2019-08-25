@@ -1,4 +1,4 @@
-Opcodes PSHWDTH & PSHHGHT push screen width & height to R
+DONE: Opcodes PSHWDTH & PSHHGHT push screen width & height to R
 Opcodes POPL & POPLF: pop to line being edited (command or file)
 Audit macros to not use alpha tab ids (preferably use tabs 75 - 80)
 DONE: workfile.c, readfl.c & maybe others to have #pragma to turn off optimising
