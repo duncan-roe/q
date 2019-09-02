@@ -52,7 +52,7 @@
   {ordch(thisch, Curr); modlin = true; contp = false; GETNEXTCHR;}
 #define RANOFF_END {err = "^NA, ^NB, ^NC &c. too near macro end"; ERR_IF_MAC;}
 #define CHECK_HAS_MACCH(x) \
-  {if (curmac > 0 && mcposn > scmacs[curmac]->maclen - x) RANOFF_END;}
+  {if (curmac >= 0 && mcposn > scmacs[curmac]->maclen - x) RANOFF_END;}
 #define GET_FOLLOWING_CHAR {glast = gpseu = true; GETNEXTCHR;}
 /* ^NB, ^NP, ^N[ & ^N] test if cursor / file position before/after tab */
 #define TEST_TAB {\
@@ -1037,7 +1037,7 @@ process_pseudo_arg(scrbuf5 *Curr, bool in_cmd)
     qreg = -1;                     /* Default response: no such macro */
     if (thisch < 0)
       ;                            /* Can't be a macro */
-    else if (thisch == 0 && curmac > 0)
+    else if (thisch == 0 && curmac >= 0)
       qreg = 0;                    /* ^N^@ legal in a macro */
 
 /* Regular pseodomacros. Force thisch to upper case */
@@ -1055,7 +1055,7 @@ process_pseudo_arg(scrbuf5 *Curr, bool in_cmd)
         }                          /* if (thisch == "EORFNMW"[i]) */
       }                            /* for (i = 6; i >= 0; i--) */
 /* Test for pseudos that are legal in macros */
-      if (qreg && curmac > 0)
+      if (qreg && curmac >= 0)
       {
         for (i = 14; i >= 0; i--)  /* 15 of them (from "h pm") */
         {
@@ -1235,7 +1235,7 @@ process_pseudo(scrbuf5 *Curr, bool in_cmd)
       SKIP2MACCH;                  /* ... skip 2 more */
 
     case 13:                       /* ^NM - make Macro from current line */
-      if (curmac > 0)
+      if (curmac >= 0)
         CHECK_HAS_MACCH(1);        /* Must be 1 more char in macro */
       gmacr = true;                /* We are defining a macro */
       GET_FOLLOWING_CHAR;          /* Get macro ID */
@@ -1562,7 +1562,7 @@ process_other(void)
   }                                /* if (thisch > TOPMAC) */
 
 /* ^N^<000> restarts current macro */
-  if (!thisch && curmac > 0)
+  if (!thisch && curmac >= 0)
     mcposn = 0;                    /* Leave curmac as-is */
   else
   {
@@ -1594,7 +1594,7 @@ process_other(void)
         immnxfr = curmac;
     }                              /* if (curmac >= FIRST_IMMEDIATE_MACRO ... */
     curmac = thisch;
-  }                                /* if (!thisch && curmac > 0) else */
+  }                                /* if (!thisch && curmac >= 0) else */
   GETNEXTCHR;
 }                                  /* static action process_other(void) */
 

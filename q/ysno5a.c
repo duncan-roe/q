@@ -40,7 +40,7 @@ ysno5a(char *mess, int key)
   if (!cl5get(comlin, 3, true, false)) /* YES is longest string */
   {
     pop_stdin();
-    if (curmac > 0)
+    if (curmac >= 0)
       notmac(false);
     newlin();
     continue;
