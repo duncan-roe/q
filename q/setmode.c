@@ -177,6 +177,10 @@ setmode()
           u = 01000000;
           break;
 
+        case 'X':            /* eXclusive L & FL: find next line not matching */
+          u = 02000000;
+          break;
+
         default:
           printf("Warning - unrecognised %s ignored\r\n", ubuf);
           continue;
@@ -296,6 +300,10 @@ show_current(unsigned long mode)
   c = mode & 01000000 ? '+' : '-';
   putchar(c);
   putchar('a');
+  fputs(", ", stdout);
+  c = mode & 02000000 ? '+' : '-';
+  putchar(c);
+  putchar('x');
   fputs("\r\n", stdout);
   switch ((int)(mode >> 30 & 3))
   {

@@ -2487,6 +2487,8 @@ static bool
 do_locate(void)
 {
   int dummy;                       /* Unwanted result from ltok5a / lsub5a */
+  bool found;
+
   is_locate = true;
   tokens = verb == 'l';            /* Whether FL */
   if (REVRSE)
@@ -2555,13 +2557,22 @@ do_locate(void)
       break;                       /* for(i4=count2;i4>0;i4--) */
     }                              /* if(!rdlin(curr, false)) */
     m = curr->bchars;
-    if (m < minlen)
-      continue;                    /* Skip search if too short */
-    if (m > lastpos)
-      m = lastpos;                 /* Get length to search */
-    if (tokens ? ltok5a((uint8_t *)ermess, h, curr->bdata, firstpos, m,
-      &locpos, &dummy, (uint8_t *)ndel) : lsub5a((uint8_t *)ermess,
-      h, curr->bdata, firstpos, m, &locpos, &dummy))
+    if (m < minlen)                /* Line too short for a match */
+    {
+      if (EXCLUSIVE_L_BOOL)
+        found = true;              /* Short line == non-match */
+      else
+        continue;
+    }                              /* if (m < minlen) */
+    else
+    {
+      if (m > lastpos)
+        m = lastpos;               /* Get length to search */
+      found = (tokens ? ltok5a((uint8_t *)ermess, h, curr->bdata, firstpos, m,
+        &locpos, &dummy, (uint8_t *)ndel) : lsub5a((uint8_t *)ermess,
+        h, curr->bdata, firstpos, m, &locpos, &dummy)) ^ EXCLUSIVE_L_BOOL;
+    }                              /* if (m < minlen) else */
+    if (found)
     {                              /* Line located */
       if (REVRSE)
         setptr(revpos);
@@ -2569,7 +2580,7 @@ do_locate(void)
         setptr(ptrpos - 1);
       J_L_common();                /* End L & J - carry on as M */
       return true;
-    }                              /* if((tokens?ltok5a((... */
+    }                              /* if (found) */
   }                                /* for(i4=count2;i4>0;i4--) */
 
 /* Didn't locate it if we get here */

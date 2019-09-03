@@ -24,6 +24,7 @@
 #define FILE_POS_BIT 00400000000
 #define STORE_FILE_POS (FMODE & FILE_POS_BIT)
 #define MATCH_ANY_WHSP (FMODE & 00001000000)
+#define EXCLUSIVE_L_BOOL ((FMODE & 00002000000) != 0)
 
 /* BRIEF and NONE are bits in fmode. Both are set for NONE */
 #define BRIEF (FMODE & 010000000000)
