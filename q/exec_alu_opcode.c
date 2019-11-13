@@ -606,6 +606,13 @@ s1x(char **err)
 }                                  /* s1x() */
 
 static bool
+tstfmod(char **err)
+{
+  xreg = mods;
+  return true;
+}                                  /* tstfmod() */
+
+static bool
 and(char **err)
 {
   if (!r_valid2(err))
@@ -1315,6 +1322,7 @@ alu_opcode opcode_defs[] = {
   OPCODE(a2x, "X = X + 2"),
   OPCODE(s2x, "X = X - 2"),
   OPCODE(s1x, "X = X - 1"),
+  OPCODE(tstfmod, "set X = 1 if file modified, else set X =0"),
   CAPTION(""),
   CAPTION("Q Result Register Instructions"),
   CAPTION("= ====== ======== ============"),

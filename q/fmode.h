@@ -37,4 +37,5 @@ extern unsigned long zmode;        /* Copy of fmode by scmnrd */
 extern uint8_t xlatable[256];
 extern bool zmode_valid;
 extern int tbstat;
+extern bool mods;                  /* Mods done since last SAVE */
 #endif

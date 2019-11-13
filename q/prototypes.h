@@ -86,7 +86,6 @@ extern bool noRereadIfMacro;       /* Don't re-read command if in macro &c */
 extern bool forych;             /* PDSPLY only required to do a BRIEF display */
 extern bool lstvld;                /* "previous" buffer has valid data */
 extern bool modlin;                /* This line has actually changed */
-extern bool mods;                  /* Mods done since last SAVE */
 extern bool binary;                /* Q invoked -b */
 extern int funit;                  /* File i/o ptr */
 extern char pcnta[PTHSIZ];         /* Pathname we are editing */
