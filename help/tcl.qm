@@ -9,6 +9,7 @@ fi ^<PS2>^<POPTBSZ>
 N061 ^NC^NS^N\n2000 (gdb) ^*NU^J^ND^N^<1270>^NU
 N062 ^NC^NS^N\n2000 \r\n>^*NU^J^ND^N^<1267>^NU
 N063 ^NC^NS^N\n2000 [$#] ^*NU^J^ND^N^<1276>^NU
+N064 ^NC^NS^N\n2000 $ ^*NU^J^ND^N^<1270>^NU
 N1267 ^NC^NS^N\n2001 "^*NU^Jn2002 "^*NU^J^NU
 N1270 ^NC^NS^N\n2001 {^*NU^Jn2002 }^*NU^J^NU
 N1276 ^NC^NS^N\n2001 -re {^*NU^Jn2002 }^*NU^J^NU
@@ -40,7 +41,7 @@ N410 fl global^J^NC^NU^G(^NA^NS^N^<411>^J^N^@
 N411 ^NG)^NL^D^N^@X^D^J^N^<410>
 N205 ^NC^N\^NFa^J^[g ta^Jm-1^J^NG}^NS^N\^X^K^Jm-2^J^NU ; Strip comment from trlg "}"
 # N207 (^N^W^G) convert current line to exp_send / expect pair
-N207 ^NC^N\^NE^E^Hexp_send {^Z};exp_send \r^Texpect ^ND^N^<2001>^ND^N^<2000>^ND^N^<2002>^J^NU
+N207 ^NC^N\^NE^E^Hexp_send -- {^Z};exp_send \r^Texpect ^ND^N^<2001>^ND^N^<2000>^ND^N^<2002>^J^NU
 N2000 (gdb) ^NU
 N2001 {^NU
 N2002 }^NU

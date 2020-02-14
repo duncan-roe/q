@@ -170,6 +170,6 @@ N1403 $C^NU ; override with invocation wildcard (^N^Ws)
 N1404 -wn^NU ; grep options for ^N^W^F
 N1405 ^NU ; Command to run after N206 (^N^W^F) (e.g. |less -ESX^NU, |cat^NU)
 N1406 ^NI^NU ; Change to ^NU for no comments from ^NE / ^NL macros (all languages)
-N1407 q$1^J^NU ; Change to ^NU to stop automatic q$1 by ^N^Wp
+N1407 q$0^J^NU ; Change to ^NU to stop automatic q$0 by ^N^Wp
 n426 /* N427 & N430 are short-form ^NE / ^NL (all languages)
 N1500 /* 15XX - RESERVED FOR MACRO PROGRAMS (*.qm)

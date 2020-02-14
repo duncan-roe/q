@@ -1,5 +1,6 @@
 #!/bin/bash -p
-# Make t5 a fairly large (over 1M lines) file. Line content is line number
+# Make t5 a fairly large (over 1M lines) file.
+# Line content is line number followed by NUL (for the benefit of gdb)
 # Optional arg is power of 2 of lines wanted if 14 - 31 (PS2Pdd opcode)
 # else lines wanted (must be power of 2 <=8192)
 # Set environment variable SILENT_MKBIGFILE for quiet operation

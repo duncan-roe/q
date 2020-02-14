@@ -547,7 +547,6 @@ main(int xargc, char **xargv)
   splt = false;                    /* Not splitting a line initially */
   mods = false;                    /* No mods to i/p file yet */
   pcnta[0] = 0;                    /* No default filename yet */
-  locpos = 0;                      /* Stays at 0 except after a LOCATE */
   locerr = false;                  /* 1st error might not be LOCATE */
   noRereadIfMacro = false;
   forych = false;                  /* Start off VERBOSE */
@@ -1958,8 +1957,8 @@ J_L_M_common(void)
       puts("E - O - F\r");
       return;
     }                              /* if(!rdlin(curr, false)) */
-    curr->bcurs = locpos;          /* In case just come from LOCATE */
-    locpos = 0;                    /* In case just come from LOCATE */
+    if (is_locate && !EXCLUSIVE_L_BOOL)
+      curr->bcurs = locpos;        /* Set cursor to start of found string */
     sprmpt(ptrpos - 1);            /* Set up prompt lin # just read */
     if (A_I_M_common())
       return;
@@ -2586,7 +2585,6 @@ do_locate(void)
 /* Didn't locate it if we get here */
 
   setptr(savpos);                  /* Move pointer back */
-  locpos = 0;                      /* zeroised by lstr5a */
   if (display_wanted)
     fputs("Specified string not found", stdout);
   locerr = true;                   /* Picked up by RERDCM */
