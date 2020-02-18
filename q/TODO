@@ -1,14 +1,15 @@
 DONE: Opcodes PSHWDTH & PSHHGHT push screen width & height to R
 Opcodes POPL & POPLF: pop to line being edited (command or file)
-Audit macros to not use alpha tab ids (preferably use tabs 75 - 80)
+STARTED: Audit macros to not use alpha tab ids (preferably use tabs 75 - 80)
 DONE: workfile.c, readfl.c & maybe others to have #pragma to turn off optimising
 DONE: Do not visbell more than once every 1/10 sec
 DONE: Add ~/bin/qm (list macros) to make install
 Create man page for qm
 DONE: q -v to not action FD Y (Changed to q -vv)
 DONE: FB to use clock_gettime (replaces gettimeofday) for 1/5 second interval
-FRecurse command to bring up q command line from w/in macro:
+STARTED: FReprompt command to bring up q command line from w/in macro:
  Q continues macro; FQ abandons
+ (Renamed from FRecurse)
 Q -B to break long lines on token delimiter if length so far > 32(?)K
 Give symbolic names to ALU memory locations e.g. k,0,i^J^<POP i>
  Error if try to rename location

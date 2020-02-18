@@ -164,9 +164,19 @@ static int pipe_temp_fd;
 static char pipe_temp_name[sizeof PIPE_NAME] = { 0 };
 static struct sigaction act;
 static int retcod;                 /* Short-term use */
+static bool quiet_flag = false;    /* -q seen */
+static bool vrsflg = false;        /* -V seen */
+static bool aluflg = false;        /* -A seen */
+static qrc_state e_state = LOCAL;
+static char *initial_command = NULL;
+static bool P, Q;                 /* For determining whether we are in a pipe */
+static bool errflg = false;        /* Illegal switch seen */
 
 /* Static prototypes */
 
+static bool check_pipe(void);
+static void not_pipe(void);
+static void do_initial_tsks(bool *do_rc_p);
 static bool do_fdevnull(void);
 static bool do_fimmediate_macro(void);
 static bool do_fmode(void);
@@ -238,14 +248,8 @@ static void display_opcodes(void);
 int
 main(int xargc, char **xargv)
 {
-  bool do_rc = true;
-  bool errflg = false;             /* Illegal switch seen */
-  bool vrsflg = false;             /* -V seen */
-  bool aluflg = false;             /* -A seen */
-  bool quiet_flag = false;         /* -q seen */
-  qrc_state e_state = LOCAL;
-  char *initial_command = NULL;
-  bool P, Q;                      /* For determining whether we are in a pipe */
+  bool recursing = !xargv;         /* In FR-FReprompt */
+  bool do_rc = !recursing;
 
 /* [Re-]initialise static variables */
 
@@ -259,314 +263,69 @@ main(int xargc, char **xargv)
   count2 = 0;
 
 /* Initial Tasks */
-  argc = xargc;                    /* Xfer invocation arg to common */
-  argv = xargv;                    /* Xfer invocation arg to common */
-  dfltmode = 01212005;             /* +e +m +* +tr +dr +i +a */
-  end_seq = normal_end_sequence;
-  init_alu();
-  tmask = umask(0);                /* Get current umask */
-  umask(tmask);                    /* Reinstate umask */
-  tmode = ~tmask & 0666;           /* Assume no execute on new file */
-
-/* Set up for the command substitution macros */
-  macdefw(STDOUT_MACRO_IDX, NULL, 0, true);
-  macdefw(STDERR_MACRO_IDX, NULL, 0, true);
-
-/* Pick up any option arguments and set cmd_state if more args follow */
-  cmd_state = TRY_INITIAL_COMMAND;
-  while ((i = getopt(argc, argv, "AVbdei:mnoqtv")) != -1)
-    switch (i)
-    {
-      case 'A':
-        aluflg = true;
-        break;
-
-      case 'V':
-        vrsflg = true;
-        break;
-
-      case 'b':
-        binary = true;
-        dfltmode |= 0400;          /* +f */
-        break;
-
-      case 'd':
-        dfltmode ^= 1;             /* dr */
-        break;
-
-      case 'e':
-        dfltmode ^= 010000;        /* e */
-        break;
-
-      case 'i':
-        initial_command = optarg;
-        break;
-
-      case 'm':
-        dfltmode ^= 02000;         /* m */
-        break;
-
-      case 'n':
-        do_rc = false;
-        break;
-
-      case 'o':
-        offline = true;
-        break;
-
-      case 'q':
-        quiet_flag = true;
-        break;
-
-      case 't':
-        dfltmode ^= 4;             /* tr */
-        break;
-
-      case 'v':
-        if (verbose_flag)
-          very_verbose_flag = true;
-        else
-          verbose_flag = true;
-        break;
-
-      case '?':
-        errflg = true;
-        break;
-    }                              /* switch(i) */
-  if (errflg)
+  if (recursing)
   {
-    fprintf(stderr, "%s",
-      "Usage: q [-AVbdemnto] [-i <macro definition>] [+<n> file]"
-      " [file[:<n>]]...\n");
-    return 1;
-  }
-  if (aluflg)
-  {
-    display_opcodes();
-    if (argc == 2)
-      return 0;
-  }                                /* if (aluflg) */
-  if (vrsflg)
-  {
-    q_version();
-    if (argc == 2)
-      return 0;
-  }                                /* if (vrsflg) */
-  if (offline && initial_command == NULL)
-  {
-    fprintf(stderr, "%s", "Can only use -o with -i\n");
-    return 1;
-  }                                /* if (offline && initial_command == NULL) */
-  if (verbose_flag && quiet_flag)
-  {
-    fprintf(stderr, "%s\n", "-q[uiet] and -v[erbose] are mutually exclusive");
-    return 1;
-  }                                /* if (verbose_flag && quiet_flag) */
-  if (!(sh = getenv("SHELL")))
-    sh = "/bin/sh";
-  if (!(help_dir = getenv("Q_HELP_DIR")))
-    help_dir = HELP_DIR;
-  if (!(macro_dir = getenv("Q_MACRO_DIR")))
-  {
-/* If HELP_DIR and MACRO_DIR were initially the same, */
-/* keep them the same now */
-    if (strcmp(HELP_DIR, MACRO_DIR))
-      macro_dir = MACRO_DIR;
-    else
-      macro_dir = help_dir;
-  }                              /* if (!(macro_dir = getenv("Q_MACRO_DIR"))) */
-  if (!(help_cmd = getenv("Q_HELP_CMD")) && !(help_cmd = getenv("PAGER")))
-    help_cmd = HELP_CMD;
-  if (!(etc_dir = getenv("Q_ETC_DIR")))
-    etc_dir = ETC_DIR;
-  fmode = dfltmode;                /* Assert defaults */
-  if (optind < argc)
-    cmd_state = Q_ARG1;
+    printf("q to continue macro %03o; fq to abandon\r\n", xargc);
+  }                                /* if (recursing) */
   else
-    argno = -1;                    /* No filenames */
-  memset(&act, 0, sizeof act);
-  act.sa_sigaction = quthan;
-  act.sa_flags = SA_SIGINFO;
-  sigemptyset(&act.sa_mask);
-  sigaddset(&act.sa_mask, SIGINT);
-  sigaddset(&act.sa_mask, SIGTERM);
-  sigaction(SIGINT, &act, NULL);
-  sigaction(SIGTERM, &act, NULL);
-#ifdef SIGWINCH
-  sigaddset(&act.sa_mask, SIGWINCH);
-  sigaction(SIGWINCH, &act, NULL);
-#endif
-
-/* Check for running in a pipe (or with redirection), but not if -o */
-  if (offline)
-    goto not_pipe;
-
-/* If stdin is not a terminal, assume we are to act as in a pipe. */
-/* We don't then care about stdout (c.f. -o) */
-
-  P = isatty(STDIN5FD);
-  Q = isatty(STDOUT5FD);
-  if (!P)
   {
-    if (initial_command == NULL)
-    {
-      fprintf(stderr, "%s\n",
-        "You must supply an initial command to run Q in a pipe");
-      return 1;
-    }                              /* if (initial_command == NULL) */
-
-    if (argno != -1)
-    {
-      fprintf(stderr, "%s\n",
-        "You may not give Q a file name when running in a pipe");
-      return 1;
-    }                              /* if (argno != -1) */
-
-/* Deal with stdout */
-    SYSCALL(saved_pipe_stdout, dup(STDOUT5FD));
-    if (saved_pipe_stdout == -1)
-    {
-      fprintf(stderr, "%s. fd %d (dup)\n", strerror(errno), STDOUT5FD);
-      return 1;
-    }                              /* if (saved_pipe_stdout == -1) */
-
-/* If verbose, dup stderr to stdout. Otherwise, stdout is /dev/null */
-    if (verbose_flag)
-    {
-      SYSCALL(i, dup2(STDERR5FD, STDOUT5FD));
-      if (i == -1)
-      {
-        fprintf(stderr, "%s. fd %d to fd %d (dup2)\n", strerror(errno),
-          STDERR5FD, STDOUT5FD);
-        return 1;
-      }                            /* if (i == -1) */
-    }                              /* if (verbose_flag) */
-    else
-      dev_null_stdout();
-
-/* Deal with stdin */
-
-/* Create & open a temporary file to buffer the entire pipe */
-    strcpy(pipe_temp_name, PIPE_NAME);
-    atexit(rm_pipe_temp);
-    pipe_temp_fd = mkstemp(pipe_temp_name);
-    if (pipe_temp_fd == -1)
-    {
-      fprintf(stderr, "%s. %s (open)\n", strerror(errno), pipe_temp_name);
-      return 1;
-    }                              /* if (pipe_temp_fd == -1) */
-
-/* Populate the temporary file */
-    while (true)
-    {
-      ssize_t nc, todo;
-      char *write_from;
-
-      SYSCALL(todo, read(STDIN5FD, ubuf, sizeof ubuf));
-      if (todo == -1)
-      {
-        fprintf(stderr, "%s. stdin (read)", strerror(errno));
-        return 1;
-      }                            /* if (todo == -1) */
-      if (!todo)
-        break;                     /* Reached EOF */
-      write_from = ubuf;
-      while (todo)
-      {
-        SYSCALL(nc, write(pipe_temp_fd, write_from, todo));
-        if (nc == -1)
-        {
-          fprintf(stderr, "%s. %s (write)\n", strerror(errno), pipe_temp_name);
-          return 1;
-        }                          /* if (nc == -1) */
-        if (nc == 0)               /* Is this possible? */
-        {
-          fprintf(stderr, "Zero characters written. %s (write)\n",
-            pipe_temp_name);
-          return 1;
-        }                          /* if (nc == 0) */
-        write_from += nc;
-        todo -= nc;
-      }                            /* while(todo) */
-    }                              /* while (true) */
-    my_close(pipe_temp_fd);
-    cmd_state = Q_ARG1;
-
-/* Never ask for input from stdin */
-    offline = true;
-  }                                /* if (!P) */
-  else
-/* Not in a pipe */
-  {
-  not_pipe:
-    if (!offline && !(P && Q))     /* P and Q not set if !offline */
-    {
-      fprintf(stderr, "%s\n", "stdin & stdout must both be a tty unless q -o");
-      return 1;
-    }                              /* if (!offline && !(P && Q)) */
-
-/* Implement quiet operation if requested */
-    if (quiet_flag)
-    {
-      if (!offline)
-      {
-        fprintf(stderr, "%s\n", "-q[uiet] is only available with -o[ffline]");
-        return 1;
-      }                            /* if (!offline) */
-      dev_null_stdout();
-    }                              /* if (quiet_flag) */
-
-/* Ctrl-C just sets a flag (rather than exitting) */
-    piping = false;
-  }                                /* if (!P) else */
+    argc = xargc;                  /* Xfer invocation arg to common */
+    argv = xargv;                  /* Xfer invocation arg to common */
+    do_initial_tsks(&do_rc);
+    if (!check_pipe())
+      not_pipe();
 
 /* Common initialisation */
-  cntrlc = false;                  /* Not yet seen ^C */
-  ndel[0] = '\0';                  /* No FT commands yet */
-  for (i = 127; i >= 0; i--)
-    fxtabl[i] = i;                 /* No FX commands yet */
-  oldcom = &b1;
-  newcom = &b2;
-  curr = &b3;
-  prev = &b4;
-  init5();                         /* Set half duplex &c */
+    ndel[0] = '\0';                /* No FT commands yet */
+    for (i = 127; i >= 0; i--)
+      fxtabl[i] = i;               /* No FX commands yet */
+    oldcom = &b1;
+    newcom = &b2;
+    curr = &b3;
+    prev = &b4;
 
 /* Set up Screenedit buffers */
-  oldcom->bcurs = 0;
-  oldcom->bchars = 0;              /* Initialise OLDCOM only this once */
-  prev->bchars = 0;
-  prev->bcurs = 0;                 /* Initialise PREV only this once */
-  oldcom->bmxch = BUFMAX;
-  newcom->bmxch = BUFMAX;
-  curr->bmxch = BUFMAX;
-  prev->bmxch = BUFMAX;
+    oldcom->bcurs = 0;
+    oldcom->bchars = 0;            /* Initialise OLDCOM only this once */
+    prev->bchars = 0;
+    prev->bcurs = 0;               /* Initialise PREV only this once */
+    oldcom->bmxch = BUFMAX;
+    newcom->bmxch = BUFMAX;
+    curr->bmxch = BUFMAX;
+    prev->bmxch = BUFMAX;
 
-  finitl();                        /* Initialise workfile system */
-  sinitl();                        /* Initialise screen system */
-  newlin();                        /* Screen displaying blanks */
-  splt = false;                    /* Not splitting a line initially */
-  mods = false;                    /* No mods to i/p file yet */
-  pcnta[0] = 0;                    /* No default filename yet */
-  locerr = false;                  /* 1st error might not be LOCATE */
-  noRereadIfMacro = false;
-  forych = false;                  /* Start off VERBOSE */
+    finitl();                      /* Initialise workfile system */
+    sinitl();                      /* Initialise screen system */
+
+/* Initially INDENT switched OFF */
+    ndntch = 0;                    /* For when it's first switched on */
+    tbstat = -1;                   /* Xlation table not set up */
+    stdidx = -1;                   /* No U-use file */
+
+    mods = false;                  /* No mods to o/p file yet */
+    init5();                       /* Set half duplex &c */
+    newlin();                      /* Screen displaying blanks */
+
+    pcnta[0] = 0;                  /* No default filename yet */
+    locerr = false;                /* 1st error might not be LOCATE */
+    orig_stdout = -1;              /* Haven't dup'd stdout */
 
 /* Invite to type H, but only if taking input */
-  if (!offline)
-    puts("Type H for help\r");
+    if (!offline)
+      puts("Type H for help\r");
+  }                                /* if (recursing) else */
+
+  cntrlc = false;                  /* Not yet seen ^C */
+  splt = false;                    /* Not splitting a line initially */
+  noRereadIfMacro = false;
+  forych = false;                  /* Not in middle of brief Y */
 
   if (size5)
     printf("Noted screen dimensions %u x %u\r\n", col5, row5);
-  orig_stdout = -1;                /* Haven't dup'd stdout */
-
-/* Initially INDENT switched OFF */
-  ndntch = 0;                      /* For when it's first switched on */
-  tbstat = -1;                     /* Xlation table not set up */
-  stdidx = -1;                     /* No U-use file */
 /*
  * Use .qrc if it exists here or in $HOME; otherwise use /etc/qrc
  */
-  if (do_rc)
+  if (do_rc)                       /* (Forced to false if recursing) */
   {
 /* Forge a u-use: push current stdin */
     stdidx = 0;
@@ -3041,3 +2800,274 @@ do_xistics(void)
   puts("Re-enabling screenedit\r");
   return true;                     /* Finished X */
 }                                  /* bool do_xistics(void) */
+
+/* ***************************** do_initial_tsks **************************** */
+
+static void
+do_initial_tsks(bool *do_rc_p)
+{
+  dfltmode = 01212005;             /* +e +m +* +tr +dr +i +a */
+  end_seq = normal_end_sequence;
+  init_alu();
+  tmask = umask(0);                /* Get current umask */
+  umask(tmask);                    /* Reinstate umask */
+  tmode = ~tmask & 0666;           /* Assume no execute on new file */
+
+/* Set up for the command substitution macros */
+  macdefw(STDOUT_MACRO_IDX, NULL, 0, true);
+  macdefw(STDERR_MACRO_IDX, NULL, 0, true);
+
+/* Pick up any option arguments and set cmd_state if more args follow */
+  cmd_state = TRY_INITIAL_COMMAND;
+  while ((i = getopt(argc, argv, "AVbdei:mnoqtv")) != -1)
+    switch (i)
+    {
+      case 'A':
+        aluflg = true;
+        break;
+
+      case 'V':
+        vrsflg = true;
+        break;
+
+      case 'b':
+        binary = true;
+        dfltmode |= 0400;          /* +f */
+        break;
+
+      case 'd':
+        dfltmode ^= 1;             /* dr */
+        break;
+
+      case 'e':
+        dfltmode ^= 010000;        /* e */
+        break;
+
+      case 'i':
+        initial_command = optarg;
+        break;
+
+      case 'm':
+        dfltmode ^= 02000;         /* m */
+        break;
+
+      case 'n':
+        *do_rc_p = false;
+        break;
+
+      case 'o':
+        offline = true;
+        break;
+
+      case 'q':
+        quiet_flag = true;
+        break;
+
+      case 't':
+        dfltmode ^= 4;             /* tr */
+        break;
+
+      case 'v':
+        if (verbose_flag)
+          very_verbose_flag = true;
+        else
+          verbose_flag = true;
+        break;
+
+      case '?':
+        errflg = true;
+        break;
+    }                              /* switch(i) */
+  if (errflg)
+  {
+    fprintf(stderr, "%s",
+      "Usage: q [-AVbdemnto] [-i <macro definition>] [+<n> file]"
+      " [file[:<n>]]...\n");
+    exit(1);
+  }
+  if (aluflg)
+  {
+    display_opcodes();
+    if (argc == 2)
+      exit(0);
+  }                                /* if (aluflg) */
+  if (vrsflg)
+  {
+    q_version();
+    if (argc == 2)
+      exit(0);
+  }                                /* if (vrsflg) */
+  if (offline && initial_command == NULL)
+  {
+    fprintf(stderr, "%s", "Can only use -o with -i\n");
+    exit(1);
+  }                                /* if (offline && initial_command == NULL) */
+  if (verbose_flag && quiet_flag)
+  {
+    fputs("-q[uiet] and -v[erbose] are mutually exclusive\n", stderr);
+    exit(1);
+  }                                /* if (verbose_flag && quiet_flag) */
+  if (!(sh = getenv("SHELL")))
+    sh = "/bin/sh";
+  if (!(help_dir = getenv("Q_HELP_DIR")))
+    help_dir = HELP_DIR;
+  if (!(macro_dir = getenv("Q_MACRO_DIR")))
+  {
+/* If HELP_DIR and MACRO_DIR were initially the same, */
+/* keep them the same now */
+    if (strcmp(HELP_DIR, MACRO_DIR))
+      macro_dir = MACRO_DIR;
+    else
+      macro_dir = help_dir;
+  }                              /* if (!(macro_dir = getenv("Q_MACRO_DIR"))) */
+  if (!(help_cmd = getenv("Q_HELP_CMD")) && !(help_cmd = getenv("PAGER")))
+    help_cmd = HELP_CMD;
+  if (!(etc_dir = getenv("Q_ETC_DIR")))
+    etc_dir = ETC_DIR;
+  fmode = dfltmode;                /* Assert defaults */
+  if (optind < argc)
+    cmd_state = Q_ARG1;
+  else
+    argno = -1;                    /* No filenames */
+  memset(&act, 0, sizeof act);
+  act.sa_sigaction = quthan;
+  act.sa_flags = SA_SIGINFO;
+  sigemptyset(&act.sa_mask);
+  sigaddset(&act.sa_mask, SIGINT);
+  sigaddset(&act.sa_mask, SIGTERM);
+  sigaction(SIGINT, &act, NULL);
+  sigaction(SIGTERM, &act, NULL);
+#ifdef SIGWINCH
+  sigaddset(&act.sa_mask, SIGWINCH);
+  sigaction(SIGWINCH, &act, NULL);
+#endif
+}                                  /* static void do_initial_tsks() */
+
+/* ******************************** not_pipe ******************************** */
+
+static void
+not_pipe(void)
+{
+  if (!offline && !(P && Q))       /* P and Q not set if !offline */
+  {
+    fputs("stdin & stdout must both be a tty unless q -o\n", stderr);
+    exit(1);
+  }                                /* if (!offline && !(P && Q)) */
+
+/* Implement quiet operation if requested */
+  if (quiet_flag)
+  {
+    if (!offline)
+    {
+      fputs("-q[uiet] is only available with -o[ffline]\n", stderr);
+      exit(1);
+    }                              /* if (!offline) */
+    dev_null_stdout();
+  }                                /* if (quiet_flag) */
+
+/* Ctrl-C just sets a flag (rather than exitting) */
+  piping = false;
+}                                  /* static void not_pipe() */
+
+/* ******************************* check_pipe ******************************* */
+
+static bool
+check_pipe(void)
+{
+/* Check for running in a pipe (or with redirection), but not if -o */
+  if (offline)
+    return false;
+
+/* If stdin is not a terminal, assume we are to act as in a pipe. */
+/* We don't then care about stdout (c.f. -o) */
+
+  P = isatty(STDIN5FD);
+  Q = isatty(STDOUT5FD);
+  if (P)
+    return false;
+  if (initial_command == NULL)
+  {
+    fputs("You must supply an initial command to run Q in a pipe\n", stderr);
+    exit(1);
+  }                                /* if (initial_command == NULL) */
+
+  if (argno != -1)
+  {
+    fputs("You may not give Q a file name when running in a pipe\n", stderr);
+    exit(1);
+  }                                /* if (argno != -1) */
+
+/* Deal with stdout */
+  SYSCALL(saved_pipe_stdout, dup(STDOUT5FD));
+  if (saved_pipe_stdout == -1)
+  {
+    fprintf(stderr, "%s. fd %d (dup)\n", strerror(errno), STDOUT5FD);
+    exit(1);
+  }                                /* if (saved_pipe_stdout == -1) */
+
+/* If verbose, dup stderr to stdout. Otherwise, stdout is /dev/null */
+  if (verbose_flag)
+  {
+    SYSCALL(i, dup2(STDERR5FD, STDOUT5FD));
+    if (i == -1)
+    {
+      fprintf(stderr, "%s. fd %d to fd %d (dup2)\n", strerror(errno),
+        STDERR5FD, STDOUT5FD);
+      exit(1);
+    }                              /* if (i == -1) */
+  }                                /* if (verbose_flag) */
+  else
+    dev_null_stdout();
+
+/* Deal with stdin */
+
+/* Create & open a temporary file to buffer the entire pipe */
+  strcpy(pipe_temp_name, PIPE_NAME);
+  atexit(rm_pipe_temp);
+  pipe_temp_fd = mkstemp(pipe_temp_name);
+  if (pipe_temp_fd == -1)
+  {
+    fprintf(stderr, "%s. %s (open)\n", strerror(errno), pipe_temp_name);
+    exit(1);
+  }                                /* if (pipe_temp_fd == -1) */
+
+/* Populate the temporary file */
+  while (true)
+  {
+    ssize_t nc, todo;
+    char *write_from;
+
+    SYSCALL(todo, read(STDIN5FD, ubuf, sizeof ubuf));
+    if (todo == -1)
+    {
+      fprintf(stderr, "%s. stdin (read)", strerror(errno));
+      exit(1);
+    }                              /* if (todo == -1) */
+    if (!todo)
+      break;                       /* Reached EOF */
+    write_from = ubuf;
+    while (todo)
+    {
+      SYSCALL(nc, write(pipe_temp_fd, write_from, todo));
+      if (nc == -1)
+      {
+        fprintf(stderr, "%s. %s (write)\n", strerror(errno), pipe_temp_name);
+        exit(1);
+      }                            /* if (nc == -1) */
+      if (nc == 0)                 /* Is this possible? */
+      {
+        fprintf(stderr, "Zero characters written. %s (write)\n",
+          pipe_temp_name);
+        exit(1);
+      }                            /* if (nc == 0) */
+      write_from += nc;
+      todo -= nc;
+    }                              /* while(todo) */
+  }                                /* while (true) */
+  my_close(pipe_temp_fd);
+  cmd_state = Q_ARG1;
+
+/* Never ask for input from stdin */
+  offline = true;
+  return true;
+}                                  /* static bool check_pipe(void) */
