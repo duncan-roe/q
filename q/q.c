@@ -194,7 +194,7 @@ static bool do_modify(void);
 static bool do_newmacro(void);
 static bool do_o_ff_or_fc(unsigned long bit);
 static bool do_print(void);
-static bool do_quit(void);
+static bool do_quit(bool recursing);
 static bool do_reposition(void);
 static bool do_shell_command(void);
 static bool do_tabset(void);
@@ -556,7 +556,7 @@ main(int xargc, char **xargv)
 
         case 'Q':                  /* Drop thru */
         case 'q':
-          retcod = do_quit();
+          retcod = do_quit(recursing);
           break;
 
         case 'R':
@@ -2472,11 +2472,37 @@ do_print(void)
 /* ********************************* do_quit ******************************** */
 
 static bool
-do_quit(void)
+do_quit(bool recursing)
 {
   char *colonpos = NULL;           /* Pos'n of ":" in q filename */
 
-/* We accept a filename - starts user off editing a fresh file */
+/* q -A and q -V are allowed whether recursing or not, */
+/* so get them out of the way. */
+/* -A & -V look like file names initially, and they may in fact be... */
+
+  if (!get_file_arg(&nofile))
+    ERRRTN("Error in filename");
+
+/* Look for Q command-line option that is enabled while running */
+  if (!nofile && strlen(ubuf) == 2 && ubuf[0] == '-' && ( /* Could be option */
+    ubuf[1] == 'A' ||              /* Display opcodes */
+    ubuf[1] == 'V'))               /* Display version */
+  {
+    if (access(ubuf, F_OK))        /* Check for file existence (yuck) */
+    {
+      switch (ubuf[1])
+      {
+        case 'A':
+          display_opcodes();
+          break;
+
+        case 'V':
+          q_version();
+          break;
+      }                            /* switch (ubuf[1]) */
+      return true;
+    }                              /* if (access(ubuf, F_OK)) */
+  }                                /* if (strlen(ubuf) == 2 && ... */
 
   if (mods &&
     !ysno5a
@@ -2484,8 +2510,6 @@ do_quit(void)
     A5DNO))
     return true;                   /* J user changed his mind */
   Tcl_DumpActiveMemory("t5mem");
-  if (!get_file_arg(&nofile))
-    ERRRTN("Error in filename");
   if (nofile)
   {
 /* If in a macro, only action solitary Q if mode says so.
@@ -2532,24 +2556,6 @@ try_open:
       else if (cmd_state == HAVE_LINE_NUMBER)
         *colonpos = ':';           /* Undo truncation */
       cmd_state = RUNNING;
-
-/* Look for Q command-line option that is enabled while running */
-      if (strlen(ubuf) == 2 && ubuf[0] == '-' && ( /* Could be option */
-        ubuf[1] == 'A' ||          /* Display opcodes */
-        ubuf[1] == 'V'))           /* Display version */
-      {
-        switch (ubuf[1])
-        {
-          case 'A':
-            display_opcodes();
-            break;
-
-          case 'V':
-            q_version();
-            break;
-        }                          /* switch (ubuf[1]) */
-        return true;
-      }                            /* if (strlen(ubuf) == 2 && ... */
 
       if (ysno5a("Do you want to create a new file (y,n,Cr [n])", A5DNO))
       {
