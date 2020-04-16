@@ -199,7 +199,7 @@ newmac()
         if (errno == ERANGE)
         {
 /* Attempt unsigned Hex or Octal entry. */
-          char *q = strbuf;
+          uint8_t *q = (void *)strbuf;
 
           while (isspace(*q))
             q++;

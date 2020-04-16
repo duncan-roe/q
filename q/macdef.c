@@ -58,7 +58,7 @@ macdef(uint32_t mcnum, uint8_t *buff, int buflen, bool appnu)
 /* On error, try unsigned conversion of hex or octal like N-NEWMACRO does */
     if (errno == ERANGE)
     {
-      char *q = (char *)buff;
+      uint8_t *q = buff;
 
       while (isspace(*q))
         q++;

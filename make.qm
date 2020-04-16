@@ -1,7 +1,7 @@
 # Macros of use when developing q
 
-n040 !make -j3 ^J^NU
-n040 !CFLAGS=-O2 make -j3 ^J^NU
+n040 !make -j3 PREFIX=/usr ^J^NU
+n040 !CFLAGS=-O2 make -j3 PREFIX=/usr ^J^NU
 # n213 (^N^W^K) Insert static prototype at front
 n213 ^NC^N\^NM^<1577>^J^[^NF{g1^Jl Static' 'prototypes^J^NC^N\^[m-^J^Z^T^ND^N^<1577>;^Jg t{^J^NU
 # n214 (^N^W^L) replace all (void)write(1,... with fputs ... stderr
