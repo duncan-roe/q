@@ -23,10 +23,10 @@
 
 static void show_current(unsigned long mode);
 
-/* ********************************* setmode ******************************** */
+/* ******************************** setqmode ******************************** */
 
 bool
-setmode()
+setqmode()
 {
   int octok = 1, first = 1;
   unsigned long u, result = fmode;
@@ -38,7 +38,7 @@ setmode()
 /* Read mnemonic or octal */
     if (scrdtk(1, (uint8_t *)ubuf, 12, oldcom))
     {
-      perror("setmode - scrdtk");
+      perror("setqmode - scrdtk");
       fputs("\r", stderr);
     bad_arg:
       fprintf(stderr, "Bad argument: %s", ubuf);

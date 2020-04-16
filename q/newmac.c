@@ -15,7 +15,6 @@
 #include <errno.h>
 #include <ctype.h>
 #include <string.h>
-#include <malloc.h>
 #include <stdlib.h>
 #include "prototypes.h"
 #include "backtick.h"

@@ -24,7 +24,7 @@ void ordch(uint8_t chr, scrbuf5 *scbuf);
 void pdsply(scrbuf5 *buf, uint8_t *prm, int pch);
 bool getlin(bool reperr, bool eofok);
 bool getnum(bool okzero, bool filpos);
-bool setmode(void);
+bool setqmode(void);
 bool tabset(scrbuf5 *scbuf);
 int newmac(void);
 bool rdlin(scrbuf5 *a1, bool aux);

@@ -1983,7 +1983,7 @@ do_fimmediate_macro(void)
 static bool
 do_fmode(void)
 {
-  return setmode();
+  return setqmode();
 }                                  /* bool do_fmode(void) */
 
 /* ******************************** do_fnone ******************************** */
