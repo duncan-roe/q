@@ -44,7 +44,10 @@ N 8 '^N^<4011> ; N 8: get the date
 N270 ^N^<4012> ; N W 8: get the date (UTC)
 N 9 '^NC^NS^N\^<PSHMODE>^ND^N^<425>^<POPMODE>^NU
 N271 ^NC^NS^N\^<PSHMODE>^ND^N^<433>^<POPMODE>^NU
-N425 ^H^NA^NL^NM^<423>^Ufv^J^ND^N^<1401>l '^ND^N^<423>'^J^NC^NU^[fb^Jg-1^Jv^Jp1^J^NU
+N425 ^H^NA^NL^NM^<423>^Ufv^J^ND^N^<1401>l '^ND^N^<423>'^J^NC^NU^[fb^J^<PS2048>^<PSHMODE>^<AND>^<SEQ>^N^<434>g-1^Jv^Jp1^N^<435>
+# N434: ^N9 when fm+r is asserted
+N434 v^Jv0^N^<435>
+N435 ^<POPN>^J^NU
 N423 /* N 9 puts token to match here
 N433 ^H^NA^N\^NE^Eg ^Jfb^Jv^Jv0^J^NU
 N ; '^NC^NS^N\^H^NE^NM ^N^<514>

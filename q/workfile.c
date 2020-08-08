@@ -760,6 +760,7 @@ forget()
   printf("%ld line%s reinstated from line %ld\r\n", fortot,
     fortot == 1 ? "" : "s", forpos);
   forpos = fortot = 0;             /* Forgotten chain now empty */
+  mods = true;                     /* File modified */
 }
 
 /* ******************************* setptr ****************************** */
