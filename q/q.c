@@ -117,7 +117,8 @@ char pcnta[PTHSIZ], *macro_dir;
 bool modify;
 uint8_t prmpt[10];
 scrbuf5 *newcom, *oldcom, *curr, *prev;
-int pchrs, fscode, argc, argno;
+int pchrs, fscode, argc, argno = 0;
+int previous_argno = -1;
 long lstlin;
 char ermess[Q_BUFSIZ], ubuf[Q_BUFSIZ], **argv, *sh;
 unsigned long dfltmode;
@@ -557,6 +558,9 @@ main(int xargc, char **xargv)
         case 'Q':                  /* Drop thru */
         case 'q':
           retcod = do_quit(recursing);
+/* do_quit() is only called from here, in lieu of lots of inline code. */
+/* The following line is part of that inline code */
+          previous_argno = -1;
           break;
 
         case 'R':
@@ -2508,7 +2512,11 @@ do_quit(bool recursing)
     !ysno5a
     ("file modified since last b-backup/s-save, ok to quit (y,n,Cr [n])",
     A5DNO))
+  {
+    if (previous_argno >= 0)
+      argno = previous_argno;
     return true;                   /* J user changed his mind */
+  }
   Tcl_DumpActiveMemory("t5mem");
   if (nofile)
   {
@@ -2527,7 +2535,7 @@ do_quit(bool recursing)
   q_new_file = false;              /* Q-QUIT into existing file */
 colontrunc:
   if (!do_stat_symlink() || !eolok())
-    return false;
+    goto reset_argno;
 try_open:
   if ((funit = open_buf(rdwr, tmode)) == -1)
   {
@@ -2547,7 +2555,7 @@ try_open:
           if (!do_stat_symlink() || !eolok())
           {
             cmd_state = RUNNING;
-            return false;
+            goto reset_argno;
           }                        /* if (!do_stat_symlink() || !eolok()) */
           goto colontrunc;         /* Try with truncated ubuf */
         }                          /* if((colonpos=strchr(ubuf,':'))&&... */
@@ -2567,7 +2575,7 @@ try_open:
       }
     }                              /* if (errno == ENOENT && !q_new_file) */
     fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
-    return false;                  /* Bad open */
+    goto reset_argno;
   }                             /* if ((funit = open_buf(rdwr, tmode)) == -1) */
 
   if (q_new_file)                  /* Have just created file for Q-QUIT */
@@ -2583,7 +2591,12 @@ try_open:
   if (q_new_file)                  /* Q-QUIT into new file */
     return true;                   /* Read next command */
   if (!E_Q_common())
+  {
+  reset_argno:
+    if (previous_argno >= 0)
+      argno = previous_argno;
     return false;
+  }                                /* if (!E_Q_common()) */
   mods = false;                    /* No mods to new file yet */
   return true;
 }                                  /* bool do_quit(void) */

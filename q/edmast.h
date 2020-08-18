@@ -30,5 +30,6 @@ extern unsigned long dfltmode;
 extern int argc;                   /* Copy of invocation arg */
 extern char **argv;                /* Copy of invocation arg */
 extern int argno;                  /* File # from cmdline (0-based) */
+extern int previous_argno;
 extern char *sh;                   /* The shell we should use */
 #endif

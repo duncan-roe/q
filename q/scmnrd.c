@@ -319,9 +319,9 @@ scmnrd()
 /* Q COMMAND MASSAGE */
   if (verb == 'Q')
   {
+    previous_argno = argno;
 /* See if command has args */
     (void)scrdtk(1, (uint8_t *)ubuf, BUFMAX, oldcom);
-/* No quotes */
     if (oldcom->toktyp == nortok && optind < argc && ubuf[0] == '$' &&
       oldcom->toklen > 1 && oldcom->bdata[oldcom->tokbeg] == '$')
     {
