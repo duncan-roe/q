@@ -33,6 +33,7 @@ macro5 *scmacs[TOPMAC + 1];
 bool mctrst, nodup;
 int curmac, mcposn, mcnxfr, immnxfr;
 struct macinfo mcstck[STKSIZ];
+int mcdtum = MCDTUM_BASE;
 
 /* ******************************** macdefw ******************************** */
 

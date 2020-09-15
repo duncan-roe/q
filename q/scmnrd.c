@@ -317,7 +317,7 @@ scmnrd()
   }
   savcurs = oldcom->bcurs;         /* Changed by disply, Q massage */
 /* Q COMMAND MASSAGE */
-  if (verb == 'Q')
+  if (verb == 'Q' && !RECURSING)
   {
     previous_argno = argno;
 /* See if command has args */

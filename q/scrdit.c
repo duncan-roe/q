@@ -825,7 +825,7 @@ static action
 ctl_n_d_ctl_n_i_common(void)
 {
   CHECK_HAS_MACCH(2);              /* Error if < 2 chars left in macro */
-  if (MCLMIT == mcnxfr)
+  if (mcnxfr == MCLMIT)
   {
     err = "Macro stack depth limit exceeded";
     ERR_IF_MAC;
@@ -1217,7 +1217,7 @@ process_pseudo(scrbuf5 *Curr, bool in_cmd)
 /* Error if < 2 chars left in macro, because it can't then do a ^NU */
       if (mcposn > scmacs[curmac]->maclen - 2)
         RANOFF_END;
-      if (mcnxfr == MCDTUM)
+      if (mcnxfr == mcdtum)
         GETNEXTCHR;                /* No-op if stack empty */
       h = curmac;                  /* Save current macro BRKPT ^NI invoked */
       m = mcposn;                  /* Save current macro position */
@@ -1262,7 +1262,7 @@ process_pseudo(scrbuf5 *Curr, bool in_cmd)
       GETNEXTCHR;
 
     case 21:                       /* ^NU - Up from a macro s/r */
-      if (mcnxfr == MCDTUM)
+      if (mcnxfr == mcdtum)
         notmac(false);             /* Treat as exit if stack empty */
       else
         ctl_n_u_ctl_n_i_common();

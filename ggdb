@@ -1,0 +1,116 @@
+#!/bin/bash -p
+# Hide shell commands from expect \
+#set -x;\
+exec expect -- "$0" "$@"
+
+proc help exitcode \
+{
+  puts "Usage: ggdb \[-a prgram_args\] \[-t controlling terminal\] program \\"
+  puts "            \[gdb command\]..."
+  exit $exitcode
+}
+
+# Set up
+# === ==
+
+#puts "$argc args: $argv"
+if {$argc == 0} \
+{
+  puts stderr "No program name supplied"
+  help 1
+}
+
+# Get options if any
+set args {}
+while {$argc > 2} \
+{
+  switch -- [string tolower [lindex $argv 0]] \
+  {
+    -a \
+    {
+      # Arguments to target program
+      set args [lindex $argv 1]
+      set argv [lreplace $argv 0 1]
+      incr argc -2
+    }
+
+    -t \
+    {
+      # Controlling tty
+      # (Cygwin can't do this via redirection on run)
+      set tty [lindex $argv 1]
+      set argv [lreplace $argv 0 1]
+      incr argc -2
+    }
+
+    -- \
+    {
+      # Code after the switch deals with this
+      break
+    }
+
+    default {break}
+  }
+}
+
+# next arg must be programe name, -h (help) or -- (edit next arg)
+if {[string equal -nocase -length 2 [lindex $argv 0] -h]} {help 0}
+if {$argc >= 2 && [lindex $argv 0] == "--" } \
+{
+  set argv [lreplace $argv 0 0]
+  incr argc -1
+}
+set progname [lindex $argv 0]
+set argv [lreplace $argv 0 0]
+incr argc -1
+if {![file exists $progname]} \
+{
+  puts stderr "No such file or directory: $progname"
+  exit 1
+}
+if {![file executable $progname] || ![file isfile $progname]} \
+{
+  puts stderr "$progname is not a program"
+  exit 1
+}
+
+# start gdb, and put in some nice settings
+spawn gdb -n -q
+expect {(gdb) }
+exp_send "file $progname\r"
+expect {(gdb) }
+exp_send "set print null-stop\r"
+expect {(gdb) }
+exp_send "set print sevenbit-strings\r"
+expect {(gdb) }
+exp_send "set print elements 0\r"
+expect {(gdb) }
+exp_send "set height 0\r"
+expect {(gdb) }
+exp_send "set print pretty\r"
+expect {(gdb) }
+exp_send "set unwindonsignal on\r"
+expect {(gdb) }
+if {[info exists tty]} \
+{
+  exp_send "set inferior-tty $tty\r"
+  expect {(gdb) }
+}
+exp_send "b main\r"
+expect {(gdb) }
+set timeout 50
+exp_send "run $args\r"
+expect {(gdb) }
+set timeout 10
+#exp_internal 1
+for {set i 0} {$i < $argc} {incr i} \
+{
+  exp_send [lindex $argv $i]\r
+  if {$i<$argc-1} \
+    {expect -re "\[(\]gdb\[)\] |\r\n>| \\(y or \\\[n\\\]\\) "}
+}                                  ;# for {set i 0} {$i < $argc} {incr i}
+interact -echo \\\\ \
+{
+  puts {}
+  exit
+}

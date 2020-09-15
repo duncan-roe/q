@@ -36,7 +36,7 @@ correction but is of course available whith ^A. These are:-
 
  L-LOCATE    Spec'd string not found        still in command mode (^NC)
  M-MODIFY    Line # off end of file              <as above>
- Y-CHANGEALL Spec'd string not found        <macro can't tell but probably
-                                                           doesn't care>
+ Y-CHANGEALL Spec'd string not found        <use ^<TSTFMOD> (as long as file
+                                                       previously unmodified)
  The first part of the error message will be output unless BRIEF (or NONE) mode
 is on.

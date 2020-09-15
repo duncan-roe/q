@@ -1,81 +1,83 @@
 When debugging Q, I find it easiest to have gdb running in one terminal session
 with all of Q's input and output going to and coming from another. Also I use
-"ggo" from the "command_line_tools" repository adjacent to that for Q.
+"ggdb" from the "command_line_tools" repository adjacent to that for Q.
 
 For the benefit of anyone who doesn't have command_line_tools installed, there
-is a copy of ggo in Q's documentation directory. You can symlink or copy this
-into your PATH, or substitute e.g. ./ggo into the template below.
+is a copy of ggdb in Q's documentation directory. You can symlink or copy this
+into your PATH, or substitute e.g. ./ggdb into the template below.
 
-ggo relies on expect. Some distributions come without expect by default. If
+ggdb relies on expect. Some distributions come without expect by default. If
 yours is one of these then you will need to install expect from the
 distribution's repository if you haven't already.
 
-In the session that is to act as Q's display, do the following:
+In the window that is to act as Q's display (the "target" window), do:
 
-> 22:10:13$ ps
->   PID TTY          TIME CMD
->  2385 pts/0    00:00:00 bash
->  4606 pts/0    00:00:00 ps
-> 13:05:42$ sleep 1000000
+> $ tty
+> /dev/pts/6
+> $ sleep 1000000  # Or, for Linux, exec disowntty
 
-Note the pts number returned by the ps command. Issue the sleep command to stop
-the shell from grabbing input.
+That 3rd line is to stop shell from grabbing input. 'sleep' always works, but
+under Linux you will get the gdb warning:
 
-In the session where you want to run gdb, do the following 2 things:
+> warning: GDB: Failed to set controlling terminal: Operation not permitted
 
-1. Enter "export my_pty={*your* pts from ps above}"
+in the target window. disowntty is in command_line_tools or get it from
+https://sourceware.org/bugzilla/show_bug.cgi?id=11403
 
-2. Select&paste the ggo template below.
-   2a. If you want to pass arguments to q, insert them after the leading
-       double-quote and followed by a space, e.g.
-         ggo q -a "myfile </dev/pts/$my_pty...
+In the window where you will run gdb (the "gdb window), 2 things to do:
+
+1. Enter e.g. "export my_tty=/dev/pts/6" (following on from the example above)
+
+2. Select & paste the ggdb template below.
+   2a. If you want to pass arguments to q, insert "-a <q_args>" after "ggdb".
+       Quote or escape spaces between multiple args, e.g.
+         ggdb -a "-b q" -t $my_tty q ...
    2b. If you want to set breakpoints or issue other gdb commands before
-       running Q, put them before the trailing "c" in the ggo command.
+       running Q, put them before the trailing "c" in the ggdb line.
        The trailing "c" is itself a gdb command to continue after hitting the
-       breakpoint which ggo always sets at "main". You need to use shell escapes
-       when setting breakpoints - see README_DEBUG_MACROS for some examples.
+       breakpoint which ggdb always sets at "main".
+       You need to use shell escapes when setting breakpoints -
+       see README_DEBUG_MACROS for some examples.
    Now touch Enter
 
 Expect to see something like the following:
 
 > spawn gdb -n -q
 > (gdb) file q
-> Reading symbols from /home/dunc/q/q/q...done.
+> Reading symbols from q...done.
 > (gdb) set print null-stop
 > (gdb) set print sevenbit-strings
 > (gdb) set print elements 0
 > (gdb) set height 0
 > (gdb) set print pretty
 > (gdb) set unwindonsignal on
+> (gdb) set inferior-tty /dev/pts/14
 > (gdb) b main
-> Breakpoint 1 at 0x403e20: file q.c, line 240.
-> (gdb) run </dev/pts/0 >/dev/pts/0 2>&1
-> Starting program: /home/dunc/q/q/q </dev/pts/0 >/dev/pts/0 2>&1
+> Breakpoint 1 at 0x40452d: file q.c, line 252.
+> (gdb) run -b q
+> Starting program: /home/dunc/q/q/q -b q
 > [Thread debugging using libthread_db enabled]
 > Using host libthread_db library "/lib64/libthread_db.so.1".
 >
-> Breakpoint 1, main (xargc=1, xargv=0x7fffffffd7b8) at q.c:240
-> 240     {
+> Breakpoint 1, main (xargc=3, xargv=0x7fffffffd7a8) at q.c:252
+> 252       bool recursing = !xargv;         /* In FR-FReprompt */
+> (gdb) set max-value-size sizeof (struct scrbuf5)
 > (gdb) c
 > Continuing.
-> Detaching after fork from child process 2417.
 
-To interrupt Q / gdb, enter ^C *in the gdb session*. Do NOT enter ^C in the Q
-display session: it will have no effect on Q but it WILL terminate sleep.
+*If* you got the gdb warning, then to interrupt Q / gdb, enter ^C *in the gdb
+window*. Do NOT enter ^C in the target window: it will have no effect on Q but
+it WILL terminate sleep. Otherwise (no gdb warning, e.g. running under Cygwin),
+enter ^C in the target window. (Under Linux with disowntty, ^C works in either
+window, but YMMV).
 
-When you have finished debugging, enter ^C in the Q display window to obtain the
-shell prompt again:
+When you have finished debugging, you *may* be able to regain use of the target
+window:-
+ - Linux / sleep: enter ^C in the target window to kill sleep
+ - Cygwin / sleep: pkill slep from another windo
+ - Linux / disowntty: you can't re-use the window, and the X button won't close
+                      it. pkill -9 disowntty to dispose of the window.
 
-> 13:05:42$ sleep 1000000
->
-> Type H for help
-> Noted screen dimensions 177 x 71
-> > u .qrc
-> > fd y /* ************************ C ************************
-> > q
-> ^C
-> 13:43:30$
-Handy template (export my_pty first):
+Handy template (export my_tty first):
 
-ggo q -a "</dev/pts/$my_pty >/dev/pts/$my_pty 2>&1" \
-"set max-value-size sizeof (struct scrbuf5)" c
+ggdb -t $my_tty q "set max-value-size sizeof (struct scrbuf5)" c

@@ -82,7 +82,7 @@ notmac(bool err)
   if (err)
   {
 /* Get out of all macros and U-USE files */
-    mcnxfr = MCDTUM;               /* No stack */
+    mcnxfr = mcdtum;               /* No stack */
     immnxfr = FIRST_IMMEDIATE_MACRO;
     for (i = 0; i <= stdidx; i++)
       stdinfo[i].frommac = false;
@@ -90,13 +90,13 @@ notmac(bool err)
   else
   {
 /* Only unwind back to the last U-USE file, if any */
-    for (; mcnxfr > MCDTUM; mcnxfr--)
+    for (; mcnxfr > mcdtum; mcnxfr--)
     {
       if (mcstck[mcnxfr - 1].u_use)
         break;
       if (mcstck[mcnxfr - 1].mcprev >= FIRST_IMMEDIATE_MACRO &&
         mcstck[mcnxfr - 1].mcprev <= LAST_IMMEDIATE_MACRO)
         immnxfr = mcstck[mcnxfr - 1].mcprev;
-    }                              /* for (; mcnxfr > MCDTUM; mcnxfr--) */
+    }                              /* for (; mcnxfr > mcdtum; mcnxfr--) */
   }                                /* if (err) else */
 }

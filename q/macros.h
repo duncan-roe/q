@@ -16,12 +16,13 @@
 
 #define STKSIZ 512                 /* Should be enough for anybody */
 #define MCLMIT STKSIZ              /* 1st entry off end of stack */
-#define MCDTUM 0                   /* No entries used yet */
+#define MCDTUM_BASE 0              /* No entries used yet */
 #define TOPMAC 2047                /* Highest available macro */
 #define FIRST_PSEUDO 64            /* First macro shadowed by pseudos */
 #define LAST_PSEUDO 127            /* Last macro shadowed by pseudos */
 #define FIRST_IMMEDIATE_MACRO (FIRST_PSEUDO + 1)
 #define LAST_IMMEDIATE_MACRO (FIRST_PSEUDO + 15)
+#define RECURSING (mcdtum != MCDTUM_BASE)
 
 /* Typedefs */
 
@@ -50,6 +51,7 @@ extern int curmac;                 /* Macro being expanded */
 extern int mcposn;                 /* Pos'n in macro */
 extern int mcnxfr;                 /* Index of next free entry in stack */
 extern int immnxfr;                /* Next free slot for an immediate macro */
+extern int mcdtum;                 /* Bottom frame for recursion level */
 
 /* Prototypes */
 

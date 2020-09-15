@@ -39,7 +39,7 @@ sinitl()
   tabs[2].value = 72;
   mctrst = false;
   curmac = -1;
-  mcnxfr = MCDTUM;                 /* Empty stack so far */
+  mcnxfr = mcdtum;                 /* Empty stack so far */
   immnxfr = FIRST_IMMEDIATE_MACRO;
   cmsplt = false;                  /* No split command yet */
 }
