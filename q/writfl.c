@@ -40,6 +40,7 @@ writfl(long wrtnum)
   uint8_t *p, *q, thisch;
   short tabfnd, spacnt, chrpos;
   int inindent;                    /* Inside indenting whitespace */
+  const bool fm_plus_y = fmode & 04000000;
 /*
  * Initialise
  */
@@ -75,7 +76,7 @@ writfl(long wrtnum)
     tabfnd = 0;                    /* Not seen a real tab yet */
     chrpos = 0;                    /* At line start */
 /* In putative w/s at line start, if we care */
-    inindent = fmode & 040000;
+    inindent = fmode & 040000;     /* fm+l asserted */
 /*
  * Inner loop for this line
  */
@@ -90,7 +91,7 @@ writfl(long wrtnum)
 /* If on 8-char bdry & have spaces */
         if (!(chrpos % tabsiz) && spacnt)
         {
-          if (spacnt == 1)
+          if (spacnt == 1 && !fm_plus_y)
             STC(SPACE);
           else
             STC('\t');
@@ -121,7 +122,7 @@ writfl(long wrtnum)
       {
         if (!(chrpos % tabsiz))
         {
-          if (spacnt == 1)
+          if (spacnt == 1 && !fm_plus_y)
             STC(SPACE);
           else
             STC('\t');

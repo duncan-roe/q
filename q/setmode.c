@@ -181,6 +181,10 @@ setqmode()
           u = 02000000;
           break;
 
+        case 'Y':                  /* Store tab for single-space on boundary */
+          u = 04000000;
+          break;
+
         default:
           printf("Warning - unrecognised %s ignored\r\n", ubuf);
           continue;
@@ -304,6 +308,10 @@ show_current(unsigned long mode)
   c = mode & 02000000 ? '+' : '-';
   putchar(c);
   putchar('x');
+  fputs(", ", stdout);
+  c = mode & 04000000 ? '+' : '-';
+  putchar(c);
+  putchar('y');
   fputs("\r\n", stdout);
   switch ((int)(mode >> 30 & 3))
   {

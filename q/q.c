@@ -366,7 +366,7 @@ main(int xargc, char **xargv)
         }                          /* switch (e_state) */
         if (e_state == GIVE_UP)
           break;
-        SYSCALL(i, open_buf(O_RDONLY, 0));
+        i = open_buf(O_RDONLY, 0);
         if (i != -1)
           break;
         e_state++;
@@ -2413,7 +2413,7 @@ do_newmacro(void)
       else
       {
         SYSCALL(i, close(1));
-        SYSCALL(i, open_buf(O_WRONLY | O_CREAT | O_TRUNC, 0666));
+        i = open_buf(O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (i == 1)
         {
           lstmac();
@@ -2664,19 +2664,19 @@ do_usefile(void)
 
 /* Save current stdin */
   stdidx++;
-  SYSCALL(stdinfo[stdidx].funit, dup(0));
+  SYSCALL(stdinfo[stdidx].funit, dup(STDIN5FD));
   if (stdinfo[stdidx].funit == -1)
   {
     stdidx--;
-    fprintf(stderr, "%s. (dup(0))", strerror(errno));
+    fprintf(stderr, "%s. (dup(STDIN5FD))", strerror(errno));
     return false;
   }                                /* if (stdinfo[stdidx].funit == -1) */
 
-/* Close funit 0 */
-  SYSCALL(i, close(0));
+/* Close stdin */
+  SYSCALL(i, close(STDIN5FD));
 
 /* Open new input source */
-  SYSCALL(i, open_buf(O_RDONLY, 0));
+  i = open_buf(O_RDONLY, STDIN5FD);
   if (i == -1)
   {
     pop_stdin();
@@ -2684,13 +2684,13 @@ do_usefile(void)
     return false;
   }                                /* if (i == -1) */
 
-/* Verify new input opened on funit 0. Try to rectify if not */
+/* Verify new input opened on STDIN5FD. Try to rectify if not */
   if (i)
   {
-    SYSCALL(j, dup2(i, 0));
+    SYSCALL(j, dup2(i, STDIN5FD));
     if (j == -1)
     {
-      fprintf(stderr, "%s.(dup2(%d, 0))", strerror(errno), i);
+      fprintf(stderr, "%s.(dup2(%d, STDIN5FD))", strerror(errno), i);
       SYSCALL(j, close(i));
       pop_stdin();
       return false;

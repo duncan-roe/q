@@ -36,6 +36,7 @@ than one mode: for instance "d" affects dr & dw.
  00000400000 w        Warn if overwriting nonzero memory                      -
  00001000000 a        ^G/^NG <space> matches Any whitespace char              +
  00002000000 x        eXclusive L & FL: find next line not matching           -
+ 00004000000 y        single space -> TAB (see TAB compression below)         -
  10000000000 FB cmnd  FBRIEF command asserted                           verbose
  30000000000 FN cmnd  FNONE command asserted                            verbose
  00000000000 FV cmnd  FVERBOSE command asserted                         verbose
@@ -63,6 +64,9 @@ position is 0, they are at 8, 16, 24 &c.: i.e. multiples of 8). The tab mode on
 reading expands these to spaces. The tab mode on writing compresses multiple
 spaces to tabs assuming the above tab settings. On writing, if an actual tab
 character is found in a line, compression stops for the rest of that line.
+Some tab-compressing algorithms output a tab when only a single space abuts the
+next tab boundary. Q has no way of knowing whether a file was created using that
+algorithm, so guesses to output a space. If 'fm +y' is asserted, Q puts a tab.
 The assumed tab spacing can be varied (by x;t <n>;x or ALU opcode ^<POPTBSZ>).
 Mode l expands and compresses *leading* tabs only
 (conversion stops as soon as any non-tab is found).

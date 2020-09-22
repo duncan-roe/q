@@ -14,47 +14,50 @@ free to skip on to the PREPARATION section below.
 
 When debugging Q, I find it easiest to have gdb running in one terminal session
 with all of Q's input and output going to and coming from another. Also I use
-"ggo" from the "command_line_tools" repository adjacent to that for Q.
+"ggdb" from the "command_line_tools" repository adjacent to that for Q.
 
 For the benefit of anyone who doesn't have command_line_tools installed, there
-is a copy of ggo in Q's documentation directory. You can symlink or copy this
-into your PATH, or substitute e.g. ./ggo into the template below.
+is a copy of ggdb in Q's documentation directory. You can symlink or copy this
+into your PATH, or substitute e.g. ./ggdb into the template below.
 
-ggo relies on expect. Some distributions come without expect by default. If
+ggdb relies on expect. Some distributions come without expect by default. If
 yours is one of these then you will need to install expect from the
 distribution's repository if you haven't already.
 
-In the session that is to act as Q's display, do the following:
+In the window that is to act as Q's display (the "target" window), do:
 
-> 22:10:13$ ps
->   PID TTY          TIME CMD
->  2385 pts/0    00:00:00 bash
->  4606 pts/0    00:00:00 ps
-> 13:05:42$ sleep 1000000
+> $ tty
+> /dev/pts/6
+> $ sleep 1000000  # Or, for Linux, exec disowntty
 
-Note the pts number returned by the ps command. Issue the sleep command to stop
-the shell from grabbing input.
+That 3rd line is to stop shell from grabbing input. 'sleep' always works, but
+under Linux you will get the gdb warning:
 
-In the session where you want to run gdb, do the following 3 things:
+> warning: GDB: Failed to set controlling terminal: Operation not permitted
 
-1. (Assuming you plan to run the tutorial example) go to Q's doc dir, e.g.
-   cd /usr/local/share/doc/q
+in the target window. disowntty is in command_line_tools or get it from
+https://sourceware.org/bugzilla/show_bug.cgi?id=11403
 
-2. Enter "export my_pty={*your* pts from ps above}"
+In the window where you will run gdb (the "gdb window), 3 things to do:
 
-3. Select&paste one of the ggo templates in this document. If ggo isn't
+1. (Assuming you plan to run the tutorial example) go to Q's doc dir,
+   i.e. the directory containing this README
+
+2. Enter e.g. "export my_tty=/dev/pts/6" (following on from the example above)
+
+3. Select & paste one of the ggdb templates in this document. If ggdb isn't
    installed, reference the copy in Q's doc dir.
    This step is covered in the tutorial, no need to do it right now.
 
 PREPARATION
 ===========
 
-As well as the gdb and Q display sessions mentioned above (or in README_DEBUG),
+As well as the gdb and target windows mentioned above (or in README_DEBUG),
 you will want a session where you can browse the currently loaded macro table.
 Recommended is "qm -a" piped into "less". Qm's "-a" (alternate format) option
 displays all macro names in octal, the way gdb shows them.
 
-For best results, the Q display session should be at least 88 characters wide.
+For best results, the target window should be at least 88 characters wide.
 
 In general you won't need another terminal session in which to examine source.
 In fact, these instructions work when source is not available.
@@ -72,7 +75,7 @@ TUTORIAL
 
 This tutorial debugs the ^N^A macro in the word.qm system macro set.
 The macro aligns text to fit inside tab 2.
-It starts the most complex macro program in the Q distribution.
+It starts one of the most complex macro programs in the Q distribution.
 
 This tutorial uses files in Q's documentation directory (a.k.a. Q's doc dir).
 The location of this directory depends on how Q was installed:
@@ -90,44 +93,44 @@ If cd'd elsewhere, prepend the path of help_dot_qrc
 The ^N^A macro is defined on the line starting "N A ..." in word.qm,
 and shows up as line 1 in the macro table (macro 001).
 
-ggo comes with command_line_tools but if you don't have that then there is a
+ggdb comes with command_line_tools but if you don't have that then there is a
 copy in Q's doc dir. The tutorial template uses this copy.
 
 The file macro_debug_sample exercises the ^N^A macro suite.
 If you have write access to macro_debug_sample, it would be preferable to
 make a copy and work on that.
-Either "export j=macro_debug_sample" before running ggo or enter
+Either "export j=macro_debug_sample" before running ggdb or enter
 "q macro_debug_sample" in the Q session.
 (If you are interested in some other file, use that file instead).
 
 RUN A SESSION
 === = =======
 
-Using the templates below, export variables and issue the ggo command.
+Using the templates below, export variables and issue the ggdb command.
 Q will start in your debug window. Optionally, set up your macro table window as
-per PREPARATION above.
+per TUTORIAL above.
 
-export my_pty=   # Complete this from ps output
+export my_tty=   # Complete this from tty output
 export j=macro_debug_sample
 export k=help_dot_qrc
-./ggo $(type -p q) -a \
-  "$([ -n "$k" ] && echo "-n -iu,$k^J" || echo "-i")fv^Jfm+v^J $j \
-  </dev/pts/$my_pty >/dev/pts/$my_pty 2>&1" \
-  b\ scrdit.c:1621 commands silent "echo starting macro" p/o\ thisch end \
+./ggdb -t $my_tty -a \
+  "$([ -n "$k" ] && echo "-n -iu,$k^J" || echo "-i")fv^Jfm+v^J $j" \
+  $(type -p q) \
+  b\ scrdit.c:1620 commands silent "echo starting macro" p/o\ thisch end \
   "cond 2 (thisch < 0101 || thisch > 0132) && thisch < 04000 && thisch != 255" \
-  b\ scrdit.c:1223 commands silent "echo ^NI invoked\\n" end \
+  b\ scrdit.c:1222 commands silent "echo ^NI invoked\\n" end \
   "set max-value-size sizeof (struct scrbuf5)" \
-  b\ scrdit.c:864 commands silent "echo resuming macro" p/o\ i end \
+  b\ scrdit.c:863 commands silent "echo resuming macro" p/o\ i end \
   'cond 4 verb != '"'I' && (curmac < FIRST_PSEUDO || curmac > LAST_PSEUDO)" c
 
-In the Q display window, enter "v" to view the file you are working on. If it's
+In the target window, enter "v" to view the file you are working on. If it's
 empty (so you didn't export j as the file to edit) you can edit the file now by
 entering "q macro_debug_sample".
 
 START DEBUGGING
 ===== =========
 
-In the Q display window, type Control-N followed by Control-A (^N^A).
+In the target window, type Control-N followed by Control-A (^N^A).
 Observe in the gdb window there is the new message "starting macro$1 = 01".
 "$1 = " is an artifact of gdb which I couldn't eliminate - try to ignore it and
 read the message as "starting macro 01".
@@ -162,7 +165,7 @@ Observe that N1001 called N4000 but gdb didn't tell us that. Macros in the low
 actions are also documented in "h pm" (NOT NOW...:).
 Unlike regular pseudomacros, active pseudos execute the action of ^NU on
 completion so can be called using ^ND.
-The ggo command template above assumes you don't want to see calls to
+The ggdb command template above assumes you don't want to see calls to
 pseudomacros (you wouldn't see returns from them anyway) by the gdb command
   cond 2 (thisch < 0101 || thisch > 0132) && thisch < 04000
 The ALU opcodes occupy the higher part of the 04000 range and it's possible you
@@ -235,7 +238,7 @@ COMMAND TEMPLATES
 
 (The sample exports for j & k assume CWD is ${doc_prefix}/q)
 
-(The ggo template below shows ^N^@ (restart current macro) as a call to macro 0.
+(The ggdb template below shows ^N^@ (restart current macro) as a call to macro 0.
  If you would prefer to see it as a call to the actual macro, change
   p/o\ thisch
  to
@@ -248,7 +251,7 @@ export k as the rc file with which q should start (e.g. export k=help_dot_qrc)
   (if k is not set, Q uses its default startup file)
 sleep 100000
 
-ggo $(type -p q) -a \
+ggdb $(type -p q) -a \
   "$([ -n "$k" ] && echo "-n -iu,$k^J" || echo "-i")fv^Jfm+v^J $j \
   </dev/pts/$my_pty >/dev/pts/$my_pty 2>&1" \
   b\ scrdit.c:1621 commands silent "echo starting macro" p/o\ thisch end \

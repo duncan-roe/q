@@ -12,4 +12,4 @@ regular files are fine.
 The file "xxx" is provided as input.
 The command below uses that and creates the file /tmp/yyy.
 
-ggo q -a "-iy,x,y^J <xxx >/tmp/yyy"
+ggdb -a "-iy,x,y^J <xxx >/tmp/yyy" q
