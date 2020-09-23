@@ -40,21 +40,21 @@ https://sourceware.org/bugzilla/show_bug.cgi?id=11403
 
 In the window where you will run gdb (the "gdb window), 3 things to do:
 
-1. (Assuming you plan to run the tutorial example) go to Q's doc dir,
+1. (Assuming you plan to run the tutorial example) cd to Q's doc dir,
    i.e. the directory containing this README
 
 2. Enter e.g. "export my_tty=/dev/pts/6" (following on from the example above)
 
-3. Select & paste one of the ggdb templates in this document. If ggdb isn't
-   installed, reference the copy in Q's doc dir.
+3. Select & paste the export and ggdb templates in this document. ggdb doesn't
+   need to be installed, the template uses the copy in Q's doc dir.
    This step is covered in the tutorial, no need to do it right now.
 
 PREPARATION
 ===========
 
 As well as the gdb and target windows mentioned above (or in README_DEBUG),
-you will want a session where you can browse the currently loaded macro table.
-Recommended is "qm -a" piped into "less". Qm's "-a" (alternate format) option
+you will want a window where you can browse the currently loaded macro table.
+Recommended is "qm -a" piped into "less". qm's "-a" (alternate format) option
 displays all macro names in octal, the way gdb shows them.
 
 For best results, the target window should be at least 88 characters wide.
@@ -83,7 +83,7 @@ the "make install" default is /usr/local/share/doc/q.
 You should run your gdb session cd'd to this directory. From now on, files
 without pathnames are in that directory.
 
-Your macro browsing session can be cd'd anywhere, but it's simplest to have it
+Your macro browsing window can be cd'd anywhere, but it's simplest to have it
 also cd'd to Q's doc dir. Assuming that, enter:
   qm -a help_dot_qrc | less
 to browse the macros that the tutorial will load.
@@ -100,7 +100,7 @@ The file macro_debug_sample exercises the ^N^A macro suite.
 If you have write access to macro_debug_sample, it would be preferable to
 make a copy and work on that.
 Either "export j=macro_debug_sample" before running ggdb or enter
-"q macro_debug_sample" in the Q session.
+"q macro_debug_sample" in the target window.
 (If you are interested in some other file, use that file instead).
 
 RUN A SESSION
@@ -110,6 +110,22 @@ Using the templates below, export variables and issue the ggdb command.
 Q will start in your debug window. Optionally, set up your macro table window as
 per TUTORIAL above.
 
+The ggdb template below shows ^N^@ (restart current macro) as a call to macro 0.
+If you would prefer to see it as a call to the actual macro, change
+ p/o\ thisch
+to
+ "p/o thisch ? thisch : curmac"
+in the "starting macro" breakpoint.
+
+--- Target Window
+tty
+sleep 1000000
+exec disowntty
+
+--- Macro Browsing Window
+qm -a help_dot_qrc | less
+
+--- gdb Window
 export my_tty=   # Complete this from tty output
 export j=macro_debug_sample
 export k=help_dot_qrc
@@ -161,7 +177,7 @@ This tells you that N1001 or some macro it jumped to has issued ^NU.
 Before moving on, take a look at the definition of N1001 in the macro table
 (key /^1001 into the browsing window, assuming you are using less).
 Observe that N1001 called N4000 but gdb didn't tell us that. Macros in the low
-04000's are what is called "active pseudomacros" or "active pseodos". Their
+04000's are what is called "active pseudomacros" or "active pseudos". Their
 actions are also documented in "h pm" (NOT NOW...:).
 Unlike regular pseudomacros, active pseudos execute the action of ^NU on
 completion so can be called using ^ND.
@@ -184,6 +200,7 @@ and other macros jump to is the main objective of the debug session.
 
 <Enter> shows that N701 jumps to N702 in this instance. Line 1 of the sample
 file was not empty and did not start with "> " (assumed quoted email line).
+[N701 only checks line starts '>'; N700 checks next char is ' '].
 
 In fact line 1 is a single word of length > desired maximum line length. This
 line is left unaltered, as we will see next.
@@ -192,7 +209,7 @@ N702 sets the cursor position according to whether line length is more than
 desired maximum (as determined by putting cursor at last character in line and
 seeing whether it is past tab 2).
   702 ^Z^Y^NP2^H^F^F^N^<704> ;New line:- first see if not too long
-  ^NP2 obeys next 2 chars iff cursor is past tab 2 as it will be
+  ^NP2 obeys next 2 chars iff cursor is past tab 2 as it will be.
 On a short line, it leaves the cursor at line end (after the last character).
 On a long line, it leaves the cursor on the first character of the 3rd word in
 the line. If there are < 3 words in the line, the cursor will also be at line
@@ -206,8 +223,30 @@ N702 now jumps to N704, which is a looping macro
     were to be renumbered whereas ^N^@ would keep working as before.
 N704 leaves the cursor at line end if that's where it is, otherwise moves it
 back one character (because it will be on the first character of a word and the
-program wants it on the preceding space).
-If the cursor is now after tab 2, jump to N705.
+program wants it on the preceding space). This accomplished by
+  ^NA^NS^Y^@
+    ^NA : Obey next 2 chars iff (cursor) at line end
+         (i.e. obey next 2 chars if at line end else skip them)
+    ^NS : Skip next 2 chars
+    ^Y  : Move cursor back 1
+    ^@  : NUL, ignored by Q unless preceded by ^N (next char is macro id),
+          ^P (next char is literal) or ^W (next char is literal parity-high).
+      ^@ is required as padding, to make up the 2 chars that ^NS skips.
+If the cursor is after tab 2 (whether still at end of line or not),
+jump to N705. ^NP2^N^<705> does this:
+  ^NP2     : Obey next 2 chars iff past tab 2. There are 80 available tabs,
+             each identified by a single ASCII char ('2' in this case).
+             For a list of all 80, type 'H AS" (in a separate Q window or after
+             debugging finishes).
+  ^N^<705> : Jump to macro 705
+If still at end of line (because we left the cursor there earlier), we now know
+it is not past tab 2 so this line is within the length limit:
+jump to macro 707. ^NA^N^<707> does this.
+We didn't jump, so move forward one word and do it all again: ^F^F^N^@
+  ^F   : Word forward to the word we were at the start of before we did the ^Y.
+         Probably ^X (character forward) would work instead, but I coded ^F.
+  ^F   : Word forward to the next word (or to end of line).
+  ^N^@ : Jump to the start of the current macro.
 
 <Enter> indeed shows a jump to N705
   705 ^B^NP1^NS^N^<701>^?^T^N^<702>
@@ -232,31 +271,3 @@ Of course, you can simple enter "q" in the gdb window.
 Instead, if you want to leave the session running but skip the rest of the
 currently debugged macro, enter "disa" to disable breakpoints. Then "c" will
 get you the Q prompt.
-
-COMMAND TEMPLATES
-======= =========
-
-(The sample exports for j & k assume CWD is ${doc_prefix}/q)
-
-(The ggdb template below shows ^N^@ (restart current macro) as a call to macro 0.
- If you would prefer to see it as a call to the actual macro, change
-  p/o\ thisch
- to
-  "p/o thisch ? thisch : curmac"
- in the "starting macro" breakpoint).
-
-export my_pty as the tty as in README_DEBUG
-export j as the file to edit (if you have one)(e.g. export j=macro_debug_sample)
-export k as the rc file with which q should start (e.g. export k=help_dot_qrc)
-  (if k is not set, Q uses its default startup file)
-sleep 100000
-
-ggdb $(type -p q) -a \
-  "$([ -n "$k" ] && echo "-n -iu,$k^J" || echo "-i")fv^Jfm+v^J $j \
-  </dev/pts/$my_pty >/dev/pts/$my_pty 2>&1" \
-  b\ scrdit.c:1621 commands silent "echo starting macro" p/o\ thisch end \
-  "cond 2 (thisch < 0101 || thisch > 0132) && thisch < 04000 && thisch != 255" \
-  b\ scrdit.c:1223 commands silent "echo ^NI invoked\\n" end \
-  "set max-value-size sizeof (struct scrbuf5)" \
-  b\ scrdit.c:864 commands silent "echo resuming macro" p/o\ i end \
-  'cond 4 verb != '"'I' && (curmac < FIRST_PSEUDO || curmac > LAST_PSEUDO)" c

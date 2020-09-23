@@ -74,7 +74,7 @@ window, but YMMV).
 When you have finished debugging, you *may* be able to regain use of the target
 window:-
  - Linux / sleep: enter ^C in the target window to kill sleep
- - Cygwin / sleep: pkill slep from another windo
+ - Cygwin / sleep: pkill sleep from another window
  - Linux / disowntty: you can't re-use the window, and the X button won't close
                       it. pkill -9 disowntty to dispose of the window.
 
