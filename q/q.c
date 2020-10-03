@@ -175,6 +175,7 @@ static char *initial_command = NULL;
 static bool P, Q;                 /* For determining whether we are in a pipe */
 static bool errflg = false;        /* Illegal switch seen */
 static bool fq_from_fr;
+static bool q_from_fr;
 
 /* Static prototypes */
 
@@ -571,8 +572,11 @@ main(int xargc, char **xargv)
 /* do_quit() is only called from here, in lieu of lots of inline code. */
 /* The following is part of that inline code */
           previous_argno = -1;
-          if (retcod && recursing)
+          if (q_from_fr)
+          {
+            q_from_fr = false;
             return 0;              /* To do_freprompt() */
+          }                        /* if (q_from_fr) */
 
           break;
 
@@ -2539,6 +2543,7 @@ do_quit(bool recursing)
   if (recursing)
   {
     fq_from_fr = verb == 'q';
+    q_from_fr = true;
     return true;
   }                                /* if (recursing) */
 
