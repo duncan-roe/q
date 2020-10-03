@@ -1,7 +1,7 @@
 /* M A C D E F . C
  *
  * Copyright (C) 1994 Duncan Roe & Associates P/L
- * Copyright (C) 2012-2014,2017,2019 Duncan Roe
+ * Copyright (C) 2012-2014,2017,2019-2020 Duncan Roe
  *
  * This routine carries out the definition of a macro. Most of the work
  * is done by MACDEFW - all we do here is expand to 1 character / short

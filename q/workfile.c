@@ -1,6 +1,6 @@
 /* W O R K F I L E
  *
- * Copyright (C) 2012,2014,2018,2019 Duncan Roe
+ * Copyright (C) 2012,2014,2018-2020 Duncan Roe
  *
  * Dual-mode Workfile System
  * ========= ======== ======

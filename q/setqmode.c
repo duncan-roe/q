@@ -1,7 +1,7 @@
 /* S E T M O D E
  *
  * Copyright (C) 1994,1995 Duncan Roe & Associates P/L
- * Copyright (C) 2003,2012,2014,2017-2019 Duncan Roe
+ * Copyright (C) 2003,2012,2014,2017-2020 Duncan Roe
  *
  * This routine manipulates the fmode bit settings */
 

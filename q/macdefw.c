@@ -1,7 +1,7 @@
 /* M A C D E F W . C
  *
  * Copyright (C) 1994, Duncan Roe & Associates P/L
- * Copyright (C) 2012-2014,2019 Duncan Roe
+ * Copyright (C) 2012-2014,2019-2020 Duncan Roe
  *
  * This routine carries out the definition of a macro. Storage is
  * acquired if necessary - if inadequate storage was previously assigned

@@ -2,7 +2,7 @@
  *
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2002,2007,2012-2019 Duncan Roe
+ * Copyright (C) 2002,2007,2012-2020 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -31,6 +31,7 @@
 #include "isacharspecial.h"
 #include "prototypes.h"
 #include "backtick.h"
+#include "cmndcmmn.h"
 #include "edmast.h"
 #include "macros.h"
 #include "q_pipe.h"
@@ -44,6 +45,7 @@
 #define PIPE_NAME "/tmp/qpipeXXXXXX"
 #define REVRSE (fmode & 04000)
 #define PRINTF_IGNORED printf("f%c ignored (mode +v)\r\n", verb)
+#define RESET_ARGNO goto reset_argno
 
 /* Typedefs */
 
@@ -172,9 +174,11 @@ static qrc_state e_state = LOCAL;
 static char *initial_command = NULL;
 static bool P, Q;                 /* For determining whether we are in a pipe */
 static bool errflg = false;        /* Illegal switch seen */
+static bool fq_from_fr;
 
 /* Static prototypes */
 
+static bool do_freprompt(void);
 static bool check_pipe(void);
 static void not_pipe(void);
 static void do_initial_tsks(bool *do_rc_p);
@@ -251,6 +255,7 @@ main(int xargc, char **xargv)
 {
   bool recursing = !xargv;         /* In FR-FReprompt */
   bool do_rc = !recursing;
+  bool cmd_reread = false;
 
 /* [Re-]initialise static variables */
 
@@ -393,104 +398,108 @@ main(int xargc, char **xargv)
 
   for (;;)
   {
-    if ((!USING_FILE && curmac < 0) || cmd_state > LINE_NUMBER_BASE)
+    if (cmd_reread)
+      cmd_reread = false;
+    else
     {
-      bool printf_wanted = true;
-      bool oldcom_done = false;
-
-      switch (cmd_state)
+      if ((!USING_FILE && curmac < 0) || cmd_state > LINE_NUMBER_BASE)
       {
-        case TRY_INITIAL_COMMAND:
-          cmd_state = RUNNING;
-          if (initial_command != NULL)
-          {
-            oldcom->bchars =
-              snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "fi %s",
-              initial_command);
-            initial_command = NULL;
-            verb = 'i';
-            oldcom->bcurs = 3;
+        bool printf_wanted = true;
+        bool oldcom_done = false;
+
+        switch (cmd_state)
+        {
+          case TRY_INITIAL_COMMAND:
+            cmd_state = RUNNING;
+            if (initial_command != NULL)
+            {
+              oldcom->bchars =
+                snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "fi %s",
+                initial_command);
+              initial_command = NULL;
+              verb = 'i';
+              oldcom->bcurs = 3;
+              break;
+            }                      /* if (initial_command != NULL) */
+
+          case RUNNING:            /* Drop thru */
+            sccmnd();              /* Read a command; set VERB */
+            printf_wanted = false;
             break;
-          }                        /* if (initial_command != NULL) */
 
-        case RUNNING:              /* Drop thru */
-          sccmnd();                /* Read a command; set VERB */
-          printf_wanted = false;
-          break;
-
-        case Q_ARG1:
+          case Q_ARG1:
 
 /* Q-quit into the first file on the command line. Pagers (e.g. less) may
  * precede this with +<line#> so deal with this too. Cause command to be
  * actioned & displayed by setting up oldcom, also set up "verb" since sccmd is
  * not being called */
 
-          if (piping)
-            cmd_state = TRY_INITIAL_COMMAND;
-          else
+            if (piping)
+              cmd_state = TRY_INITIAL_COMMAND;
+            else
 /* assume if the first arg starts "+" and there is at least 1 more arg then the
  * first arg is a line number */
-          {
-            if (**(argv + optind) == '+' && strlen(*(argv + optind)) > 1 &&
-              argc - optind >= 2)
             {
-              optind++;            /* "hide" +# arg */
-              cmd_state = LINE_NUMBER_SAVED; /* Have a +# arg */
-            }                      /* if(**(argv+optind)=='+'&&... */
-            else
-              cmd_state = TRY_INITIAL_COMMAND;
-          }                        /* if (!piping) */
+              if (**(argv + optind) == '+' && strlen(*(argv + optind)) > 1 &&
+                argc - optind >= 2)
+              {
+                optind++;          /* "hide" +# arg */
+                cmd_state = LINE_NUMBER_SAVED; /* Have a +# arg */
+              }                    /* if(**(argv+optind)=='+'&&... */
+              else
+                cmd_state = TRY_INITIAL_COMMAND;
+            }                      /* if (!piping) */
 
 /* Open the file whether line number supplied or not */
-          oldcom->bchars =
-            snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "q %s",
-            piping ? pipe_temp_name : *(argv + optind));
-          verb = 'Q';
-          oldcom->bcurs = 2;
-          if (piping)
-            atexit(write_workfile_to_stdout);
-          break;
+            oldcom->bchars =
+              snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "q %s",
+              piping ? pipe_temp_name : *(argv + optind));
+            verb = 'Q';
+            oldcom->bcurs = 2;
+            if (piping)
+              atexit(write_workfile_to_stdout);
+            break;
 
 /* The line number states are used on "q file:line",
  * either initially or any time subsequently.
  * They are also used on an initial "q +line file". */
 
-        case LINE_NUMBER_BASE:
-          fprintf(stderr, "Illegal command state in %s:%d\r\n", __FILE__,
-            __LINE__);
-          exit(1);
+          case LINE_NUMBER_BASE:
+            fprintf(stderr, "Illegal command state in %s:%d\r\n", __FILE__,
+              __LINE__);
+            exit(1);
 
-        case LINE_NUMBER_SAVED:
-          oldcom->bchars =
-            snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "g %s",
-            *(argv + optind - 1) + 1);
-          oldcom_done = true;      /* Drop thru */
-
-        case HAVE_LINE_NUMBER:
-          if (!oldcom_done)
+          case LINE_NUMBER_SAVED:
             oldcom->bchars =
-              snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "g %d",
-              colonline);
-          cmd_state = DO_V_NEXT;
-          verb = 'G';
-          oldcom->bcurs = 2;
-          break;
+              snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "g %s",
+              *(argv + optind - 1) + 1);
+            oldcom_done = true;    /* Drop thru */
 
-        case DO_V_NEXT:
-          cmd_state = TRY_INITIAL_COMMAND;
-          oldcom->bchars = 1;
-          oldcom->bdata[0] = 'v';
-          oldcom->bdata[1] = 0;
-          verb = 'V';
-          oldcom->bcurs = 1;
-          break;
-      }                            /* switch(cmd_state) */
-      if (printf_wanted)
-        printf("> %s\r\n", oldcom->bdata);
-    }                             /* if ((!USING_FILE && curmac < 0) || ... ) */
-    else
-      sccmnd();                    /* Read a command; set VERB */
-  cmd_reread:
+          case HAVE_LINE_NUMBER:
+            if (!oldcom_done)
+              oldcom->bchars =
+                snprintf((char *)oldcom->bdata, sizeof oldcom->bdata, "g %d",
+                colonline);
+            cmd_state = DO_V_NEXT;
+            verb = 'G';
+            oldcom->bcurs = 2;
+            break;
+
+          case DO_V_NEXT:
+            cmd_state = TRY_INITIAL_COMMAND;
+            oldcom->bchars = 1;
+            oldcom->bdata[0] = 'v';
+            oldcom->bdata[1] = 0;
+            verb = 'V';
+            oldcom->bcurs = 1;
+            break;
+        }                          /* switch(cmd_state) */
+        if (printf_wanted)
+          printf("> %s\r\n", oldcom->bdata);
+      }                           /* if ((!USING_FILE && curmac < 0) || ... ) */
+      else
+        sccmnd();                  /* Read a command; set VERB */
+    }                              /* if (cmd_reread) else */
     retcod = true;
     if (cntrlc)                    /* There has been a ^C or BRK */
     {
@@ -558,9 +567,13 @@ main(int xargc, char **xargv)
         case 'Q':                  /* Drop thru */
         case 'q':
           retcod = do_quit(recursing);
+
 /* do_quit() is only called from here, in lieu of lots of inline code. */
-/* The following line is part of that inline code */
+/* The following is part of that inline code */
           previous_argno = -1;
+          if (retcod && recursing)
+            return 0;              /* To do_freprompt() */
+
           break;
 
         case 'R':
@@ -656,6 +669,10 @@ main(int xargc, char **xargv)
           retcod = do_fdevnull();
           break;
 
+        case 'r':                  /* "FR"eprompt (calls q recursively) */
+          retcod = do_freprompt();
+          break;
+
         default:                   /* Coding error if we get here */
           fputs("unknown command", stdout);
           retcod = false;
@@ -670,7 +687,7 @@ main(int xargc, char **xargv)
         optind--;
       }                            /* if (cmd_state == LINE_NUMBER_SAVED) */
       rerdcm();
-      goto cmd_reread;
+      cmd_reread = true;
     }                              /* if (!retcod) */
   }                                /* for(;;) */
 }                                  /* main() */
@@ -882,6 +899,7 @@ static bool
 do_b_or_s(bool is_b)
 {
   bool bspar;                      /* BACKUP/SAVE had a param */
+  bool new_bkup_file = false;
 
   savpos = ptrpos;                 /* So we can leave pos'n same at end */
   setptr((long)1);                 /* Pos'n 1st line */
@@ -932,19 +950,26 @@ do_b_or_s(bool is_b)
       if (bspar && errno == ENOENT)
       {
         puts("New file - no backup taken\r");
-        goto new_bkup_file;
-      }                            /* if(bspar&&(errno==ENOENT)) */
-      fprintf(stderr, "%s. %s to %s (rename)", strerror(errno), ubuf, tmfile);
-      my_close(funit);             /* In case anything left open */
-      return false;                /* Get corrected command */
+        new_bkup_file = true;
+      }                            /* if (bspar && errno == ENOENT) */
+      else
+      {
+        fprintf(stderr, "%s. %s to %s (rename)", strerror(errno), ubuf, tmfile);
+        my_close(funit);           /* In case anything left open */
+        return false;              /* Get corrected command */
+      }                            /* if (bspar && errno == ENOENT) else */
     }                              /* if (rename(ubuf, tmfile)) */
 /*
  * File renamed - now open new file of same type as original
  */
-    rdwr = O_WRONLY + O_CREAT + O_EXCL; /* Must be new file */
-    if (is_b)
-      printf("Backup file is %s\r\n", tmfile); /* Report backup f/n */
-  new_bkup_file:
+    if (new_bkup_file)
+      new_bkup_file = false;
+    else
+    {
+      rdwr = O_WRONLY + O_CREAT + O_EXCL; /* Must be new file */
+      if (is_b)
+        printf("Backup file is %s\r\n", tmfile); /* Report backup f/n */
+    }                              /* if (new_bkup_file) else */
     if (!s_b_w_common_write())
       return false;
   }
@@ -2508,6 +2533,15 @@ do_quit(bool recursing)
     }                              /* if (access(ubuf, F_OK)) */
   }                                /* if (strlen(ubuf) == 2 && ... */
 
+/* If recursing, simply return. do_freprompt() cleans up. */
+/* Indicate whether Q or FQ though */
+
+  if (recursing)
+  {
+    fq_from_fr = verb == 'q';
+    return true;
+  }                                /* if (recursing) */
+
   if (mods &&
     !ysno5a
     ("file modified since last b-backup/s-save, ok to quit (y,n,Cr [n])",
@@ -2535,7 +2569,7 @@ do_quit(bool recursing)
   q_new_file = false;              /* Q-QUIT into existing file */
 colontrunc:
   if (!do_stat_symlink() || !eolok())
-    goto reset_argno;
+    RESET_ARGNO;
 try_open:
   if ((funit = open_buf(rdwr, tmode)) == -1)
   {
@@ -2555,7 +2589,7 @@ try_open:
           if (!do_stat_symlink() || !eolok())
           {
             cmd_state = RUNNING;
-            goto reset_argno;
+            RESET_ARGNO;
           }                        /* if (!do_stat_symlink() || !eolok()) */
           goto colontrunc;         /* Try with truncated ubuf */
         }                          /* if((colonpos=strchr(ubuf,':'))&&... */
@@ -2575,7 +2609,7 @@ try_open:
       }
     }                              /* if (errno == ENOENT && !q_new_file) */
     fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
-    goto reset_argno;
+    RESET_ARGNO;
   }                             /* if ((funit = open_buf(rdwr, tmode)) == -1) */
 
   if (q_new_file)                  /* Have just created file for Q-QUIT */
@@ -2618,6 +2652,24 @@ do_reposition(void)
     return true;
   return false;
 }                                  /* bool do_reposition(void) */
+
+/* ****************************** do_freprompt ****************************** */
+
+static bool
+do_freprompt(void)
+{
+  if (curmac < 0)
+  {
+    fputs("FR only allowed from within a macro", stdout);
+    return false;
+  }                                /* if (curmac < 0) */
+  if (cmsplt)
+  {
+    fputs("FR not allowed with control-t", stdout);
+    return false;
+  }                                /* if (cmsplt) */
+  return true;
+}                                  /* do_freprompt() */
 
 /* **************************** do_shell_command **************************** */
 

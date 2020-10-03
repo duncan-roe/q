@@ -1,7 +1,7 @@
 /* I N I T 5 . C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2011-2014,2019 Duncan Roe
+ * Copyright (C) 2011-2014,2019-2020 Duncan Roe
  *
  * This routine initialises the terminal i/o system.
  */
@@ -38,10 +38,10 @@ init5()
       fprintf(stderr, "%s. stderr (setvbuf)\r\n", strerror(errno));
 /* See if we have access to a tty */
     ttyfd = 0;
-    for (i = STDIN5FD; i < STDERR5FD; i++)
+    for (i = STDIN5FD; i <= STDERR5FD; i++)
       if (isatty(i))
       {
-        ttyfd = dup(i);
+        SYSCALL(ttyfd, dup(i));
         break;
       }
     if (ttyfd == 0)

@@ -1,7 +1,7 @@
 /* N E W M A C
  *
  * Copyright (C) 1981,1999,2011, D. C. Roe
- * Copyright (C) 2012,2014,2019 Duncan Roe
+ * Copyright (C) 2012,2014,2019-2020 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.

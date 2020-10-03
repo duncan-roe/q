@@ -1,7 +1,7 @@
 /* S C M N R D
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2012-2014,2016-2019 Duncan Roe
+ * Copyright (C) 2012-2014,2016-2020 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -94,7 +94,7 @@ static char *cmtabl[52] = {        /* Table of commands in full */
   "ORGET",                         /* FO */
   "",                              /* FP */
   "QUIT",                          /* FQ */
-  "",                              /* FR */
+  "REPROMPT",                      /* FR */
   "",                              /* FS */
   "TOKENCHAR",                     /* FT */
   "",                              /* FU */
