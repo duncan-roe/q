@@ -46,6 +46,7 @@
 #define REVRSE (fmode & 04000)
 #define PRINTF_IGNORED printf("f%c ignored (mode +v)\r\n", verb)
 #define RESET_ARGNO goto reset_argno
+#define STDERROUT (curmac < 0 ? stderr : stdout)
 
 /* Typedefs */
 
@@ -678,7 +679,7 @@ main(int xargc, char **xargv)
           break;
 
         default:                   /* Coding error if we get here */
-          fputs("unknown command", stdout);
+          fputs("unknown command", stderr);
           retcod = false;
           break;
       }                            /* switch (verb) */
@@ -719,7 +720,7 @@ eolok(void)
   scrdtk(1, (uint8_t *)NULL, 0, oldcom);
   if (oldcom->toktyp == eoltok)    /* OK */
     return true;
-  fputs("Too many arguments for this command", stdout);
+  fputs("Too many arguments for this command", stderr);
   return false;
 }                                  /* static bool eolok(void) */
 
@@ -739,7 +740,7 @@ get_answer(void)
     return Q_MAYBE;
   if (oldcom->toktyp != nortok)    /* I.e. null token */
   {
-    fputs("Bad parameter for command", stdout);
+    fputs("Bad parameter for command", stderr);
     return Q_UNREC;
   }                                /* if (oldcom->toktyp != nortok) */
   if (!eolok())
@@ -759,7 +760,7 @@ get_answer(void)
     case 'N':
       return Q_NO;
   }
-  fputs("Parameter not recognised", stdout);
+  fputs("Parameter not recognised", stderr);
   return Q_UNREC;
 }                                  /* get_answer(void) */
 
@@ -1312,7 +1313,7 @@ do_ychangeall(void)
     return bad_rdtk();
   if (oldcom->toktyp == eoltok || !(oldlen = oldcom->toklen))
   {
-    fputs("Null string to replace", stdout);
+    fputs("Null string to replace", stderr);
     return false;
   }
 
@@ -1325,7 +1326,7 @@ do_ychangeall(void)
 /* strings must be equal length if Fixed-Length mode */
   if (ydiff && fmode & 0400)
   {
-    fputs("Replace string must be same length in FIXED LENGTH mode", stdout);
+    fputs("Replace string must be same length in FIXED LENGTH mode", stderr);
     return false;
   }
 
@@ -1357,7 +1358,7 @@ do_ychangeall(void)
     return false;
   if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
   {
-    fputs("Empty file - can't changeall any lines", stdout);
+    fputs("Empty file - can't changeall any lines", stderr);
     return false;
   }
 
@@ -1470,7 +1471,7 @@ do_ychangeall(void)
   if (!lines_changed)
   {
     if (curmac < 0 || !BRIEF)
-      fputs("specified string not found", stdout);
+      fputs("Specified string not found", STDERROUT);
     locerr = true;                 /* Picked up by RERDCM */
     move_cursor_back();
     return false;
@@ -1495,7 +1496,7 @@ get_search_columns(void)
     lastpos = oldcom->decval - 1;  /* Last start position */
     if (lastpos < firstpos)        /* Impossible combination of columns */
     {
-      puts("Last pos'n < first\r");
+      fputs("Last pos'n < first\r", stderr);
       return false;
     }                              /* if(lastpos < firstpos) */
     lastpos += h;                  /* Add search length to get wanted length */
@@ -1548,7 +1549,7 @@ valid_FX_arg(void)
 {
   if (oldcom->toklen == 0)
   {
-    fputs("Null argument not allowed", stdout);
+    fputs("Null argument not allowed", stderr);
     return false;
   }                                /* if (oldcom->toklen == 0) */
   if (oldcom->toklen != 2)         /* Can't be ^<char> */
@@ -1556,7 +1557,7 @@ valid_FX_arg(void)
     k = xkey[0];                   /* Convert to subscript */
     if (k >= 128)
     {
-      fputs("parity-high \"keys\" not allowed", stdout);
+      fputs("parity-high \"keys\" not allowed", stderr);
       return false;
     }                              /* if (k >= 128) */
   }                                /* if (oldcom->toklen != 2) */
@@ -1564,7 +1565,7 @@ valid_FX_arg(void)
   {
     if (xkey[0] != CARAT)
     {
-      fputs("may only have single char or ^ char", stdout);
+      fputs("may only have single char or ^ char", stderr);
       return false;
     }                              /* if (xkey[0] != CARAT) */
     k = xkey[1];                   /* Isolate putative control */
@@ -1576,7 +1577,7 @@ valid_FX_arg(void)
       k = 127;
     else
     {
-      fputs("Illegal control character representation", stdout);
+      fputs("Illegal control character representation", stderr);
       return false;
     }
   }                                /* if (oldcom->toklen != 2) else */
@@ -1616,20 +1617,20 @@ get_c_or_r_args(void)
 {
   if (!getlin(true, false))        /* Bad source */
   {
-    fputs(" in source line", stdout);
+    fputs(" in source line", stderr);
     return false;
   }
   k4 = oldcom->decval;             /* Remember source */
   if (!getlin(true, true))         /* Bad dest'n */
   {
-    fputs(" in dest'n line", stdout);
+    fputs(" in dest'n line", stderr);
     return false;
   }
   j4 = oldcom->decval;             /* Remember dest'n */
   lstlin = k4;                     /* -TO refers from source line */
   if (j4 == k4)                    /* Error if equal */
   {
-    fputs("Source and destination line #'s must be different", stdout);
+    fputs("Source and destination line #'s must be different", stderr);
     return false;
   }
   return true;
@@ -1714,7 +1715,7 @@ A_I_M_common(void)
         break;
 
       default:
-        fputs("Internal error - EOL char not recognised", stdout);
+        fputs("Internal error - EOL char not recognised", stderr);
         newlin();
         return true;
     }                              /* switch (verb) */
@@ -1972,7 +1973,7 @@ do_fdevnull(void)
       }                            /* if (USING_FILE) */
       else
       {
-        fputs("fd y is not available from the keyboard", stdout);
+        fputs("fd y is not available from the keyboard", stderr);
         return false;
       }
   }                                /* switch (get_answer()) */
@@ -1995,7 +1996,7 @@ do_fimmediate_macro(void)
 /* to support e.g. nested U-use files which contain FI cmds */
   if (immnxfr > LAST_IMMEDIATE_MACRO)
   {
-    fputs("Too many nested FI commands", stdout);
+    fputs("Too many nested FI commands", stderr);
     return false;
   }
   verb = immnxfr++;
@@ -2051,19 +2052,19 @@ do_ftokenchar(void)
 {
   if (strlen(ndel) >= 32)
   {
-    fputs("no room for further entries", stdout);
+    fputs("no room for further entries", stderr);
     return false;
   }
   if (scrdtk(1, (uint8_t *)ubuf, 40, oldcom)) /* Get character to add */
     return bad_rdtk();
   if (oldcom->toktyp == eoltok)
   {
-    fputs("command requires a parameter", stdout);
+    fputs("command requires a parameter", stderr);
     return false;
   }
   if (oldcom->toklen != 1)
   {
-    fputs("parameter must be single character", stdout);
+    fputs("parameter must be single character", stderr);
     return false;
   }
   if (!eolok())
@@ -2112,7 +2113,7 @@ do_fxchange(void)
     return bad_rdtk();
   if (oldcom->toktyp == eoltok)
   {
-    fputs("FX must have 2 parameters", stdout);
+    fputs("FX must have 2 parameters", stderr);
     return false;
   }
   xkey[0] = newkey[0];
@@ -2302,7 +2303,7 @@ do_locate(void)
     return bad_rdtk();
   if (oldcom->toktyp == eoltok || !(h = oldcom->toklen))
   {
-    fputs("Null string to locate", stdout);
+    fputs("Null string to locate", stderr);
     return false;
   }
 
@@ -2378,7 +2379,7 @@ do_locate(void)
 
   setptr(savpos);                  /* Move pointer back */
   if (display_wanted)
-    fputs("Specified string not found", stdout);
+    fputs("Specified string not found", STDERROUT);
   locerr = true;                   /* Picked up by RERDCM */
   move_cursor_back();
   return false;
@@ -2650,7 +2651,7 @@ do_reposition(void)
     return false;
   if (k4 == j4 - 1)
   {
-    fputs("moving a line to before the next line is a no-op", stdout);
+    fputs("moving a line to before the next line is a no-op", stderr);
     return false;
   }
   if (finish_c_or_r("repositioned"))
@@ -2665,12 +2666,12 @@ do_freprompt(void)
 {
   if (curmac < 0)
   {
-    fputs("FR only allowed from within a macro", stdout);
+    fputs("FR only allowed from within a macro", stderr);
     return false;
   }                                /* if (curmac < 0) */
   if (cmsplt)
   {
-    fputs("FR not allowed with control-t", stdout);
+    fputs("FR not allowed with control-t", stderr);
     return false;
   }                                /* if (cmsplt) */
   return true;
@@ -2683,7 +2684,7 @@ do_shell_command(void)
 {
   if (do_cmd())
   {
-    fputs("bad luck", stdout);
+    fputs("bad luck", stderr);
     noRereadIfMacro = true;
     move_cursor_back();            /* Error has been reported */
     return false;
@@ -3026,7 +3027,7 @@ not_pipe(void)
 {
   if (!offline && !(P && Q))       /* P and Q not set if !offline */
   {
-    fputs("stdin & stdout must both be a tty unless q -o\n", stderr);
+    fputs("stdin & stderr must both be a tty unless q -o\n", stderr);
     exit(1);
   }                                /* if (!offline && !(P && Q)) */
 
