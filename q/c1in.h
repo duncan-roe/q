@@ -3,7 +3,7 @@
 /* c 1 i n . h */
 /*
  * Copyright (C) 1995, Duncan Roe & Associates P/L
- * Copyright (C) 2012,2014,2019 Duncan Roe
+ * Copyright (C) 2012,2014,2019-2020 Duncan Roe
  *
  * This header file contains items of interest to the character input
  * subsystem
@@ -19,7 +19,7 @@
 #ifndef OPEN_MAX
 #  define OPEN_MAX 2048            /* Surely more than anyone would want */
 #endif
-#define USING_FILE (bool)(stdidx >= 0)
+#define USING_FILE (bool)(stdidx >= stdbase)
 
 /* External variables */
 
@@ -28,6 +28,7 @@ extern struct termios tio5save, tio5;
 extern bool size5;                 /* Screen was sized */
 extern int ttyfd;                  /* fd to do iocltls on */
 extern int stdidx;
+extern int stdbase;
 extern struct stdinfo
 {
   int funit;

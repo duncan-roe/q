@@ -22,7 +22,7 @@
 #define LAST_PSEUDO 127            /* Last macro shadowed by pseudos */
 #define FIRST_IMMEDIATE_MACRO (FIRST_PSEUDO + 1)
 #define LAST_IMMEDIATE_MACRO (FIRST_PSEUDO + 15)
-#define RECURSING (mcdtum != MCDTUM_BASE)
+#define RECURSING (mcdtum != MCDTUM_BASE || immdtum != FIRST_IMMEDIATE_MACRO)
 
 /* Typedefs */
 
@@ -51,6 +51,8 @@ extern int curmac;                 /* Macro being expanded */
 extern int mcposn;                 /* Pos'n in macro */
 extern int mcnxfr;                 /* Index of next free entry in stack */
 extern int immnxfr;                /* Next free slot for an immediate macro */
+extern int immdtum;                /* First free slot for an immediate macro
+                                      (at this FReprompt level, if any) */
 extern int mcdtum;                 /* Bottom frame for recursion level */
 
 /* Prototypes */

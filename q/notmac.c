@@ -83,8 +83,8 @@ notmac(bool err)
   {
 /* Get out of all macros and U-USE files */
     mcnxfr = mcdtum;               /* No stack */
-    immnxfr = FIRST_IMMEDIATE_MACRO;
-    for (i = 0; i <= stdidx; i++)
+    immnxfr = immdtum;
+    for (i = stdbase; i <= stdidx; i++)
       stdinfo[i].frommac = false;
   }                                /* if (err) */
   else

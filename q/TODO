@@ -1,3 +1,5 @@
+Regexp search mode for L & Y (but not FL & FY)
+Specify file for monitoring input (from any source)
 DONE: Opcodes PSHWDTH & PSHHGHT push screen width & height to R
 Opcodes POPL & POPLF: pop to line being edited (command or file)
 STARTED: Audit macros to not use alpha tab ids (preferably use tabs 75 - 80)
@@ -24,11 +26,12 @@ Give some kind of acknowledgement to ^NF (& ^NO?)
 -H option to give invocation help
 Can set actual amount for "1 line forward / back" half-page / full-page
 Properly reinstate output optimisation (old hack removed as "quick fix")
- needs select() /poll()
+ use ioctl TIOCOUTQ to get # chars waiting to go
+ needs select() /poll() and/or ioctl FIONREAD
  needs nanosleep when outputting chars
- needs stack of buffers per U-use [and F-freprompt] for input chars
  get per-char delay from stty baud rate
  reinstate setting per-char delay (useful for testing)
+ Will need 2x USB-serial dongles to test (can't lower xterm speed)
 INTERNALS
 	STARTED: Have a bool enum for logicals
 	DONE: Fix runindent label squashes
@@ -38,7 +41,7 @@ INTERNALS
 	DONE: Tidy scmnrd.c in particular
 	STARTED: Be more careful what goes to stderr / stdin
 	STARTED: use stdint types
-	DONE: Reduce number of goto stmts
+	STARTED: Reduce number of goto stmts
 	DONE: return bad_rdtk() once H & L are subroutinised
 	DONE: Eliminate FTN COMMON in favour of extern / instantiate
 	DONE: Re-organise q.c for static fns at end

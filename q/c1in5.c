@@ -1,7 +1,7 @@
 /* C 1 I N 5 . C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2012-2014,2019 Duncan Roe
+ * Copyright (C) 2012-2014,2019-2020 Duncan Roe
  *
  * This routine gets the next character from standard input. If we
  * hit EOF on a file, revert to the TTY
@@ -23,6 +23,7 @@
 const char *const normal_end_sequence = "\033\033fq\n";
 const char *end_seq;
 int buf5len, buf5idx, ttyfd, stdidx;
+int stdbase = 0;
 bool size5 = false;
 struct stdinfo stdinfo[OPEN_MAX];
 

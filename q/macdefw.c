@@ -34,6 +34,7 @@ bool mctrst, nodup;
 int curmac, mcposn, mcnxfr, immnxfr;
 struct macinfo mcstck[STKSIZ];
 int mcdtum = MCDTUM_BASE;
+int immdtum = FIRST_IMMEDIATE_MACRO;
 
 /* ******************************** macdefw ******************************** */
 

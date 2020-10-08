@@ -1,7 +1,7 @@
 /* R E S T O R E _ S T D O U T . C
  *
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2012,2013,2019 Duncan Roe
+ * Copyright (C) 2012-2013,2019-2020 Duncan Roe
  *
  * This routine switches output back to the original stdout
  */
@@ -19,7 +19,7 @@ restore_stdout()
 /* Only switch if the original stdout is preserved */
   if (orig_stdout != -1)
   {
-    if (stdidx >= 0)
+    if (stdidx >= stdbase)
       stdinfo[stdidx].nullstdout = false;
     SYSCALL(i, dup2(orig_stdout, 1));
     if (i == -1)

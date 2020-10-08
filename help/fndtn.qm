@@ -15,7 +15,7 @@ N431 ^<SNE>^NU ^<S1>^N^@
 N J '^ND^N^O^J^NU ;Single "/*" comment beautify - call by ^N^M
 N K '^D^NA^NU^NG ^NS^N^@^D^NU Word delete
 N N '^N^^ ; Can change for convenience
-N O '^NOa^H^O^S^X^ND^N^U^NRa^NU Comment beautify - no n/l
+N O '^NO{^H^O^S^X^ND^N^U^NR{^NU Comment beautify - no n/l
 N P '''^ND^N^<4002>''^NU ; Access current edit file name. Call by ^N^P^P
 N Q '^NC^NS^N\g-^ND^N^<4004>^Jv^J^NU View previous screenful
 N R '^H^NA^N^<1201>^NM^<1201>^NU ;Remember/recall command or line
@@ -34,8 +34,8 @@ N $ '^NE^E^X^NA^NU ^N^@ ;Space between each char from cursor onwards
 N & '^NC^NS^N\!rcsdiff ^ND^N^<522> "^ND^N^<4002>"|less -EX^J^NU
 N246 ^NC^NS^N\!git diff ^ND^N^<522> -- "^ND^N^<4002>"^J^NU ; ^N^W&
 N * '!/bin/ls -l "^ND^N^<4002>"^J^NU
-N ( '^NC^NS^N\^NFa!co^ND^N^<1301> -l "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^NNa^NU
-N ) '^NC^NS^N\^NFas^J!ci^ND^N^<1302> -u "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^NNa^NU
+N ( '^NC^NS^N\^NF{!co^ND^N^<1301> -l "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^NN{^NU
+N ) '^NC^NS^N\^NF{s^J!ci^ND^N^<1302> -u "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^NN{^NU
 # n@ defines the - macro (since n- has special meaning)
 N @ '^NO9^ND^N^<401>^NR9^NU Non-space -> equals
 N401 ^NA^NU^NG ^NS=^Y^X^N^@ ; Used by ^N-
@@ -130,31 +130,34 @@ N776 ^<PSH 5>^<S1>^<SGE>^NU^<POP 5>^<PSH 1>^<POPX>^<S1X>^<PSH 6>^<A1>^<DUP>^<POP
 N775 ^<S1X>^<SXGE>^NU ^N^@
 N774 ^<S1X>^<SXGE>^NU^<PSH 1>^<PSH 5>^<A1>^<DUP>^<POP 5>^<SUB>^<SLT>^NS^NL^<PS0>^<POP 5>^<POPN>^ND^N^<7005>^N^@
 N773 ^NFZ^<PSHTAB Z>^NC^NS^<S1>^NU ;Push current line number
+# N1001 & N1002: environment saves (Use N1002 when env already saved by N1001)
+# TABS USED: _(underscore) and -(tab 80)
+# !! NO OTHER MACROS SHOULD USE THESE TABS !!
 N1001 ^NC^NS^N\^[^NF_^ND^N^<4000>^NM^<1021>^[^NU ; Env save #1
-N1002 ^NC^NS^N\^[^NF|^ND^N^<4000>^NM^<1022>^[^NU ; Env save #2
+N1002 ^NC^NS^N\^[^NF-^ND^N^<4000>^NM^<1022>^[^NU ; Env save #2
 # N1011 - restore environment (line number and mode setting) as stored by N1001
 #         the ALU program is to guard against the case where the current line
-#         number stored in tab a is now beyond the end of the file.
+#         number stored in tab _ is now beyond the end of the file.
 #         In this case, it is reset to one more than the # lines in the file
 #         (i.e. EOF).
 # Operation of ALU program:-
 # PSH 0   ; Save contents of memory location 0 (we want it for scratch space)
 # SFPT    ; Store file-position tabs
 #           (this will be overwritten when the macro restores the mode)
-# PSHTAB a; current value of tab a
+# PSHTAB _; current value of tab _
 # PSHNBLN ; number of lines in file
-# A1      ; add 1 to give max allowable tab a
+# A1      ; add 1 to give max allowable tab _
 # DUP
 # POP 0   ; keep copy for later
 # SUB
-# SLT     ; Skip if tab a is too big (-ve result from SUB)
+# SLT     ; Skip if tab _ is too big (-ve result from SUB)
 # ^NL     ; Unconditional 4-char (2 opcode) skip
-# PSH 0   ; retrieve saved max tab a
-# POPTAB a; set tab a to retrieved value
+# PSH 0   ; retrieve saved max tab _
+# POPTAB _; set tab _ to retrieved value
 # POPN    ; throw away diff that we tested
 # POP 0   ; restore contents of memory location 0
 N1011 ^NC^NS^N\^<PSH 0>^<SFPT>^<PSHTAB _>^<PSHNBLN>^<A1>^<DUP>^<POP 0>^<SUB>^<SLT>^NL^<PSH 0>^<POPTAB _>^<POPN>^<POP 0>g t_^Jfm^ND^N^<1021>^J^NU ; Env restore #1
-N1012 ^NC^NS^N\^<PSH 0>^<SFPT>^<PSHTAB |>^<PSHNBLN>^<A1>^<DUP>^<POP 0>^<SUB>^<SLT>^NL^<PSH 0>^<POPTAB |>^<POPN>^<POP 0>g t|^Jfm^ND^N^<1022>^J^NU ; Env restore #2
+N1012 ^NC^NS^N\^<PSH 0>^<SFPT>^<PSHTAB ->^<PSHNBLN>^<A1>^<DUP>^<POP 0>^<SUB>^<SLT>^NL^<PSH 0>^<POPTAB ->^<POPN>^<POP 0>g t-^Jfm^ND^N^<1022>^J^NU ; Env restore #2
 N1021 !!SCRATCH - USED BY ENV DUMP #1
 N1022 !!SCRATCH - USED BY ENV DUMP #2
 N1200 /* 12XX - USED AS SCRATCH SPACE AND FOR OTHER FORMER KEYBOARD INTERNAL MACROS

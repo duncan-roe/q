@@ -59,7 +59,7 @@ init5()
       }
       else
       {
-        memcpy(&tio5, &tio5save, sizeof(struct termios));
+        tio5 = tio5save;
 /* Ensure terminal will be reset on exit */
         atexit(final5);
 /* Enable the ISTRIP flag */

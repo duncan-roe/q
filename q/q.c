@@ -47,6 +47,7 @@
 #define PRINTF_IGNORED printf("f%c ignored (mode +v)\r\n", verb)
 #define RESET_ARGNO goto reset_argno
 #define STDERROUT (curmac < 0 ? stderr : stdout)
+#define NUM_RFRAMES 8
 
 /* Typedefs */
 
@@ -177,6 +178,19 @@ static bool P, Q;                 /* For determining whether we are in a pipe */
 static bool errflg = false;        /* Illegal switch seen */
 static bool fq_from_fr;
 static bool q_from_fr;
+static struct reprompt_frame
+{
+  bool saved_offline;
+  bool saved_piping;
+  int fds[2];
+  int saved_curmac;
+  int saved_mcposn;
+  int saved_immdtum;
+  int saved_mcdtum;
+  int saved_stdbase;
+}
+rframe[NUM_RFRAMES];
+static int ridx = -1;
 
 /* Static prototypes */
 
@@ -272,9 +286,7 @@ main(int xargc, char **xargv)
 
 /* Initial Tasks */
   if (recursing)
-  {
-    printf("q to continue macro %03o; fq to abandon\r\n", xargc);
-  }                                /* if (recursing) */
+    printf("\r\nq to continue macro %03o; fq to abandon\r\n", xargc);
   else
   {
     argc = xargc;                  /* Xfer invocation arg to common */
@@ -336,7 +348,7 @@ main(int xargc, char **xargv)
   if (do_rc)                       /* (Forced to false if recursing) */
   {
 /* Forge a u-use: push current stdin */
-    stdidx = 0;
+    stdidx = stdbase;
     SYSCALL(stdinfo[stdidx].funit, dup(0));
     if (stdinfo[stdidx].funit == -1)
     {
@@ -675,7 +687,15 @@ main(int xargc, char **xargv)
           break;
 
         case 'r':                  /* "FR"eprompt (calls q recursively) */
-          retcod = do_freprompt();
+          if (!(retcod = do_freprompt()))
+            break;
+          if (fq_from_fr)
+          {
+            if (recursing)
+              return 0;
+            else
+              fq_from_fr = false;
+          }                        /* if (fq_from_fr) */
           break;
 
         default:                   /* Coding error if we get here */
@@ -2664,6 +2684,10 @@ do_reposition(void)
 static bool
 do_freprompt(void)
 {
+  int fd;
+  int rc;
+  struct reprompt_frame *r;
+
   if (curmac < 0)
   {
     fputs("FR only allowed from within a macro", stderr);
@@ -2674,6 +2698,82 @@ do_freprompt(void)
     fputs("FR not allowed with control-t", stderr);
     return false;
   }                                /* if (cmsplt) */
+  if (ttyfd <= 0)
+  {
+    fputs("FR must have access to a tty", stderr);
+    return false;
+  }                                /* if (ttyfs <= 0) */
+  if (ridx >= NUM_RFRAMES - 1)     /* '>' shouldn't happen */
+  {
+    fputs("Too many levels of FR", stderr);
+    return false;
+  }                                /* if (ridx >= NUM_RFRAMES - 1) */
+
+/* All checks pass, actually do it */
+
+  r = rframe + ++ridx;
+  r->saved_offline = offline;
+  offline = false;
+  r->saved_piping = piping;
+  piping = false;
+  for (fd = STDIN5FD; fd <= STDOUT5FD; fd++)
+  {
+    if (isatty(fd))
+      r->fds[fd] = -1;
+    else
+    {
+      SYSCALL(r->fds[fd], dup(fd));
+      if (r->fds[fd] == -1)
+      {
+        fprintf(stderr, "%s. (dup(%d))", strerror(errno), fd);
+        exit(1);
+      }                            /* if r->fds[fd] == -1) */
+      SYSCALL(rc, dup2(ttyfd, fd));
+      if (rc == -1)
+      {
+        fprintf(stderr, "%s.(dup2(%d, %d))", strerror(errno), ttyfd, fd);
+        exit(1);
+      }                            /* if (rc == -1) */
+    }                              /* if (isatty(fd)) else */
+  }                             /* for (fd = STDIN5FD; fd <= STDOUT5FD; fd++) */
+  r->saved_curmac = curmac;
+  curmac = -1;
+  r->saved_mcposn = mcposn;
+  r->saved_immdtum = immdtum;
+  immdtum = immnxfr;
+  r->saved_mcdtum = mcdtum;
+  mcdtum = mcnxfr;
+  r->saved_stdbase = stdbase;
+  stdbase = stdidx + 1;
+  if (r->saved_offline)
+    change_attr(ttyfd, &tio5);
+
+  main(r->saved_curmac, NULL);     /* *!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*! */
+
+/* Back from main, restore previous state */
+
+  if (r->saved_offline)
+    change_attr(ttyfd, &tio5save);
+  stdbase = r->saved_stdbase;
+  mcdtum = r->saved_mcdtum;
+  immdtum = r->saved_immdtum;
+  mcposn = r->saved_mcposn;
+  curmac = r->saved_curmac;
+  for (fd = STDIN5FD; fd <= STDOUT5FD; fd++)
+    if (r->fds[fd] != -1)
+    {
+      SYSCALL(rc, dup2(r->fds[fd], fd));
+      if (rc == -1)
+      {
+        fprintf(stderr, "%s.(dup2(%d, %d))", strerror(errno), r->fds[fd], fd);
+        exit(1);
+      }                            /* if (rc == -1) */
+      SYSCALL(rc, close(r->fds[fd]));
+    }                              /* if (r->fds[fd] != -1) */
+  piping = r->saved_piping;
+  offline = r->saved_offline;
+  --ridx;
+
   return true;
 }                                  /* do_freprompt() */
 
@@ -2718,7 +2818,7 @@ do_usefile(void)
 
 /* NULLSTDOUT setting is same as parent */
   stdinfo[stdidx + 1].nullstdout =
-    stdidx < 0 ? false : stdinfo[stdidx].nullstdout;
+    stdidx < stdbase ? false : stdinfo[stdidx].nullstdout;
 
 /* Save current stdin */
   stdidx++;

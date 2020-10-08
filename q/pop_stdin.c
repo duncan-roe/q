@@ -1,7 +1,7 @@
 /* P O P _ S T D I N . C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2012,2013,2019 Duncan Roe
+ * Copyright (C) 2012-2013,2019-2020 Duncan Roe
  *
  * This function pops stdin 1 level
  */
@@ -26,11 +26,11 @@ pop_stdin()
 
   devnull_currently = stdinfo[stdidx].nullstdout;
 
-  SYSCALL(retcod, dup2(stdinfo[stdidx].funit, 0));
+  SYSCALL(retcod, dup2(stdinfo[stdidx].funit, STDIN5FD));
   if (retcod == -1)
   {
-    fprintf(stderr, "\r\n%s. (dup2(%d, 0))\r\n", strerror(errno),
-      stdinfo[stdidx].funit);
+    fprintf(stderr, "\r\n%s. (dup2(%d, %d))\r\n", strerror(errno),
+      stdinfo[stdidx].funit, STDIN5FD);
     refrsh(NULL);
   }                                /* if (retcod == -1) */
   else
