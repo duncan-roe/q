@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <ctype.h>
+#include <regex.h>
 #include <signal.h>
 #include <memory.h>
 #include <string.h>
@@ -149,6 +150,7 @@ static long count;
 static int h, i, j, k, m;          /* Scratch */
 static long i4, j4, k4;            /* Scratch */
 static bool tokens;                /* Token search yes/no */
+static bool regs;                  /* RE search yes/no */
 static char *help_dir;
 static char *help_cmd;
 static char *etc_dir;
@@ -191,9 +193,11 @@ static struct reprompt_frame
 }
 rframe[NUM_RFRAMES];
 static int ridx = -1;
+static regex_t preg = {0};
 
 /* Static prototypes */
 
+static bool compile_regexp(char *regex);
 static bool do_freprompt(void);
 static bool check_pipe(void);
 static void not_pipe(void);
@@ -2303,6 +2307,10 @@ do_locate(void)
 
   is_locate = true;
   tokens = verb == 'l';            /* Whether FL */
+  if (tokens)
+    regs = false;
+  else
+    regs = (fmode & 010000000) != 0;
   if (REVRSE)
     revpos = ptrpos;
   display_wanted = !BRIEF || curmac < 0; /* Display error messages if true */
@@ -2326,6 +2334,8 @@ do_locate(void)
     fputs("Null string to locate", stderr);
     return false;
   }
+  if (regs && !compile_regexp(ermess))
+    return false;
 
   lstlin = ptrpos;                 /* -TO rel currnt line */
   if ((retcod = get_num(false, &count2)) < 0) /* Get number lines to search */
@@ -3248,3 +3258,19 @@ check_pipe(void)
   offline = true;
   return true;
 }                                  /* static bool check_pipe(void) */
+
+/* ***************************** compile_regexp ***************************** */
+
+static bool
+compile_regexp(char *regex)
+{
+  int rc;
+
+  regfree(&preg);
+  rc = regcomp(&preg, regex, REG_EXTENDED | (CASDEP ? 0 : REG_ICASE));
+  if (!rc)
+    return true;
+  regerror(rc, &preg, ermess, sizeof ermess);
+  fputs(ermess, stderr);
+  return false;
+}                                  /* compile_regexp(char *regex) */

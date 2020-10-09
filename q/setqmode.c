@@ -185,6 +185,10 @@ setqmode()
           u = 04000000;
           break;
 
+        case 'G':                  /* L & Y do reGexp matching */
+          u = 010000000;
+          break;
+
         default:
           printf("Warning - unrecognised %s ignored\r\n", ubuf);
           continue;
@@ -312,6 +316,10 @@ show_current(unsigned long mode)
   c = mode & 04000000 ? '+' : '-';
   putchar(c);
   putchar('y');
+  fputs(", ", stdout);
+  c = mode & 010000000 ? '+' : '-';
+  putchar(c);
+  putchar('g');
   fputs("\r\n", stdout);
   switch ((int)(mode >> 30 & 3))
   {
