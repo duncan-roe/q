@@ -193,10 +193,11 @@ static struct reprompt_frame
 }
 rframe[NUM_RFRAMES];
 static int ridx = -1;
-static regex_t preg = {0};
+static regex_t preg = { 0 };
 
 /* Static prototypes */
 
+static bool locate_regexp(int len);
 static bool compile_regexp(char *regex);
 static bool do_freprompt(void);
 static bool check_pipe(void);
@@ -1525,7 +1526,14 @@ get_search_columns(void)
     }                              /* if(lastpos < firstpos) */
     lastpos += h;                  /* Add search length to get wanted length */
   }                                /* if (oldcom->toktyp != nortok) else */
-  minlen = firstpos + h;           /* Get minimum line length to search */
+/* --------------------------------------------------------------------- */
+/* FNDTN MACRO BUG                                                       */
+/* Comment on next line is split with ^N6, so next line has no slash-*   */
+/* and following line has no star-slash. Comment is lined up micely, but */
+/* N1 pushes it to the right. It should leave that line alone.           */
+/* --------------------------------------------------------------------- */
+  minlen = regs ? 0 : firstpos + h; /* Get minimum line length to search
+                                           (can't determine for RE search) */
   if (!eolok())
     return false;
   return true;
@@ -2391,8 +2399,10 @@ do_locate(void)
       if (m > lastpos)
         m = lastpos;               /* Get length to search */
       found = (tokens ? ltok5a((uint8_t *)ermess, h, curr->bdata, firstpos, m,
-        &locpos, &dummy, (uint8_t *)ndel) : lsub5a((uint8_t *)ermess,
-        h, curr->bdata, firstpos, m, &locpos, &dummy)) ^ EXCLUSIVE_L_BOOL;
+        &locpos, &dummy, (uint8_t *)ndel) : (regs ?
+        locate_regexp(m) :
+        lsub5a((uint8_t *)ermess, h, curr->bdata, firstpos, m, &locpos,
+        &dummy))) ^ EXCLUSIVE_L_BOOL;
     }                              /* if (m < minlen) else */
     if (found)
     {                              /* Line located */
@@ -3274,3 +3284,29 @@ compile_regexp(char *regex)
   fputs(ermess, stderr);
   return false;
 }                                  /* compile_regexp(char *regex) */
+
+/* ****************************** locate_regexp ***************************** */
+
+static bool
+locate_regexp(int len)
+{
+  int rc;
+  uint8_t saved_char;
+  regmatch_t pmatch;               /* (array of 1) */
+
+/* Terminate line for regexec */
+  saved_char = curr->bdata[len];
+  curr->bdata[len] = 0;
+
+  rc = regexec(&preg, (char *)curr->bdata, 1, &pmatch, 0);
+  curr->bdata[len] = saved_char;
+  if (rc)
+    return false;
+
+/* Find first match within desired columns */
+
+/* Set found position */
+  locpos = pmatch.rm_so;
+
+  return true;
+}                                  /* static bool locate_regexp() */
