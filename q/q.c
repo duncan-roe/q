@@ -147,7 +147,8 @@ static int lastpos;                /* Last pos to search (L&Y) */ ;
 static int minlen;                 /* Min line length (L&Y) */
 static int firstpos;               /* First pos to search (L&Y) */
 static long count;
-static int h, i, j, k, m;          /* Scratch */
+static int i, j, k;                /* Scratch */
+static int srch_str_len;
 static long i4, j4, k4;            /* Scratch */
 static bool tokens;                /* Token search yes/no */
 static bool regs;                  /* RE search yes/no */
@@ -197,7 +198,8 @@ static regex_t preg = { 0 };
 
 /* Static prototypes */
 
-static bool locate_regexp(int len);
+static bool match_regexp(uint8_t *string, int stringlen, int offset,
+  int *matchpos, int *matchlen);
 static bool compile_regexp(char *regex);
 static bool do_freprompt(void);
 static bool check_pipe(void);
@@ -1332,6 +1334,8 @@ do_ychangeall(void)
   char oldstr[Q_BUFSIZ], newstr[Q_BUFSIZ]; /* YCHANGEALL. !!AMENDED USAGE!! */
   bool lines_changed = false;
   int n;
+  int match_start;
+  int match_end;
 
   tokens = verb == 'y';            /* Differentiate fy */
   if (scrdtk(2, (uint8_t *)oldstr, BUFMAX, oldcom))
@@ -1378,7 +1382,7 @@ do_ychangeall(void)
   else
     count = oldcom->decval;
   lstlin = -1;                     /* -TO not allowed for column pos'ns */
-  h = oldlen;                      /* Req'd by code for L-LOCATE */
+  srch_str_len = oldlen;           /* Used by get_search_columns */
   if (!get_search_columns())       /* Look for 1st & last pos'ns in line */
     return false;
   if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
@@ -1435,11 +1439,11 @@ do_ychangeall(void)
       if (tokens)
         retcod =
           ltok5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn,
-          curr->bchars - n, &h, &m, (uint8_t *)ndel);
+          curr->bchars - n, &match_start, &match_end, (uint8_t *)ndel);
       else
         retcod =
           lsub5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn,
-          curr->bchars - n, &h, &m);
+          curr->bchars - n, &match_start, &match_end);
       if (!retcod)
         break;
       if (curr->bchars + ydiff > curr->bmxch) /* Would exceed line capacity */
@@ -1449,15 +1453,15 @@ do_ychangeall(void)
         print_scanned_lines(count);
         return true;
       }                            /* if (curr->bchars + ydiff > curr->bmxch) */
-      memmove(&curr->bdata[m + 1 + ydiff], &curr->bdata[m + 1],
-        curr->bchars - m - 1);
+      memmove(&curr->bdata[match_end + 1 + ydiff], &curr->bdata[match_end + 1],
+        curr->bchars - match_end - 1);
 
 /* Move in new string if not null */
       if (newlen != 0)
-        memcpy(&curr->bdata[h], newstr, newlen);
+        memcpy(&curr->bdata[match_start], newstr, newlen);
       curr->bchars = curr->bchars + ydiff; /* Get new line length */
       linmod = true;               /* This line has been modified */
-      yposn = m + 1 + ydiff;       /* Resume search after new string */
+      yposn = match_end + 1 + ydiff;       /* Resume search after new string */
 
 /* Seek more occurrences if room */
     }
@@ -1524,7 +1528,7 @@ get_search_columns(void)
       fputs("Last pos'n < first\r", stderr);
       return false;
     }                              /* if(lastpos < firstpos) */
-    lastpos += h;                  /* Add search length to get wanted length */
+    lastpos += srch_str_len;       /* Add search length to get wanted length */
   }                                /* if (oldcom->toktyp != nortok) else */
 /* --------------------------------------------------------------------- */
 /* FNDTN MACRO BUG                                                       */
@@ -1532,8 +1536,9 @@ get_search_columns(void)
 /* and following line has no star-slash. Comment is lined up micely, but */
 /* N1 pushes it to the right. It should leave that line alone.           */
 /* --------------------------------------------------------------------- */
-  minlen = regs ? 0 : firstpos + h; /* Get minimum line length to search
-                                           (can't determine for RE search) */
+/* Get minimum line length to search
+  minlen = regs ? 0 : firstpos + srch_str_len;
+                                                   (can't determine for RE search) */
   if (!eolok())
     return false;
   return true;
@@ -2312,6 +2317,7 @@ do_locate(void)
 {
   int dummy;                       /* Unwanted result from ltok5a / lsub5a */
   bool found;
+  int srch_len;
 
   is_locate = true;
   tokens = verb == 'l';            /* Whether FL */
@@ -2337,11 +2343,15 @@ do_locate(void)
  * so ermess is spare. */
   if (scrdtk(2, (uint8_t *)ermess, BUFMAX, oldcom))
     return bad_rdtk();
-  if (oldcom->toktyp == eoltok || !(h = oldcom->toklen))
+  if (oldcom->toktyp == eoltok || !(oldcom->toklen))
   {
     fputs("Null string to locate", stderr);
     return false;
   }
+  if (regs)
+    srch_str_len = 0;              /* lastpos will be where string may start */
+  else
+    srch_str_len = oldcom->toklen; /* lastpos will be where string may end */
   if (regs && !compile_regexp(ermess))
     return false;
 
@@ -2386,24 +2396,27 @@ do_locate(void)
         printf_eof_reached(count2, "searched");
       break;                       /* for(i4=count2;i4>0;i4--) */
     }                              /* if(!rdlin(curr, false)) */
-    m = curr->bchars;
-    if (m < minlen)                /* Line too short for a match */
+    srch_len = curr->bchars;
+    if (srch_len < minlen)                /* Line too short for a match */
     {
       if (EXCLUSIVE_L_BOOL)
         found = true;              /* Short line == non-match */
       else
         continue;
-    }                              /* if (m < minlen) */
+    }                              /* if (srch_len < minlen) */
     else
     {
-      if (m > lastpos)
-        m = lastpos;               /* Get length to search */
-      found = (tokens ? ltok5a((uint8_t *)ermess, h, curr->bdata, firstpos, m,
-        &locpos, &dummy, (uint8_t *)ndel) : (regs ?
-        locate_regexp(m) :
-        lsub5a((uint8_t *)ermess, h, curr->bdata, firstpos, m, &locpos,
-        &dummy))) ^ EXCLUSIVE_L_BOOL;
-    }                              /* if (m < minlen) else */
+      if (srch_len > lastpos)
+        srch_len = lastpos;               /* Get length to search */
+      found =
+        (tokens ?
+        ltok5a((uint8_t *)ermess, srch_str_len, curr->bdata, firstpos, srch_len,
+        &locpos, &dummy, (uint8_t *)ndel) :
+        (regs ?
+        match_regexp(curr->bdata, curr->bchars, firstpos, &locpos, NULL) :
+        lsub5a((uint8_t *)ermess, srch_str_len, curr->bdata, firstpos, srch_len,
+        &locpos, &dummy))) ^ EXCLUSIVE_L_BOOL;
+    }                              /* if (srch_len < minlen) else */
     if (found)
     {                              /* Line located */
       if (REVRSE)
@@ -3285,28 +3298,50 @@ compile_regexp(char *regex)
   return false;
 }                                  /* compile_regexp(char *regex) */
 
-/* ****************************** locate_regexp ***************************** */
+/* ****************************** match_regexp ****************************** */
+
+/* ----------------------------------------------- */
+/* Arguments:-                                     */
+/*                                                 */
+/* A1 - Address of string to search                */
+/* A2 - Length of string to search                 */
+/* A3 - Offset from string start to start matching */
+/* A4 - Returned match position                    */
+/* A5 - Returned match length or NULL              */
+/* ----------------------------------------------- */
 
 static bool
-locate_regexp(int len)
+match_regexp(uint8_t *string, int stringlen, int offset, int *matchpos,
+  int *matchlen)
 {
   int rc;
   uint8_t saved_char;
   regmatch_t pmatch;               /* (array of 1) */
 
-/* Terminate line for regexec */
-  saved_char = curr->bdata[len];
-  curr->bdata[len] = 0;
+/* Unlike lsub5a, caller can't check for a short line */
+/* (since minlen is always zero). */
+/* Also unlike lsub5a, it is legal to search an empty string, */
+/* so test is for GT rather than GE */
+  if (offset > stringlen)
+    return false;
 
-  rc = regexec(&preg, (char *)curr->bdata, 1, &pmatch, 0);
-  curr->bdata[len] = saved_char;
+/* Terminate line for regexec */
+  saved_char = string[stringlen];
+  string[stringlen] = 0;
+
+  rc = regexec(&preg, (char *)string + offset, 1, &pmatch, 0);
+  string[stringlen] = saved_char;
   if (rc)
     return false;
 
-/* Find first match within desired columns */
+/* Match after last allowed column is not a match */
+  if (pmatch.rm_so + offset > lastpos)
+    return false;
 
-/* Set found position */
-  locpos = pmatch.rm_so;
+/* Set found position and length matched */
+  *matchpos = pmatch.rm_so + offset;
+  if (matchlen)
+    *matchlen = pmatch.rm_eo - pmatch.rm_so;
 
   return true;
-}                                  /* static bool locate_regexp() */
+}                                  /* static bool match_regexp() */
