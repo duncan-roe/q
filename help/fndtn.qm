@@ -5,8 +5,8 @@ fi ^<FQVERSN>^<DUPF>^<FRND>^<SUBF>^<SFEQ>^NL^<POPNF>^NU^<POPNF>!echo -e REMINDER
 o n
 N B '^NC^NS^N\A^J^[V1^J^NU "BOTTOM"
 N C '^N^P^P ;N P replacement when ^P is interrupt character. Call by ^N^C^C
-N F '^Z^NOA^A^NRA^F^K^NU ^F with recall
-N G '^Z ^NO9^J^NC^NL^ND^N^<402>J-1^J^NR9^NU ;Join next line after space
+N F '^Z^NO{^A^NR{^F^K^NU ;^F with recall
+N G '^Z ^NO{^J^NC^NL^ND^N^<402>J-1^J^NR{^NU ;Join next line after space
 N402 ^[G-1^J^NU ; Used by ^N^G
 N H '^NC^N\^<PSHTBSZ>^ND^N^<432>^<POPN>^NU ; Outdent one tab
 N432 ^<SNE>^NU^?^<S1>^N^@
@@ -19,13 +19,13 @@ N O '^NO{^H^O^S^X^ND^N^U^NR{^NU Comment beautify - no n/l
 N P '''^ND^N^<4002>''^NU ; Access current edit file name. Call by ^N^P^P
 N Q '^NC^NS^N\g-^ND^N^<4004>^Jv^J^NU View previous screenful
 N R '^H^NA^N^<1201>^NM^<1201>^NU ;Remember/recall command or line
-N S '^NOD^G ^NOC^Z^NOB^NRC^K^NRD^S^R^NRB^K^NRC^NU ;Word to u/c
+N S '^NO}^G ^NO|^Z^NO{^NR|^K^NR}^S^R^NR{^K^NR|^NU ;Word to u/c
 N T '^NC^NS^N\^UG 1^JV 0^J^NU "TOP"
-N U '^Q^NO9^ND^N^<527>^NR9^NU l/c except sentence strt
+N U '^Q^NO{^ND^N^<527>^NR{^NU l/c except sentence strt
 N527 ^ND^N^<530>^NU^F^NA^NU^S^X^Q^NG.^F^@^N^@
 N530 ^G.^NA^NU^X^NG ^NL^F^N^@^@^NI^NU
 N V '^NC^NS^N\g+^ND^N^<4001>^Jv^J^NU View next screenful
-N X '^Z^NOA^A^NRA^X^K^NU ^X with recall
+N X '^Z^NO{^A^NR{^X^K^NU ;^X with recall
 N Y '^NE^I^NP2^NS^NL^T^I^I^@^E/* ^E^NU "/*" comment without matching "*/"
 N Z '^Z^B^S^J^NU
 N ^ '^NC^NL^J^[^NS^NL^ND^N^^^[M-2,32000^J^NU ;Back up 1 line when modifying
@@ -37,7 +37,7 @@ N * '!/bin/ls -l "^ND^N^<4002>"^J^NU
 N ( '^NC^NS^N\^NF{!co^ND^N^<1301> -l "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^NN{^NU
 N ) '^NC^NS^N\^NF{s^J!ci^ND^N^<1302> -u "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^NN{^NU
 # n@ defines the - macro (since n- has special meaning)
-N @ '^NO9^ND^N^<401>^NR9^NU Non-space -> equals
+N @ '^NO{^ND^N^<401>^NR{^NU ;Non-space -> equals
 N401 ^NA^NU^NG ^NS=^Y^X^N^@ ; Used by ^N-
 N 7 '^NC^NS^N\^H^NA#^@^NM^<1201>^U^ND^N^<4005>^NM^<7000>^U^<PS8>^<PSH 0>^<SUB>^<POP 0>^<PSHMODE>^<DUP>^<PS2P30>^<PS2P31>^<OR>^<DUP>^<NOT>^<PSHMODE>^<AND>^<POPMODE># ^ND^N^<1201>^J^ND^N^<777>^<OR>^<POPMODE>^ND^N^<1201>^J^<POPMODE>
 N 8 '^N^<4011> ; N 8: get the date
@@ -129,7 +129,7 @@ N777 10^NM^<7001>0^NM^<7002>0^NM^<7003>^U0^NM^<7006>^U^<PSH 1>^<PSH 0>^<DIV>^<PO
 N776 ^<PSH 5>^<S1>^<SGE>^NU^<POP 5>^<PSH 1>^<POPX>^<S1X>^<PSH 6>^<A1>^<DUP>^<POP 6>^<PSH 1>^<SUB>^<SGT>^<S1X>^<POPN>^<PSH 6>^<PSH 2>^<SUB>^<SGT>^<S1X>^<POPN>^<PSH 6>^<PSH 3>^<SUB>^<SGT>^<S1X>^<POPN>^ND^N^<775>^ND^N^<7006>^N^@
 N775 ^<S1X>^<SXGE>^NU ^N^@
 N774 ^<S1X>^<SXGE>^NU^<PSH 1>^<PSH 5>^<A1>^<DUP>^<POP 5>^<SUB>^<SLT>^NS^NL^<PS0>^<POP 5>^<POPN>^ND^N^<7005>^N^@
-N773 ^NFZ^<PSHTAB Z>^NC^NS^<S1>^NU ;Push current line number
+N773 ^<PSHLNNB>^NC^NS^<S1>^NU ;Push current line number
 # N1001 & N1002: environment saves (Use N1002 when env already saved by N1001)
 # TABS USED: _(underscore) and -(tab 80)
 # !! NO OTHER MACROS SHOULD USE THESE TABS !!

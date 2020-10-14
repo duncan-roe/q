@@ -6,23 +6,23 @@ N A '^NC^NS^N\^ND^N^<1001>o off^J^<SCPT>^<PSHTAB 1>^<PS0>^<POPTAB 1>m1,32000^ND^
 N700 ^X^NA^N^<701>^NG ^N^<701>^N^<702> ;Leave lines starting "> " alone
 N701 ^J^NC^NU^NA^N^<706>^NG>^N^<700>^N^<702> ;Leave lines starting "> " alone
 N J '^G^*^S^F^Q^NU ;control char in HELP file u/c
-N I '^NC^NS^N\G1^J^NOI^N^<714> ;Justify r/h margin T2 unless line < T1
+N I '^NC^NS^N\G1^J^NO|^N^<714> ;Justify r/h margin T2 unless line < T1
 N327 ^NC^NS^N\^ND^N^<1001>fm-f^Jy ^P^@^Jy ^P^M ^P^J^Jy ^<200>^Jy ^<201>^Jy ^<202>^Jy ^<203>^Jy ^<204>^Jy ^<205>^Jy ^<206>^Jy ^<207>^Jy ^<210>^Jy ^<211>^Jy ^<212>^Jy ^<213>^Jy ^<214>^Jy ^<215>^Jy ^<216>^Jy ^<217>^Jy ^<220>^Jy ^<221>^Jy ^<222>^Jy ^<223>^Jy ^<224>^Jy ^<225>^Jy ^<226>^Jy ^<227>^Jy ^<230>^Jy ^<231>^Jy ^<232>^Jy ^<233>^Jy ^<234>^Jy ^<235>^Jy ^<236>^Jy ^<237>^Jy ^<240>^Jy ^<241>^Jy ^<242>^Jy ^<243>^Jy ^<244>^Jy ^<245>^Jy ^<246>^Jy ^<247>^Jy ^<250>^Jy ^<251>^Jy ^<252>^Jy ^<253>^Jy ^<254>^Jy ^<255>^Jy ^<256>^Jy ^<257>^Jy ^<260>^Jy ^<261>^Jy ^<262>^Jy ^<263>^Jy ^<264>^Jy ^<265>^Jy ^<266>^Jy ^<267>^Jy ^<270>^Jy ^<271>^Jy ^<272>^Jy ^<273>^Jy ^<274>^Jy ^<275>^Jy ^<276>^Jy ^<277>^Jy ^<300>^Jy ^<301>^Jy ^<302>^Jy ^<303>^Jy ^<304>^Jy ^<305>^Jy ^<306>^Jy ^<307>^Jy ^<310>^Jy ^<311>^Jy ^<312>^Jy ^<313>^Jy ^<314>^Jy ^<315>^Jy ^<316>^Jy ^<317>^Jy ^<320>^Jy ^<321>^Jy ^<322>^Jy ^<323>^Jy ^<324>^Jy ^<325>^Jy ^<326>^Jy ^<327>^Jy ^<330>^Jy ^<331>^Jy ^<332>^Jy ^<333>^Jy ^<334>^Jy ^<335>^Jy ^<336>^Jy ^<337>^Jy ^<340>^Jy ^<341>^Jy ^<342>^Jy ^<343>^Jy ^<344>^Jy ^<345>^Jy ^<346>^Jy ^<347>^Jy ^<350>^Jy ^<351>^Jy ^<352>^Jy ^<353>^Jy ^<354>^Jy ^<355>^Jy ^<356>^Jy ^<357>^Jy ^<360>^Jy ^<361>^Jy ^<362>^Jy ^<363>^Jy ^<364>^Jy ^<365>^Jy ^<366>^Jy ^<367>^Jy ^<370>^Jy ^<371>^Jy ^<372>^Jy ^<373>^Jy ^<374>^Jy ^<375>^Jy ^<376>^Jy ^<377>^Jy ^P^A^Jy ^P^B^Jy ^P^C^Jy ^P^D^Jy ^P^E^Jy ^P^F^Jy ^P^G^Jy ^P^H^Jy ^P^K^Jy ^P^L^Jy ^P^N^Jy ^P^O^Jy ^P^P^Jy ^P^Q^Jy ^P^R^Jy ^P^S^Jy ^P^T^Jy ^P^U^Jy ^P^V^Jy ^P^W^Jy ^P^X^Jy ^P^Y^Jy ^P^Z^Jy ^P^[^Jy ^P^^^Jy ^P^]^Jy ^P^\^Jy ^P^_^Jy ^P^?^J^ND^N^<1011>^NU
 n367 ^NC^NS^N\ ^ND^N^<222>1 999999^J^ND^N^<210>^ND^N^A^NU
-N707 ^NP2^Y^@^NOA^<PSHTAB A>^<PSHTAB 2>^<SUB>^<SEQ>^<S1>^<POPTAB C>^J^NC^NU^NA^N^<706>^NG ^N^<702>^NG>^N^<700>^F^NA^NS^Y^@^NPC^N^<702>^N^<703>
+N707 ^NP2^Y^@^NO{^<PSHTAB {>^<PSHTAB 2>^<SUB>^<SEQ>^<S1>^<POPTAB }>^J^NC^NU^NA^N^<706>^NG ^N^<702>^NG>^N^<700>^F^NA^NS^Y^@^NP}^N^<702>^N^<703>
 /*
 /* For editting reply emails (where the original lines start '> ') - if
 /* we find one of these then just go to the next line
 /*
 N702 ^Z^Y^NP2^H^F^F^N^<704> ;New line:- first see if not too long
-N703 ^[J-2,1,32000^J^NRA^E ^E^F^N^<704> ;We know 1st wd will fit
+N703 ^[J-2,1,32000^J^NR{^E ^E^F^N^<704> ;We know 1st wd will fit
 N704 ^NA^NS^Y^@^NP2^N^<705>^NA^N^<707>^F^F^N^@ ;Work along line
 # n705: This word doesn't fit. If it's the only word on the line, leave as_is.
 #       Otherwise, split line at preceding word boundary.
 N705 ^B^NP1^NS^N^<701>^?^T^N^<702>
 N706 ^NA^NS^N^<710>^J^NC^NU^N^@ ;Accept extra blank lines until non blank
 N710 ^NG>^N^<700>^N^<702> ;Leave lines starting "> " alone also
-N711 ^NOJ^Z^NB2^NL^J^NUX^NRJ^NI^NU
-N712 ^B^NPI^NS^N^<713> ^ND^N^<711>^N^<714>^N^<712>
+N711 ^NO~^Z^NB2^NL^J^NUX^NR~^NI^NU
+N712 ^B^NP|^NS^N^<713> ^ND^N^<711>^N^<714>^N^<712>
 N713 ^G.^NA^N^<712>^X^NG ^NS^N^<713>^ND^N^<711>^N^<714>^N^<713>
 N714 M-^J^NC^NU^Z^NP1^NL^[^N^<714>X^NB2^NL^[^N^<714>X^E^H^N^<713>
