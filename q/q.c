@@ -293,7 +293,7 @@ main(int xargc, char **xargv)
 
 /* Initial Tasks */
   if (recursing)
-    printf("\r\nq to continue macro %03o; fq to abandon\r\n", xargc);
+    printf("\r\nType q to continue macro %03o; fq to abandon\r\n", xargc);
   else
   {
     argc = xargc;                  /* Xfer invocation arg to common */
@@ -1461,7 +1461,7 @@ do_ychangeall(void)
         memcpy(&curr->bdata[match_start], newstr, newlen);
       curr->bchars = curr->bchars + ydiff; /* Get new line length */
       linmod = true;               /* This line has been modified */
-      yposn = match_end + 1 + ydiff;       /* Resume search after new string */
+      yposn = match_end + 1 + ydiff; /* Resume search after new string */
 
 /* Seek more occurrences if room */
     }
@@ -1532,13 +1532,25 @@ get_search_columns(void)
   }                                /* if (oldcom->toktyp != nortok) else */
 /* --------------------------------------------------------------------- */
 /* FNDTN MACRO BUG                                                       */
-/* Comment on next line is split with ^N6, so next line has no slash-*   */
-/* and following line has no star-slash. Comment is lined up micely, but */
-/* N1 pushes it to the right. It should leave that line alone.           */
+/* Comment on next line was split with ^N6, so next line had no slash-*  */
+/* and following line had no star-slash. Comment was lined up micely,    */
+/* but N1 pushed it to the right. It should have left that line alone.   */
+/* Progress:                                                             */
+/* This is not caused by N1. GNU indent doesn't like the single space    */
+/* between semicolon and slash-star, so inserts some extra spaces.       */
+/* It then (helpfully, not) recognises and indents the comment           */
+/* continaution. N1 will have to clean this up.                          */
+/* THIS IS NOW DONE                                                      */
+/* Subsidiary Issue:  (NEEDS ACTION)                                     */
+/* After line lengthened beyond cc 80, N1 moved unterminated comment     */
+/* fragment to before that line, causing line to be not executed         */
+/* with no gcc warning. N1 needs to action this specially (FR perhaps?)  */
+/* THIS IS NOW DONE (with FR)                                            */
 /* --------------------------------------------------------------------- */
-/* Get minimum line length to search
+
+/* Get minimum line length to search (can't determine for RE search) */
   minlen = regs ? 0 : firstpos + srch_str_len;
-                                                   (can't determine for RE search) */
+
   if (!eolok())
     return false;
   return true;
@@ -2397,7 +2409,7 @@ do_locate(void)
       break;                       /* for(i4=count2;i4>0;i4--) */
     }                              /* if(!rdlin(curr, false)) */
     srch_len = curr->bchars;
-    if (srch_len < minlen)                /* Line too short for a match */
+    if (srch_len < minlen)         /* Line too short for a match */
     {
       if (EXCLUSIVE_L_BOOL)
         found = true;              /* Short line == non-match */
@@ -2407,7 +2419,7 @@ do_locate(void)
     else
     {
       if (srch_len > lastpos)
-        srch_len = lastpos;               /* Get length to search */
+        srch_len = lastpos;        /* Get length to search */
       found =
         (tokens ?
         ltok5a((uint8_t *)ermess, srch_str_len, curr->bdata, firstpos, srch_len,

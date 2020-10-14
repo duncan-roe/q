@@ -6,57 +6,25 @@ O Y
 FC N
 ft_
 N ' ' !make^J^NU
-N A '^H^NA^NS^NL^L^N^<421>^@^ND^N^U^Z^Y^Y^Y^NE^E^NG ^NU^X ^NU ;Continuations
 N Y '^NE^H^NA^NS^N^<422>^L^E/*  */^Y^Y^Y^NU ;C comment
-N Z '^Z^b^B^S^J
-N417 ^NB{ ^@^NB{^N^<417>
-N420 ^Y^Y^Y^NG ^D^Y^X^T^E^N^<417>
-N421 ^NBb ^@^NBb^N^<421>
-N422 ^Z^NB2^NS^T^I^I^NB2^I^@^E/*  */^Y^Y^Y^NU
+N Z '^Z^B^B^S^J^NU ;Last word of comment to u/c
+
 # n207 Run GNU indent then invoke N1 for final polish.
 #      Requires runindent from command_line_tools
 N207 ^NC^NS^N\^ND^N^<1001>fm-dw^Js^J!runindent "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^ND^N1s^J^ND^N^<1011>^NU
+
 # n 1   "beautify" C source. Comments are aligned on cc36 or one space
 #       after source end if the line is too long, or if the comment is
 #       too long then it's aligned to finish on cc80. If neither can be
-#       done, comment is split off and put at start of previous line
-N 1 '^NC^NS^N\t3 36 81^N^<415>'
-N415 ^J^ND^N^<1002>fb^Jo y^Ji1^Jx^NO|^[^ND^N^<404>o n^Jy ' * /*' ' *',,,,1^J^ND^N^<1012>^NU
+#       done, comment is split off and put at start of previous line.
+#       Special treatment of split comments (e.g. by ^N6):
+#       ALU X register is zero except when within a split comment.
+N061 ^NC^NS^N\t3 36 81^J^<PS0>^<POPX>^ND^N^<1002>fb^Jo y^Ji1^Jx^NO|^[^ND^N^<404>o n^Jy ' * /*' ' *',,,,1^J^ND^N^<1012>^NU
+
 # n 6   Continue the current /* comment on the next line,
 #       starting aligned with this one
 N 6 '^H^O^NA^N^<420>^NO{^Z^N^<420> ;Continue comment nxt lin
-# n404: Main loop on lines. Remember cursor pos'n (so we can detect if
-#       we get back to line start, move to comment start, next line if
-#       now at end, backup to delimiter, jump off to submacro if now at
-#       line start.
-N404 ^[m-^J^NC^NU^NO}^O^NA^N^<414>^B^NP}^N^<407>^N^<405>
-# n414 - line has no trailing comment but check for it being just /*
-N414 ^H^NG/^NS^N^<404>^X^NG*^NS^N^<404>^H^N^<405>
-# n407: Enter a different submacro if not past tab 2. Otherwise, check
-#       for 2 spaces before delimiter and if found, delete the second.
-#       If 2 spaces were not found, enter another submacro. Has been
-#       split at n413, where n412 may jump to
-N407 ^NP2^N^<413>^N^<406>
-N413 ^Y^NG ^NS^N^<410>^Y^NG ^NS^N^<410>^F^?^N^<407>
-# n410: Check comment doesn't extend beyond cc80, split off if it does.
-N410 ^Z^NP3^NL^J^N^<404>X^H^O^B^T^L^Jr-1 -2^J^N^<404>
-# n406: If before tab 2, insert spaces until at tab 2, if there is room
-N406 ^NB2^NS^N^<412>^Z^NP3^N^<412>^NB3^NL^J^N^<404>X^H^O^B^NE^E ^N^<406>
-# n405: Start of comment sequence. Move this comment to line start
-#       Call n424 to check for self-contained comment (ending "*/")
-N405 ^L^Jm-1^J^N^<424>
-# n411: if this line starts '*', indent it one space only. Otherwise,
-#       have the line re-examined as a normal line. We take some care
-#       that if the indent is already right, the the line is not
-#       modified.
-N411 ^[m-^J^NC^NU^E^NG*^NS^NL^NJ^<10>X^[g-1^J^N^<404>^NB|^NS^NL^NJ^<10>X^NP|^NS^N^<424>^L ^Jm-1^J^N^<424>
-# n424 - decide whether to enter n411 or n404 next,
-#        depending on whether this line ends "*/"
-N424 ^Z^Y^NG/^NS^N^<411>^Y^NG*^NS^N^<411>^N^<404>
-# n412: The comment starts at cc36 (now). Just in case it started off
-#        there and was too long, check...
-N412 ^Z^NP3^NL^J^N^<404>X^H^O^B^N^<413>
-#
+
 # n212 - Put a box around the current block of comments. Can invoke from last
 #        line in modify mode (which will be overwritten)
 #        or just after in command mode.
@@ -64,20 +32,102 @@ N412 ^Z^NP3^NL^J^N^<404>X^H^O^B^N^<413>
 # MACROS DEFINED
 #
 # n212, n677 down to n671
-#
 N212 ^[^NF{m-1^J^ND^N^<677>^N\^NO}^[^ND^N^<676>^[^NF|^ND^N^<675>^ND^N^<673>i t{^J^ND^N^<672>^J^[i t|^J^L^ND^N^<672>^J^[g t{^Jg+2^J^NU
+
+# -------------------- end of user-callable macros --------------------
+
+# Macros to implement N1:
+
+# n404: Main loop on lines. Remember cursor pos'n (so we can detect if
+#       we get back to line start, move to comment start, next line if
+#       now at end, backup to delimiter, jump off to submacro if now at
+#       line start.
+N404 ^[m-^J^NC^NU^NO}^O^NA^N^<414>^B^NP}^N^<416>^N^<405>
+
+# n416: If a delimiter is found after tab 2 then check it for being the start
+#       of a split comment.
+N416 ^NP2^NS^N^<407>^NO~^G*^NA^NS^NL^NJ^<07>X^X^NG/^NS^<A1X>^NR~^N^<407>
+
+# n414: Line has no trailing comment but check for it being just slash-star.
+#       Otherwise usually move on to next line,
+#       but go via n436 to check for being in a comment continuation.
+N414 ^H^NG/^NS^N^<436>^X^NG*^NS^N^<436>^H^N^<405>
+
+# n436: Line does not start slash-star.
+#       Move on to next line unless comment continuation.
+#       tab ~ has position of original slash-star.
+#       We want text to start 3 chars on from that.
+#       Pull text back if it's too far along.
+N436 ^<SXNE>^N^<404>^H^<PSHTAB ~>^<A2>^<A1>^<PSHCRS>^<SUB>^<SGT>^N^<404>^?^<S1>^<SGT>^NL^NJ^<177766>X^J^N^<404>
+
+# n407: Jump on to n406 if not past tab 2. Otherwise, enter a loop between here
+#       and n413, removing one space per round trip.
+#       If the comment extends beyond cc80, n406 is also part of a loop:
+#       n406->n412->n413->n407
+N407 ^NP2^N^<413>^N^<406>
+
+# n413: check for 2 spaces before delimiter and if found, delete the second.
+#       If a space was deleted, jump (back, usually) to n407.
+#       Otherwise jump to n410.
+N413 ^Y^NG ^NS^N^<410>^Y^NG ^NS^N^<410>^F^?^N^<407>
+
+# n410: Check comment doesn't extend beyond cc80, split off if it does.
+#       Except: if inside a split comment, ask for manual intervention.
+#       Also if inside a split comment, set tab ~ to pos'n of slash-star
+N410 ^<SXGT>^NS^NL^NJ^<7>X^H^O^B^NO~^Z^NP3^NL^J^N^<404>X^<SXEQ>^N^<415>^H^O^B^T^L^Jr-1 -2^J^N^<404>
+
+# n415: Long line in split comment. User has to fix.
+n415 ^[fr^J^<PS0>^<POPX>^N^<404> ;Fix up split comment then q to continue
+
+# n406: If before tab 2, insert spaces until at tab 2, if there is room
+N406 ^NB2^NS^N^<412>^Z^NP3^N^<412>^NB3^NL^J^N^<404>X^H^O^B^NE^E ^N^<406>
+
+# n405: Start of comment sequence. Move this comment to line start
+#       Call n424 to check for self-contained comment (ending "*/")
+N405 ^L^Jm-1^J^N^<424>
+
+# n411: if this line starts '*', indent it one space only. Otherwise,
+#       have the line re-examined as a normal line. We take some care
+#       that if the indent is already right, the the line is not
+#       modified.
+N411 ^[m-^J^NC^NU^E^NG*^NS^NL^NJ^<10>X^[g-1^J^N^<404>^NB|^NS^NL^NJ^<10>X^NP|^NS^N^<424>^L ^Jm-1^J^N^<424>
+
+# n424 - decide whether to enter n411 or n404 next,
+#        depending on whether this line ends "*/"
+N424 ^Z^Y^NG/^NS^N^<411>^Y^NG*^NS^N^<411>^N^<404>
+
+# n412: The comment starts at cc36 (now). Just in case it started off
+#        there and was too long, check...
+N412 ^Z^NP3^NL^J^N^<404>X^H^O^B^N^<413>
+
+# Macros to implement N6:
+
+N417 ^NB{ ^@^NB{^N^@^NU
+N420 ^Y^Y^Y^NG ^D^Y^X^T^E^N^<417>
+
+# Macros to implement NY:
+
+N422 ^Z^NB2^NS^T^I^I^NB2^I^@^E/*  */^Y^Y^Y^NU
+
+# Macros to implement n212:
+
 # n677 - Return if non-comment-line else incremented return (all in modify mode)
 N677 ^NG/^NS^NU^X^NG*^NS^NU^X^NG ^NS^NU^Z^Y^NG/^NS^NU^Y^NG*^NS^NU^Y^NG ^NI^NU
+
 # n676 - Modify lines back up the file, advancing tab } to max line length.
 #        Return in edit mode when non-comment line found, positioned in the
 #        non-comment line
 N676 m-2^J^ND^N^<677>^NU^NP}^NS^NL^NO}X^[^N^<676>
+
 # n675 - Modify each comment line to push its trailing *\ out to the maximum
 #        length
 N675 ^N[{^NS^NUm-^J^Z^B^Y^E^ND^N^<674>^J^N^<675>
+
 # n674 - pad line out for n675
 N674 ^NB}^NS^NU ^N^<674>
+
 # n673 - Construct a /*--- */ line of the right lenght, put in n672
 N673 i t{^J/*  */^B^Y^E^ND^N^<671>^H^L^NM^<672>^[^NU
+
 # n671 - fill line with minuses
 N671 ^NB}^NS^NU-^N^<671>
