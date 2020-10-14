@@ -902,7 +902,7 @@ process_pseudo_arg(scrbuf5 *Curr, bool in_cmd)
   if (fornj)
   {
     fornj = false;
-    mcposn += thisch;              /* Do the jump */
+    mcposn += (int16_t)thisch;     /* Do the (signed!) jump */
     if (mcposn >= 0 && mcposn < scmacs[curmac]->maclen)
       GETNEXTCHR;
     err = "^NJ off macro end or start";

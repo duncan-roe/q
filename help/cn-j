@@ -2,7 +2,7 @@
 
 Jumps by the arbitrary number of chars which is the value of the next
 character. A backwards jump may be effected by specifying 16-bit 2's-complement
-e.g. ^<177777> is -1 (but you would never use -1, read on).
+e.g. fi ^<PS2>xyz^<S1>^<SGT>^NL^NJ^<177764>Xabc^<POPN> outputs xyzxyzabc
 
 Because this is a 3-character sequence, ^NL will be required to conditionally
 obey it. The 4th character position is therefore lost, since either the ^NL or
@@ -16,7 +16,4 @@ up in the ^NJ sequence again. For example:-
 ...^NL^NJ^<06>X^[m-2^J...
 
 conditionally obeys the 5-character sequence  starting with ^[ (assuming ^NL
-was preceded by a conditional like ^NA).
-
-Specify numeric 6 as ^<06>m since ^<6> will probably acquire the meaning of
-"extended-parity 6".
+was preceded by a conditional like ^NA returning false).
