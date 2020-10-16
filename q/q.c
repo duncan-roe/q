@@ -2327,7 +2327,6 @@ do_join(void)
 static bool
 do_locate(void)
 {
-  int dummy;                       /* Unwanted result from ltok5a / lsub5a */
   bool found;
   int srch_len;
 
@@ -2423,11 +2422,11 @@ do_locate(void)
       found =
         (tokens ?
         ltok5a((uint8_t *)ermess, srch_str_len, curr->bdata, firstpos, srch_len,
-        &locpos, &dummy, (uint8_t *)ndel) :
+        &locpos, NULL, (uint8_t *)ndel) :
         (regs ?
         match_regexp(curr->bdata, curr->bchars, firstpos, &locpos, NULL) :
         lsub5a((uint8_t *)ermess, srch_str_len, curr->bdata, firstpos, srch_len,
-        &locpos, &dummy))) ^ EXCLUSIVE_L_BOOL;
+        &locpos, NULL))) ^ EXCLUSIVE_L_BOOL;
     }                              /* if (srch_len < minlen) else */
     if (found)
     {                              /* Line located */

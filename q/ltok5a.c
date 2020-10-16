@@ -1,7 +1,7 @@
 /* L T O K 5 A
  *
  * Copyright (C) 1993 Duncan Roe & Associates P/L
- * Copyright (C) 2012,2014,2018,2019 Duncan Roe
+ * Copyright (C) 2012,2014,2018-2020 Duncan Roe
  *
  * This routine searches for a string as a token. The search is case
  * independent iff CASDEP is nonzero.
@@ -40,8 +40,8 @@ ltok5a(uint8_t *srchstr, int srchlen, uint8_t *string,
   if (first >= len)
   {
     visbel();
-    printf("First position out of range: first=%d, len=%d (lsub5a)\r\n",
-      first, len);
+    fprintf(stderr,
+      "First position out of range: first=%d, len=%d (ltok5a)\r\n", first, len);
     return false;
   }                                /* if (first >= len) */
   if (tbstat != CASDEP)
@@ -80,7 +80,8 @@ ltok5a(uint8_t *srchstr, int srchlen, uint8_t *string,
     }                              /* if (q != string + len) */
 /* We have a match. Set return variables and leave... */
     *strtpos = p - string - 1;
-    *endpos = *strtpos + srchlen - 1;
+    if (endpos)
+      *endpos = *strtpos + srchlen - 1;
     return true;
   }                               /* for (i = len - first - srchlen + 1; ...) */
 /*  Not found string if get here */

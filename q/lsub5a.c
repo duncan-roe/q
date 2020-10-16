@@ -1,7 +1,7 @@
 /* L S U B 5 A
  *
  * Copyright (C) 1993 Duncan Roe & Associates P/L
- * Copyright (C) 2014,2018,2019 Duncan Roe
+ * Copyright (C) 2014,2018-2020 Duncan Roe
  *
  * This routine searches for a string. The search is case independent
  * iff CASDEP is 1.
@@ -34,8 +34,8 @@ lsub5a(uint8_t *srchstr, int srchlen, uint8_t *string,
   if (first >= len)
   {
     visbel();
-    printf("First position out of range: first=%d, len=%d (lsub5a)\r\n",
-      first, len);
+    fprintf(stderr,
+      "First position out of range: first=%d, len=%d (lsub5a)\r\n", first, len);
     return false;
   }
   if (tbstat != CASDEP)
@@ -60,7 +60,8 @@ lsub5a(uint8_t *srchstr, int srchlen, uint8_t *string,
 
 /* Have match. Set return variables and leave... */
     *strtpos = p - string - 1;
-    *endpos = *strtpos + srchlen - 1;
+    if (endpos)
+      *endpos = *strtpos + srchlen - 1;
     return true;
   }                               /* for (i = len - first - srchlen + 1; ...) */
 /* Not found string if get here */

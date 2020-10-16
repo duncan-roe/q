@@ -25,5 +25,4 @@ indent level where you see your choice of tab width when editing.
 macro expansion is not active. Therefore the leading and trailing X must both be
 in the same macro if the macro is a subroutine, because X will not action ^NU.
  Similarly if an X command starts in a U-USE file it must also finish there,
-because X will not action Z. (Q actually forces an X and then forces a Z in this
-case).
+because X will not action Z. (Q forces an X at end of U-Use file)
