@@ -82,3 +82,10 @@ Script started on Tue 18 Feb 2020 12:25:39 PM AEDT
 exit
 
 Script done on Tue 18 Feb 2020 12:25:56 PM AEDT
+Script started on Sat 17 Oct 2020 12:37:45 PM AEDT
+12:37:45$ cat *.c|grep -w goto|wc -l
+13
+12:38:07$ exit
+exit
+
+Script done on Sat 17 Oct 2020 12:39:08 PM AEDT

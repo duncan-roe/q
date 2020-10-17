@@ -15,7 +15,7 @@
 void memrec(uint8_t *start, uint8_t *end, unsigned long mode, scrbuf5 *a1);
 void mapfil(ino_t inode, off_t size, uint8_t *addr);
 void dfread(long num, scrbuf5 *s);
-int ismapd(ino_t inode);
+bool ismapd(ino_t inode);
 void newmap(ino_t inode, off_t size, uint8_t *addr);
 bool trytab(uint8_t *zvuf, scrbuf5 *scline, bool filpos);
 void scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd);

@@ -46,7 +46,8 @@
 #define PIPE_NAME "/tmp/qpipeXXXXXX"
 #define REVRSE (fmode & 04000)
 #define PRINTF_IGNORED printf("f%c ignored (mode +v)\r\n", verb)
-#define RESET_ARGNO goto reset_argno
+#define RESET_ARGNO do {if (previous_argno >= 0) argno = previous_argno;\
+  return false;}while (0)
 #define STDERROUT (curmac < 0 ? stderr : stdout)
 #define NUM_RFRAMES 8
 
@@ -912,15 +913,19 @@ s_b_w_common_write(void)
     fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
     return false;                  /* Bad open */
   }                             /* if ((funit = open_buf(rdwr, tmode)) == -1) */
-  if (fstat(funit, &statbuf))
+  if ((fscode = fstat(funit, &statbuf)))
     fprintf(stderr, "%s. funit %d (fstat)", strerror(errno), funit);
   else if (ismapd(statbuf.st_ino))
-    fprintf(stderr, "%s is mmap'd", ubuf);
-  else if (ftruncate(funit, 0))
-    fprintf(stderr, "%s. funit %d (ftruncate)", strerror(errno), funit);
+    fprintf(stderr, "%s is mmap'd", ubuf), fscode = 1;
   else
+  {
+    SYSCALL(fscode, ftruncate(funit, 0));
+    if (fscode)
+      fprintf(stderr, "%s. funit %d (ftruncate)", strerror(errno), funit);
+  }                                /* else */
+  if (fscode == 0)
     writfl(wrtnum);                /* Write lines to o/p file */
-  if (fscode != 0)                 /* Some kind of failure above */
+  else                             /* Some kind of failure above */
     my_close(funit);
   return fscode == 0;
 }                                  /* s_b_w_common_write() */
@@ -930,7 +935,6 @@ s_b_w_common_write(void)
 static bool
 do_b_or_s(bool is_b)
 {
-  bool bspar;                      /* BACKUP/SAVE had a param */
   bool new_bkup_file = false;
 
   savpos = ptrpos;                 /* So we can leave pos'n same at end */
@@ -941,13 +945,24 @@ do_b_or_s(bool is_b)
   rdwr = O_WRONLY + O_CREAT;       /* Don't truncate yet in case mmap'd */
   if (!get_file_arg(&nofile))
     ERRRTN("Error in filename");
-  if (nofile)                      /* B or S no filename arg */
+  if (!nofile)                     /* B or S with param */
   {
-    if (!pcnta[0])                 /* We have no default f/n */
-      ERRRTN("filename must be specified");
-    bspar = false;                 /* Don't have a param */
-    strcpy(ubuf, pcnta);    /* Duplicate f/n in ubuf so B-BACKUP can merge in */
-  bkup_with_fn_arg:               /*  B-Backup with a filename arg joins here */
+    if (!do_stat_symlink() || !eolok())
+      return false;
+/*
+ * If B-BACKUP, back up supplied param anyway
+ */
+    if (!is_b && !s_b_w_common_write())
+      return false;
+  }                                /* if(!nofile) */
+  if (nofile || is_b)
+  {
+    if (!is_b)
+    {
+      if (!pcnta[0])               /* We have no default f/n */
+        ERRRTN("filename must be specified");
+      strcpy(ubuf, pcnta);  /* Duplicate f/n in ubuf so B-BACKUP can merge in */
+    }
 /*
  * Use TMFILE for name of backup file
  */
@@ -978,18 +993,18 @@ do_b_or_s(bool is_b)
     }                              /* while (!stat(tmfile, &statbuf)) */
     if (rename(ubuf, tmfile))      /* If rename fails */
     {
-/* OK nofile if B with param */
-      if (bspar && errno == ENOENT)
+/* No such file is OK if B with param */
+      if (!nofile && errno == ENOENT)
       {
         puts("New file - no backup taken\r");
         new_bkup_file = true;
-      }                            /* if (bspar && errno == ENOENT) */
+      }                            /* if (!nofile && errno == ENOENT) */
       else
       {
         fprintf(stderr, "%s. %s to %s (rename)", strerror(errno), ubuf, tmfile);
         my_close(funit);           /* In case anything left open */
         return false;              /* Get corrected command */
-      }                            /* if (bspar && errno == ENOENT) else */
+      }                            /* if (!nofile && errno == ENOENT) else */
     }                              /* if (rename(ubuf, tmfile)) */
 /*
  * File renamed - now open new file of same type as original
@@ -1004,22 +1019,9 @@ do_b_or_s(bool is_b)
     }                              /* if (new_bkup_file) else */
     if (!s_b_w_common_write())
       return false;
-  }
-  else
-  {
-    if (!do_stat_symlink() || !eolok())
-      return false;
-    bspar = true;                  /* B or S has a parameter */
-/*
- * If B-BACKUP, back up supplied param anyway
- */
-    if (is_b)
-      goto bkup_with_fn_arg;       /* Join S&B with no params */
-    if (!s_b_w_common_write())
-      return false;
-  }
+  }                                /* if(nofile) */
   setptr(savpos);                  /* Repos'n file as before */
-  if (bspar)
+  if (!nofile)
     strcpy(pcnta, ubuf);           /* We had a param. Set as dflt */
   else if (!is_b)
   {
@@ -2573,6 +2575,8 @@ static bool
 do_quit(bool recursing)
 {
   char *colonpos = NULL;           /* Pos'n of ":" in q filename */
+  bool colontrunc = false;         /* Try truncating ":<line#> */
+  bool have_tried = false;         /* Have tried truncating ":<line#> */
 
 /* q -A and q -V are allowed whether recursing or not, */
 /* so get them out of the way. */
@@ -2637,50 +2641,60 @@ do_quit(bool recursing)
   }
   rdwr = O_RDONLY;
   q_new_file = false;              /* Q-QUIT into existing file */
-colontrunc:
-  if (!do_stat_symlink() || !eolok())
-    RESET_ARGNO;
-try_open:
-  if ((funit = open_buf(rdwr, tmode)) == -1)
+  do
   {
+    if (colontrunc)
+      have_tried = true;
+    if (!do_stat_symlink() || !eolok())
+      RESET_ARGNO;
+  try_open:
+    if ((funit = open_buf(rdwr, tmode)) == -1)
+    {
 /*
  * The file may not exist as user wishes to create a new one.
  * Or the file may not exist because it's of the form <filename>:<line number>
  */
-    if (errno == ENOENT && !q_new_file)
-    {
-      if (cmd_state == RUNNING || cmd_state == TRY_INITIAL_COMMAND)
+      if (errno == ENOENT && !q_new_file)
       {
-        if ((colonpos = strchr(ubuf, ':')) &&
-          sscanf(colonpos + 1, "%d", &colonline) == 1)
+        if (cmd_state == RUNNING || cmd_state == TRY_INITIAL_COMMAND)
         {
-          cmd_state = HAVE_LINE_NUMBER; /* line # in colonline */
-          *colonpos = '\0';        /* Truncate filename */
-          if (!do_stat_symlink() || !eolok())
+          if ((colonpos = strchr(ubuf, ':')) &&
+            sscanf(colonpos + 1, "%d", &colonline) == 1)
           {
-            cmd_state = RUNNING;
-            RESET_ARGNO;
-          }                        /* if (!do_stat_symlink() || !eolok()) */
-          goto colontrunc;         /* Try with truncated ubuf */
-        }                          /* if((colonpos=strchr(ubuf,':'))&&... */
-      }                            /* if (cmd_state == RUNNING) */
+            cmd_state = HAVE_LINE_NUMBER; /* line # in colonline */
+            *colonpos = '\0';      /* Truncate filename */
+            if (!do_stat_symlink() || !eolok())
+            {
+              cmd_state = RUNNING;
+              RESET_ARGNO;
+            }                      /* if (!do_stat_symlink() || !eolok()) */
+            colontrunc = true;     /* Try with truncated ubuf */
+          }                        /* if((colonpos=strchr(ubuf,':'))&&... */
+        }                          /* if (cmd_state == RUNNING) */
 /* Just tried truncating at ":" */
-      else if (cmd_state == HAVE_LINE_NUMBER)
-        *colonpos = ':';           /* Undo truncation */
-      cmd_state = RUNNING;
+        else if (cmd_state == HAVE_LINE_NUMBER)
+          *colonpos = ':';         /* Undo truncation */
+        if (!colontrunc || have_tried)
+        {
+          cmd_state = RUNNING;
 
-      if (ysno5a("Do you want to create a new file (y,n,Cr [n])", A5DNO))
+          if (ysno5a("Do you want to create a new file (y,n,Cr [n])", A5DNO))
+          {
+            cmd_state = TRY_INITIAL_COMMAND;
+            q_new_file = true;     /* Q-QUIT into new file */
+            rdwr = O_WRONLY + O_CREAT + O_EXCL; /* File should *not* exist */
+            goto try_open;         /* So create file */
+          }    /* if (ysno5a("Do you want to create a new file ...)", A5DNO)) */
+        }                          /* if (!colontrunc  || have_tried) */
+      }                            /* if (errno == ENOENT && !q_new_file) */
+      if (!colontrunc || have_tried)
       {
-        cmd_state = TRY_INITIAL_COMMAND;
-        q_new_file = true;         /* Q-QUIT into new file */
-        rdwr = O_WRONLY + O_CREAT + O_EXCL; /* File should *not* exist */
-        goto try_open;             /* So create file */
-/* if(ysno5a("Do you want to create a new file (y,n,Cr [n])",A5DNO)) */
+        fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
+        RESET_ARGNO;
       }
-    }                              /* if (errno == ENOENT && !q_new_file) */
-    fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
-    RESET_ARGNO;
-  }                             /* if ((funit = open_buf(rdwr, tmode)) == -1) */
+    }                           /* if ((funit = open_buf(rdwr, tmode)) == -1) */
+  }
+  while (colontrunc && !have_tried);
 
   if (q_new_file)                  /* Have just created file for Q-QUIT */
   {
@@ -2695,12 +2709,7 @@ try_open:
   if (q_new_file)                  /* Q-QUIT into new file */
     return true;                   /* Read next command */
   if (!E_Q_common())
-  {
-  reset_argno:
-    if (previous_argno >= 0)
-      argno = previous_argno;
-    return false;
-  }                                /* if (!E_Q_common()) */
+    RESET_ARGNO;
   mods = false;                    /* No mods to new file yet */
   return true;
 }                                  /* bool do_quit(void) */

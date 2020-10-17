@@ -58,7 +58,8 @@ N414 ^H^NG/^NS^N^<436>^X^NG*^NS^N^<436>^H^N^<405>
 #       tab ~ has position of original slash-star.
 #       We want text to start 3 chars on from that.
 #       Pull text back if it's too far along.
-N436 ^<SXNE>^N^<404>^H^<PSHTAB ~>^<A2>^<A1>^<PSHCRS>^<SUB>^<SGT>^N^<404>^?^<S1>^<SGT>^NL^NJ^<177766>X^J^N^<404>
+N436 ^<SXNE>^N^<404>^H^<PSHTAB ~>^<A2>^<A1>^<PSHCRS>^<SUB>^<SGT>^N^<437>^?^<S1>^<SGT>^NL^NJ^<177766>X^J^N^<437>
+N437 ^<POPN>^N^<404>
 
 # n407: Jump on to n406 if not past tab 2. Otherwise, enter a loop between here
 #       and n413, removing one space per round trip.

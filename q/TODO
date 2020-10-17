@@ -39,7 +39,7 @@ INTERNALS
 	DONE: rework asg2 blocks (including xistcs.c)
 	DONE: Use meaningful names instead of logtmp &c.
 	DONE: Tidy scmnrd.c in particular
-	STARTED: Be more careful what goes to stderr / stdin
+	STARTED: Be more careful what goes to stderr / stdout
 	STARTED: use stdint types
 	STARTED: Reduce number of goto stmts
 	DONE: return bad_rdtk() once H & L are subroutinised

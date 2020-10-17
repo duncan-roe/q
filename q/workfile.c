@@ -1049,7 +1049,7 @@ insmem(uint8_t *linptr, uint8_t *last)
 
 /* ******************************* ismapd ****************************** */
 
-int
+bool
 ismapd(ino_t inode)
 {
   mapbk *mp;                       /* Scratch */
