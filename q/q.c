@@ -2576,7 +2576,10 @@ do_quit(bool recursing)
 {
   char *colonpos = NULL;           /* Pos'n of ":" in q filename */
   bool colontrunc = false;         /* Try truncating ":<line#> */
-  bool have_tried = false;         /* Have tried truncating ":<line#> */
+  bool tried_colontrunc = false;
+  bool try_create = false;         /* Try creating a new file this time */
+  bool tried_create = false;
+  command_state old_cmd_state;
 
 /* q -A and q -V are allowed whether recursing or not, */
 /* so get them out of the way. */
@@ -2644,57 +2647,64 @@ do_quit(bool recursing)
   do
   {
     if (colontrunc)
-      have_tried = true;
+      tried_colontrunc = true;
     if (!do_stat_symlink() || !eolok())
       RESET_ARGNO;
-  try_open:
-    if ((funit = open_buf(rdwr, tmode)) == -1)
+    do
     {
+      if (try_create)
+        tried_create = true;
+      if ((funit = open_buf(rdwr, tmode)) == -1)
+      {
 /*
  * The file may not exist as user wishes to create a new one.
  * Or the file may not exist because it's of the form <filename>:<line number>
  */
-      if (errno == ENOENT && !q_new_file)
-      {
-        if (cmd_state == RUNNING || cmd_state == TRY_INITIAL_COMMAND)
+        if (errno == ENOENT && !q_new_file)
         {
-          if ((colonpos = strchr(ubuf, ':')) &&
-            sscanf(colonpos + 1, "%d", &colonline) == 1)
+          if (cmd_state == RUNNING || cmd_state == TRY_INITIAL_COMMAND)
           {
-            cmd_state = HAVE_LINE_NUMBER; /* line # in colonline */
-            *colonpos = '\0';      /* Truncate filename */
-            if (!do_stat_symlink() || !eolok())
+            if ((colonpos = strchr(ubuf, ':')) &&
+              sscanf(colonpos + 1, "%d", &colonline) == 1)
             {
-              cmd_state = RUNNING;
-              RESET_ARGNO;
-            }                      /* if (!do_stat_symlink() || !eolok()) */
-            colontrunc = true;     /* Try with truncated ubuf */
-          }                        /* if((colonpos=strchr(ubuf,':'))&&... */
-        }                          /* if (cmd_state == RUNNING) */
+              cmd_state = HAVE_LINE_NUMBER; /* line # in colonline */
+              *colonpos = '\0';    /* Truncate filename */
+              if (!do_stat_symlink() || !eolok())
+              {
+                cmd_state = RUNNING;
+                RESET_ARGNO;
+              }                    /* if (!do_stat_symlink() || !eolok()) */
+              colontrunc = true;   /* Try with truncated ubuf */
+            }                      /* if((colonpos=strchr(ubuf,':'))&&... */
+          }                        /* if (cmd_state == RUNNING) */
 /* Just tried truncating at ":" */
-        else if (cmd_state == HAVE_LINE_NUMBER)
-          *colonpos = ':';         /* Undo truncation */
-        if (!colontrunc || have_tried)
-        {
-          cmd_state = RUNNING;
-
-          if (ysno5a("Do you want to create a new file (y,n,Cr [n])", A5DNO))
+          else if (cmd_state == HAVE_LINE_NUMBER)
+            *colonpos = ':';       /* Undo truncation */
+          if (!colontrunc || tried_colontrunc)
           {
-            cmd_state = TRY_INITIAL_COMMAND;
-            q_new_file = true;     /* Q-QUIT into new file */
-            rdwr = O_WRONLY + O_CREAT + O_EXCL; /* File should *not* exist */
-            goto try_open;         /* So create file */
-          }    /* if (ysno5a("Do you want to create a new file ...)", A5DNO)) */
-        }                          /* if (!colontrunc  || have_tried) */
-      }                            /* if (errno == ENOENT && !q_new_file) */
-      if (!colontrunc || have_tried)
-      {
-        fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
-        RESET_ARGNO;
-      }
-    }                           /* if ((funit = open_buf(rdwr, tmode)) == -1) */
+            old_cmd_state = cmd_state;
+            cmd_state = RUNNING;
+
+            if (ysno5a("Do you want to create a new file (y,n,Cr [n])", A5DNO))
+            {
+              cmd_state =
+                old_cmd_state == TRY_INITIAL_COMMAND ? old_cmd_state : RUNNING;
+              q_new_file = true;   /* Q-QUIT into new file */
+              rdwr = O_WRONLY + O_CREAT + O_EXCL; /* File should *not* exist */
+              try_create = true;   /* So create file */
+            }  /* if (ysno5a("Do you want to create a new file ...)", A5DNO)) */
+          }                        /* if (!colontrunc  || tried_colontrunc) */
+        }                          /* if (errno == ENOENT && !q_new_file) */
+        if ((!colontrunc || tried_colontrunc) && (!try_create || tried_create))
+        {
+          fprintf(stderr, "%s. %s (open)", strerror(errno), ubuf);
+          RESET_ARGNO;
+        }
+      }                         /* if ((funit = open_buf(rdwr, tmode)) == -1) */
+    }
+    while (try_create && !tried_create);
   }
-  while (colontrunc && !have_tried);
+  while (colontrunc && !tried_colontrunc);
 
   if (q_new_file)                  /* Have just created file for Q-QUIT */
   {
