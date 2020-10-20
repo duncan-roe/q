@@ -5,7 +5,8 @@ line. The search for the string starts at the current file position, and
 proceeds forward through the file unless "fm +r" is in effect, in which case the
 file is searched backwards.
  Format
- LOCATE <string>,<1st no. of lines>,<2nd no. of lines>,<1st pos'n>,<last pos'n>
+ LOCATE <string>,<1st no. of lines>,<2nd no. of lines>,<1st pos'n>,<last pos'n>,
+<match index>
  Parameters
  <string>    the string to be searched for. If it contains space, comma, '/*'
              or quote, it should be enclosed in quotes, and quotes in the
@@ -20,6 +21,13 @@ file is searched backwards.
  <last  "  > } the string may start. Both same value => where string must be.
              } Rules same as for # of lines arguments. Defaults:-
              } <string> can start char 1 / can be up to last part of line.
+ <match index> For regular expressions only (fm +g): specify on which match to
+               leave the cursor. A value of 1 (the default) means the start of
+               the whole RE; 2 means 1st reported subexpression match, 3 means
+               2nd subexpression and so on. RE matching is "extended", as
+               defined in POSIX.2. (See e.g. "man 7 regex").
+               If 1st and/or last positions are specified, they apply to the
+               indexed match.
  File position
  After a successful search, the file is positioned after the last line modified,
 if searching forwards. If searching backwards, the file is left at the line

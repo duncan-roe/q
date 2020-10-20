@@ -1,7 +1,7 @@
 /* X I S T C S
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012,2017,2019 Duncan Roe
+ * Copyright (C) 2012,2017,2019-2020 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -76,8 +76,8 @@ xistcs()
       puts("x");
     }                              /* if (!cl5get(...)) */
     cmdbuf.bchars = strlen((char *)cmdbuf.bdata);
-    (void)scrdtk(5, 0, 0, &cmdbuf);
-    (void)scrdtk(1, buf, 2, &cmdbuf);
+    scrdtk(5, 0, 0, &cmdbuf);
+    scrdtk(1, buf, 2, &cmdbuf);
     verb = buf[0];
     if (cmdbuf.toktyp != nortok || cmdbuf.toklen != 1)
     {
@@ -166,7 +166,7 @@ xistcs()
 /* so silently ignore attempts to change it. */
 /* (bspace was a boolean saying whether this terminal can backspace) */
 
-        (void)scrdtk(1, buf, 4, &cmdbuf);
+        scrdtk(1, buf, 4, &cmdbuf);
         if (cmdbuf.toktyp != eoltok)
         {
           if (cmdbuf.toktyp != nortok)
@@ -306,7 +306,7 @@ good_octnum(void)
 static bool
 eolok(void)
 {
-  (void)scrdtk(1, 0, 0, &cmdbuf);
+  scrdtk(1, 0, 0, &cmdbuf);
   if (cmdbuf.toktyp == eoltok)
     return true;                   /* J EOL (OK) */
   msg = "Spurious params - command not done";

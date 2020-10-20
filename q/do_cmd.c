@@ -4,7 +4,7 @@
  *
  * Copyright (C) 1995, Duncan Roe & Associates P/L
  * Copyright (C) 2002, Duncan Roe
- * Copyright (C) 2012,2014,2017-2019 Duncan Roe
+ * Copyright (C) 2012,2014,2017-2020 Duncan Roe
  */
 #include <stdio.h>
 #include <errno.h>
@@ -39,8 +39,8 @@ do_cmd()
         return 0;
       }
     }                      /* if (scrdtk(2, (uint8_t *)ubuf, BUFMAX, oldcom)) */
-  scrdtk(3, (uint8_t *)NULL, 0, oldcom); /* Reset to line start */
-  scrdtk(1, (uint8_t *)NULL, 0, oldcom); /* Skip over '!' */
+  scrdtk(3, NULL, 0, oldcom);      /* Reset to line start */
+  scrdtk(1, NULL, 0, oldcom);      /* Skip over '!' */
   scrdtk(4, (uint8_t *)ubuf, BUFMAX, oldcom); /* Get shell command */
   final5();
 /* Unary exclamation mark gets interactive shell */

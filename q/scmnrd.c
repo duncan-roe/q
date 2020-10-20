@@ -321,19 +321,19 @@ scmnrd()
   {
     previous_argno = argno;
 /* See if command has args */
-    (void)scrdtk(1, (uint8_t *)ubuf, BUFMAX, oldcom);
+    scrdtk(1, (uint8_t *)ubuf, BUFMAX, oldcom);
     if (oldcom->toktyp == nortok && optind < argc && ubuf[0] == '$' &&
       oldcom->toklen > 1 && oldcom->bdata[oldcom->tokbeg] == '$')
     {
 /* First check for no more args */
       file_start = oldcom->tokbeg; /* Remember where filename starts */
-      (void)scrdtk(1, 0, 0, oldcom);
+      scrdtk(1, 0, 0, oldcom);
       if (oldcom->toktyp == eoltok)
       {
         oldcom->bcurs = savcurs;
         oldcom->bdata[file_start] = SPACE; /* Remove leading '$' */
 /* Read arg no */
-        (void)scrdtk(1, (uint8_t *)ubuf, BUFMAX, oldcom);
+        scrdtk(1, (uint8_t *)ubuf, BUFMAX, oldcom);
         oldcom->bdata[file_start] = '$'; /* Reinstate leading '$' */
         oldcom->tokbeg = file_start;
         if (oldcom->decok)         /* Ok decimal */
@@ -371,7 +371,7 @@ static action
 display_maybe(void)
 {
 /* Defer displaying the command owing to a possible Q massage... */
-  (void)scrdtk(5, 0, 0, oldcom);   /* Reset command buffer */
+  scrdtk(5, 0, 0, oldcom);         /* Reset command buffer */
   scrdtk(1, (uint8_t *)ubuf, BUFMAX, oldcom);
   if (oldcom->toklen > 12 && verb != ASTRSK) /* Verb too long */
   {

@@ -196,11 +196,13 @@ static struct reprompt_frame
 rframe[NUM_RFRAMES];
 static int ridx = -1;
 static regex_t preg = { 0 };
+static regmatch_t *pmatch;
+static size_t pmatch_len = 0;
 
 /* Static prototypes */
 
 static bool match_regexp(uint8_t *string, int stringlen, int offset,
-  int *matchpos, int *matchlen);
+  int *matchpos, int *matchlen, size_t nmatch);
 static bool compile_regexp(char *regex);
 static bool do_freprompt(void);
 static bool check_pipe(void);
@@ -251,7 +253,7 @@ static bool valid_FX_arg(void);
 static void move_cursor_back(void);
 static void printf_eof_reached(long ct, char *action_str);
 static void print_scanned_lines(long which);
-static bool get_search_columns(void);
+static bool get_search_columns(bool more_allowed);
 static bool do_ychangeall(void);
 static bool do_zenduse(void);
 static bool pushmac(bool set_u_use);
@@ -745,7 +747,7 @@ pushmac(bool set_u_use)
 static bool
 eolok(void)
 {
-  scrdtk(1, (uint8_t *)NULL, 0, oldcom);
+  scrdtk(1, NULL, 0, oldcom);
   if (oldcom->toktyp == eoltok)    /* OK */
     return true;
   fputs("Too many arguments for this command", stderr);
@@ -938,7 +940,7 @@ do_b_or_s(bool is_b)
   bool new_bkup_file = false;
 
   savpos = ptrpos;                 /* So we can leave pos'n same at end */
-  setptr((long)1);                 /* Pos'n 1st line */
+  setptr(1);                       /* Pos'n 1st line */
   if (deferd)
     dfread(LONG_MAX, NULL);        /* Ensure all file in */
   wrtnum = lintot;                 /* Write all lines */
@@ -949,23 +951,22 @@ do_b_or_s(bool is_b)
   {
     if (!do_stat_symlink() || !eolok())
       return false;
-/*
- * If B-BACKUP, back up supplied param anyway
- */
+
+/* B-BACKUP will back up supplied param if it exists, but not now */
     if (!is_b && !s_b_w_common_write())
       return false;
-  }                                /* if(!nofile) */
+  }                                /* if (!nofile) */
+
   if (nofile || is_b)
   {
-    if (!is_b)
+    if (nofile)
     {
       if (!pcnta[0])               /* We have no default f/n */
         ERRRTN("filename must be specified");
-      strcpy(ubuf, pcnta);  /* Duplicate f/n in ubuf so B-BACKUP can merge in */
-    }
-/*
- * Use TMFILE for name of backup file
- */
+      strcpy(ubuf, pcnta);         /* ubuf has b f/n if !nofile */
+    }                              /* if (nofile) */
+
+/* Use .tm or .bu for name of backup file */
     if (snprintf(tmfile, sizeof tmfile, "%s.%s", ubuf,
       is_b ? "bu" : "tm") >= sizeof tmfile)
       ERRRTN("Filename too long");
@@ -1009,14 +1010,12 @@ do_b_or_s(bool is_b)
 /*
  * File renamed - now open new file of same type as original
  */
-    if (new_bkup_file)
-      new_bkup_file = false;
-    else
+    if (!new_bkup_file)
     {
       rdwr = O_WRONLY + O_CREAT + O_EXCL; /* Must be new file */
       if (is_b)
         printf("Backup file is %s\r\n", tmfile); /* Report backup f/n */
-    }                              /* if (new_bkup_file) else */
+    }                              /* if (!new_bkup_file) */
     if (!s_b_w_common_write())
       return false;
   }                                /* if(nofile) */
@@ -1103,7 +1102,7 @@ write_workfile_to_stdout(void)
 /*
  * Do a subset of a regular save, to the original stdout
  */
-  setptr((long)1);                 /* Pos'n 1st line */
+  setptr(1);                       /* Pos'n 1st line */
   if (deferd)
     dfread(LONG_MAX, NULL);        /* Ensure all file in */
   funit = saved_pipe_stdout;
@@ -1385,7 +1384,7 @@ do_ychangeall(void)
     count = oldcom->decval;
   lstlin = -1;                     /* -TO not allowed for column pos'ns */
   srch_str_len = oldlen;           /* Used by get_search_columns */
-  if (!get_search_columns())       /* Look for 1st & last pos'ns in line */
+  if (!get_search_columns(false))  /* Look for 1st & last pos'ns in line */
     return false;
   if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
   {
@@ -1513,7 +1512,7 @@ do_ychangeall(void)
 /* *************************** get_search_columns *************************** */
 
 static bool
-get_search_columns(void)
+get_search_columns(bool more_allowed)
 {
   if (!getnum(false, false))       /* Get 1st pos to search */
     return false;
@@ -1553,10 +1552,10 @@ get_search_columns(void)
 /* Get minimum line length to search (can't determine for RE search) */
   minlen = regs ? 0 : firstpos + srch_str_len;
 
-  if (!eolok())
+  if (!more_allowed && !eolok())
     return false;
   return true;
-}                                  /* bool get_search_columns(void) */
+}                               /* bool get_search_columns(bool more_allowed) */
 
 /* *************************** print_scanned_lines ************************** */
 
@@ -1586,11 +1585,11 @@ static void
 move_cursor_back(void)
 {
 /* Reset screen cursor */
-  (void)scrdtk(5, (uint8_t *)NULL, 0, oldcom);
+  scrdtk(5, NULL, 0, oldcom);
 
 /* Move past command & 1st param */
-  (void)scrdtk(1, (uint8_t *)NULL, 0, oldcom);
-  (void)scrdtk(1, (uint8_t *)NULL, 0, oldcom);
+  scrdtk(1, NULL, 0, oldcom);
+  scrdtk(1, NULL, 0, oldcom);
 }                                  /* void move_cursor_back(void) */
 
 /* ****************************** valid_FX_arg ****************************** */
@@ -2331,6 +2330,7 @@ do_locate(void)
 {
   bool found;
   int srch_len;
+  size_t nmatch;
 
   is_locate = true;
   tokens = verb == 'l';            /* Whether FL */
@@ -2383,9 +2383,33 @@ do_locate(void)
   lstlin = -1;                     /* Not allowed -TO */
   if (get_num(false, &count) < 0)  /* Get # lines to mod on location */
     return false;
-  if (!get_search_columns())
+  if (!get_search_columns(regs))
     return false;
   savpos = ptrpos;                 /* Remember pos in case no match */
+
+/* Get nmatch for this regexp call */
+  if (regs)
+  {
+    scrdtk(1, 0, 0, oldcom);
+    if (oldcom->toktyp == nortok)
+    {
+      if (!oldcom->decok)
+      {
+        fputs("Invalid decimal number of matches", stderr);
+        return false;
+      }                            /* if (!oldcom->decok) */
+      nmatch = oldcom->decval;
+      if (nmatch <= 0)
+      {
+        fputs("Number of matches must be 1 or more", stderr);
+        return false;
+      }                            /* if (nmatch <= 0) */
+    }                              /* if (oldcom->toktyp == nortok) */
+    else
+      nmatch = 1;
+    if (!eolok())
+      return false;                /* Too many args to command */
+  }                                /* if (regs) */
 
 /* Start of search */
 
@@ -2426,7 +2450,8 @@ do_locate(void)
         ltok5a((uint8_t *)ermess, srch_str_len, curr->bdata, firstpos, srch_len,
         &locpos, NULL, (uint8_t *)ndel) :
         (regs ?
-        match_regexp(curr->bdata, curr->bchars, firstpos, &locpos, NULL) :
+        match_regexp
+        (curr->bdata, curr->bchars, firstpos, &locpos, NULL, nmatch) :
         lsub5a((uint8_t *)ermess, srch_str_len, curr->bdata, firstpos, srch_len,
         &locpos, NULL))) ^ EXCLUSIVE_L_BOOL;
     }                              /* if (srch_len < minlen) else */
@@ -2715,7 +2740,7 @@ do_quit(bool recursing)
 /*
  * Set up new default for S&B
  */
-  (void)strcpy(pcnta, ubuf);       /* Filename & length now remembered */
+  strcpy(pcnta, ubuf);             /* Filename & length now remembered */
   if (q_new_file)                  /* Q-QUIT into new file */
     return true;                   /* Read next command */
   if (!E_Q_common())
@@ -3338,40 +3363,82 @@ compile_regexp(char *regex)
 /* A3 - Offset from string start to start matching */
 /* A4 - Returned match position                    */
 /* A5 - Returned match length or NULL              */
+/* A6 - nmatch arg for regexec()                   */
 /* ----------------------------------------------- */
 
 static bool
 match_regexp(uint8_t *string, int stringlen, int offset, int *matchpos,
-  int *matchlen)
+  int *matchlen, size_t nmatch)
 {
   int rc;
   uint8_t saved_char;
-  regmatch_t pmatch;               /* (array of 1) */
+  bool repeat;
+/* Have to search for sub-expression from line start */
+  int local_offset = nmatch == 1 ? offset : 0;
+
+/* Make sure pmatch is big enough. If first time through, allocate 8 slots */
+  if (nmatch > pmatch_len)
+  {
+    size_t wanted = nmatch;
+
+    if (!pmatch_len)
+    {
+      if (wanted < 8)
+        wanted = 8;
+      pmatch = malloc(wanted * sizeof *pmatch);
+    }                              /* if (!pmatch_len && wanted < 8) */
+    else
+      pmatch = realloc(pmatch, wanted * sizeof *pmatch);
+    if (!pmatch)
+    {
+      fputs(strerror(errno), stderr);
+      return false;
+    }                              /* if (!pmatch) */
+    pmatch_len = wanted;
+  }                                /* if (nmatch > pmatch_len) */
 
 /* Unlike lsub5a, caller can't check for a short line */
-/* (since minlen is always zero). */
+/* (since minlen is always zero). So do it now */
 /* Also unlike lsub5a, it is legal to search an empty string, */
 /* so test is for GT rather than GE */
   if (offset > stringlen)
     return false;
 
-/* Terminate line for regexec */
-  saved_char = string[stringlen];
-  string[stringlen] = 0;
+/* Inner match loop (required in case substring may only start after offset) */
+  do
+  {
+    repeat = false;
 
-  rc = regexec(&preg, (char *)string + offset, 1, &pmatch, 0);
-  string[stringlen] = saved_char;
-  if (rc)
-    return false;
+/* Terminate line for regexec */
+    saved_char = string[stringlen];
+    string[stringlen] = 0;
+
+    rc = regexec(&preg, (char *)string + local_offset, nmatch, pmatch, 0);
+    string[stringlen] = saved_char;
+    if (rc)
+      return false;
 
 /* Match after last allowed column is not a match */
-  if (pmatch.rm_so + offset > lastpos)
-    return false;
+    if (pmatch[nmatch - 1].rm_so + local_offset > lastpos)
+      return false;
+
+/* Negative pmatch is not a match */
+    if (pmatch[nmatch - 1].rm_so < 0)
+      return false;
+
+/* If matched a substring too early, try again with bigger offset */
+    if (pmatch[nmatch - 1].rm_so + local_offset < offset)
+    {
+      local_offset += pmatch->rm_so + 1;
+      repeat = true;
+    }                /* if (pmatch[nmatch - 1].rm_so + local_offset < offset) */
+  }
+  while (repeat);                  /* do */
 
 /* Set found position and length matched */
-  *matchpos = pmatch.rm_so + offset;
+  *matchpos = pmatch[nmatch - 1].rm_so + local_offset;
   if (matchlen)
-    *matchlen = pmatch.rm_eo - pmatch.rm_so;
+    *matchlen = pmatch[nmatch - 1].rm_eo - pmatch[nmatch - 1].rm_so;
 
   return true;
 }                                  /* static bool match_regexp() */

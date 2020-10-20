@@ -3,7 +3,7 @@
  * Obey a shell command returning its exit status
  *
  * Copyright (C) 2002, Duncan Roe
- * Copyright (C) 2012,2015,2019 Duncan Roe
+ * Copyright (C) 2012,2015,2019-2020 Duncan Roe
  */
 #include <stdio.h>
 #include <errno.h>
@@ -262,7 +262,7 @@ cmd(char *mybuf, bool backtick)
       }                            /* if (i != STDERR5FD) */
       SYSCALL(i, close(errfds[1]));
     }                              /* if (backtick) */
-    execl(sh, sh, "-c", mybuf, (char *)NULL);
+    execl(sh, sh, "-c", mybuf, NULL);
     fprintf(stderr, "%s. %s (execl)\r\n", strerror(errno), sh);
     return 1;
   }                                /* if(pid) else */
