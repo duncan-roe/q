@@ -198,6 +198,8 @@ static int ridx = -1;
 static regex_t preg = { 0 };
 static regmatch_t *pmatch;
 static size_t pmatch_len = 0;
+static bool unmatched_substring;
+static int saved_tokbeg;
 
 /* Static prototypes */
 
@@ -250,7 +252,7 @@ static bool get_c_or_r_args(void);
 static void report_control_c(void);
 static int get_num(bool okzero, long *result);
 static bool valid_FX_arg(void);
-static void move_cursor_back(void);
+static void move_cursor_back(int wanted_tokbeg);
 static void printf_eof_reached(long ct, char *action_str);
 static void print_scanned_lines(long which);
 static bool get_search_columns(bool more_allowed);
@@ -1339,6 +1341,7 @@ do_ychangeall(void)
   int match_end;
 
   tokens = verb == 'y';            /* Differentiate fy */
+  saved_tokbeg = 0;
   if (scrdtk(2, (uint8_t *)oldstr, BUFMAX, oldcom))
     return bad_rdtk();
   if (oldcom->toktyp == eoltok || !(oldlen = oldcom->toklen))
@@ -1503,7 +1506,7 @@ do_ychangeall(void)
     if (curmac < 0 || !BRIEF)
       fputs("Specified string not found", STDERROUT);
     locerr = true;                 /* Picked up by RERDCM */
-    move_cursor_back();
+    move_cursor_back(saved_tokbeg);
     return false;
   }                                /* if (!lines_changed) */
   return true;
@@ -1582,7 +1585,7 @@ printf_eof_reached(long ct, char *action_str)
 /* **************************** move_cursor_back **************************** */
 
 static void
-move_cursor_back(void)
+move_cursor_back(int wanted_tokbeg)
 {
 /* Reset screen cursor */
   scrdtk(5, NULL, 0, oldcom);
@@ -1590,7 +1593,12 @@ move_cursor_back(void)
 /* Move past command & 1st param */
   scrdtk(1, NULL, 0, oldcom);
   scrdtk(1, NULL, 0, oldcom);
-}                                  /* void move_cursor_back(void) */
+
+/* Move on to wanted token, if specified */
+  if (wanted_tokbeg)
+    while (oldcom->tokbeg < wanted_tokbeg && oldcom->toktyp != eoltok)
+      scrdtk(1, NULL, 0, oldcom);
+}                                  /* move_cursor_back() */
 
 /* ****************************** valid_FX_arg ****************************** */
 
@@ -2333,6 +2341,8 @@ do_locate(void)
   size_t nmatch;
 
   is_locate = true;
+  unmatched_substring = false;
+  saved_tokbeg = 0;
   tokens = verb == 'l';            /* Whether FL */
   if (tokens)
     regs = false;
@@ -2399,6 +2409,7 @@ do_locate(void)
         return false;
       }                            /* if (!oldcom->decok) */
       nmatch = oldcom->decval;
+      saved_tokbeg = oldcom->tokbeg;
       if (nmatch <= 0)
       {
         fputs("Number of matches must be 1 or more", stderr);
@@ -2470,9 +2481,10 @@ do_locate(void)
 
   setptr(savpos);                  /* Move pointer back */
   if (display_wanted)
-    fputs("Specified string not found", STDERROUT);
+    fprintf(STDERROUT, "Specified %s not found",
+      unmatched_substring ? "sub-expression" : "string");
   locerr = true;                   /* Picked up by RERDCM */
-  move_cursor_back();
+  move_cursor_back(saved_tokbeg);
   return false;
 }                                  /* bool do_locate(void) */
 
@@ -2874,7 +2886,7 @@ do_shell_command(void)
   {
     fputs("bad luck", stderr);
     noRereadIfMacro = true;
-    move_cursor_back();            /* Error has been reported */
+    move_cursor_back(0);           /* Error has been reported */
     return false;
   }
   if (cntrlc)
@@ -3424,7 +3436,10 @@ match_regexp(uint8_t *string, int stringlen, int offset, int *matchpos,
 
 /* Negative pmatch is not a match */
     if (pmatch[nmatch - 1].rm_so < 0)
+    {
+      unmatched_substring = true;
       return false;
+    }                              /* if (pmatch[nmatch - 1].rm_so < 0) */
 
 /* If matched a substring too early, try again with bigger offset */
     if (pmatch[nmatch - 1].rm_so + local_offset < offset)
