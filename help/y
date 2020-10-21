@@ -1,7 +1,8 @@
   \/ Y - Y C H A N G E A L L \/
  Changes all occurrences of one string to another in a range of lines
  Format
- YCHANGEALL <string1>,<string2>,<line #>,<# lines>,<1st pos'n>,<last pos'n>
+ YCHANGEALL <string1>,<string2>,<line #>,<# lines>,<1st pos'n>,<last pos'n>,
+<match index>
  Parameters
  <string1>  the string to be searched for and replaced. See L-LOCATE for full
             format details. <string1> must be specified.
@@ -14,6 +15,8 @@
             search is done to end of file.
  <1st pos'n> \Much the same as for L-LOCATE. Note however that these params
  <last  "  > /apply to the UNMODIFIED line (before any length change).
+ <match index> For regular expressions only (fm +g): specify on which match to
+               leave the cursor. H L for more info.
  Notes
  BRIEF or NONE output modes are actioned if in an scmacro without question. If
 command came from the keyboard, they are actioned subject to confirmation.

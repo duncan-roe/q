@@ -203,6 +203,7 @@ static int saved_tokbeg;
 
 /* Static prototypes */
 
+static bool get_nmatch(size_t *nmatch);
 static bool match_regexp(uint8_t *string, int stringlen, int offset,
   int *matchpos, int *matchlen, size_t nmatch);
 static bool compile_regexp(char *regex);
@@ -1329,19 +1330,24 @@ do_ychangeall(void)
 
 /* Y or FY - Change all occurrences of 1 string to another */
 
-  bool linmod;                     /* This line modified (Y) */
-  int yposn;                       /* How far we are along a line (Y) */
-  int ydiff = 0;                   /* OLDLEN-NEWLEN */
-  int newlen = 0;                  /* Length of NEWSTR */
-  int oldlen = 0;                  /* Length of OLDSTR */
-  char oldstr[Q_BUFSIZ], newstr[Q_BUFSIZ]; /* YCHANGEALL. !!AMENDED USAGE!! */
+  bool linmod;                     /* This line modified */
+  int yposn;                       /* How far we are along a line */
+  int ydiff;
+  int oldlen, newlen;
+  char oldstr[Q_BUFSIZ], newstr[Q_BUFSIZ];
   bool lines_changed = false;
-  int n;
+  int srch_len;
   int match_start;
   int match_end;
+  size_t nmatch;
 
   tokens = verb == 'y';            /* Differentiate fy */
+  unmatched_substring = false;
   saved_tokbeg = 0;
+  if (tokens)
+    regs = false;
+  else
+    regs = (fmode & 010000000) != 0;
   if (scrdtk(2, (uint8_t *)oldstr, BUFMAX, oldcom))
     return bad_rdtk();
   if (oldcom->toktyp == eoltok || !(oldlen = oldcom->toklen))
@@ -1354,14 +1360,19 @@ do_ychangeall(void)
   if (scrdtk(2, (uint8_t *)newstr, BUFMAX, oldcom))
     return bad_rdtk();
   newlen = oldcom->toklen;
-  ydiff = newlen - oldlen;
+
+/* RE does this once matched length for current line is known */
+  if (!regs)
+  {
+    ydiff = newlen - oldlen;
 
 /* strings must be equal length if Fixed-Length mode */
-  if (ydiff && fmode & 0400)
-  {
-    fputs("Replace string must be same length in FIXED LENGTH mode", stderr);
-    return false;
-  }
+    if (ydiff && fmode & 0400)
+    {
+      fputs("Replace string must be same length in FIXED LENGTH mode", stderr);
+      return false;
+    }
+  }                                /* if (!regs) */
 
   if (oldcom->toktyp == eoltok)
     j4 = 1;
@@ -1386,14 +1397,17 @@ do_ychangeall(void)
   else
     count = oldcom->decval;
   lstlin = -1;                     /* -TO not allowed for column pos'ns */
-  srch_str_len = oldlen;           /* Used by get_search_columns */
-  if (!get_search_columns(false))  /* Look for 1st & last pos'ns in line */
+  srch_str_len = regs ? 0 : oldlen; /* Used by get_search_columns */
+  if (!get_search_columns(regs))   /* Look for 1st & last pos'ns in line */
     return false;
   if (!lintot && !(deferd && (dfread(1, NULL), lintot))) /* Empty file */
   {
     fputs("Empty file - can't changeall any lines", stderr);
     return false;
   }
+
+  if (regs && !(get_nmatch(&nmatch) && compile_regexp(oldstr)))
+    return false;
 
 /* We act on BRIEF or NONE if in a macro without question. Otherwise, BRIEF or
  * NONE is queried, and we reset to VERBOSE if we don't get confirmation */
@@ -1434,22 +1448,36 @@ do_ychangeall(void)
     linmod = false;                /* No match this line yet */
     if (curr->bchars < minlen)
       continue;                    /* J line shorter than minimum */
-    n = 0;
-    if (curr->bchars > lastpos)
-      n = curr->bchars - lastpos;  /* N=# at end not to search */
+    srch_len = curr->bchars;
+    if (srch_len > lastpos)
+      srch_len = lastpos;
 
     do
     {
       if (tokens)
         retcod =
           ltok5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn,
-          curr->bchars - n, &match_start, &match_end, (uint8_t *)ndel);
+          srch_len, &match_start, &match_end, (uint8_t *)ndel);
+      else if (regs)
+        retcod = match_regexp
+          (curr->bdata, curr->bchars, yposn, &match_start, &oldlen, nmatch);
       else
         retcod =
           lsub5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn,
-          curr->bchars - n, &match_start, &match_end);
+          srch_len, &match_start, &match_end);
       if (!retcod)
         break;
+      else if (regs)
+      {
+        ydiff = newlen - oldlen;
+        match_end = match_start + oldlen - 1;
+        if (ydiff && fmode & 0400)
+        {
+          fputs("Replace string must be same length in FIXED LENGTH mode",
+            stderr);
+          return false;
+        }                          /* if (ydiff && fmode & 0400) */
+      }                            /* else if (regs) */
       if (curr->bchars + ydiff > curr->bmxch) /* Would exceed line capacity */
       {
         savpos = ptrpos - 1;       /* Point to too big line */
@@ -1469,7 +1497,7 @@ do_ychangeall(void)
 
 /* Seek more occurrences if room */
     }
-    while (curr->bchars - n - yposn >= oldlen);
+    while (srch_len - yposn >= (regs ? 0 : oldlen));
 
     if (!linmod)
       continue;                    /* J no mods to this line */
@@ -1504,7 +1532,8 @@ do_ychangeall(void)
   if (!lines_changed)
   {
     if (curmac < 0 || !BRIEF)
-      fputs("Specified string not found", STDERROUT);
+      fprintf(STDERROUT, "Specified %s not found",
+        unmatched_substring ? "sub-expression" : "string");
     locerr = true;                 /* Picked up by RERDCM */
     move_cursor_back(saved_tokbeg);
     return false;
@@ -2397,30 +2426,8 @@ do_locate(void)
     return false;
   savpos = ptrpos;                 /* Remember pos in case no match */
 
-/* Get nmatch for this regexp call */
-  if (regs)
-  {
-    scrdtk(1, 0, 0, oldcom);
-    if (oldcom->toktyp == nortok)
-    {
-      if (!oldcom->decok)
-      {
-        fputs("Invalid decimal number of matches", stderr);
-        return false;
-      }                            /* if (!oldcom->decok) */
-      nmatch = oldcom->decval;
-      saved_tokbeg = oldcom->tokbeg;
-      if (nmatch <= 0)
-      {
-        fputs("Number of matches must be 1 or more", stderr);
-        return false;
-      }                            /* if (nmatch <= 0) */
-    }                              /* if (oldcom->toktyp == nortok) */
-    else
-      nmatch = 1;
-    if (!eolok())
-      return false;                /* Too many args to command */
-  }                                /* if (regs) */
+  if (regs && !get_nmatch(&nmatch))
+    return false;
 
 /* Start of search */
 
@@ -3457,3 +3464,30 @@ match_regexp(uint8_t *string, int stringlen, int offset, int *matchpos,
 
   return true;
 }                                  /* static bool match_regexp() */
+
+/* ******************************* get_nmatch ******************************* */
+
+static bool
+get_nmatch(size_t *nmatch)
+/* Get nmatch for this regexp call */
+{
+  scrdtk(1, 0, 0, oldcom);
+  if (oldcom->toktyp == nortok)
+  {
+    if (!oldcom->decok)
+    {
+      fputs("Invalid decimal number of matches", stderr);
+      return false;
+    }                              /* if (!oldcom->decok) */
+    *nmatch = oldcom->decval;
+    saved_tokbeg = oldcom->tokbeg;
+    if (*nmatch <= 0)
+    {
+      fputs("Number of matches must be 1 or more", stderr);
+      return false;
+    }                              /* if (*nmatch <= 0) */
+  }                                /* if (oldcom->toktyp == nortok) */
+  else
+    *nmatch = 1;
+  return eolok();
+}                                  /* get_nmatch() */
