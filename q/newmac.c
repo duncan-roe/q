@@ -128,7 +128,7 @@ newmac()
     mcchrs = oldcom->toklen;       /* Remember length of expansion */
 
 /* Check no more tokens */
-    scrdtk(1, 0, 0, oldcom);
+    scrdtk(1, NULL, 0, oldcom);
     if (oldcom->toktyp != eoltok)
     {
       fprintf(stderr, "Too many arguments for this command");
@@ -174,14 +174,14 @@ newmac()
     long long_result;              /* Guard against LONG_MAX on error */
 
 /* Parse out token from supplied buffer to allow slash star comments */
-    scrdtk(5, 0, 0, &aluscrbuf);
+    scrdtk(5, NULL, 0, &aluscrbuf);
     aluscrbuf.bchars = snprintf((char *)aluscrbuf.bdata, BUFMAX, "%s", ubuf);
     if (aluscrbuf.bchars > 0)
     {
       scrdtk(1, alubuf, sizeof alubuf - 1, &aluscrbuf);
       if (aluscrbuf.toktyp == nortok)
       {
-        scrdtk(1, 0, 0, &aluscrbuf);
+        scrdtk(1, NULL, 0, &aluscrbuf);
         if (aluscrbuf.toktyp == eoltok)
           strbuf = (char *)alubuf;
       }                            /* if (aluscrbuf.toktyp == nortok) */

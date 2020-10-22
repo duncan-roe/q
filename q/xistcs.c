@@ -76,7 +76,7 @@ xistcs()
       puts("x");
     }                              /* if (!cl5get(...)) */
     cmdbuf.bchars = strlen((char *)cmdbuf.bdata);
-    scrdtk(5, 0, 0, &cmdbuf);
+    scrdtk(5, NULL, 0, &cmdbuf);
     scrdtk(1, buf, 2, &cmdbuf);
     verb = buf[0];
     if (cmdbuf.toktyp != nortok || cmdbuf.toklen != 1)
@@ -306,7 +306,7 @@ good_octnum(void)
 static bool
 eolok(void)
 {
-  scrdtk(1, 0, 0, &cmdbuf);
+  scrdtk(1, NULL, 0, &cmdbuf);
   if (cmdbuf.toktyp == eoltok)
     return true;                   /* J EOL (OK) */
   msg = "Spurious params - command not done";

@@ -3471,7 +3471,7 @@ static bool
 get_nmatch(size_t *nmatch)
 /* Get nmatch for this regexp call */
 {
-  scrdtk(1, 0, 0, oldcom);
+  scrdtk(1, NULL, 0, oldcom);
   if (oldcom->toktyp == nortok)
   {
     if (!oldcom->decok)

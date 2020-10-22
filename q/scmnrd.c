@@ -170,7 +170,7 @@ scmnrd()
  * Some format checking can be done here: blank line (repeat input),
  * null verb (object), verb doesn't start with a letter (object).
  */
-    scrdtk(5, 0, 0, oldcom);       /* Init command buffer */
+    scrdtk(5, NULL, 0, oldcom);    /* Init command buffer */
 
 /* Read unmassaged verb */
     scrdtk(1, (uint8_t *)ubuf, BUFMAX, oldcom);
@@ -327,7 +327,7 @@ scmnrd()
     {
 /* First check for no more args */
       file_start = oldcom->tokbeg; /* Remember where filename starts */
-      scrdtk(1, 0, 0, oldcom);
+      scrdtk(1, NULL, 0, oldcom);
       if (oldcom->toktyp == eoltok)
       {
         oldcom->bcurs = savcurs;
@@ -371,7 +371,7 @@ static action
 display_maybe(void)
 {
 /* Defer displaying the command owing to a possible Q massage... */
-  scrdtk(5, 0, 0, oldcom);         /* Reset command buffer */
+  scrdtk(5, NULL, 0, oldcom);      /* Reset command buffer */
   scrdtk(1, (uint8_t *)ubuf, BUFMAX, oldcom);
   if (oldcom->toklen > 12 && verb != ASTRSK) /* Verb too long */
   {
