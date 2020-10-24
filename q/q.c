@@ -1336,7 +1336,7 @@ do_ychangeall(void)
   int oldlen, newlen;
   char oldstr[Q_BUFSIZ], newstr[Q_BUFSIZ];
   bool lines_changed = false;
-  int srch_len;
+  int n;                           /* #chars at end not to search */
   int match_start;
   int match_end;
   size_t nmatch;
@@ -1448,23 +1448,23 @@ do_ychangeall(void)
     linmod = false;                /* No match this line yet */
     if (curr->bchars < minlen)
       continue;                    /* J line shorter than minimum */
-    srch_len = curr->bchars;
-    if (srch_len > lastpos)
-      srch_len = lastpos;
+/* n stays valid as curr->bchars changes with replacements */
+/* along the line */
+    n = curr->bchars > lastpos ? curr->bchars - lastpos : 0;
 
     do
     {
       if (tokens)
         retcod =
           ltok5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn,
-          srch_len, &match_start, &match_end, (uint8_t *)ndel);
+          curr->bchars - n, &match_start, &match_end, (uint8_t *)ndel);
       else if (regs)
         retcod = match_regexp
           (curr->bdata, curr->bchars, yposn, &match_start, &oldlen, nmatch);
       else
         retcod =
           lsub5a((uint8_t *)oldstr, oldlen, curr->bdata, yposn,
-          srch_len, &match_start, &match_end);
+          curr->bchars - n, &match_start, &match_end);
       if (!retcod)
         break;
       else if (regs)
@@ -1497,7 +1497,7 @@ do_ychangeall(void)
 
 /* Seek more occurrences if room */
     }
-    while (srch_len - yposn >= (regs ? 0 : oldlen));
+    while (curr->bchars - n - yposn >= (regs ? 0 : oldlen));
 
     if (!linmod)
       continue;                    /* J no mods to this line */
