@@ -31,7 +31,7 @@ cl5get(char *buf, int bufcap, bool action_eof, bool read_macros)
     {
       if (mcposn >= scmacs[curmac]->maclen)
       {
-        notmac(false);
+        notmac(NORMAL);
         continue;
       }                            /* if (mcposn >= scmacs[curmac]->maclen) */
       thisch = scmacs[curmac]->data[mcposn];

@@ -276,6 +276,6 @@ newmac2(bool appnu)
  * certain .qrc's
  */
   if (curmac == verb)
-    notmac(false);
+    notmac(NORMAL);
   return true;                     /* Successful end */
 }                                  /* newmac2() */

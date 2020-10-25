@@ -55,7 +55,7 @@ rerdcm()
 /* Abandon any macro if undetectable error */
   if (curmac >= 0)
   {
-    notmac(true);                  /* As in SCRDIT */
+    notmac(ERROR);                 /* As in SCRDIT */
     use_sccmd = noRereadIfMacro;
   }                                /* if(curmac>=0) */
 

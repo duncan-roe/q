@@ -24,9 +24,12 @@ bool simulate_q = false;
 int simulate_q_idx;
 
 void
-notmac(bool err)
+notmac(notmac_action err)
 {
   int i;
+
+/* The notmac_actions ERROR and FQ_FROM_FR do the same thing most of the time */
+/* so much of the code still uses err as the bool it used to be. */
 
 /* If error, must also get out of U-use file(s) */
   if (err && USING_FILE)
@@ -54,7 +57,7 @@ notmac(bool err)
     index_next = false;
     alu_skip = false;
 
-    if (curmac >= 0)
+    if (curmac >= 0 && err == ERROR)
     {
       mctrst = false;
       visbel();

@@ -299,7 +299,7 @@ main(int xargc, char **xargv)
 
 /* Initial Tasks */
   if (recursing)
-    printf("\r\nType q to continue macro %03o; fq to abandon\r\n", xargc);
+    printf("\r\nType Q to continue macro %03o; FQ to abandon\r\n", xargc);
   else
   {
     argc = xargc;                  /* Xfer invocation arg to common */
@@ -706,8 +706,8 @@ main(int xargc, char **xargv)
           {
             if (recursing)
               return 0;
-            else
-              fq_from_fr = false;
+            fq_from_fr = false;
+            notmac(FQ_FROM_FR);
           }                        /* if (fq_from_fr) */
           break;
 

@@ -42,7 +42,7 @@ void sccmnd(void);
 void scmnrd(void);
 void restore_stdout(void);
 void sinitl(void);
-void notmac(bool err);
+void notmac(notmac_action err);
 void disply(scrbuf5 *line, bool savecurs);
 void refrsh(scrbuf5 *xline);
 void scrset(scrbuf5 *line);

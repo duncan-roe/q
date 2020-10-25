@@ -67,7 +67,7 @@ ordch(uint8_t chr, scrbuf5 *scbuf)
       visbel();
       mctrst = false;
       cmover = true;               /* Warn notmac in case input from U-use */
-      notmac(true);                /* Want macro diagnostics */
+      notmac(ERROR);               /* Want macro diagnostics */
       return;
     }                              /* if (scbuf->bchars == scbuf->bmxch) */
     if (scbuf->bcurs < scbuf->bchars) /* A real insert */

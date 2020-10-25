@@ -27,43 +27,43 @@ ysno5a(char *mess, int key)
   char *p;
   int i;
 
-  for(;;)
+  for (;;)
   {
-  printf("%s? ", mess);
-  if (offline)
-  {
-    fputs("y\r\n", stdout);
-    return true;
-  }                                /* if (offline) */
+    printf("%s? ", mess);
+    if (offline)
+    {
+      fputs("y\r\n", stdout);
+      return true;
+    }                              /* if (offline) */
 /* Build a command line, forcing to upper case. BEL if it fills up */
 /* If run off end of u-use file, clean up and re-prompt */
-  if (!cl5get(comlin, 3, true, false)) /* YES is longest string */
-  {
-    pop_stdin();
-    if (curmac >= 0)
-      notmac(false);
-    newlin();
-    continue;
-  }                                /* if (!cl5get(comlin, 3, true, false)) */
-  for (p = comlin - 1;;)
-  {
-    if (!*++p)
-      break;
-    *p = toupper(*p);
-  }                                /* for (p = comlin - 1;;) */
-  if (!(i = strlen(comlin)))
-  {
+    if (!cl5get(comlin, 3, true, false)) /* YES is longest string */
+    {
+      pop_stdin();
+      if (curmac >= 0)
+        notmac(NORMAL);
+      newlin();
+      continue;
+    }                              /* if (!cl5get(comlin, 3, true, false)) */
+    for (p = comlin - 1;;)
+    {
+      if (!*++p)
+        break;
+      *p = toupper(*p);
+    }                              /* for (p = comlin - 1;;) */
+    if (!(i = strlen(comlin)))
+    {
 /* DEFAULT: A5NDEF=NONE, A5DNO='NO', A5DYES='YES' */
-    if (key == A5DYES)
-      return true;
-    if (key == A5DNO)
-      return false;
-    continue;
-  }                                /* if (!(i = strlen(comlin))) */
+      if (key == A5DYES)
+        return true;
+      if (key == A5DNO)
+        return false;
+      continue;
+    }                              /* if (!(i = strlen(comlin))) */
 /* Check for 'YES', 'OK' and 'NO' */
-  if (!strncmp(comlin, "NO", i))
-    return false;
-  if (!strncmp(comlin, "YES", i) || !strncmp(comlin, "OK", i))
-    return true;
+    if (!strncmp(comlin, "NO", i))
+      return false;
+    if (!strncmp(comlin, "YES", i) || !strncmp(comlin, "OK", i))
+      return true;
   }                                /* for(;;) */
 }                                  /* ysno5a() */

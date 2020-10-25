@@ -72,7 +72,14 @@ typedef enum caller_action
   RETURN,
   BREAK,
   CONTINUE,
-} action;                          /* type def enum caller_action */
+} action;                          /* typedef enum caller_action */
+
+typedef enum
+{
+  NORMAL,
+  ERROR,
+  FQ_FROM_FR,
+} notmac_action;                   /* typedef enum */
 
 /* Prototype */
 

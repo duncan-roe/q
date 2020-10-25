@@ -40,11 +40,11 @@
 #define BOL_OR_EOL {err = "Ran off beginning or end of line"; ERR_IF_MAC;}
 #define ERR_IF_MAC \
   {if (curmac >= 0){if (err) fprintf(stderr, "\r\n%s. ", err); err = NULL; \
-  notmac(true);}SOUNDALARM;}
+  notmac(ERROR);}SOUNDALARM;}
 #define SOUNDALARM \
   {mctrst = fornj = gpseu = glast = false; visbel(); GETNEXTCHR;}
 #define TABOORANGE {if (curmac >= 0){fprintf(stderr, \
-  "\r\nTab ID %c or value in that tab out of range. ", thisch); notmac(true);}\
+  "\r\nTab ID %c or value in that tab out of range. ", thisch); notmac(ERROR);}\
   SOUNDALARM;}
 #define SKIP2MACCH {CHECK_HAS_MACCH(2); mcposn += 2; GETNEXTCHR;}
 #define NORMALCHAR \
@@ -261,7 +261,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
 /* Clear expanding if that was last char from macro */
       if (mcposn >= scmacs[curmac]->maclen)
       {
-        notmac(false);
+        notmac(NORMAL);
         GETNEXTCHR;
       }                            /* if (mcposn >= scmacs[curmac]->maclen) */
       thisch = scmacs[curmac]->data[mcposn++];
@@ -407,7 +407,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
         if (k < 0)
         {
           fprintf(stderr, "Internal error: k=%d\r\n", k);
-          notmac(true);
+          notmac(ERROR);
           SOUNDALARM;
         }
         if (k)
@@ -709,7 +709,7 @@ get_effective_address(int addr)
     {
       fprintf(stderr, "\r\nIndexing fault at 0%o. ", effaddr);
       dump_registers(true);
-      notmac(true);
+      notmac(ERROR);
       return false;
     }                              /* if ((effaddr & 0777) != effaddr) */
   }                                /* if (index_next) */
@@ -727,7 +727,7 @@ push_register(long val)
     fprintf(stderr, "%s",
       "\r\nRegister stack overflow.\r\nFailing opcode: PSH\r\n");
     dump_registers(true);
-    notmac(true);
+    notmac(ERROR);
     return false;
   }                                /* if (++rsidx >= stack_size) */
   rs[rsidx] = val;
@@ -745,7 +745,7 @@ push_fp_register(double val)
     fprintf(stderr, "%s",
       "\r\nFP register stack overflow.\r\nFailing opcode: PSHF\r\n");
     dump_registers(true);
-    notmac(true);
+    notmac(ERROR);
     return false;
   }                                /* if (++fsidx >= stack_size) */
   fs[fsidx] = val;
@@ -762,7 +762,7 @@ pop_register(long *val)
     fprintf(stderr, "%s",
       "\r\nRegister stack underflow.\r\nFailing opcode: POP\r\n");
     dump_registers(true);
-    notmac(true);
+    notmac(ERROR);
     return false;
   }                                /* if (rsidx < 0) */
   *val = rs[rsidx--];
@@ -779,7 +779,7 @@ pop_fp_register(double *val)
     fprintf(stderr, "%s",
       "\r\nFP register stack underflow.\r\nFailing opcode: POPF\r\n");
     dump_registers(true);
-    notmac(true);
+    notmac(ERROR);
     return false;
   }                                /* if (fsidx < 0) */
   *val = fs[fsidx--];
@@ -852,7 +852,7 @@ ctl_n_u_ctl_n_i_common(void)
   if (i < 0 || i > TOPMAC || !scmacs[i] || j > scmacs[i]->maclen || j < 0)
   {
     fprintf(stderr, "\r\nReturn macro ^<%o>out of range or empty. ", i);
-    notmac(true);
+    notmac(ERROR);
     SOUNDALARM;
   }
 
@@ -1027,7 +1027,7 @@ process_pseudo_arg(scrbuf5 *Curr, bool in_cmd)
     if (macdef((int)thisch, Curr->bdata, (int)Curr->bchars, true))
       GETNEXTCHR;
     if (curmac >= 0)
-      notmac(true);
+      notmac(ERROR);
     SOUNDALARM;                    /* Report failure */
   }                                /* if (gmacr) */
 
@@ -1263,7 +1263,7 @@ process_pseudo(scrbuf5 *Curr, bool in_cmd)
 
     case 21:                       /* ^NU - Up from a macro s/r */
       if (mcnxfr == mcdtum)
-        notmac(false);             /* Treat as exit if stack empty */
+        notmac(NORMAL);            /* Treat as exit if stack empty */
       else
         ctl_n_u_ctl_n_i_common();
       GETNEXTCHR;
@@ -1274,7 +1274,7 @@ process_pseudo(scrbuf5 *Curr, bool in_cmd)
       GET_FOLLOWING_CHAR;          /* Get macro ID */
 
     case 24:                       /* ^NX - eXit from macro */
-      notmac(false);
+      notmac(NORMAL);
       GETNEXTCHR;
 
     case 27:                       /* ^N[ - Obey if file before spec'd tab */
@@ -1295,7 +1295,7 @@ process_pseudo(scrbuf5 *Curr, bool in_cmd)
       if (curmac >= 0)
       {
         fprintf(stderr, "\r\nCalling undefined pseudo-macro \"%c\". ", thisch);
-        notmac(true);
+        notmac(ERROR);
       }
       SOUNDALARM;
   }                                /* switch (thisch & 037) */
@@ -1571,7 +1571,7 @@ process_other(void)
       if (curmac >= 0)
       {
         fprintf(stderr, "\r\nCalling undefined macro ^<%03o>. ", thisch);
-        notmac(true);
+        notmac(ERROR);
       }
       SOUNDALARM;
     }
