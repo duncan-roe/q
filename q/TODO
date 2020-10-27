@@ -1,4 +1,4 @@
-Regexp search mode for L & Y (but not FL & FY)
+DONE: Regexp search mode for L & Y (but not FL & FY)
 Specify file for monitoring input (from any source)
 DONE: Opcodes PSHWDTH & PSHHGHT push screen width & height to R
 Opcodes POPL & POPLF: pop to line being edited (command or file)
@@ -9,7 +9,7 @@ DONE: Add ~/bin/qm (list macros) to make install
 Create man page for qm
 DONE: q -v to not action FD Y (Changed to q -vv)
 DONE: FB to use clock_gettime (replaces gettimeofday) for 1/5 second interval
-STARTED: FReprompt command to bring up q command line from w/in macro:
+DONE: FReprompt command to bring up q command line from w/in macro:
  Q continues macro; FQ abandons
  (Renamed from FRecurse)
 Q -B to break long lines on token delimiter if length so far > 32(?)K

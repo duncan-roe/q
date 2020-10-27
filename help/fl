@@ -1,13 +1,13 @@
   \/ F L - T O K E N   L O C A T E \/
 
 Functions exactly as L-LOCATE except that the string being searched for is
-searched for as a TOKEN.
+searched for as a TOKEN, and is never treated as a regular expression.
 
 Format
  see LOCATE
 
 Parameters
- see LOCATE
+ see LOCATE (except FL can't take a <match index>)
 
 File Position
  see LOCATE

@@ -15,8 +15,9 @@
             search is done to end of file.
  <1st pos'n> \Much the same as for L-LOCATE. Note however that these params
  <last  "  > /apply to the UNMODIFIED line (before any length change).
- <match index> For regular expressions only (fm +g): specify on which match to
-               leave the cursor. H L for more info.
+ <match index> For regular expressions only (fm +g): specify which match to
+               replace. Same as telling L-LOCATE where to leave the cursor:
+               H L for more info.
  Notes
  BRIEF or NONE output modes are actioned if in an scmacro without question. If
 command came from the keyboard, they are actioned subject to confirmation.

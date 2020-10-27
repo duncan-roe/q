@@ -186,7 +186,7 @@ static struct reprompt_frame
 {
   bool saved_offline;
   bool saved_piping;
-  int fds[2];
+  int fds[3];
   int saved_curmac;
   int saved_mcposn;
   int saved_immdtum;
@@ -2823,7 +2823,7 @@ do_freprompt(void)
   offline = false;
   r->saved_piping = piping;
   piping = false;
-  for (fd = STDIN5FD; fd <= STDOUT5FD; fd++)
+  for (fd = STDIN5FD; fd <= STDERR5FD; fd++)
   {
     if (isatty(fd))
       r->fds[fd] = -1;
@@ -2866,7 +2866,7 @@ do_freprompt(void)
   immdtum = r->saved_immdtum;
   mcposn = r->saved_mcposn;
   curmac = r->saved_curmac;
-  for (fd = STDIN5FD; fd <= STDOUT5FD; fd++)
+  for (fd = STDIN5FD; fd <= STDERR5FD; fd++)
     if (r->fds[fd] != -1)
     {
       SYSCALL(rc, dup2(r->fds[fd], fd));

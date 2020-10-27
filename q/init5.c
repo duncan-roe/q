@@ -45,10 +45,14 @@ init5()
         break;
       }
     if (ttyfd == 0)
-      ttyfd = -1;                  /* No tty found */
+    {
+/* No tty found yet. Try /dev/tty. */
+/* If that fails, ttyfd will be -1, which is what we want */
+      SYSCALL(ttyfd, open("/dev/tty", O_RDWR));
+    }                              /* if (ttyfd == 0) */
     else if (ttyfd == -1)
       fprintf(stderr, "%s. fd %d (dup)\r\n", strerror(errno), i);
-    else
+    if (ttyfd != -1)
     {
       fcntl(ttyfd, F_SETFD, fcntl(ttyfd, F_GETFD) | FD_CLOEXEC);
 /* Get the termio structure and save it */
@@ -56,7 +60,7 @@ init5()
       {
         fprintf(stderr, "%s. fd %d (tcgetattr)\r\n", strerror(errno), ttyfd);
         ttyfd = -1;
-      }
+      }                            /* if (tcgetattr(ttyfd, &tio5save) == -1) */
       else
       {
         tio5 = tio5save;
@@ -94,12 +98,12 @@ init5()
         tio5.c_cc[VMIN] = 1;
 /* No wait for characters */
         tio5.c_cc[VTIME] = 0;
-      }                            /* tcgetattr OK */
-    }                              /* if (ttyfd > 0) */
+      }                        /* if (tcgetattr(ttyfd, &tio5save) == -1) else */
+    }                              /* if (ttyfd != -1) */
   }                                /* if (first) */
 
 /* Get the screen size, whether or not we have a tty */
-      setwinsz(0);                 /* No o/p this time */
+  setwinsz(0);                     /* No o/p this time */
 
 /* Change the termio structure for stdin */
   if (ttyfd > 0)

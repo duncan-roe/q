@@ -1,0 +1,24 @@
+  \/ F R - F R E P R O M P T \/
+
+Prompts user for action in the middle of a macro
+
+Parameters: none
+
+ FR is designed to be used by a macro when it encounters a situation which it
+doesn't know how to deal with.
+ The user takes whatever action is required and then lets the macro continue by
+entering the Q-QUIT command. Or, if say no remedy is available, the FQ command
+will terminate the macro much as if the macro had encountered an error.
+
+ FR may only be issued from within a macro. In that macro, it must be followed
+by ^J (not ^T).
+ The above are the only constraints. FR works when Q is running in a pipe or
+with the -o (offline) option. When FR is invoked, the user is invited to
+ "Type Q to continue macro xxx; FQ to abandon", where xxx is the number of the
+invoking macro (in octal, as macros are defined).
+
+Example use of FR:
+
+ The (case-insensitive) command H C.QM browses the macros for writing C code.
+The indented part of the comment block starting '# n 1   "beautify" C source'
+describes how FR is used by the N1 (N061) macro suite.

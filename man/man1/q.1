@@ -1,6 +1,6 @@
 .\"
 .\" q manual page.
-.\" Copyright (c) 2018 Duncan Roe
+.\" Copyright (c) 2018,2020 Duncan Roe
 .\"
 .\" Original author: Duncan Roe
 .\"
@@ -19,7 +19,7 @@
 .\" the Free Software Foundation, 59 Temple Place - Suite 330,
 .\" Boston, MA 02111-1307, USA.
 .\"
-.TH Q 1 "Dec 6 2018" "q-54" "Linux Programmer's Manual"
+.TH Q 1 "Oct 27 2020" "q-56" "Linux Programmer's Manual"
 .SH NAME
 q \- line-oriented mostly WYSIWYG editor with a powerful macro facility
 .SH SYNOPSIS
@@ -362,7 +362,7 @@ Locate a string as a \fItoken\fR. See \fBL-LOCATE\fR below
 Sets, displays or resets \fBq\fR's mode switches. See \fBMODES\fR below
 .TP
 .BI FN-FNONE
-Macros will run in "none" mode: nothing is output until the macro finishes.
+Macros will run in "none" mode: nothing is output until the macro finishes
 .TP
 .BI FO-FORGET
 Forget the last D-DELETE command. Implied by any subsequent change to the file
@@ -373,6 +373,9 @@ With an argument: same as \fBQ-QUIT\fR.
 Otherwsie: stop editing the current file and exit
 (ignore extra \fIfile\fR arguments).
 Also exit \fBq\fR if in a macro.
+.TP
+.BI FR-FREPROMPT
+From inside a macro only: prompt the user for what to do next
 .TP
 .BI FT-FTOKENCHAR
 Remove a character from the token delimiter table,
