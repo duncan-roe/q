@@ -1,0 +1,52 @@
+.\"
+.\" qm manual page.
+.\" Copyright (c) 2020 Duncan Roe
+.\"
+.\" Original author: Duncan Roe
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2, or (at your option)
+.\" any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; see the file COPYING.  If not, write to
+.\" the Free Software Foundation, 59 Temple Place - Suite 330,
+.\" Boston, MA 02111-1307, USA.
+.\"
+.TH qm 1 "Oct 28 2020" "q-56" "Linux Programmer's Manual"
+.SH NAME
+qm \- output current \f3q\f1 macros to stdout
+.SH SYNOPSIS
+\f3qm\f1 [\f3-a\f1] [\f2file\f1|\f2directory\f1]
+.SH DESCRIPTION
+With no arguments, \f3qm\f1 displays the macro set that \f3q\f1 would load if
+run in the current working directory.
+.br
+With \f2directory\f1, \f3qm\f1 displays the macro set that \f3q\f1 would load if
+run in \f2directory\f1.
+.br
+With \f2file\f1, \f3qm\f1 displays the macro set that \f3q\f1 would load using
+\f2file\f1 as its startup file.
+.RE
+.SH OPTIONS
+.TP 4
+.BI \-a
+Use \f3a\f1lternative output format.
+.RS 6
+Without \f3\-a\f1, macros 1 - 77 (octal) are output as themselves.
+E.g. macro 1,
+which the user would invoke by keying \f3^N^A\f1 (Control-N Control-A),
+is displayed on a line starting
+"\f3^A : \f1".
+This changes to "\f3001 \f1" with \f3\-a\f1.
+Higher-numbered macros are always displayed numerically.
+.SH SEE ALSO
+q(1), q_macros(5), q_opcodes(5)
+.SH AUTHOR
+Written by Duncan Roe

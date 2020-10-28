@@ -19,11 +19,11 @@
 .\" the Free Software Foundation, 59 Temple Place - Suite 330,
 .\" Boston, MA 02111-1307, USA.
 .\"
-.TH Q 1 "Oct 27 2020" "q-56" "Linux Programmer's Manual"
+.TH q 1 "Oct 28 2020" "q-56" "Linux Programmer's Manual"
 .SH NAME
 q \- line-oriented mostly WYSIWYG editor with a powerful macro facility
 .SH SYNOPSIS
-\f3q\f1 [\f3-AVbdemnoqt\f1] [\f3-i\f2 initial_macro\f1] [\f3+\f2line# file\f1]
+\f3q\f1 [\f3-AVbdemnoqtvv\f1] [\f3-i\f2 initial_macro\f1] [\f3+\f2line# file\f1]
 [\f2file\f1[\f3:\f2line#\f1] [...]]
 .br
 \f2command\f1 [...] \f3| q \f1[\f3-bdntv\f1]\f3 -i\f2 initial_macro \f3|\f2
@@ -316,7 +316,7 @@ The \fBFT-FTOKENCHAR\fR command can remove characters from the
 token delimiter table, e.g. if a programming language allows \fB'$'\fR
 in variable names, the command \fBFT\ \&$\fR will accommodate this.
 .RE
-.TP
+.TP 15
 .BI A-APPEND
 Enter edit mode, appending lines to the file
 .TP
