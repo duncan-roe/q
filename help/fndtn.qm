@@ -3,11 +3,11 @@ fm-t +s -* +#
 t7 36 81
 fi ^<FQVERSN>^<DUPF>^<FRND>^<SUBF>^<SFEQ>^NL^<POPNF>^NU^<POPNF>!echo -e REMINDER: This is Q version ^<FQVERSN>^<POPF 0>^ND^N^<13000>^<ZAM> \(Development\)\\r >&2^J
 o n
-N B '^NC^NS^N\A^J^[V1^J^NU "BOTTOM"
+N B '^NC^NS^N\a^J^[v1^J^NU "BOTTOM"
 N C '^N^P^P ;N P replacement when ^P is interrupt character. Call by ^N^C^C
 N F '^Z^NO{^A^NR{^F^K^NU ;^F with recall
-N G '^Z ^NO{^J^NC^NL^ND^N^<402>J-1^J^NR{^NU ;Join next line after space
-N402 ^[G-1^J^NU ; Used by ^N^G
+N G '^Z ^NO{^J^NC^NL^ND^N^<402>j-1^J^NR{^NU ;Join next line after space
+N402 ^[g-1^J^NU ; Used by ^N^G
 N H '^NC^N\^<PSHTBSZ>^ND^N^<432>^<POPN>^NU ; Outdent one tab
 N432 ^<SNE>^NU^?^<S1>^N^@
 N I '^<PSHTBSZ>^ND^N^<431>^<POPN>^NU ; indent one tab
@@ -20,7 +20,7 @@ N P '''^ND^N^<4002>''^NU ; Access current edit file name. Call by ^N^P^P
 N Q '^NC^NS^N\g-^ND^N^<4004>^Jv^J^NU View previous screenful
 N R '^H^NA^N^<1201>^NM^<1201>^NU ;Remember/recall command or line
 N S '^NO}^G ^NO|^Z^NO{^NR|^K^NR}^S^R^NR{^K^NR|^NU ;Word to u/c
-N T '^NC^NS^N\^UG 1^JV 0^J^NU "TOP"
+N T '^NC^NS^N\^Ug 1^Jv 0^J^NU "TOP"
 N U '^Q^NO{^ND^N^<527>^NR{^NU l/c except sentence strt
 N527 ^ND^N^<530>^NU^F^NA^NU^S^X^Q^NG.^F^@^N^@
 N530 ^G.^NA^NU^X^NG ^NL^F^N^@^@^NI^NU
@@ -28,7 +28,7 @@ N V '^NC^NS^N\g+^ND^N^<4001>^Jv^J^NU View next screenful
 N X '^Z^NO{^A^NR{^X^K^NU ;^X with recall
 N Y '^NE^I^NP2^NS^NL^T^I^I^@^E/* ^E^NU "/*" comment without matching "*/"
 N Z '^Z^B^S^J^NU
-N ^ '^NC^NL^J^[^NS^NL^ND^N^^^[M-2,32000^J^NU ;Back up 1 line when modifying
+N ^ '^NC^NL^J^[^NS^NL^ND^N^^^[m-2,32000^J^NU ;Back up 1 line when modifying
 N _ ^P^M^NU
 N $ '^NE^E^X^NA^NU ^N^@ ;Space between each char from cursor onwards
 N & '^NC^NS^N\!rcsdiff ^ND^N^<522> "^ND^N^<4002>"|less -EX^J^NU

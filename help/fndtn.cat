@@ -3,7 +3,7 @@
  This "topic" is a work in progress. The plan is to document those macros in the
 suite which you might want to invoke directly.
 
-t2 10 15 24
+t2 10 15 24 26
 
  Macro   Oct  Context  Action
  =====   ===  =======  ======
@@ -66,6 +66,8 @@ t2 10 15 24
  ^N^W^H  210  Edit     Apply ^N^W^R sequence at start of each line with insert
                          on
                          (See note 1)
+ ^N^W^I  211  Edit     Update all lines contaning "at line <n>" (<n> some
+                         number) so that <n> is the line number of that line
  ^N^W^R  222  Command  Save composed edit string
                          (See note 1)
  ^N^W^U  225  Command  Initialise current file to RCS with no title, non-strict

@@ -5,8 +5,9 @@ exec expect -- "$0" "$@"
 
 proc help exitcode \
 {
-  puts "Usage: ggdb \[-a prgram_args\] \[-t controlling terminal\] program \\"
+  puts "Usage: ggdb \[-a prgram_args\] \[-t controlling terminal\] <program> \\"
   puts "            \[gdb command\]..."
+  puts "       ggdb -h"
   exit $exitcode
 }
 

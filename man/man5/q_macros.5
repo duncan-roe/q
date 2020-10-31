@@ -1,4 +1,4 @@
-.TH Q_MACROS 5 "12 Oct 2020" q-56 "q"
+.TH q_macros 5 "Oct 29 2020" q-56 "q macros"
 .SH NAME
 Q macros - the Q macro facility
 .SH DESCRIPTION
@@ -221,7 +221,7 @@ However \fB^NU\fR should not be added when redefining them -
 .TP
 .B List of Active Pseudomacros
 .RS 3
-.TP
+.TP 10
 .BI ^N^<4000>
 Expands to the current \fBFM-FMODE\fR setting, in octal.
 Modes are further described in q(1).
@@ -831,4 +831,4 @@ n 040,! tail -n1 ^ND^N^<4002>^J
 (The sequence \fB^N^<4002>\fR retrieves the name of the current edit file).
 .RE
 .SH SEE ALSO
-q(1), strtol(3), strtoul(3), strtod(3), system(3), q_opcodes(5)
+q(1), qm(1), strtol(3), strtoul(3), strtod(3), system(3), q_opcodes(5)

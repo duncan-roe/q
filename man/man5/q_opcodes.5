@@ -1,4 +1,4 @@
-.TH Q_OPCODES 5 "06 Apr 2019" q-55 "q"
+.TH q_opcodes 5 "Oct 29 2020" q-56 "q"
 .SH NAME
 Q opcodes - the Q ALU opcodes
 .SH DESCRIPTION
@@ -13,12 +13,12 @@ Start \fBq\fR and enter \fBH ALU\fR
 Enter \fBq\ \&-A\fR at the shell prompt or from within \fBq\fR to get a list.
 From the shell prompt the output may be fed into a pager,
 e.g. \fBq -A | less -X\fR.
-The list in this man page is from \fBq\fR version 55
+The list in this man page is from \fBq\fR version 56
 .SH EXAMPLES
 The line below is from the foundation macro set, fndtn.qm.
 It posts a reminder if run in a development version of \fBq\fR:
 .br
-	
+
 .br
 .nf
 fi ^<FQVERSN>^<DUPF>^<FRND>^<SUBF>^<SFEQ>^NL^<POPNF>^NU^<POPNF>!echo -e REMINDER: This is a development Q \\r >&2^J
@@ -138,7 +138,7 @@ PSH  xxx  Push contents of N7xxx to R
 POP  xxx  Pop R to define N7xxx
 PSHF xxx  Push contents of N13xxx to F
 POPF xxx  Pop F to define N13xxx
-	 
+
 	 Skip Instructions
 	 ==== ============
 NOP	 Do nothing
@@ -155,7 +155,7 @@ SFGE	 Skip if F is greater than or equal to zero
 SFLE	 Skip if F is less than or equal to zero
 SFGT	 Skip if F is greater than zero
 SFLT	 Skip if F is less than zero
-	 
+
 	 Instructions that Modify R
 	 ============ ==== ====== =
 NOT	 Bitwise Invert
@@ -179,7 +179,9 @@ PSHNBLN	 Push number of lines in file to R (i.e. # read so far)
 PSHLNNB	 Push line number to R (same as ^NF / PSHTAB)
 PSHTBSZ	 Push number of spaces between tabstops in file to R
 POPTBSZ	 Pop R to number of spaces between tabstops in file
-	 
+PSHWDTH	 Push screen width to R
+PSHHGHT	 Push screen height to R
+
 	 Instructions that Modify F
 	 ============ ==== ====== =
 TCF	 Negate (2's complement)
@@ -197,7 +199,12 @@ FSQRT	 F = sqrt(F)
 INPF	 Read next number in line, push value to F & length to R
 	 (leaves cursor on 1st char of number)
 FQVERSN	 Push Q version to F
-	 
+PSVBINT	 Push Visible Bell Interval to F
+PPVBINT	 Pop F to Visible Bell Interval
+PSFBINT	 Push Fbrief Interval to F
+PPFBINT	 Pop F to Fbrief Interval
+PSCLOCK	 Push result from clock(3) to F as seconds
+
 	 Immediate Data Instructions
 	 ========= ==== ============
 PS0	 Push constant 0 to R
@@ -233,7 +240,7 @@ PS2P28	 Push constant 268435456 (2**28) to R
 PS2P29	 Push constant 536870912 (2**29) to R
 PS2P30	 Push constant 1073741824 (2**30) to R
 PS2P31	 Push constant 2147483648 (2**31) to R
-	 
+
 	 Instructions with 2 operands
 	 ============ ==== = ========
 	 (These have the same effect as:-
@@ -251,12 +258,12 @@ ADDF	 Add F
 SUBF	 Subtract F
 MPYF	 Multiply F
 DIVF	 Divide F
-	 
+
 	 FP (double) <==> Integer (long)
 	 == ======== ==== ======= ======
 POPFR	 Pop F; push (long) to R
 POPRF	 Pop R; push (double) to F
-	 
+
 	 Index Register Instructions
 	 ===== ======== ============
 INDX	 Index next PSH[F] or POP[F]
@@ -272,7 +279,8 @@ A1X	 X = X + 1
 A2X	 X = X + 2
 S2X	 X = X - 2
 S1X	 X = X - 1
-	 
+TSTFMOD	 set X = 1 if file modified, else set X =0
+
 	 Q Result Register Instructions
 	 = ====== ======== ============
 PSHQ	 Push contents of Q to R
@@ -282,7 +290,7 @@ SQGE	 Skip if Q is greater than or equal to zero
 SQLE	 Skip if Q is less than or equal to zero
 SQGT	 Skip if Q is greater than zero
 SQLT	 Skip if Q is less than zero
-	 
+
 	 Control Instructions
 	 ======= ============
 DMP	 Dump Registers

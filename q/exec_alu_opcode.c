@@ -1181,7 +1181,6 @@ ps2p31(char **err)
 /* **************************** The Opcode Table **************************** */
 
 alu_opcode opcode_defs[] = {
-  CAPTION(""),
   CAPTION("Skip Instructions"),
   CAPTION("==== ============"),
   OPCODE(nop, "Do nothing"),
