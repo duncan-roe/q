@@ -1,0 +1,4 @@
+  >< W - V T 0 0   O F F ><
+
+Turns off the use of VT100 escape sequences to move the cursor. There is no
+command to turn them back on again.
