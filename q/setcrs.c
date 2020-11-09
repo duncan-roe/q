@@ -1,7 +1,7 @@
 /* S E T C R S */
 /*
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012,2018,2019 Duncan Roe
+ * Copyright (C) 2012,2018-2020 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -21,6 +21,7 @@
  */
 #include <stdio.h>
 #include <memory.h>
+#include <limits.h>
 #include "prototypes.h"
 #include "scrnedit.h"
 void
@@ -40,64 +41,71 @@ setcrs(int posn)
   if (scurs == oldcrs)
     return;                        /* Cursor right already */
 
-/* Fill buffer with backspaces */
-  memset(crsbuf, backsp, WCHRS);
+/* Find out how many chars to use with Ansii Ec seq, if enabled... */
+  absnum =
+    vt100 ? sprintf(absbuf, "\033[%d%c",
+    scurs > oldcrs ? scurs - oldcrs : oldcrs - scurs,
+    scurs > oldcrs ? 'C' : 'D') : INT_MAX;
 
-/* Find out how many chars to use with vt100 Ec seq, if VT100... */
-  if (vt100)
-  {
-    sprintf(absbuf, "\r\033[%hdC", scurs);
-    absnum = strlen(absbuf);
-  }
-  else
-    absnum = 9999;                 /* Dummy high value */
   if (scurs < oldcrs)
   {
 /* Move cursor backwards */
     bsp = oldcrs - scurs;          /* Set # bsp's req'd */
     rtn = 1 + scurs;               /* \r + refresh */
     if (bsp <= rtn)
-/* Backspace or VT100 */
     {
+/* Backspace or Ansii */
       if (absnum < bsp)
-        memcpy(crsbuf, absbuf, crscnt = absnum); /* VT100 better */
+        memcpy(crsbuf, absbuf, crscnt = absnum); /* Ansii better */
       else
-        crscnt = bsp;
-      return;                      /* Backspaces already moved in */
-    }
-/* F'wd refresh or VT100 */
-    if (absnum < rtn)
-      memcpy(crsbuf, absbuf, crscnt = absnum);
+        memset(crsbuf, backsp, crscnt = bsp);
+    }                              /* if (bsp <= rtn) */
     else
     {
-      crsbuf[0] = '\r';
-      if (scurs ^= 0)
-        memcpy(&crsbuf[1], reqd, scurs);
-      crscnt = rtn;                /* Set final # to do */
-    }
-    return;
+/* Cr + f'wd refresh or Ansii */
+      if (absnum < rtn)
+        memcpy(crsbuf, absbuf, crscnt = absnum);
+      else
+      {
+        crsbuf[0] = '\r';
+        if (scurs)
+          memcpy(&crsbuf[1], reqd, scurs);
+        crscnt = rtn;              /* Set final # to do */
+      }                            /* if (absnum < rtn) else */
+    }                              /* if (bsp <= rtn) else */
   }                                /* if (scurs < oldcrs) */
   else
   {
 /* Cursor to be moved forward */
     fwd = scurs - oldcrs;          /* # chars if refresh forward */
     if (cacnt)                     /* If fast ^A available */
-/* cacnt shouldn't be zero if VT100 is enabled, so no check here */
     {
       ca = cacnt + WCHRS - scurs;  /* # of chars if ^A then bsp */
       if (ca < fwd)                /* If ^A faster */
       {
-        crscnt = ca;               /* Set no. of chars in sequence */
-        memcpy(crsbuf, cachrs, cacnt);
-        return;                    /* Finished */
-      }
-    }
-    if (absnum < fwd)
-      memcpy(crsbuf, absbuf, crscnt = absnum); /* VT100 is faster */
+        if (absnum < ca)
+          memcpy(crsbuf, absbuf, crscnt = absnum);
+        else
+        {
+          crscnt = ca;             /* Set no. of chars in sequence */
+          memcpy(crsbuf, cachrs, cacnt);
+          memset(crsbuf + cacnt, backsp, ca - cacnt);
+        }                          /* if (absnum < ca) else */
+      }                            /* if (ca < fwd) */
+      else
+      {
+        if (absnum < fwd)
+          memcpy(crsbuf, absbuf, crscnt = absnum);
+        else
+          memcpy(crsbuf, reqd + oldcrs, crscnt = fwd);
+      }                            /* if (ca < fwd) else */
+    }                              /* if (cacnt) */
     else
     {
-      crscnt = fwd;                /* Set result */
-      memcpy(crsbuf, &reqd[oldcrs], fwd); /* Refresh */
-    }                              /* if (absnum < fwd) else */
+      if (absnum < fwd)
+        memcpy(crsbuf, absbuf, crscnt = absnum); /* Ansii is faster */
+      else
+        memcpy(crsbuf, &reqd[oldcrs], crscnt = fwd); /* Refresh */
+    }                              /* if (cacnt) else */
   }                                /* if (scurs < oldcrs) else */
 }

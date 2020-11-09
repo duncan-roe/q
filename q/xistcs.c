@@ -105,8 +105,8 @@ xistcs()
         {
           p = cachrs;              /* Where characters go */
           j = result;              /* Result includes backspaces */
-          if (j > PRMAX)
-            j = PRMAX;
+          if (j >= sizeof cachrs)
+            j = sizeof cachrs - 1;
           for (k = j; k > 0; k--)
           {
 /* Get an octal character to OCTNUM. Single characters stand for themselves,
@@ -120,7 +120,9 @@ xistcs()
                 break;
               }
             }
-            if (cmdbuf.toktyp != eoltok)
+            if (cmdbuf.toktyp == eoltok)
+              octnum = backsp;
+            else
             {
               if (cmdbuf.toktyp ^= nortok)
               {
@@ -145,9 +147,7 @@ xistcs()
                   break;
                 }
               }                    /* if (cmdbuf.toklen == 1) else */
-            }                      /* if (cmdbuf.toktyp != eoltok) */
-            if (cmdbuf.toktyp == eoltok)
-              break;               /* J out no octal char (EOL) */
+            }                      /* if (cmdbuf.toktyp == eoltok) else */
             *p++ = octnum;
           }                        /* for (k = j; k > 0; k--) */
           if (!ok || !eolok())

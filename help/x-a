@@ -1,31 +1,28 @@
-  >< A - E N D	 O F   L I N E ><
+  >< A - E N D   O F   L I N E ><
 
-Gets the character string to get the cursor to end-of-line (e.g. column 80 on a
-traditional VDU). Q never displays a character in this column, because of
-possible wraparound, but it may wish to leave the cursor there. The default
-method is to get to the start of the current line, backspace to the end of the
-previous line, then linefeed. This works for most modern ASYNC terminals, which
-generally 'wrap back' from start of line on a backspace. However the VT100
-didn't, so now neither do X-windows nor Linux consoles &c.
+Gets the character string to get the cursor to end-of-line (EOL) (i.e. the
+rightmost character position on the screen). Q never displays a character in
+this column, because of possible wraparound, but it may wish to leave the cursor
+there. The old default method was to get to the start of the current line,
+backspace to the end of the previous line, then linefeed. This worked for many
+pre-Ansii serial terminals, but is optional behaviour in an xterm.
 
-Therefore there is a second default method for these terminals, which involves
-doing a Cr (to get to column 1) then using an escape sequence to move the
-cursor forward to the last column. Q tries to guess which method to use: if it
-can determine the screen size and that size is not 80 x 24, then VT100 is used,
-else the old default is used.
+Q can't determine whether reverse-wrap is in effect, so this default is no more.
+However Q can use an Ansii escape sequence to get to anywhere in the line with
+only a few characters (4 for cc 1-9, 5 for 10-99, ...).
 
 Format
  A <no. of chars>,<char1>,...
- <# chars> total # of chars to get to cc80 (includes any # of backspaces, which
-	   are done after <char1>ff. Optional - may be specified as 0 or
-	   ommitted (0 assumed). 0 => there is no fast get to eol available.
- <char1>ff The octal char(s) to get the cursor to a defined point (usually cc80
-	   of this line - if #chars is not exhausted then do extra backspaces).
-	   Single characters stand for themselves - octal numbers must
-	   therefore be specified with at least 2 digits.
+ <# chars> total # of chars to get to EOL. Optional - may be specified as 0 or
+           ommitted (0 assumed). 0 => there is no fast get to EOL available.
+ <char1>ff The octal character(s) to get the cursor to EOL. Single characters
+           stand for themselves - octal numbers must be specified with at least
+           2 digits. If less than <# chars> are specified, the remainder are
+           filled with the backspace character.
 
 Examples
- A	      /* Terminal with no fast eol sequence - can only refresh forward
- A 3,15,10,12 /* The default, described earlier.
- A 1,1	      /* A terminal where ^A gets to cc80.
- A 6 015 033 [ 7 9 C /* VT100 sequence for 80-column terminal
+ A            /* Terminal with no fast EOL sequence
+ A 3,15,10,12 /* The old default. Can still be quicker than Ansii
+              /* (e.g. to get to column before EOL).
+ A 1,01       /* A terminal where ^A gets to EOL.
+ A 6 15 33 [ 7 9 C /* Ansii sequence for 80-column terminal EOL
