@@ -28,7 +28,8 @@ sinitl()
 
   endlin = false;
   backsp = '\b';                   /* Set variable to the default */
-  vt100 = true;                    /* VT100 or X */
+  bspace = true;                   /* Set variable to the default */
+  vt100 = true;                    /* Ansii */
   cacnt = 0;                       /* No fast EOL */
   tabcnt = 3;
   tabs[0].value = 2;

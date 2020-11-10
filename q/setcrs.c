@@ -17,13 +17,19 @@
  *    A) Backspace
  *    B) Return
  *    C) Get to EOL (poss return, backspace etc.)
- * One of A) or B) must be available (not checked)
+ *    D) Ansii cursor movement
+ * One of A), B) or D) must be available (not checked)
  */
 #include <stdio.h>
 #include <memory.h>
 #include <limits.h>
 #include "prototypes.h"
 #include "scrnedit.h"
+
+/* Instantiate externals */
+
+bool bspace;
+
 void
 setcrs(int posn)
 {
@@ -50,7 +56,7 @@ setcrs(int posn)
   if (scurs < oldcrs)
   {
 /* Move cursor backwards */
-    bsp = oldcrs - scurs;          /* Set # bsp's req'd */
+    bsp = bspace ? oldcrs - scurs : INT_MAX; /* Set # bsp's req'd */
     rtn = 1 + scurs;               /* \r + refresh */
     if (bsp <= rtn)
     {

@@ -25,6 +25,7 @@ extern uint8_t reqd[SCRMAX];       /* What we want on the screen */
 extern uint8_t prompt[PRSIZ];      /* Text of the supplied prompt */
 extern uint8_t crsbuf[SCRMAX];    /* Chars to set cursor to required position */
 extern uint8_t backsp;             /* Character that does a backspace */
+extern bool bspace;                /* Whether termina had a backspace char */
 extern uint8_t cachrs[PRSIZ];  /* Chars to effect ^A (-> last posn on screen) */
 extern int cursr;                  /* Where the screen cursor should be */
 extern int scurs;                  /* Where the screen cursor is */

@@ -162,12 +162,10 @@ xistcs()
 
       case 'B':                    /* Backspace */
 
-/* It turns out that no code outside this module checks bspace any more */
-/* so silently ignore attempts to change it. */
-/* (bspace was a boolean saying whether this terminal can backspace) */
-
         scrdtk(1, buf, 4, &cmdbuf);
-        if (cmdbuf.toktyp != eoltok)
+        if (cmdbuf.toktyp == eoltok)
+          bspace = !bspace;
+        else
         {
           if (cmdbuf.toktyp != nortok)
           {
@@ -200,9 +198,12 @@ xistcs()
             switch (verb)
             {
               case 'Y':            /* Drop thru */
-              case 'T':            /* Drop thru */
+              case 'T':
+                bspace = true;
+                break;
               case 'N':            /* Drop thru */
               case 'F':
+                bspace = false;
                 break;
               default:
                 msg = "param not recognised";
@@ -210,7 +211,7 @@ xistcs()
                 continue;
             }                      /* switch (verb) */
           }                        /* if (result) else */
-        }                          /* if (cmdbuf.toktyp != eoltok) */
+        }                          /* if (cmdbuf.toktyp == eoltok) else */
         ok = true;
         continue;
 

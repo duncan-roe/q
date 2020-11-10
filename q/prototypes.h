@@ -79,7 +79,7 @@ double time_now(void);
 
 extern uint32_t verb;        /*Command Processing - COMANL, ONEOF, NEWMAC &c. */
 extern int ndntch;                 /* # of chars to indent */
-extern bool vt100;                 /* Enable VT100-style curpos */
+extern bool vt100;                 /* Enable Ansii curpos */
 extern bool deferd;                /* Deferred indexing of mmap'd input file */
 extern bool locerr;                /* LOCATE error only - macro can detect */
 extern bool noRereadIfMacro;       /* Don't re-read command if in macro &c */

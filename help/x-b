@@ -16,6 +16,6 @@ is assumed i.e. the logical variable set by "B <yes/no>" is inverted.
 Examples
  B     /* Inverts availability: if the editor did assume ^H worked it won't now
  B NO  /* Tells editor definetily no backspace function
- B 210 /* Tells editor backspaces is ^H, but says nothing about whether it's
+ B 10  /* Tells editor backspaces is ^H, but says nothing about whether it's
        /* available on this terminal (the logical variable accessed by
        /* "B <yes/no>" is not altered).

@@ -11,7 +11,7 @@ Notes
  HELP on individual characteristics commands is available seperately by typing
 "H X-<xistics command>". A list of these follows:
  A-end of line sequence                  B-backspace availability or value
- D-set or display per-character delay    W-Assume VT100 / X-Window eol seq
+ D-set or display per-character delay    W-Disable Ansii escape sequences
  T-set spaces per tab                    X-exit back to main editor
  Example
  The most common use of this command is probably to set the "spaces per tab"
