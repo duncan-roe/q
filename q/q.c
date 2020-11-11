@@ -104,8 +104,8 @@ int num_ops = 0;
 alu_dict_ent root_alu_dict_ent = { NULL, NULL, -2, 0 };
 int *alu_table_index;
 bool alu_macros_only = false;      /* N- was N-- */
-unsigned long fmode;
-unsigned long zmode;
+uint32_t fmode;
+uint32_t zmode;
 bool zmode_valid = false;
 char FPformat[40];
 char Iformat[40];
@@ -192,6 +192,7 @@ static struct reprompt_frame
   int saved_immdtum;
   int saved_mcdtum;
   int saved_stdbase;
+  uint32_t saved_fmode;
 }
 rframe[NUM_RFRAMES];
 static int ridx = -1;
@@ -2851,6 +2852,7 @@ do_freprompt(void)
   r->saved_mcdtum = mcdtum;
   mcdtum = mcnxfr;
   r->saved_stdbase = stdbase;
+  r->saved_fmode = fmode;
   stdbase = stdidx + 1;
   if (r->saved_offline)
     change_attr(ttyfd, &tio5);
@@ -2862,6 +2864,7 @@ do_freprompt(void)
   if (r->saved_offline)
     change_attr(ttyfd, &tio5save);
   stdbase = r->saved_stdbase;
+  fmode = r->saved_fmode;
   mcdtum = r->saved_mcdtum;
   immdtum = r->saved_immdtum;
   mcposn = r->saved_mcposn;

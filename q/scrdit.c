@@ -1082,7 +1082,7 @@ process_pseudo_arg(scrbuf5 *Curr, bool in_cmd)
       switch (thisch)
       {
         case 04000:                /* Mode */
-          qreg = snprintf(NULL, 0, "%lo", zmode_valid ? zmode : fmode);
+          qreg = snprintf(NULL, 0, "%o", zmode_valid ? zmode : fmode);
           break;
 
         case 04002:                /* Curent edit file */
@@ -1325,7 +1325,7 @@ process_other(void)
     switch (thisch)
     {
       case 04000:                  /* Return mode */
-        i = snprintf(tbuf, sizeof tbuf, "%lo", zmode_valid ? zmode : fmode);
+        i = snprintf(tbuf, sizeof tbuf, "%o", zmode_valid ? zmode : fmode);
         macdef(FIRST_PSEUDO, (uint8_t *)tbuf, i, true);
         break;
 

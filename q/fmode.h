@@ -32,8 +32,8 @@
 
 /* External variables */
 
-extern unsigned long fmode;
-extern unsigned long zmode;        /* Copy of fmode by scmnrd */
+extern uint32_t fmode;
+extern uint32_t zmode;             /* Copy of fmode by scmnrd */
 extern uint8_t xlatable[256];
 extern bool zmode_valid;
 extern int tbstat;
