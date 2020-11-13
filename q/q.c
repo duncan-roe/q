@@ -1534,7 +1534,7 @@ do_ychangeall(void)
   {
     if (curmac < 0 || !BRIEF)
       fprintf(STDERROUT, "Specified %s not found",
-        unmatched_substring ? "sub-expression" : "string");
+        unmatched_substring ? "sub-expression" : (regs ? "pattern" : "string"));
     locerr = true;                 /* Picked up by RERDCM */
     move_cursor_back(saved_tokbeg);
     return false;
@@ -2490,7 +2490,7 @@ do_locate(void)
   setptr(savpos);                  /* Move pointer back */
   if (display_wanted)
     fprintf(STDERROUT, "Specified %s not found",
-      unmatched_substring ? "sub-expression" : "string");
+      unmatched_substring ? "sub-expression" : (regs ? "pattern" : "string"));
   locerr = true;                   /* Picked up by RERDCM */
   move_cursor_back(saved_tokbeg);
   return false;
