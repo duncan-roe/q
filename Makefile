@@ -22,7 +22,7 @@ cp --preserve=timestamps,mode q/q $(DESTDIR)$(BINDIR)
 
 install_doc:
 	mkdir -p $(DESTDIR)$(DOCDIR)/q && \
-cp --preserve=timestamps q/README* q/TODO $(DESTDIR)$(DOCDIR)/q/ && \
+cp --preserve=timestamps q/README* q/TODO q/DONE $(DESTDIR)$(DOCDIR)/q/ && \
 cp --preserve=timestamps,mode ggdb $(DESTDIR)$(DOCDIR)/q/ && \
 cp --preserve=timestamps q/.qrc $(DESTDIR)$(DOCDIR)/q/q_dot_qrc && \
 cp --preserve=timestamps help/.qrc $(DESTDIR)$(DOCDIR)/q/help_dot_qrc && \

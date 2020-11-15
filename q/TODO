@@ -2,6 +2,7 @@ DONE: Regexp search mode for L & Y (but not FL & FY)
 Specify file for monitoring input (from any source)
 DONE: Opcodes PSHWDTH & PSHHGHT push screen width & height to R
 Opcodes POPL & POPLF: pop to line being edited (command or file)
+Opcode XMODE to set fmode from X-reg after command read (for ^N7)
 DONE: Audit macros to not use alpha tab ids (preferably use tabs 75 - 80)
 DONE: workfile.c, readfl.c & maybe others to have #pragma to turn off optimising
 DONE: Do not visbell more than once every 1/10 sec
