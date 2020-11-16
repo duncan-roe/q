@@ -1,0 +1,22 @@
+This was to be Q version 34 until Issue #2 appeared.
+In version 34, all macro files with suffices other than **.qm** were renamed to have a **.qm** suffix (.qm == Q macro). Most files with names ending **macs** are left as before, so most _.qrc_ files outside of the Q tree should continue to work without modification. The following files are renamed:
+
+| old name | new name |
+| --- | --- |
+| adamacs | ada.qm |
+| brktmacs.ada | ada_brkts.qm |
+| scmacs.c | c.qm |
+| brktmacs.c | c_brkts.qm |
+| scmacs.f | fndtn.qm |
+| gitmacs | git.qm |
+| scmacs.pl | perl.qm |
+| pymacs | py.qm |
+| brktmacs.python | py_brkts.qm |
+| scmacs.tcl | tcl.qm |
+| scmacs.w | word.qm |
+
+In fndtn.qm, ^N8 now outputs the current date / time, as formatted by N4010. (Formerly, ^N8 outputted a fixed-width 80-character ruler: ^N7 now outputs a ruler which always fits the screen width exactly).
+In fndtn.qm, n206 (^N^W^F) (grep a string in the current file) can be nade to pipe the output to some other command by redefining n1405.
+In word.qm, updated ^N^A to use the ALU, instead of the ^NY "tab subtraction" pseudomacro. ^NY is slated for retirement now.
+In word.qm, moved the ^W macro out of the way (it was overwriting at least the global replace macro suite ^N^W{p,q,r}). The ^W macro is likely obsolete anyway, but I haven't had time to verify that.
+General code cleanups: more booleans, less gotos

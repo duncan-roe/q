@@ -1,0 +1,14 @@
+Q version 33 can read ints and doubles from the current line via new opcodes `^<INP>` and `^<INPF>`.  
+Additionally, `^<INP>` and `^<INPF>` both
+- Return the length of the number read, since it can be terminated by any
+  non-numeric (not just whitespace). This is always pushed to R, unlike the
+  actual value which is first pushed to R or F as appropriate.
+- Skip leading whitespace before the number starts
+  (any whitespace, not just spaces)
+- Leave the cursor on the first character of the number.
+
+There is a new README_DEBUG_PIPE documenting how to debug Q running in a pipe.
+
+There are 2 examples of using the new `^<INPF>` opcode in the wiki, with a detailed explanation of 1 of them.
+
+See git log for other changes (nothing intersting I can think of).

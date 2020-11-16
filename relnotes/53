@@ -1,0 +1,17 @@
+Two major innovations:
+
+- **make install** builds and installs Q to specified or default locations.
+This is tested under a number of distributions: see INSTALL for details.
+- Q now has a *man page* for the **q** command.
+
+Release 53 is marked as pre-release because it is still missing:
+
+* Q needs a *man page* for *q macros*
+
+Other Highlights:
+
+* Fixes issues 9 & 11
+* Catalogue (.cat) files complete for *word* & *foundation* macro sets
+* **make uninstall** removes everything (except any created directories)
+* *~user* works wherever *~* used to
+* Unary **!** pops to command level like in other programs

@@ -1,0 +1,10 @@
+Highlights include:
+* Fixes all outstanding issues (i.e. up to issue 7)
+* No arbitrary limit on line length (code dictates 64K -1 for now)
+* New *README_DEBUG_MACROS* documents debugging macros using gdb
+* Has the beginnings of a macro catalogue
+* New opcodes <code>^&lt;PSHMODE&gt;</code>, <code>^&lt;POPMODE&gt;</code>, <code>^&lt;PSHNBLN&gt;</code> &amp; <code>^&lt;PSHLNNB&gt;</code>
+* New opcodes <code>^&lt;PSHBTBSZ&gt;</code> &amp; <code>^&lt;POPTBSZ&gt;</code> give access to file tab size
+* C and Tcl macros indent according to file tab size
+
+Lots of other stuff - see git log for details

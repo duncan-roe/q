@@ -1,0 +1,7 @@
+Two major innovations:
+
+- Q can search for and replace a regular expression (RE). Assert **fm+g** to enable this feature. Once asserted, **L**ocate and **Y**changeall will treat their first argument as an RE and accept an additional argument being the sub-expression (SE) index: **1** for the entire RE or **2** for the first SE and so on.
+- A macro can pop a new **q** interactive command level to deal with a situation with which it cannot cope. This works even if **q** is running in a pipe, as long as it was started from or has some association with a tty.
+The macro issues an **FR**eprompt command (only available from within a macro) to get the **q** prompt. The user makes whatever changes are required then inssues the **q**uit command to continue the macro. Or, she can issue the **fq**uit command to abandon the calling macro and go back to the base-level **q** prompt.
+
+Numerous *TODO* items are completed: see the [*DONE*](https://github.com/duncan-roe/q/blob/master/q/DONE) file for the complete list. Perhaps of some note:

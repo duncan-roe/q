@@ -1,0 +1,16 @@
+This is a full release of Q. Innovations include:
+
+- New *man page*s for **q_macros** and for **q_opcodes**
+- Documentation directory is no longer a tree structure
+- **FQVERSN** opcode (TODO item)
+- Major re-work of **README_DEBUG_MACROS** for installed systems w/out source
+- supply a copy of **ggdb** (used by worked example in **README_DEBUG_MACROS**)
+- Comments may be introduced by **#** (like most scripting languages)
+
+
+Other Highlights:
+
+* Fixes issues 10 &  12 and corrrects issue 11 fix
+* Fixes several unreported issues (git log for details)
+* Remove dependencies on [command_line_tools](https://github.com/duncan-roe/command_line_tools)
+* refer to ASCII character 0 as NUL, not NULL

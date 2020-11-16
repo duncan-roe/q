@@ -1,0 +1,14 @@
+Q may be run in a pipe (in conjunction with using the **-i** option to tell it what do do).
+Standard input must a pipe or redirected from other than a tty.
+Q buffers the entire file (i.e. it waits for end of file on its input before processing). So, avoid using with _tail -f_ (unless you plan to explicitly kill _tail_)
+Examples
+
+```
+$ echo aaa|q -i "y a b^J"
+bbb
+```
+
+```
+$ echo aaa >t5; q -i "y a z^J" < t5 > t6;cat t6; rm t5 t6
+zzz
+```

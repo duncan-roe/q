@@ -1,0 +1,3 @@
+Q version 32 has proved to be very stable. There are plans for further enhancements, but the timescale for these is uncertain.
+About the only new feature since the last release is the ability to insert the current date / time into the file you are editing. There have been some improvements to using Q in scripts (i.e. non-interactively). There is also a fix for segfault when the screen was wider than 500 characters.
+The last few commits have been to documentation (no version bump).

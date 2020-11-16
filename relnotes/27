@@ -1,0 +1,12 @@
+At revision 27, **Q** has an _FPU_ (Floating Point Unit) to complement its _ALU_ (Arithmetic and Logic Unit).
+I expect to use the FPU for e.g. converting degrees plus decimal minutes (from GPS) to decimal degrees, but have yet to write the macros.
+The following academic example compares getting the square root of 2 from sqrt() or exp(log() / 2)
+
+`fi ^<ZAM>^<RST>`
+`n13000 2`
+`fi ^<PSHF 0>^<DUPF>^<FSQRT>^<POPF 1>^<DUPF>^<FLOG>^<DIVF>^<FEXP>^<POPF 2>n--^J`
+
+Output from last line:
+13000 2.00000000000000000e+00 2
+13001 1.41421356237309515e+00 1.41421
+13002 1.41421356237309492e+00 1.41421

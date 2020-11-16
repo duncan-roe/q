@@ -1,0 +1,14 @@
+The principal innovation in this release is the ability to run an external command and incorporate its output into the file being edited:
+
+- 2 new active pseudomacros <code>^N^&lt;4014&gt;</code> & <code>^N^&lt;4015&gt;</code> to receive command and return stdout / stderr
+- New pseudomacro <code>^NW</code> to return, in the new ALU Q-register, the length of a macro (or -1 if macro not defined)
+- New ALU Q-register for return results (e.g. external command result code, <code>^NW</code> result)
+- Above fully documented in updated *man* pages and *h-help* topics
+
+Other Highlights:
+
+- Use visible bell to signal errors
+- New regression test suite (source only)
+- Fixes several unreported issues (git log for details)
+
+Lots of internal stuff - see git log for details

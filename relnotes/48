@@ -1,0 +1,7 @@
+Highlights include:
+* ^F, ^B and indenting skip over all whitespace chars, not just space
+* ^G & ^NG space optionally operate on all whitespace chars
+* New FMode 'a' enables optional behaviour of ^G & ^NG
+* Fixes issue 8
+
+Lots of internal stuff - see git log for details

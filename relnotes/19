@@ -1,0 +1,2 @@
+With this release, Q macros can perform arbitrary computation using Q's Arithmetic and Logic Unit (ALU).
+The updated N7 macro is a good example of how to use this new feature (from _help/fndtn.qm_).
