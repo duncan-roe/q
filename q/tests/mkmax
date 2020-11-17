@@ -1,0 +1,4 @@
+#!/bin/sh
+# This script outputs the maximum (power of 2) arg that mkbigfile can work with
+# without starting to swap
+q -nin13000,$(free|head -n2|tail -n1|q -nim1^J^F^L^G' '^K^J)^J'^<PS2>^<POPRF>^<FLOG>^<PSHF 0>^<FLOG>^<DIVF>^<FRND>^<POPFR>^<PS1>^<ADD>^<PS2>^<ADD>^<POP 0>a^J^ND^N^<7000>^J^[' </dev/null

@@ -35,6 +35,6 @@ dump_registers(bool append_newline)
     for (i = fsidx; i >= 0; i--)
       fprintf(stderr, "%.17e\r\n", fs[i]);
   }                                /* if (fsidx < 0) else */
-  fprintf(stderr, "X = %ld%s", xreg, append_newline ? "\r\n" : "");
+  fprintf(stderr, "X = %ld%s", xreg, append_newline ? "\r\n" : ", ");
   fprintf(stderr, "Q = %ld%s", qreg, append_newline ? "\r\n" : "");
 }                                  /* dump_registers()  */

@@ -67,9 +67,10 @@
 #include <memory.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/mman.h>
 #include <limits.h>
+#include <sys/mman.h>
 #include "prototypes.h"
+#include "macros.h"
 #include "fmode.h"
 
 /* Macros */
@@ -757,6 +758,7 @@ forget()
   lintot += fortot;
   ptrpos += fortot;
   setptr(forpos);
+  if (curmac < 0 || !BRIEF)
   printf("%ld line%s reinstated from line %ld\r\n", fortot,
     fortot == 1 ? "" : "s", forpos);
   forpos = fortot = 0;             /* Forgotten chain now empty */
