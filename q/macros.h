@@ -3,13 +3,14 @@
 /* M A C R O S
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012-2014,2019 Duncan Roe
+ * Copyright (C) 2012-2014,2019-2020 Duncan Roe
  *
  * Universal statements for segments accessing SCREENEDIT macros
  * */
 
 /* Headers required by this header */
 
+#include <stdio.h>
 #include "prototypes.h"
 
 /* Macros */
@@ -60,5 +61,5 @@ extern int mcdtum;                 /* Bottom frame for recursion level */
 bool newmac2(bool appnu);
 bool macdef(uint32_t mcnum, uint8_t *buff, int buflen, bool appnu);
 bool macdefw(uint32_t mcnum, uint16_t *buff, int buflen, bool appnu);
-void showmac(int i);
+void showmac(int i, FILE* stream);
 #endif

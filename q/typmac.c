@@ -1,7 +1,7 @@
 /* T Y P M A C
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012,2014 Duncan Roe
+ * Copyright (C) 2012,2014,2020 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -35,7 +35,7 @@ typmac(void)
         continue;                  /* J no macro in this slot */
       gotone = true;
       printf("^%c : ", i + 0100);
-      showmac(i);
+      showmac(i, stdout);
       putchar('\r');
     }
     for (i = 32; i < 64; i++)
@@ -46,7 +46,7 @@ typmac(void)
         continue;                  /* J no macro in this slot */
       gotone = true;
       printf("%c : ", i);
-      showmac(i);
+      showmac(i, stdout);
       putchar('\r');
     }
     for (i = 128; i <= TOPMAC; i++)
@@ -57,7 +57,7 @@ typmac(void)
         continue;                  /* J no macro in this slot */
       gotone = true;
       printf("%03o ", i);
-      showmac(i);
+      showmac(i, stdout);
       putchar('\r');
     }
   }                                /* if (!alu_macros_only) */

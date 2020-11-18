@@ -65,7 +65,7 @@ notmac(notmac_action err)
         "\r\nStopped in macro 0%o, character %d\r\n", curmac, mcposn);
       if (scmacs[curmac])
       {
-        showmac(curmac);
+        showmac(curmac, stderr);
         putchar('\r');
       }
       else

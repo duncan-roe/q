@@ -1,7 +1,7 @@
 /* S H O W M A C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2012,2014,2019 Duncan Roe
+ * Copyright (C) 2012,2014,2019-2020 Duncan Roe
  *
  * This routine expands the body of a macro to standard output.
  */
@@ -13,7 +13,7 @@
 #include "tabs.h"
 #include "alu.h"
 void
-showmac(int i)
+showmac(int i, FILE *stream)
 {
   macro5 *p;                       /* Points to current macro */
   int k, l;                        /* Scratch */
@@ -50,27 +50,27 @@ showmac(int i)
         while (*q)
           *r++ = toupper((uint8_t)*q++);
         *r = 0;
-        printf("^<%s>", tbuf);
+        fprintf(stream, "^<%s>", tbuf);
         continue;
       }             /* if (ch >= FIRST_ALU_OP && ch < FIRST_ALU_OP + num_ops) */
       else if (ch017000 == 05000)
       {
-        printf("^<PSH %o>", ch & 0777);
+        fprintf(stream, "^<PSH %o>", ch & 0777);
         continue;
       }                            /* else if (ch017000 == 05000) */
       else if (ch017000 == 06000)
       {
-        printf("^<POP %o>", ch & 0777);
+        fprintf(stream, "^<POP %o>", ch & 0777);
         continue;
       }                            /* else if (ch017000 == 06000) */
       else if (ch017000 == 011000)
       {
-        printf("^<PSHF %o>", ch & 0777);
+        fprintf(stream, "^<PSHF %o>", ch & 0777);
         continue;
       }                            /* else if (ch017000 == 011000) */
       else if (ch017000 == 012000)
       {
-        printf("^<POPF %o>", ch & 0777);
+        fprintf(stream, "^<POPF %o>", ch & 0777);
         continue;
       }                            /* else if (ch017000 == 012000) */
       else if (ch >= FIRST_ALU_OP + num_ops &&
@@ -94,11 +94,11 @@ showmac(int i)
           *tab_str = '-';
         else if (tabidx < 78)
           *tab_str = tabidx + '1';
-        printf("^<%sTAB %s>", is_pop ? "POP" : "PSH", tab_str);
+        fprintf(stream, "^<%sTAB %s>", is_pop ? "POP" : "PSH", tab_str);
         continue;
       }                       /* else if (ch >= FIRST_ALU_OP + num_ops && ... */
       else
-        fputs("^N", stdout);
+        fputs("^N", stream);
     }                              /* if (ctl_n_pending) */
     else
     {
@@ -109,22 +109,15 @@ showmac(int i)
       }                            /* if (ch == CTL_N) */
     }                              /* if (ctl_n_pending) else */
     if (ch < SPACE)
-      printf("^%c", ch + 0100);
+      fprintf(stream, "^%c", ch + 0100);
     else if (ch > 0177)
-      printf("^<%o>", ch);
+      fprintf(stream, "^<%o>", ch);
     else if (ch == 0177)
-    {
-      putchar(CARAT);
-      putchar('?');
-    }
+      fputs("^?", stream);
     else
-    {
-      putchar(ch);
-      if (ch == CARAT)
-        putchar('*');
-    }
+      fprintf(stream, "%c%s", ch, ch == CARAT ? "*" : "");
   }
   if (ctl_n_pending)
-    fputs("^N", stdout);
-  putchar('\n');
+    fputs("^N", stream);
+  fputc('\n', stream);
 }
