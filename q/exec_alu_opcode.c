@@ -1321,7 +1321,7 @@ alu_opcode opcode_defs[] = {
   OPCODE(a2x, "X = X + 2"),
   OPCODE(s2x, "X = X - 2"),
   OPCODE(s1x, "X = X - 1"),
-  OPCODE(tstfmod, "set X = 1 if file modified, else set X =0"),
+  OPCODE(tstfmod, "set X = 1 if file modified, else set X = 0"),
   CAPTION(""),
   CAPTION("Q Result Register Instructions"),
   CAPTION("= ====== ======== ============"),

@@ -14,3 +14,7 @@ Other Highlights:
 * Fixes several unreported issues (git log for details)
 * Remove dependencies on [command_line_tools](https://github.com/duncan-roe/command_line_tools)
 * refer to ASCII character 0 as NUL, not NULL
+
+New ALU opcode since version 53:
+
+- FQVERSN  Push Q version to F

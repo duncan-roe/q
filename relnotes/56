@@ -4,4 +4,19 @@ Two major innovations:
 - A macro can pop a new **q** interactive command level to deal with a situation with which it cannot cope. This works even if **q** is running in a pipe, as long as it was started from or has some association with a tty.
 The macro issues an **FR**eprompt command (only available from within a macro) to get the **q** prompt. The user makes whatever changes are required then inssues the **q**uit command to continue the macro. Or, she can issue the **fq**uit command to abandon the calling macro and go back to the base-level **q** prompt.
 
-Numerous *TODO* items are completed: see the [*DONE*](https://github.com/duncan-roe/q/blob/master/q/DONE) file for the complete list. Perhaps of some note:
+Completed a number of *TODO* items: see the [*DONE*](https://github.com/duncan-roe/q/blob/master/q/DONE) file for a complete list. Perhaps of some note:
+
+- **D**elete is faster now it no longer reads every line as if it were **M**odify. A casual test on a 3.6GHz system using the **time** internal **bash** command showed time to delete 100000000 (100M) lines went from 20.7 sec down to 4.3 sec.
+<br>
+A more rigorous investigation (using the new **PSCLOCK** opcode listed below) showed **q** spent most of the shorter time mapping where lines started (in the memory-mapped file) and **D**elete of any number of lines took approximately 6 microseconds compared with over 15 seconds for 100M lines previously.
+
+New ALU opcodes since version 55:
+
+- PSHWDTH  Push screen width to R
+- PSHHGHT  Push screen height to R
+- PSVBINT  Push Visible Bell Interval to F
+- PPVBINT  Pop F to Visible Bell Interval
+- PSFBINT  Push Fbrief Interval to F
+- PPFBINT  Pop F to Fbrief Interval
+- PSCLOCK  Push result from clock(3) to F as seconds
+- TSTFMOD  set X = 1 if file modified, else set X = 0
