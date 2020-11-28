@@ -1,4 +1,4 @@
 #!/bin/sh
 # This script outputs the maximum (power of 2) arg that mkbigfile can work with
 # without starting to swap
-free|head -n2|tail -n1|q '-nin13001,0.25^Jm1^J^G ^<INPF>^<POPF 0>^<PSHF 1>^<PS2>^<POPRF>^<FLOG>^<PSHF 0>^<FLOG>^<DIVF>^<SUBF>^<FRND>^<POPFR>^<PS4>^<S1>^<ADD>^<POP 0>^U^ND^N^<7000>^J'
+free|q '-mnid3^Jd1^Jn13001,0.25^Jm1^J^G ^<INPF>^<POPF 0>^<PSHF 1>^<PS2>^<POPRF>^<FLOG>^<PSHF 0>^<FLOG>^<DIVF>^<SUBF>^<FRND>^<POPFR>^<PS4>^<S1>^<ADD>^<POP 0>^U^ND^N^<7000>^J'

@@ -28,10 +28,13 @@ In the window that is to act as Q's display (the "target" window), do:
 
 > $ tty
 > /dev/pts/6
-> $ sleep 1000000  # Or, for Linux, exec disowntty
+> $ sleep 1000000  # (except Cygwin). For Linux, 'exec disowntty' is better
+Under Cygwin, sleep is not necessary.
+Under Linux, using sleep has limitations documented below.
+Under anything else (e.g. OpenBSD, not fully supported yet) use sleep
 
-That 3rd line is to stop shell from grabbing input. 'sleep' always works, but
-under Linux you will get the gdb warning:
+That 3rd line is to stop shell from grabbing input (Cygwin does it by itself).
+'sleep' always works, but under Linux you will get the gdb warning:
 
 > warning: GDB: Failed to set controlling terminal: Operation not permitted
 
@@ -111,11 +114,12 @@ Q will start in your debug window. Optionally, set up your macro table window as
 per TUTORIAL above.
 
 The ggdb template below shows ^N^@ (restart current macro) as a call to macro 0.
-If you would prefer to see it as a call to the actual macro, change
- p/o\ thisch
-to
- "p/o thisch ? thisch : curmac"
-in the "starting macro" breakpoint.
+If you would prefer to see it as a call to the actual macro, append
+ ? thisch : curmac
+to the "starting macro %o\n" command. E.g. once gdb is running:
+ ^C; commands 2; silent; printf "starting macro %o\n", thisch ? thisch : curmac;
+ end; c
+(To make the change permanent, edit macros.gdb).
 
 --- Target Window
 tty
@@ -129,15 +133,8 @@ qm -a help_dot_qrc | less
 export my_tty=   # Complete this from tty output
 export j=macro_debug_sample
 export k=help_dot_qrc
-./ggdb -t $my_tty -a \
-  "$([ -n "$k" ] && echo "-n -iu,$k^J" || echo "-i")fv^Jfm+v^J $j" \
-  $(type -p q) \
-  b\ scrdit.c:1620 commands silent 'printf "starting macro %o\n",thisch' end \
-  "cond 2 (thisch < 0101 || thisch > 0132) && thisch < 04000 && thisch != 255" \
-  b\ scrdit.c:1222 commands silent "echo ^NI invoked\\n" end \
-  "set max-value-size sizeof (struct scrbuf5)" \
-  b\ scrdit.c:863 commands silent 'printf "resuming macro %o\n",i' end \
-  'cond 4 verb != '"'I' && (curmac < FIRST_PSEUDO || curmac > LAST_PSEUDO)" c
+./ggdb -t $my_tty -f macros.gdb -a \
+  "$([ -n "$k" ] && echo "-niu,$k^J" || echo "-i")fv^Jfm+v^J $j" $(type -p q) c
 
 In the target window, enter "v" to view the file you are working on. If it's
 empty (so you didn't export j as the file to edit) you can edit the file now by

@@ -1,7 +1,7 @@
 /* S C R S E T
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2012,2014,2018,2019 Duncan Roe
+ * Copyright (C) 2012,2014,2018-2020 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -30,9 +30,8 @@ scrset(scrbuf5 *line)
   bool cntrl;                      /* thisch needs >1 pos to display */
   bool phigh;                      /* thisch has parity bit set */
   bool end_line_wanted;            /* Set by END_LINE */
-  int i, j;                        /* Loop indices */
-  int thisch;                      /* Char being dealt with */
-  uint8_t *p;
+  int j;                           /* Loop indices */
+  uint16_t thisch;                 /* Char being dealt with */
   int icurs;                       /* Pos'n on screen of last char done */
 
 /* Initial Tasks:- */
@@ -46,9 +45,7 @@ scrset(scrbuf5 *line)
   {
 /* Initial tasks for this line */
     end_line_wanted = false;
-    p = reqd;
-    for (i = WCHRS; i > 0; i--)
-      *p++ = SPACE;                /* Spacefill reqd buffer */
+    memset(reqd, SPACE, WCHRS);
     icurs = -1;                    /* At start of line */
     if (pchars != 0)
     {
@@ -59,11 +56,8 @@ scrset(scrbuf5 *line)
       }                            /* if (partno == 1) */
       else
       {
-        reqd[0] = '(';             /* Move in '(P' */
-        reqd[1] = 'P';             /* Move in '(P' */
-        sprintf((char *)&reqd[2], "%3d", partno); /* Move in part # */
-        reqd[5] = ')';             /* Moves in ') ' */
-        icurs = 6;
+        icurs = sprintf((char *)reqd, "(P%3d)", partno); /* Move in part # */
+        reqd[icurs] = ' ';         /* O/write trlg \0 */
       }                            /* if (partno == 1) else */
     }                              /* if (pchars != 0) */
     if (line->bchars == cdone)     /* Empty line */
@@ -147,7 +141,6 @@ scrset(scrbuf5 *line)
           {
             reqd[icurs] = (thisch >> 13) + '0';
             thisch <<= 3;
-            thisch &= 0177777;     /* In case 32-bit int */
             if (++icurs == WCHRS)
               END_LINE;            /* End of line now */
           }

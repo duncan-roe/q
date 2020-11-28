@@ -5,14 +5,26 @@ exec expect -- "$0" "$@"
 
 proc help exitcode \
 {
-  puts "Usage: ggdb \[-a prgram_args\] \[-t controlling terminal\] <program> \\"
-  puts "            \[gdb command\]..."
+  puts "Usage: ggdb \[-a program args\] \[-f file of gdb commands\]... \\"
+  puts "            \[-t controlling terminal\] <program> \[gdb command\]..."
   puts "       ggdb -h"
   exit $exitcode
 }
 
 # Set up
 # === ==
+
+global pending
+set pending 0
+
+proc sndrcv {cmd} \
+{
+  global pending
+  if {$pending} \
+    {expect -re "\[(\]gdb\[)\] |\r\n>| \\(y or \\\[n\\\]\\) "}
+  exp_send ${cmd}\r
+  set pending 1
+}
 
 #puts "$argc args: $argv"
 if {$argc == 0} \
@@ -33,6 +45,26 @@ while {$argc > 2} \
       set args [lindex $argv 1]
       set argv [lreplace $argv 0 1]
       incr argc -2
+    }
+
+    -f \
+    {
+      if {![info exists file_index]} {set file_index 0}
+      set file_name($file_index) [lindex $argv 1]
+      set argv [lreplace $argv 0 1]
+      incr argc -2
+      if {![file readable $file_name($file_index)]} \
+      {
+        puts "$file_name($file_index): not readable"
+        exit 1
+      }
+      file stat $file_name($file_index) stat
+      if {[string compare $stat(type) file]} \
+      {
+        puts "$file_name($file_index): not a regular file"
+        exit 1
+      }
+      incr file_index
     }
 
     -t \
@@ -76,7 +108,7 @@ if {![file executable $progname] || ![file isfile $progname]} \
 }
 
 # start gdb, and put in some nice settings
-spawn gdb -n -q
+if {[info exists tty]} {spawn gdb -n -q --tty=$tty} {spawn gdb -n -q}
 expect {(gdb) }
 exp_send "file $progname\r"
 expect {(gdb) }
@@ -103,13 +135,22 @@ set timeout 50
 exp_send "run $args\r"
 expect {(gdb) }
 set timeout 10
+
+# Do gdb commands from file(s) in order
 #exp_internal 1
-for {set i 0} {$i < $argc} {incr i} \
+if {[info exists file_index]} \
 {
-  exp_send [lindex $argv $i]\r
-  if {$i<$argc-1} \
-    {expect -re "\[(\]gdb\[)\] |\r\n>| \\(y or \\\[n\\\]\\) "}
-}                                  ;# for {set i 0} {$i < $argc} {incr i}
+  for {set i 0} {$i < $file_index} {incr i} \
+  {
+    set chan [open $file_name($i)]
+    while {[gets $chan line] >= 0} {sndrcv $line}
+    close $chan
+  }
+}
+
+# Do gdb commands from the command line
+for {set i 0} {$i < $argc} {incr i} {sndrcv [lindex $argv $i]}
+
 interact -echo \\\\ \
 {
   puts {}

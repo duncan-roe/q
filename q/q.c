@@ -1333,7 +1333,7 @@ do_ychangeall(void)
 
   bool linmod;                     /* This line modified */
   int yposn;                       /* How far we are along a line */
-  int ydiff;
+  int ydiff = 0;                   /* = 0 not needed but compiler can't tell */
   int oldlen, newlen;
   char oldstr[Q_BUFSIZ], newstr[Q_BUFSIZ];
   bool lines_changed = false;

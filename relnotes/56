@@ -7,7 +7,6 @@ The macro issues an **FR**eprompt command (only available from within a macro) t
 Completed a number of *TODO* items: see the [*DONE*](https://github.com/duncan-roe/q/blob/master/q/DONE) file for a complete list. Perhaps of some note:
 
 - **D**elete is faster now it no longer reads every line as if it were **M**odify. A casual test on a 3.6GHz system using the **time** internal **bash** command showed time to delete 100000000 (100M) lines went from 20.7 sec down to 4.3 sec.
-<br>
 A more rigorous investigation (using the new **PSCLOCK** opcode listed below) showed **q** spent most of the shorter time mapping where lines started (in the memory-mapped file) and **D**elete of any number of lines took approximately 6 microseconds compared with over 15 seconds for 100M lines previously.
 
 New ALU opcodes since version 55:
