@@ -8,8 +8,10 @@
 /* Headers */
 
 #include <stdio.h>
-#include <sys/types.h>
+#include <string.h>
 #include <unistd.h>
+#include <inttypes.h>
+#include <sys/types.h>
 #include "prototypes.h"
 #include "macros.h"
 #include "edmast.h"
@@ -21,7 +23,7 @@
 
 /* Static prototypes */
 
-static void show_current(unsigned long mode);
+static void show_current(uint32_t mode);
 
 /* ******************************** setqmode ******************************** */
 
@@ -29,7 +31,7 @@ bool
 setqmode()
 {
   int octok = 1, first = 1;
-  unsigned long u, result = fmode;
+  uint32_t u, result = fmode;
 /*
  * Read an arg. If there are none, reset to default & display settings
  */
@@ -189,6 +191,14 @@ setqmode()
           u = 010000000;
           break;
 
+        case '8':                 /* Log macro & usefile as well as keybd i/p */
+          u = 020000000;
+          break;
+
+        case '9':                  /* Log '^' as '^*' */
+          u = 040000000;
+          break;
+
         default:
           printf("Warning - unrecognised %s ignored\r\n", ubuf);
           continue;
@@ -213,12 +223,15 @@ setqmode()
 /* ****************************** show_current ****************************** */
 
 static void
-show_current(unsigned long mode)
+show_current(uint32_t mode)
 {
   char c;
   int i;
+  uint32_t mask;
+  const char *const modestring = "*q#fvmrenlhiwaxyg89";
+  const char *p;
 
-  printf("Current mode is %lo:-\r\n", mode);
+  printf("Current mode is %" PRIo32 ":-\r\n", mode);
   switch (i = (int)mode & 03)
   {
     case 0:
@@ -234,7 +247,7 @@ show_current(unsigned long mode)
       break;
   }                                /* switch((int)mode&03) */
   fputs(", ", stdout);
-  switch (i = (int)mode & 014)
+  switch (i = mode & 014)
   {
     case 0:
     case 014:
@@ -252,74 +265,9 @@ show_current(unsigned long mode)
   c = mode & 020 ? '+' : '-';
   putchar(c);
   putchar('s');
-  fputs(", ", stdout);
-  c = mode & 040 ? '+' : '-';
-  putchar(c);
-  putchar('*');
-  fputs(", ", stdout);
-  c = mode & 0100 ? '+' : '-';
-  putchar(c);
-  putchar('q');
-  fputs(", ", stdout);
-  c = mode & 0200 ? '+' : '-';
-  putchar(c);
-  putchar('#');
-  fputs(", ", stdout);
-  c = mode & 0400 ? '+' : '-';
-  putchar(c);
-  putchar('f');
-  fputs(", ", stdout);
-  c = mode & 01000 ? '+' : '-';
-  putchar(c);
-  putchar('v');
-  fputs(", ", stdout);
-  c = mode & 02000 ? '+' : '-';
-  putchar(c);
-  putchar('m');
-  fputs(", ", stdout);
-  c = mode & 04000 ? '+' : '-';
-  putchar(c);
-  putchar('r');
-  fputs(", ", stdout);
-  c = mode & 010000 ? '+' : '-';
-  putchar(c);
-  putchar('e');
-  fputs(", ", stdout);
-  c = mode & 020000 ? '+' : '-';
-  putchar(c);
-  putchar('n');
-  fputs(", ", stdout);
-  c = mode & 040000 ? '+' : '-';
-  putchar(c);
-  putchar('l');
-  fputs(", ", stdout);
-  c = mode & 0100000 ? '+' : '-';
-  putchar(c);
-  putchar('h');
-  fputs(", ", stdout);
-  c = mode & 0200000 ? '+' : '-';
-  putchar(c);
-  putchar('i');
-  fputs(", ", stdout);
-  c = mode & 0400000 ? '+' : '-';
-  putchar(c);
-  putchar('w');
-  fputs(", ", stdout);
-  c = mode & 01000000 ? '+' : '-';
-  putchar(c);
-  putchar('a');
-  fputs(", ", stdout);
-  c = mode & 02000000 ? '+' : '-';
-  putchar(c);
-  putchar('x');
-  fputs(", ", stdout);
-  c = mode & 04000000 ? '+' : '-';
-  putchar(c);
-  putchar('y');
-  fputs(", ", stdout);
-  c = mode & 010000000 ? '+' : '-';
-  putchar(c);
-  putchar('g');
+  for (i = strlen(modestring), p = modestring, mask = 040; i > 0;
+    i--, p++, mask <<= 1)
+    printf(", %c%c", mode & mask ? '+' : '-', *p);
   fputs("\r\n", stdout);
   switch ((int)(mode >> 30 & 3))
   {

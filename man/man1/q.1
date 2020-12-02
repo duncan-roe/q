@@ -72,7 +72,7 @@ These commands typically load macros and may set some modes
 \f3q\f1 first looks in the current working directory for a file named
 \f3.qrc\f1.
 If not found, it tries to open \f3$HOME/.qrc\f1.
-If no such file then it reads the file \f3qrc\f1 in 
+If no such file then it reads the file \f3qrc\f1 in
 \f3/usr/local/etc\f1 or wherever was configured at build time.
 .RE
 .PP
@@ -161,6 +161,11 @@ the current command).
 .TP
 .BI \-i " initial_macro"
 see \fBInitial Macro\fR above.
+.TP
+.BI \-l " file_or_tty"
+Log keyboard input to \fIfile_or_tty\fR. With \fBfm+8\fR,
+log input from macros and U-use files as well.
+With \fBfm+9\fR, log '^' as '^*'.
 .TP
 .BI \-m
 Read files with \fBread(2)\fR instead of Memory-mapping with \fBmmap(2)\fR.

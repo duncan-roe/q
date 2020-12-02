@@ -1286,10 +1286,10 @@ display_opcodes(void)
     "\r\n"
     "\t Memory Reference Instructions\r\n"
     "\t ====== ========= ============\r\n"
-    "PSH  xxx  Push contents of N7xxx to R\r\n"
-    "POP  xxx  Pop R to define N7xxx\r\n"
-    "PSHF xxx  Push contents of N13xxx to F\r\n"
-    "POPF xxx  Pop F to define N13xxx\r\n");
+    "PSH  xxx Push contents of N7xxx to R\r\n"
+    "POP  xxx Pop R to define N7xxx\r\n"
+    "PSHF xxx Push contents of N13xxx to F\r\n"
+    "POPF xxx Pop F to define N13xxx\r\n");
 
   for (i = 0; i < num_alu_opcode_table_entries; i++)
   {
@@ -1416,7 +1416,7 @@ do_ychangeall(void)
     !ysno5a("Use brief/none in this command (y,n,Cr [n])", A5DNO))
   {
     puts("Reverting to verbose\r");
-    fmode &= 07777777777;
+    fmode &= ~INT32_C(030000000000);
   }
 
   savpos = ptrpos;                 /* Remember so we can get back */
@@ -2118,7 +2118,7 @@ do_fnone(void)
   if (fmode & 01000)
     PRINTF_IGNORED;
   else
-    fmode |= 030000000000u;
+    fmode |= 030000000000;
   return true;                     /* Finished */
 }                                  /* bool do_fnone(void) */
 
@@ -3106,7 +3106,7 @@ do_initial_tsks(bool *do_rc_p)
 
 /* Pick up any option arguments and set cmd_state if more args follow */
   cmd_state = TRY_INITIAL_COMMAND;
-  while ((i = getopt(argc, argv, "AVbdei:mnoqtv")) != -1)
+  while ((i = getopt(argc, argv, "AVbdei:l:mnoqtv")) != -1)
     switch (i)
     {
       case 'A':
@@ -3132,6 +3132,22 @@ do_initial_tsks(bool *do_rc_p)
 
       case 'i':
         initial_command = optarg;
+        break;
+
+      case 'l':
+        do
+          log_fd = fopen(optarg, "a");
+        while (!log_fd && errno == EINTR);
+        if (!log_fd)
+        {
+          fprintf(stderr, "%s. %s (fopen)\r\n", strerror(errno), optarg);
+          exit(1);
+        }                          /* if (!log_fd) */
+        if (setvbuf(log_fd, NULL, _IONBF, 0))
+        {
+          fprintf(stderr, "%s. %s (setvbuf)\r\n", strerror(errno), optarg);
+          exit(1);
+        }                          /* if (setvbuf(log_fd, NULL, _IONBF, 0)) */
         break;
 
       case 'm':

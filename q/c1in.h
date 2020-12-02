@@ -11,6 +11,7 @@
 
 /* Headers */
 
+#include <stdio.h>
 #include "typedefs.h"
 
 /* Macros */
@@ -20,6 +21,9 @@
 #  define OPEN_MAX 2048            /* Surely more than anyone would want */
 #endif
 #define USING_FILE (bool)(stdidx >= stdbase)
+#define LOG(x) do {if\
+ (log_fd && ((fmode & 020000000) || (!USING_FILE && curmac < 0)))\
+ log_char(x);} while (0)
 
 /* External variables */
 
@@ -43,9 +47,11 @@ extern const char *end_seq;
 extern const char *const normal_end_sequence;
 extern double timlst;
 extern uint8_t fxtabl[128];        /* FX command implementation */
+extern FILE *log_fd;
 
 /* Prototypes */
 
 void init5(void), final5(void);
 void change_attr(int fd, struct termios *wanted);
+void log_char(uint16_t thisch);
 #endif

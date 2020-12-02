@@ -239,6 +239,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
 
       refrsh(Curr);                /* Display prompt etc */
       thisch = c1in5(&eof_encountered); /* Read 1 char */
+      LOG(thisch);
       if (eof_encountered)
       {                            /* c1in5 will have returned '\r' */
         if (in_cmd && Curr->bchars == 0 && USING_FILE)
@@ -265,6 +266,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
         GETNEXTCHR;
       }                            /* if (mcposn >= scmacs[curmac]->maclen) */
       thisch = scmacs[curmac]->data[mcposn++];
+      LOG(thisch);
     }                              /* if (curmac < 0) else */
     if (contp)
     {

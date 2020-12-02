@@ -204,7 +204,7 @@ newmac2(bool appnu)
     {
       xpnsion[m++] = *bfp;
       continue;
-    }                              /* if (thisch != CARAT) */
+    }                              /* if (*bfp != CARAT) */
     if (!*++bfp)                   /* If nothing to precurse (error) */
     {                              /* (and point to next i/p char) */
       fprintf(stderr, "Macro specification ends mid-sequence");
@@ -236,7 +236,7 @@ newmac2(bool appnu)
           break;                   /* B wasn't octal, may be ">" */
         if (thisch & 0160000)
         {                          /* Would overflow */
-          fprintf(stderr, "Octal macro char out of range (>177777)");
+          fprintf(stderr, "Octal macro char out of range (>17777)");
           GIVE_UP;
         }                          /* if (thisch & 0160000) */
         thisch = (thisch << 3) + k; /* Accumulate digit */

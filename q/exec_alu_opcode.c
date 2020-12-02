@@ -1,6 +1,6 @@
 /* E X E C _ A L U _ O P C O D E . C
  *
- * Copyright (C) 2014-2017,2019 Duncan Roe
+ * Copyright (C) 2014-2017,2019-2020 Duncan Roe
  */
 
 /* Headers */
@@ -611,6 +611,13 @@ tstfmod(char **err)
   xreg = mods;
   return true;
 }                                  /* tstfmod() */
+
+static bool
+clrfmod(char **err)
+{
+  mods = false;
+  return true;
+}                                  /* clrfmod() */
 
 static bool
 and(char **err)
@@ -1340,6 +1347,7 @@ alu_opcode opcode_defs[] = {
   OPCODE(zam, "Zeroise All Memory"),
   OPCODE(scpt, "Store Cursor Position Tabs (initial setting, also after RST)"),
   OPCODE(sfpt, "Store File Position Tabs"),
+  OPCODE(clrfmod, "Set file to be unmodified"),
 };                                 /* alu_opcode opcode_defs[] = */
 
 /* Instantiate other externals */

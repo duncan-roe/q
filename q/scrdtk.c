@@ -1,7 +1,7 @@
 /*  S C R D T K
  * Retrieve tokens from screenedit buffers
  * Copyright (C) 1998, Duncan Roe & Associates P/L
- * Copyright (C) 2012,2014,2019 Duncan Roe
+ * Copyright (C) 2012,2014,2019-2020 Duncan Roe
  */
 #include <stdio.h>
 #include <errno.h>
@@ -75,7 +75,7 @@ int scrdtk                         /* errno is int, so we are */
               }                    /* if(chr=',') */
               if (chr == SLASH && tknidx < scline->bchars - 1 &&
                 scline->bdata[tknidx + 1] == ASTRSK)
-              {                    /* Token is SLASH-star comment */
+              {                    /* Token is slash-star comment */
                 tknidx = scline->bchars; /* Look like end-of-line */
                 break;
               }                    /* else if(chr==SLASH&&... */

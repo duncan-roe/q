@@ -1,6 +1,6 @@
 /* C L 5 G E T
  *
- * Copyright (C) 2012,2013,2019 Duncan Roe
+ * Copyright (C) 2012,2013,2019-2020 Duncan Roe
  *
  * Assembles characters in buf,
  * echoing them and performing erase & kill processing,
@@ -11,12 +11,13 @@
  * Assume ECHOK is required as well...
  */
 #include <stdio.h>
-#include <sys/types.h>
 #include <unistd.h>
+#include <sys/types.h>
 #include "prototypes.h"
 #include "macros.h"
+#include "fmode.h"
 #include "c1in.h"
-/* */
+
 bool
 cl5get(char *buf, int bufcap, bool action_eof, bool read_macros)
 {
@@ -34,8 +35,7 @@ cl5get(char *buf, int bufcap, bool action_eof, bool read_macros)
         notmac(NORMAL);
         continue;
       }                            /* if (mcposn >= scmacs[curmac]->maclen) */
-      thisch = scmacs[curmac]->data[mcposn];
-      mcposn++;
+      thisch = scmacs[curmac]->data[mcposn++];
     }                              /* if (read_macros && curmac >= 0) */
     else if (action_eof)
     {
@@ -47,6 +47,7 @@ cl5get(char *buf, int bufcap, bool action_eof, bool read_macros)
     }                              /* if (action_eof) */
     else
       thisch = c1in5(NULL);
+    LOG(thisch);
     if (thisch == '\n')
       break;                       /* J EOL */
     if (thisch == '\r')

@@ -1,26 +1,13 @@
-DONE: Regexp search mode for L & Y (but not FL & FY)
-Specify file for monitoring input (from any source)
-DONE: Opcodes PSHWDTH & PSHHGHT push screen width & height to R
+STARTED: Specify file for monitoring input (from any source)
 Opcodes POPL & POPLF: pop to line being edited (command or file)
 Opcode XMODE to set fmode from X-reg after command read (for ^N7)
-DONE: Audit macros to not use alpha tab ids (preferably use tabs 75 - 80)
-DONE: workfile.c, readfl.c & maybe others to have #pragma to turn off optimising
-DONE: Do not visbell more than once every 1/10 sec
-DONE: Add ~/bin/qm (list macros) to make install
-DONE: Create man page for qm
-DONE: q -v to not action FD Y (Changed to q -vv)
-DONE: FB to use clock_gettime (replaces gettimeofday) for 1/5 second interval
-DONE: FReprompt command to bring up q command line from w/in macro:
- Q continues macro; FQ abandons
- (Renamed from FRecurse)
 Q -B to break long lines on token delimiter if length so far > 32(?)K
 Give symbolic names to ALU memory locations e.g. k,0,i^J^<POP i>
  Error if try to rename location
  Error if use same name twice
-"q -l" to insert "fm +l" command before reading file
+command-line option to insert "fm +l" command before reading file
 Search up directory tree for .qrc
 Use .qrc associated with file to edit
-DONE: Do Delete properly (i.e. entirely inside workfile.c)
 ALU is always 64-bit (?)
 cater for >4G lines in L & Y
 Give some kind of acknowledgement to ^NF (& ^NO?)
@@ -35,18 +22,9 @@ Properly reinstate output optimisation (old hack removed as "quick fix")
  Will need 2x USB-serial dongles to test (can't lower xterm speed)
 INTERNALS
 	STARTED: Have a bool enum for logicals
-	DONE: Fix runindent label squashes
-	DONE: More GIVE_UP macros - use error_exit as standard label
-	DONE: rework asg2 blocks (including xistcs.c)
-	DONE: Use meaningful names instead of logtmp &c.
-	DONE: Tidy scmnrd.c in particular
 	STARTED: Be more careful what goes to stderr / stdout
 	STARTED: use stdint types
 	STARTED: Reduce number of goto stmts
-	DONE: return bad_rdtk() once H & L are subroutinised
-	DONE: Eliminate FTN COMMON in favour of extern / instantiate
-	DONE: Re-organise q.c for static fns at end
-	DONE: Maybe re-organise q.c for no internal fns
 Show what arguments Q started with (?)
 STARTED: Catalogue of useful macros
 New pseudomacro to replace "/*" with arbitrary seq: #, // &c (i.e. for ^O)
