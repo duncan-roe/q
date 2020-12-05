@@ -5,17 +5,14 @@
 
 /* Headers */
 
-#include "c1in.h"
-#include "fmode.h"
 #include "macros.h"
+#include "fmode.h"
+#include "c1in.h"
+#include "alu.h"
 
 /* Static Variables */
 
-static bool nseen = false;
-
-/* Static prototypes */
-
-static bool display_opcode(uint16_t thisch);
+static bool ctl_n_pending = false;
 
 /* ******************************** log_char ******************************** */
 
@@ -23,44 +20,37 @@ void
 log_char(uint16_t thisch)
 {
 /* Look for an opcode if previous char was ^N */
-  if (nseen)
+  if (ctl_n_pending)
   {
-    nseen = false;
-    if (display_opcode(thisch))
+    ctl_n_pending = false;
+    if (display_opcode(thisch, log_fd))
       return;
     fputs("^N", log_fd);
-  }                                /* if (nseen) */
+  }                                /* if (ctl_n_pending) */
 /* Pend o/p of ^N if in a macro (LOG macro checks fmode for logging wanted) */
-  else if (thisch == 016 && curmac >= 0)
+  else if (thisch == CTL_N && curmac >= 0)
   {
-    nseen = true;
+    ctl_n_pending = true;
     return;
-  }                                /* else if (thisch == 016 && curmac >= 0) */
+  }                               /* else if (thisch == CTL_N && curmac >= 0) */
 
-  if (thisch < 040)
+  if (thisch < SPACE)
   {
     fprintf(log_fd, "^%c", thisch | 0100);
 /* Newline after ^J, ^M, ^T or ^[ */
-    if (thisch == 012 || thisch == 015 || thisch == 024 || thisch == 033)
+    if (thisch == 012 || thisch == 015 || thisch == 024 || thisch == ESC)
       fputc('\n', log_fd);
-  }                                /* if (thisch < 040) */
+  }                                /* if (thisch < SPACE) */
   else if (thisch == CARAT)
   {
     fputc(CARAT, log_fd);
     if (fmode & 040000000)
       fputc(ASTRSK, log_fd);
   }                                /* else if (thisch == CARAT) */
-  else if (thisch < 0177)
+  else if (thisch < DEL)
     fputc(thisch, log_fd);
-  else if (thisch == 0177)
+  else if (thisch == DEL)
     fputs("^?", log_fd);
   else
     fprintf(log_fd, "^<%o>", thisch);
 }                                  /* log_char(uint16_t thisch) */
-
-/* ***************************** display_opcode ***************************** */
-
-static bool display_opcode(uint16_t thisch)
-{
-  return false;
-}                                  /* static bool display_opcode() */

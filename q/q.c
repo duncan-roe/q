@@ -2028,7 +2028,7 @@ do_fbrief(void)
   if (!(fmode & 01000))
   {
     fmode |= 010000000000;
-    fmode &= 017777777777;
+    fmode &= ~INT32_C(020000000000);
   }                                /* if (!(fmode & 01000)) */
   else
     PRINTF_IGNORED;
@@ -2168,7 +2168,7 @@ do_fverbose(void)
 {
   if (!eolok())
     return false;
-  fmode &= 07777777777;
+  fmode &= ~INT32_C(030000000000);
   return true;                     /* Finished */
 }                                  /* bool do_fverbose(void) */
 

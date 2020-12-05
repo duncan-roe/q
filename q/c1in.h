@@ -54,4 +54,5 @@ extern FILE *log_fd;
 void init5(void), final5(void);
 void change_attr(int fd, struct termios *wanted);
 void log_char(uint16_t thisch);
+bool display_opcode(uint16_t ch, FILE *stream);
 #endif

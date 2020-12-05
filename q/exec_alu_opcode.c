@@ -139,7 +139,7 @@ popmode(char **err)
   if (zmode_valid)
   {
     zmode = fmode;
-    fmode &= 033777777777U;
+    fmode &= ~INT32_C(04000000000); /* Turn off indent (zmode may reinstate) */
   }                                /* if (zmode_valid) */
   return true;
 }                                  /* popmode() */

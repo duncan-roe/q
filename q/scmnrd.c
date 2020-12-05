@@ -128,7 +128,7 @@ scmnrd()
     cmsplt = false;                /* No split command yet */
     zmode = fmode;                 /* So n4000 can return proper value */
     zmode_valid = true;
-    fmode &= 033777777777U;        /* Turn off indent */
+    fmode &= ~INT32_C(04000000000); /* Turn off indent */
     if (USING_FILE)
     {
       putchar('>');
