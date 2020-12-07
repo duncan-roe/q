@@ -22,7 +22,7 @@
 #endif
 #define USING_FILE (bool)(stdidx >= stdbase)
 #define LOG(x) do {if\
- (log_fd && ((fmode & 020000000) || (!USING_FILE && curmac < 0)))\
+ (log_fd && ((fmode & FM_PLUS_8_BIT) || (!USING_FILE && curmac < 0)))\
  log_char(x);} while (0)
 
 /* External variables */

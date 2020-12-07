@@ -44,7 +44,7 @@
 
 #define ERRRTN(x) do {fprintf(stderr, "%s", (x)); return false;} while (0)
 #define PIPE_NAME "/tmp/qpipeXXXXXX"
-#define REVRSE (fmode & 04000)
+#define REVRSE (fmode & FM_PLUS_R_BIT)
 #define PRINTF_IGNORED printf("f%c ignored (mode +v)\r\n", verb)
 #define RESET_ARGNO do {if (previous_argno >= 0) argno = previous_argno;\
   return false;}while (0)
@@ -104,8 +104,8 @@ int num_ops = 0;
 alu_dict_ent root_alu_dict_ent = { NULL, NULL, -2, 0 };
 int *alu_table_index;
 bool alu_macros_only = false;      /* N- was N-- */
-uint32_t fmode;
-uint32_t zmode;
+fmode_t fmode;
+fmode_t zmode;
 bool zmode_valid = false;
 char FPformat[40];
 char Iformat[40];
@@ -127,7 +127,7 @@ int pchrs, fscode, argc, argno = 0;
 int previous_argno = -1;
 long lstlin;
 char ermess[Q_BUFSIZ], ubuf[Q_BUFSIZ], **argv, *sh;
-unsigned long dfltmode;
+fmode_t dfltmode;
 
 /* Static Variables */
 
@@ -192,7 +192,7 @@ static struct reprompt_frame
   int saved_immdtum;
   int saved_mcdtum;
   int saved_stdbase;
-  uint32_t saved_fmode;
+  fmode_t saved_fmode;
 }
 rframe[NUM_RFRAMES];
 static int ridx = -1;
@@ -227,7 +227,7 @@ static bool do_join(void);
 static bool do_locate(void);
 static bool do_modify(void);
 static bool do_newmacro(void);
-static bool do_o_ff_or_fc(unsigned long bit);
+static bool do_o_ff_or_fc(fmode_t bit);
 static bool do_print(void);
 static bool do_quit(bool recursing);
 static bool do_reposition(void);
@@ -1348,7 +1348,7 @@ do_ychangeall(void)
   if (tokens)
     regs = false;
   else
-    regs = (fmode & 010000000) != 0;
+    regs = (fmode & FM_PLUS_G_BIT) != 0;
   if (scrdtk(2, (uint8_t *)oldstr, BUFMAX, oldcom))
     return bad_rdtk();
   if (oldcom->toktyp == eoltok || !(oldlen = oldcom->toklen))
@@ -1368,7 +1368,7 @@ do_ychangeall(void)
     ydiff = newlen - oldlen;
 
 /* strings must be equal length if Fixed-Length mode */
-    if (ydiff && fmode & 0400)
+    if (ydiff && fmode & FM_PLUS_F_BIT)
     {
       fputs("Replace string must be same length in FIXED LENGTH mode", stderr);
       return false;
@@ -1416,7 +1416,7 @@ do_ychangeall(void)
     !ysno5a("Use brief/none in this command (y,n,Cr [n])", A5DNO))
   {
     puts("Reverting to verbose\r");
-    fmode &= ~INT32_C(030000000000);
+    fmode &= ~FN_CMD_BITS;
   }
 
   savpos = ptrpos;                 /* Remember so we can get back */
@@ -1472,12 +1472,12 @@ do_ychangeall(void)
       {
         ydiff = newlen - oldlen;
         match_end = match_start + oldlen - 1;
-        if (ydiff && fmode & 0400)
+        if (ydiff && fmode & FM_PLUS_F_BIT)
         {
           fputs("Replace string must be same length in FIXED LENGTH mode",
             stderr);
           return false;
-        }                          /* if (ydiff && fmode & 0400) */
+        }                          /* if (ydiff && fmode & FM_PLUS_F_BIT) */
       }                            /* else if (regs) */
       if (curr->bchars + ydiff > curr->bmxch) /* Would exceed line capacity */
       {
@@ -1895,7 +1895,7 @@ E_Q_common(void)
 
 /* Use mmap if requested */
 
-  if (fmode & 02000 && (verb != 'E' || fmode & 020000))
+  if (fmode & FM_PLUS_M_BIT && (verb != 'E' || fmode & FM_PLUS_N_BIT))
   {
     if (fstat(funit, &statbuf))
     {
@@ -1919,7 +1919,7 @@ E_Q_common(void)
     }                              /* if(statbuf.st_size) */
     else
       puts("0 lines read.\r");
-  }                                /* if(fmode&02000&&... */
+  }                                /* if(fmode & FM_PLUS_M_BIT &&... */
   else
     readfl();
   if (my_close(funit))             /* Failure */
@@ -2025,11 +2025,11 @@ do_fbrief(void)
 {
   if (!eolok())
     return false;
-  if (!(fmode & 01000))
+  if (!(fmode & FM_PLUS_V_BIT))
   {
-    fmode |= 010000000000;
-    fmode &= ~INT32_C(020000000000);
-  }                                /* if (!(fmode & 01000)) */
+    fmode &= ~FN_CMD_BITS;
+    fmode |= FB_CMD_BIT;
+  }                                /* if (!(fmode & FM_PLUS_V_BIT)) */
   else
     PRINTF_IGNORED;
   return true;                     /* Finished */
@@ -2115,10 +2115,10 @@ do_fnone(void)
 {
   if (!eolok())
     return false;
-  if (fmode & 01000)
+  if (fmode & FM_PLUS_V_BIT)
     PRINTF_IGNORED;
   else
-    fmode |= 030000000000;
+    fmode |= FN_CMD_BITS;
   return true;                     /* Finished */
 }                                  /* bool do_fnone(void) */
 
@@ -2168,7 +2168,7 @@ do_fverbose(void)
 {
   if (!eolok())
     return false;
-  fmode &= ~INT32_C(030000000000);
+  fmode &= ~FN_CMD_BITS;
   return true;                     /* Finished */
 }                                  /* bool do_fverbose(void) */
 
@@ -2377,7 +2377,7 @@ do_locate(void)
   if (tokens)
     regs = false;
   else
-    regs = (fmode & 010000000) != 0;
+    regs = (fmode & FM_PLUS_G_BIT) != 0;
   if (REVRSE)
     revpos = ptrpos;
   display_wanted = !BRIEF || curmac < 0; /* Display error messages if true */
@@ -2576,7 +2576,7 @@ do_newmacro(void)
 /* ****************************** do_o_ff_or_fc ***************************** */
 
 static bool
-do_o_ff_or_fc(unsigned long bit)
+do_o_ff_or_fc(fmode_t bit)
 {
   bool bit_is_set = false;
 
@@ -2600,7 +2600,7 @@ do_o_ff_or_fc(unsigned long bit)
   else
     fmode &= ~bit;
   return true;
-}                                  /* bool do_o_ff_or_fc(unsigned long bit) */
+}                                  /* bool do_o_ff_or_fc(fmode_t bit) */
 
 /* ******************************** do_print ******************************** */
 
@@ -2678,7 +2678,7 @@ do_quit(bool recursing)
   {
 /* If in a macro, only action solitary Q if mode says so.
  * Otherwise, convert to ^NU... */
-    if (curmac >= 0 && !(fmode & 0100) && verb == 'Q')
+    if (curmac >= 0 && !(fmode & FM_PLUS_Q_BIT) && verb == 'Q')
     {
       macdef(64, (uint8_t *)"", 0, true); /* Macro is ^NU only */
       curmac = 64;
@@ -3093,7 +3093,8 @@ do_xistics(void)
 static void
 do_initial_tsks(bool *do_rc_p)
 {
-  dfltmode = 01212005;             /* +e +m +* +tr +dr +i +a */
+  dfltmode = FM_PLUS_A_BIT | FM_PLUS_I_BIT | FM_PLUS_E_BIT | FM_PLUS_M_BIT |
+    TAB_READ_BIT | DOS_READ_BIT;
   end_seq = normal_end_sequence;
   init_alu();
   tmask = umask(0);                /* Get current umask */
@@ -3119,7 +3120,7 @@ do_initial_tsks(bool *do_rc_p)
 
       case 'b':
         binary = true;
-        dfltmode |= 0400;          /* +f */
+        dfltmode |= FM_PLUS_F_BIT;
         break;
 
       case 'd':
@@ -3127,7 +3128,7 @@ do_initial_tsks(bool *do_rc_p)
         break;
 
       case 'e':
-        dfltmode ^= 010000;        /* e */
+        dfltmode ^= FM_PLUS_E_BIT;
         break;
 
       case 'i':
@@ -3151,7 +3152,7 @@ do_initial_tsks(bool *do_rc_p)
         break;
 
       case 'm':
-        dfltmode ^= 02000;         /* m */
+        dfltmode ^= FM_PLUS_M_BIT;
         break;
 
       case 'n':

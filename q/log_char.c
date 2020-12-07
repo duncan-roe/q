@@ -44,7 +44,7 @@ log_char(uint16_t thisch)
   else if (thisch == CARAT)
   {
     fputc(CARAT, log_fd);
-    if (fmode & 040000000)
+    if (fmode & FM_PLUS_9_BIT)
       fputc(ASTRSK, log_fd);
   }                                /* else if (thisch == CARAT) */
   else if (thisch < DEL)

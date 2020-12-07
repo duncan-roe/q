@@ -81,6 +81,8 @@ typedef enum
   FQ_FROM_FR,
 } notmac_action;                   /* typedef enum */
 
+typedef uint32_t fmode_t;
+
 /* Prototype */
 
 int scrdtk(int key, uint8_t * buf, int bufcap, scrbuf5 *scline);

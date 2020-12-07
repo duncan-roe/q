@@ -109,7 +109,7 @@ typedef struct suppbk
   ofstbk *prev;
   uint8_t *filptr;
   uint8_t *endptr;
-  unsigned long mode;
+  fmode_t mode;
   short dlrecs;
 } suppbk;
 

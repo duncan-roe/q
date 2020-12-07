@@ -128,7 +128,7 @@ scmnrd()
     cmsplt = false;                /* No split command yet */
     zmode = fmode;                 /* So n4000 can return proper value */
     zmode_valid = true;
-    fmode &= ~INT32_C(04000000000); /* Turn off indent */
+    fmode &= ~INDENT_BIT;          /* Turn off indent */
     if (USING_FILE)
     {
       putchar('>');
@@ -306,8 +306,8 @@ scmnrd()
     return;
   }
 /* Check for disallowed command if Fixed-Length Mode */
-  if (fmode & 0400 && ((verb == 'A' && !binary) || verb == 'C' || verb == 'D' ||
-    verb == 'E' || verb == 'I'))
+  if (fmode & FM_PLUS_F_BIT && ((verb == 'A' && !binary) || verb == 'C' ||
+    verb == 'D' || verb == 'E' || verb == 'I'))
   {
     if (want_disply)
       disply(oldcom, true);        /* Display the command */
@@ -345,7 +345,7 @@ scmnrd()
             wanted_arg = oldcom->decval - 1; /* Wanted arg # */
           if (wanted_arg >= 0 && wanted_arg + optind < argc)
           {
-            if (fmode & 0200)
+            if (fmode & FM_PLUS_HASH_BIT)
               argno = wanted_arg;  /* If +# mode */
             oldcom->bchars = file_start - 1; /* Truncate command line */
             massage_q_arg();       /* Massage in argument */

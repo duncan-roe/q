@@ -40,7 +40,7 @@ writfl(long wrtnum)
   uint8_t *p, *q, thisch;
   short tabfnd, spacnt, chrpos;
   int inindent;                    /* Inside indenting whitespace */
-  const bool fm_plus_y = fmode & 04000000;
+  const bool fm_plus_y = (fmode & FM_PLUS_Y_BIT) != 0;
 /*
  * Initialise
  */
@@ -65,7 +65,7 @@ writfl(long wrtnum)
 /*
  * Strip trailing spaces (usually)...
  */
-    if (!(fmode & 020 || binary))
+    if (!(fmode & FM_PLUS_S_BIT || binary))
       while (bytes > 0)
       {
         if (curr->bdata[bytes - 1] != SPACE)
@@ -76,7 +76,7 @@ writfl(long wrtnum)
     tabfnd = 0;                    /* Not seen a real tab yet */
     chrpos = 0;                    /* At line start */
 /* In putative w/s at line start, if we care */
-    inindent = fmode & 040000;     /* fm+l asserted */
+    inindent = fmode & FM_PLUS_L_BIT;
 /*
  * Inner loop for this line
  */
@@ -86,7 +86,7 @@ writfl(long wrtnum)
 /*
  * Compress spaces to tabs if requested
  */
-      if (!binary && (fmode & 010 || fmode & inindent) && !tabfnd)
+      if (!binary && (fmode & TAB_WRITE_BIT || inindent) && !tabfnd)
       {
 /* If on 8-char bdry & have spaces */
         if (!(chrpos % tabsiz) && spacnt)
@@ -131,7 +131,7 @@ writfl(long wrtnum)
           for (; spacnt > 0; spacnt--)
             STC(SPACE);
       }                            /* if(spacnt) */
-      if (fmode & 2)
+      if (fmode & DOS_WRITE_BIT)
         STC('\r');                 /* If DOS o/p wanted */
       STC('\n');
     }                              /* if(!binary) */

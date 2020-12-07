@@ -22,6 +22,7 @@
 #include <memory.h>
 #include <string.h>
 #include <stdlib.h>
+#include <inttypes.h>
 #include <sys/types.h>
 #include <sys/times.h>
 #include "prototypes.h"
@@ -493,7 +494,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
         }                          /* if (verb == 'T') */
 
 /* Disallow length change in FIXED LENGTH mode, when editing the file */
-        if (Curr->bchars != olen && !in_cmd && fmode & 0400)
+        if (Curr->bchars != olen && !in_cmd && fmode & FM_PLUS_F_BIT)
         {
           fprintf(stderr,
             "\r\nLine length must not change in FIXED LENGTH mode");
@@ -1084,7 +1085,7 @@ process_pseudo_arg(scrbuf5 *Curr, bool in_cmd)
       switch (thisch)
       {
         case 04000:                /* Mode */
-          qreg = snprintf(NULL, 0, "%o", zmode_valid ? zmode : fmode);
+          qreg = snprintf(NULL, 0, "%" PRIofmode, FMODE);
           break;
 
         case 04002:                /* Curent edit file */
@@ -1327,7 +1328,7 @@ process_other(void)
     switch (thisch)
     {
       case 04000:                  /* Return mode */
-        i = snprintf(tbuf, sizeof tbuf, "%o", zmode_valid ? zmode : fmode);
+        i = snprintf(tbuf, sizeof tbuf, "%" PRIofmode, FMODE);
         macdef(FIRST_PSEUDO, (uint8_t *)tbuf, i, true);
         break;
 
@@ -1349,7 +1350,7 @@ process_other(void)
           i = j;
 
 /* Look for half-screen requested */
-        if ((fmode & 00000100000) && i > row5 / 2)
+        if ((fmode & FM_PLUS_H_BIT) && i > row5 / 2)
         {
           if (i > row5)
             i -= row5 / 2 + 1;
@@ -1395,7 +1396,7 @@ process_other(void)
           j = ptrpos - 1;
 
 /* Look for half-screen requested */
-        if ((fmode & 00000100000) && j > row5 / 2)
+        if ((fmode & FM_PLUS_H_BIT) && j > row5 / 2)
         {
 
 /* Reduce j by an extra 1 because empirically that moves the */

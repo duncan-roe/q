@@ -26,7 +26,7 @@
 int tabsiz = 8;                    /* How often tabstops are */
 
 static long dcount;                /* # deferred lines read */
-static unsigned long dfmode;       /* Mode at deferred map time */
+static fmode_t dfmode;             /* Mode at deferred map time */
 static uint8_t *defend;            /* Deferred file end */
 static uint8_t *defpos;            /* Deferred file current address */
 static uint8_t *dfaddr;            /* Deferred file start address */
@@ -42,7 +42,7 @@ static int pbchars;                /* local copy of xxprev->bchars for speed */
 static bool fileio;                /* Whether i/o from file */
 static bool lngwrn;        /* Whether to store xxprev, warn of long lines &c. */
 static scrbuf5 *xxprev;            /* Buffer where line is built up */
-static unsigned long xxmode;       /* Copy of fmode, as is or was */
+static fmode_t xxmode;             /* Copy of fmode, as is or was */
 static short state;                /* Cr &c state */
 /*
  * STATE VARIABLE TABLE:-
@@ -111,7 +111,8 @@ static int
 prclin(void)                       /* Build up line; return 1 for eof */
 {
   uint8_t *pbptr;                  /* -> xxprev->bdata[bchars] for speed */
-  int inindent = 040000;           /* Inside indenting w/s, mask matches mode */
+/* Inside indenting w/s, mask matches mode */
+  fmode_t inindent = FM_PLUS_L_BIT;
 /*  */
   for (pbchars = linpos = 0, pbptr = xxprev->bdata; pbchars < BUFMAX; linpos++)
   {
@@ -156,11 +157,11 @@ prclin(void)                       /* Build up line; return 1 for eof */
 /* If doing a DOS read and already holding on to a Cr, store it and stay in
  * state 1. Else, move to state 1 and store nothing */
 
-          if (xxmode & 1 && state != 1) /* DOS read, not holding Cr */
+          if (xxmode & DOS_READ_BIT && state != 1) /* state: not holding Cr */
           {
             state = 1;             /* Holding a Cr */
             continue;              /* for(pbchars=linpos... (don't store Cr) */
-          }                        /* if(xxmode&1) */
+          }                       /* if (xxmode & DOS_READ_BIT && state != 1) */
           linpos = -1;             /* Back at line start */
           goto endswitch;          /* switch(state) cases 0 & 1 */
         }                          /* if(thisch=='\r') */
@@ -187,8 +188,7 @@ prclin(void)                       /* Build up line; return 1 for eof */
 
         if (thisch == '\t' || thisch == '\b')
         {
-/* +tr || +l in ldg w/s */
-          if ((xxmode & 4) || (xxmode & 040000 & inindent))
+          if ((xxmode & TAB_READ_BIT) || (xxmode & FM_PLUS_L_BIT & inindent))
           {
             if (thisch == '\t')
             {
@@ -197,7 +197,7 @@ prclin(void)                       /* Build up line; return 1 for eof */
             }                      /* if(thisch=='\t' */
             else if (linpos > 0)   /* thisch must be '\b' */
               linpos -= 2;
-          }                        /* if(xxmode&4) */
+          }                        /* if ((xxmode & TAB_READ_BIT) || ... */
         }                          /* if(thisch=='\t'||thisch=='\b') */
       }                            /* if(thisch<' '||state) */
     }                              /* if(binary) else */
@@ -289,7 +289,7 @@ mapfil(ino_t inode, off_t size, uint8_t *addr)
 
 /* If we can defer reading the file, do so */
 
-  if (ptrpos == lintot + 1 && fmode & 010000 && !deferd)
+  if (ptrpos == lintot + 1 && fmode & FM_PLUS_E_BIT && !deferd)
   {
     dcount = 0;                    /* No lines read in from file */
     dfmode = fmode;                /* Remember mode at map time */
@@ -298,7 +298,7 @@ mapfil(ino_t inode, off_t size, uint8_t *addr)
     deferd = true;                 /* Tell the world */
     printf("%lld bytes mapped.\r\n", (long long int)size); /* Tell the user */
     return;
-  }                                /* if(ptrpos==lintot+1&&fmode&010000&&... */
+  }          /* if (ptrpos == lintot + 1 && fmode & FM_PLUS_E_BIT && !deferd) */
 
   lngwrn = true;                   /* Not memrec */
   fileio = false;                  /* File already mmap'd */
@@ -324,7 +324,7 @@ mapfil(ino_t inode, off_t size, uint8_t *addr)
 /* ******************************* memrec ****************************** */
 
 void
-memrec(uint8_t *start, uint8_t *end, unsigned long mode, scrbuf5 *s)
+memrec(uint8_t *start, uint8_t *end, fmode_t mode, scrbuf5 *s)
 {
   lngwrn = false;                  /* This *is* memrec */
   fileio = false;                  /* File already mmap'd */

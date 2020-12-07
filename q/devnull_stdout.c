@@ -19,10 +19,10 @@ devnull_stdout()
 {
   int i, j;
 
-  if (fmode & 01000)
+  if (fmode & FM_PLUS_V_BIT)
   {
     fputs("\"fd y\" ignored (mode +v)\r\n", stdout);
-  }                                /* if (fmode & 01000) */
+  }                                /* if (fmode & FM_PLUS_V_BIT) */
   else
   {
 /* Only switch output to /dev/null if not there already. */
@@ -60,5 +60,5 @@ devnull_stdout()
       }                            /* if (i != 1) */
     }                              /* if (orig_stdout == -1) */
     stdinfo[stdidx].nullstdout = true;
-  }                                /* if (fmode & 01000) else */
+  }                                /* if (fmode & FM_PLUS_V_BIT) else */
 }                                  /* devnull_stdout() */

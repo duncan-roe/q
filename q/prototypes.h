@@ -12,7 +12,7 @@
 
 /* Function Prototypes */
 
-void memrec(uint8_t *start, uint8_t *end, unsigned long mode, scrbuf5 *a1);
+void memrec(uint8_t *start, uint8_t *end, fmode_t mode, scrbuf5 *a1);
 void mapfil(ino_t inode, off_t size, uint8_t *addr);
 void dfread(long num, scrbuf5 *s);
 bool ismapd(ino_t inode);

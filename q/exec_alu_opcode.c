@@ -127,7 +127,7 @@ pshmode(char **err)
 {
   if (!room(err))
     return false;
-  return push(zmode_valid ? zmode : fmode, err);
+  return push(FMODE, err);
 }                                  /* pshmode() */
 
 static bool
@@ -139,7 +139,7 @@ popmode(char **err)
   if (zmode_valid)
   {
     zmode = fmode;
-    fmode &= ~INT32_C(04000000000); /* Turn off indent (zmode may reinstate) */
+    fmode &= ~INDENT_BIT;          /* Turn off indent (zmode may reinstate) */
   }                                /* if (zmode_valid) */
   return true;
 }                                  /* popmode() */

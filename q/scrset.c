@@ -87,8 +87,8 @@ scrset(scrbuf5 *line)
       phigh = (thisch & 0200) != 0; /* Remember high parity bit */
 
 /* Set cntrl if multi-char display needed */
-      cntrl = thisch < SPACE || phigh || (thisch == CARAT && fmode & 040) ||
-        thisch == 0177;
+      cntrl = thisch < SPACE || phigh || (thisch == CARAT &&
+        fmode & FM_PLUS_STAR_BIT) || thisch == DEL;
 
       if (cntrl)                   /* If not guaranteed room */
       {
@@ -151,10 +151,10 @@ scrset(scrbuf5 *line)
           icurs = icurs + 1;
           if (thisch == CARAT)
             thisch = ASTRSK;       /* O/p '*' */
-          else if (thisch == 0177)
+          else if (thisch == DEL)
             thisch = QM;           /* O/p DEL */
           else
-            thisch = thisch + 0100; /* O/p appropriate symbol */
+            thisch = thisch | 0100; /* O/p appropriate symbol */
         }
       }
       reqd[icurs] = thisch;

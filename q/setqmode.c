@@ -23,7 +23,7 @@
 
 /* Static prototypes */
 
-static void show_current(uint32_t mode);
+static void show_current(fmode_t mode);
 
 /* ******************************** setqmode ******************************** */
 
@@ -31,7 +31,7 @@ bool
 setqmode()
 {
   int octok = 1, first = 1;
-  uint32_t u, result = fmode;
+  fmode_t u, result = fmode;
 /*
  * Read an arg. If there are none, reset to default & display settings
  */
@@ -60,7 +60,7 @@ setqmode()
             result = dfltmode;     /* Reset to defaults */
             if (curmac < 0)
               show_current(result); /* Display settings */
-          }                /* if(ysno5a("Reset modes to default [no]",A5DNO)) */
+          }                        /* if (curmac >= 0 || ysno5a(... */
           continue;                /* Keep reading */
         }                          /* if (first) */
         else                       /* Eol, line not empty */
@@ -85,15 +85,15 @@ setqmode()
       {
         case 'D':                  /* DOS */
           if (oldcom->toklen == 2)
-            u = 3;                 /* Read & write */
+            u = DOS_READ_BIT | DOS_WRITE_BIT;
           else
             switch (ubuf[2])
             {
               case 'R':
-                u = 1;
+                u = DOS_READ_BIT;
                 break;
               case 'W':
-                u = 2;
+                u = DOS_WRITE_BIT;
                 break;
               default:
                 GIVE_UP;
@@ -102,101 +102,101 @@ setqmode()
 
 /* fm +t forces fm -l */
         case 'T':                  /* Tab expand / compress */
-          if (oldcom->plusf && (result & 040000))
+          if (oldcom->plusf && (result & FM_PLUS_L_BIT))
           {
             fputs("Forcing fm -l\r\n", stdout);
-            result &= ~040000;
-          }                        /* if(oldcom->plusf&&(result&040000)) */
+            result &= ~FM_PLUS_L_BIT;
+          }                  /* if(oldcom->plusf && (result & FM_PLUS_L_BIT)) */
           if (oldcom->toklen == 2)
-            u = 014;               /* Read & write */
+            u = TAB_READ_BIT | TAB_WRITE_BIT;
           else
             switch (ubuf[2])
             {
               case 'R':
-                u = 04;
+                u = TAB_READ_BIT;
                 break;
               case 'W':
-                u = 010;
+                u = TAB_WRITE_BIT;
                 break;
               default:
                 GIVE_UP;
             }                      /* else switch(ubuf[2]) */
           break;
         case 'S':                  /* Leave trailing Spaces */
-          u = 020;
+          u = FM_PLUS_S_BIT;
           break;
         case '*':                  /* Show '^' as "^*" */
-          u = 040;
+          u = FM_PLUS_STAR_BIT;
           break;
         case 'Q':                  /* Q in macro quits program */
-          u = 0100;
+          u = FM_PLUS_Q_BIT;
           break;
         case '#':                  /* Q $-+# moves argptr */
-          u = 0200;
+          u = FM_PLUS_HASH_BIT;
           break;
         case 'F':                  /* Fixed-length edit */
-          u = 0400;
+          u = FM_PLUS_F_BIT;
           break;
         case 'V':                  /* Verbose always */
-          u = 01000;
+          u = FM_PLUS_V_BIT;
           break;
         case 'M':                  /* Use mmap for file input */
-          u = 02000;
+          u = FM_PLUS_M_BIT;
           break;
         case 'R':                  /* Locate searches backwards */
-          u = 04000;
+          u = FM_PLUS_R_BIT;
           break;
         case 'E':                  /* Deferred read of mmapping files */
-          u = 010000;
+          u = FM_PLUS_E_BIT;
           break;
         case 'N':                  /* E-eNter mmap's also */
-          u = 020000;
+          u = FM_PLUS_N_BIT;
           break;
 
 /* fm +l forces fm -t */
         case 'L':                  /* Expand/compress Leading tabs */
-          u = 040000;
-          if (oldcom->plusf && (result & 014))
+          u = FM_PLUS_L_BIT;
+          if (oldcom->plusf && (result & (TAB_READ_BIT | TAB_WRITE_BIT)))
           {
             fputs("Forcing fm -t\r\n", stdout);
-            result &= ~014;
-          }                        /* if(oldcom->plusf&&(result&014)) */
+            result &= ~(TAB_READ_BIT | TAB_WRITE_BIT);
+          } /* if(oldcom->plusf && (result & (TAB_READ_BIT | TAB_WRITE_BIT))) */
           break;
 
         case 'H':                  /* Half-screen scroll */
-          u = 0100000;
+          u = FM_PLUS_H_BIT;
           break;
 
         case 'I':                  /* Show Interpreted ALU opcodes */
-          u = 0200000;
+          u = FM_PLUS_I_BIT;
           break;
 
         case 'W':                  /* Warn when overwriting nonzero memory  */
-          u = 0400000;
+          u = FM_PLUS_W_BIT;
           break;
 
         case 'A':                  /* ^G & ^NG match Any whitespace */
-          u = 01000000;
+          u = FM_PLUS_A_BIT;
           break;
 
         case 'X':            /* eXclusive L & FL: find next line not matching */
-          u = 02000000;
+          u = FM_PLUS_X_BIT;
           break;
 
         case 'Y':                  /* Store tab for single-space on boundary */
-          u = 04000000;
+          u = FM_PLUS_Y_BIT;
           break;
 
         case 'G':                  /* L & Y do reGexp matching */
-          u = 010000000;
+          u = FM_PLUS_G_BIT;
           break;
 
         case '8':                 /* Log macro & usefile as well as keybd i/p */
-          u = 020000000;
+          u = FM_PLUS_8_BIT;
           break;
 
         case '9':                  /* Log '^' as '^*' */
-          u = 040000000;
+          u = FM_PLUS_9_BIT;
           break;
 
         default:
@@ -223,64 +223,64 @@ setqmode()
 /* ****************************** show_current ****************************** */
 
 static void
-show_current(uint32_t mode)
+show_current(fmode_t mode)
 {
   char c;
   int i;
-  uint32_t mask;
+  fmode_t mask;
   const char *const modestring = "*q#fvmrenlhiwaxyg89";
   const char *p;
 
-  printf("Current mode is %" PRIo32 ":-\r\n", mode);
-  switch (i = (int)mode & 03)
+  printf("Current mode is %" PRIofmode ":-\r\n", mode);
+  switch (i = mode & (DOS_READ_BIT | DOS_WRITE_BIT))
   {
     case 0:
-    case 3:
+    case (DOS_READ_BIT | DOS_WRITE_BIT):
       putchar(i ? '+' : '-');
       putchar('d');
       break;
-    case 1:
+    case DOS_READ_BIT:
       fputs("+dr, -dw", stdout);
       break;
-    case 2:
+    case DOS_WRITE_BIT:
       fputs("-dr, +dw", stdout);
       break;
-  }                                /* switch((int)mode&03) */
+  }                     /* switch (i = mode & (DOS_READ_BIT | DOS_WRITE_BIT)) */
   fputs(", ", stdout);
-  switch (i = mode & 014)
+  switch (i = mode & (TAB_READ_BIT | TAB_WRITE_BIT))
   {
     case 0:
-    case 014:
+    case (TAB_READ_BIT | TAB_WRITE_BIT):
       putchar(i ? '+' : '-');
       putchar('t');
       break;
-    case 04:
+    case TAB_READ_BIT:
       fputs("+tr, -tw", stdout);
       break;
-    case 010:
+    case TAB_WRITE_BIT:
       fputs("-tr, +tw", stdout);
       break;
-  }                                /* switch((int)mode&014) */
+  }                     /* switch (i = mode & (TAB_READ_BIT | TAB_WRITE_BIT)) */
   fputs(", ", stdout);
-  c = mode & 020 ? '+' : '-';
+  c = mode & FM_PLUS_S_BIT ? '+' : '-';
   putchar(c);
   putchar('s');
-  for (i = strlen(modestring), p = modestring, mask = 040; i > 0;
+  for (i = strlen(modestring), p = modestring, mask = FM_PLUS_STAR_BIT; i > 0;
     i--, p++, mask <<= 1)
     printf(", %c%c", mode & mask ? '+' : '-', *p);
   fputs("\r\n", stdout);
-  switch ((int)(mode >> 30 & 3))
+  switch (mode & FN_CMD_BITS)
   {
     case 0:
       fputs("verbose", stdout);
       break;
-    case 1:
+    case FB_CMD_BIT:
       fputs("brief", stdout);
       break;
-    case 3:
+    case FN_CMD_BITS:
       fputs("none", stdout);
       break;
-  }                                /* switch((int)(mode>>30&3)) */
+  }                                /* switch (mode & FN_CMD_BITS) */
   fputs(", ", stdout);
   if (!INDENT)
     fputs("not ", stdout);
