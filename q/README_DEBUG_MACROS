@@ -136,6 +136,11 @@ export k=help_dot_qrc
 ./ggdb -t $my_tty -f macros.gdb -a \
   "$([ -n "$k" ] && echo "-niu,$k^J" || echo "-i")fv^Jfm+v^J $j" $(type -p q) c
 
+or, if you have a loggging screen in $log_tty:
+./ggdb -t $my_tty -f macros.gdb -a "-l $log_tty\
+  $([ -n "$k" ] && echo "-niu,$k^J" || echo "-i")fv^Jfm+v^Jfm+8,+9^J $j"\
+  $(type -p q) c
+
 In the target window, enter "v" to view the file you are working on. If it's
 empty (so you didn't export j as the file to edit) you can edit the file now by
 entering "q macro_debug_sample".

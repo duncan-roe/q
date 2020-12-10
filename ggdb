@@ -6,7 +6,6 @@ exec expect -- "$0" "$@"
 proc help exitcode \
 {
   puts "Usage: ggdb \[-a program args\] \[-f file of gdb commands\]... \\"
-  puts "            \[-q log file or tty (for debugging q) \] \\"
   puts "            \[-t controlling terminal\] <program> \[gdb command\]..."
   puts "       ggdb -h"
   exit $exitcode
@@ -66,15 +65,6 @@ while {$argc > 2} \
         exit 1
       }
       incr file_index
-    }
-
-    -q \
-    {
-      # Q's log file
-      # ggdb sends newline to it on every breakpoint
-      set logfile [lindex $argv 1]
-      set argv [lreplace $argv 0 1]
-      incr argc -2
     }
 
     -t \
@@ -153,12 +143,7 @@ if {[info exists file_index]} \
   for {set i 0} {$i < $file_index} {incr i} \
   {
     set chan [open $file_name($i)]
-    while {[gets $chan line] >= 0} \
-    {
-      sndrcv $line
-      if {[info exists logfile] && ![string compare $line silent]} \
-        {sndrcv "shell echo >$logfile"}
-    }
+    while {[gets $chan line] >= 0} {sndrcv $line}
     close $chan
   }
 }

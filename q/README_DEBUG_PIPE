@@ -14,3 +14,4 @@ The file "xxx" is provided as input.
 The command below uses that and creates the file /tmp/yyy.
 
 ggdb -a "-iy,x,y^J <xxx >/tmp/yyy" q
+ggdb -a "-l $log_tty -ifm+8,+9^Jy,x,y^J <xxx >/tmp/yyy" q

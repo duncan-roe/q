@@ -64,6 +64,8 @@
   gposn = true;                   /* Distinguish from ^G */ GET_FOLLOWING_CHAR;}
 #define LEAVE_SCRDIT {if (!(USING_FILE || nodup)) duplx5(true); return;}
 #define ERR(x) {fputs(x "\r\n", stderr); verb = 'J'; return;}
+#define LOG_BREAK do {if (log_fd && (fmode & FM_PLUS_8_BIT) && \
+  (fmode & FM_PLUS_0_BIT)) fputc('\n', log_fd);} while (0)
 
 /* Instantiate externals */
 
@@ -863,6 +865,8 @@ ctl_n_u_ctl_n_i_common(void)
   if (curmac >= FIRST_IMMEDIATE_MACRO && curmac <= LAST_IMMEDIATE_MACRO)
     immnxfr = curmac;
 
+  if (verb != 'I' && (curmac < FIRST_PSEUDO || curmac > LAST_PSEUDO))
+    LOG_BREAK;
   curmac = i;                      /* BRKPT resuming macro */
   mcposn = j;                      /* Accept the popped values */
 
@@ -905,7 +909,16 @@ process_pseudo_arg(scrbuf5 *Curr, bool in_cmd)
   if (fornj)
   {
     fornj = false;
-    mcposn += (int16_t)thisch;     /* Do the (signed!) jump */
+    mcposn += (int16_t)thisch;    /* Do the (signed!) jump BRKPT jumping back */
+    if (cntrlc)                    /* Guard against looping backwards jump */
+    {
+      if (!USING_FILE)
+        cntrlc = false;
+      err = "Interrupt";
+      ERR_IF_MAC;
+    }                              /* if (cntrlc) */
+    if ((int16_t)thisch < 0)
+      LOG_BREAK;
     if (mcposn >= 0 && mcposn < scmacs[curmac]->maclen)
       GETNEXTCHR;
     err = "^NJ off macro end or start";
@@ -1522,7 +1535,7 @@ process_other(void)
       {
         if ((success = pop_register(&tabs[tabidx].value)))
           tabs[tabidx].tabtyp = STORE_FILE_POS ? LINENUM : CHRPOS;
-      }
+      }                            /* if (is_pop) */
       else
         success = push_register(tabs[tabidx].value);
       if (success)
@@ -1563,8 +1576,10 @@ process_other(void)
     }       /* if (thisch >= FIRST_ALU_OP && thisch < FIRST_ALU_OP + num_ops) */
   }                                /* if (thisch > TOPMAC) */
 
+  LOG_BREAK;
+
 /* ^N^<000> restarts current macro */
-  if (!thisch && curmac >= 0)
+  if (!thisch && curmac >= 0)      /* BRKPT starting macro */
     mcposn = 0;                    /* Leave curmac as-is */
   else
   {
@@ -1620,7 +1635,7 @@ macro_or_del_or_esc(scrbuf5 *Curr, bool in_cmd)
     LEAVE_SCRDIT;                  /* Same as normal ESC */
   }                                /* if (thisch == ESC && curmac < 0) */
 
-  if (thisch <= LAST_PSEUDO && thisch >= FIRST_PSEUDO) /* BRKPT startg macro */
+  if (thisch <= LAST_PSEUDO && thisch >= FIRST_PSEUDO)
     process_pseudo(Curr, in_cmd);
   else
     process_other();

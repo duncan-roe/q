@@ -1,3 +1,4 @@
+Mode to turn off line & part numbering (entire line selectable on V or P)
 STARTED: Specify file for monitoring input (from any source)
 Opcodes POPL & POPLF: pop to line being edited (command or file)
 Opcode XMODE to set fmode from X-reg after command read (for ^N7)
@@ -8,7 +9,7 @@ Give symbolic names to ALU memory locations e.g. k,0,i^J^<POP i>
 command-line option to insert "fm +l" command before reading file
 Search up directory tree for .qrc
 Use .qrc associated with file to edit
-ALU is always 64-bit (?)
+ALU is always 64-bit (required for > 32 mode bits)
 cater for >4G lines in L & Y
 Give some kind of acknowledgement to ^NF (& ^NO?)
 -H option to give invocation help
@@ -19,7 +20,6 @@ Properly reinstate output optimisation (old hack removed as "quick fix")
  needs nanosleep when outputting chars
  get per-char delay from stty baud rate
  reinstate setting per-char delay (useful for testing)
- Will need 2x USB-serial dongles to test (can't lower xterm speed)
 INTERNALS
 	STARTED: Have a bool enum for logicals
 	STARTED: Be more careful what goes to stderr / stdout

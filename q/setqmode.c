@@ -199,6 +199,10 @@ setqmode()
           u = FM_PLUS_9_BIT;
           break;
 
+        case '0':                  /* Log '^' as '^*' */
+          u = FM_PLUS_0_BIT;
+          break;
+
         default:
           printf("Warning - unrecognised %s ignored\r\n", ubuf);
           continue;
@@ -225,10 +229,9 @@ setqmode()
 static void
 show_current(fmode_t mode)
 {
-  char c;
   int i;
   fmode_t mask;
-  const char *const modestring = "*q#fvmrenlhiwaxyg89";
+  const char *const modestring = "\\\\\\\\s*q#fvmrenlhiwaxyg890";
   const char *p;
 
   printf("Current mode is %" PRIofmode ":-\r\n", mode);
@@ -261,13 +264,13 @@ show_current(fmode_t mode)
       fputs("-tr, +tw", stdout);
       break;
   }                     /* switch (i = mode & (TAB_READ_BIT | TAB_WRITE_BIT)) */
-  fputs(", ", stdout);
-  c = mode & FM_PLUS_S_BIT ? '+' : '-';
-  putchar(c);
-  putchar('s');
-  for (i = strlen(modestring), p = modestring, mask = FM_PLUS_STAR_BIT; i > 0;
+  for (i = strlen(modestring), p = modestring, mask = 1; i > 0;
     i--, p++, mask <<= 1)
+  {
+    if (*p == '\\')                /* Placeholder */
+      continue;
     printf(", %c%c", mode & mask ? '+' : '-', *p);
+  }
   fputs("\r\n", stdout);
   switch (mode & FN_CMD_BITS)
   {

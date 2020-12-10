@@ -2816,6 +2816,11 @@ do_freprompt(void)
     fputs("Too many levels of FR", stderr);
     return false;
   }                                /* if (ridx >= NUM_RFRAMES - 1) */
+  if (cmd_state != RUNNING)
+  {
+    fputs("FR not allowed this early", stderr);
+    return false;
+  }                                /* if (cmd_state != RUNNING) */
 
 /* All checks pass, actually do it */
 
@@ -3094,7 +3099,7 @@ static void
 do_initial_tsks(bool *do_rc_p)
 {
   dfltmode = FM_PLUS_A_BIT | FM_PLUS_I_BIT | FM_PLUS_E_BIT | FM_PLUS_M_BIT |
-    TAB_READ_BIT | DOS_READ_BIT;
+    TAB_READ_BIT | DOS_READ_BIT | FM_PLUS_0_BIT;
   end_seq = normal_end_sequence;
   init_alu();
   tmask = umask(0);                /* Get current umask */
