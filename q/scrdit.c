@@ -195,8 +195,8 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
     }                    /* if ((t = time_now()) - timlst >= fbrief_interval) */
   }                /* if (curmac >= 0 && !in_cmd && BRIEF && !NONE && pchars) */
 
-/* If this is a new line and INDENT is on, pad out with appropriate
- * number of spaces. If not a new line and INDENT on, get new
+/* If this is a new line and indent is on, pad out with appropriate
+ * number of spaces. If not a new line and indent on, get new
  * indent position. */
   if (INDENT)
   {
@@ -205,7 +205,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
       if (lstvld)
         indent_string = Prev->bdata;
       else
-        indent_string = sindnt();  /* Sets ndntch & forces lstvld to be true */
+        indent_string = sindnt(true);
       if (ndntch > 0)
       {
         for (i = ndntch, p = indent_string; i > 0; i--)
@@ -215,13 +215,9 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
     }                              /* if !(Curr->bchars) */
     else
     {
-      ndntch = 0;
-      for (j = Curr->bchars; j > 0; j--)
-      {
+      for (ndntch = 0, j = Curr->bchars; j > 0; j--, ndntch++)
         if (!isspace(Curr->bdata[ndntch]))
           break;
-        ndntch = ndntch + 1;
-      }
       if (Curr->bcurs < ndntch)
       {
 /* Leave the cursor if came here from [F]L */
@@ -318,7 +314,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
       if (!Curr->bcurs)
         BOL_OR_EOL;                /* Error if at line start */
 
-/* If at indent point,decrement INDENT */
+/* If at indent point, move it back 1 */
       if (INDENT && Curr->bcurs == ndntch)
         ndntch--;
 
@@ -338,10 +334,8 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
 
 /* If more info in previous line than current, append previous excess
  * to current, then in either case move cursor to follow last char */
-        i = ndntch;                /* In case we SINDNT */
         if (!lstvld)
-          sindnt();                /* Get previous line valid */
-        ndntch = i;
+          sindnt(false);           /* Get previous line valid */
         if (Curr->bchars < Prev->bchars)
         {
 

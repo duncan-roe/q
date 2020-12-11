@@ -19,14 +19,16 @@
 .\" the Free Software Foundation, 59 Temple Place - Suite 330,
 .\" Boston, MA 02111-1307, USA.
 .\"
-.TH q 1 "Oct 31 2020" "q-56" "Linux Programmer's Manual"
+.TH q 1 "Dec 10 2020" "q-57" "Linux Programmer's Manual"
 .SH NAME
 q \- line-oriented mostly WYSIWYG editor with a powerful macro facility
 .SH SYNOPSIS
-\f3q\f1 [\f3-AVbdemnoqtvv\f1] [\f3-i\f2 initial_macro\f1] [\f3+\f2line# file\f1]
+\f3q\f1 [\f3-AVbdemnoqtvv\f1] [\f3-i\f2 initial_macro\f1]
+[\f3-l\f2 log_file\f1] [\f3+\f2line# file\f1]
 [\f2file\f1[\f3:\f2line#\f1] [...]]
 .br
-\f2command\f1 [...] \f3| q \f1[\f3-bdntv\f1]\f3 -i\f2 initial_macro \f3|\f2
+\f2command\f1 [...] \f3| q \f1[\f3-bdntv\f1]\f3 -i\f2 initial_macro \f1
+[\f3-l\f2 log_file\f1] \f3|\f2
 command\f1 [...]
 .SH DESCRIPTION
 \f3q\f1 is a command-driven line-oriented editor in which almost all the control
@@ -102,6 +104,11 @@ from the argument of \fB-i\fR (see \fBq_macros(5)\fR).
 This runs after the first \fBfile\fR has been loaded.
 .RE
 .PP
+\fBLog File\fR
+.RS 3
+See \fB-l\fR under \fBOPTIONS\fR below.
+.RE
+.PP
 \f3Running q in a pipe\f1
 .RS 3
 When running in a pipe, \f3q\f1 accumulates data from stdin until end of file
@@ -166,6 +173,9 @@ see \fBInitial Macro\fR above.
 Log keyboard input to \fIfile_or_tty\fR. With \fBfm+8\fR,
 log input from macros and U-use files as well.
 With \fBfm+9\fR, log '^' as '^*'.
+With \fBfm+0\fR (the default), insert a newline in the log after a sequence
+that alters control flow (\fB^N<\fImacro\fB>\fR, \fB^NU\fR or \fB^NJ\fR
+jumping backwards).
 .TP
 .BI \-m
 Read files with \fBread(2)\fR instead of Memory-mapping with \fBmmap(2)\fR.

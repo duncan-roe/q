@@ -67,7 +67,7 @@ void setwinsz(int msg);
 void newlin(void);
 void rerdcm(void);
 void xistcs(void);
-uint8_t *sindnt(void);
+uint8_t *sindnt(bool set_indent);
 char c1in5(bool *eof_encountered);
 int cmd(char *buf, bool backtick);
 bool pop_stdin(void);
