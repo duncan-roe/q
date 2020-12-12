@@ -127,7 +127,7 @@ pshmode(char **err)
 {
   if (!room(err))
     return false;
-  return push(FMODE, err);
+  return push(fmode, err);
 }                                  /* pshmode() */
 
 static bool
@@ -136,11 +136,6 @@ popmode(char **err)
   if (!r_valid(err))
     return false;
   fmode = rs[rsidx--];
-  if (zmode_valid)
-  {
-    zmode = fmode;
-    fmode &= ~INDENT_BIT;          /* Turn off indent (zmode may reinstate) */
-  }                                /* if (zmode_valid) */
   return true;
 }                                  /* popmode() */
 
@@ -686,7 +681,7 @@ div(char **err)
     return false;
   if (rs[rsidx - 1] == 0)
   {
-    *err="Attempt to divide by zero";
+    *err = "Attempt to divide by zero";
     return false;
   }                                /* if (rs[rsidx - 1] == 0) */
   rs[rsidx - 1] = rs[rsidx] / rs[rsidx - 1];
@@ -701,7 +696,7 @@ mod(char **err)
     return false;
   if (rs[rsidx - 1] == 0)
   {
-    *err="Attempt to take modulo zero";
+    *err = "Attempt to take modulo zero";
     return false;
   }                                /* if (rs[rsidx - 1] == 0) */
   rs[rsidx - 1] = rs[rsidx] % rs[rsidx - 1];
@@ -907,7 +902,7 @@ divf(char **err)
     return false;
   if (fs[fsidx - 1] == 0.0)
   {
-    *err="Attempt to divide by zero";
+    *err = "Attempt to divide by zero";
     return false;
   }                                /* if (fs[fsidx - 1] == 0) */
   fs[fsidx - 1] = fs[fsidx] / fs[fsidx - 1];
@@ -952,10 +947,7 @@ rst(char **err)
   xreg = 0;
   index_next = false;
   alu_skip = false;
-  if (zmode_valid)
-    zmode &= ~FILE_POS_BIT;
-  else
-    fmode &= ~FILE_POS_BIT;
+  fmode &= ~FILE_POS_BIT;
   return true;
 }                                  /* rst() */
 
@@ -970,20 +962,14 @@ zam(char **err)
 static bool
 scpt(char **err)
 {
-  if (zmode_valid)
-    zmode &= ~FILE_POS_BIT;
-  else
-    fmode &= ~FILE_POS_BIT;
+  fmode &= ~FILE_POS_BIT;
   return true;
 }                                  /* scpt() */
 
 static bool
 sfpt(char **err)
 {
-  if (zmode_valid)
-    zmode |= FILE_POS_BIT;
-  else
-    fmode |= FILE_POS_BIT;
+  fmode |= FILE_POS_BIT;
   return true;
 }                                  /* sfpt() */
 

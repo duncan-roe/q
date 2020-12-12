@@ -76,13 +76,14 @@ uint8_t screen[SCRMAX], reqd[SCRMAX], prompt[PRSIZ], crsbuf[SCRMAX], backsp;
 uint8_t cachrs[PRSIZ];
 int cursr, scurs, pchars, crscnt, cacnt, tabcnt, cdone, partno, mxchrs;
 bool insert, rfrsh, endlin;
+bool in_cmd;
 
 /* Static prototypes */
 
-static action macro_or_del_or_esc(scrbuf5 *Curr, bool in_cmd);
+static action macro_or_del_or_esc(scrbuf5 *Curr);
 static action process_other(void);
-static action process_pseudo(scrbuf5 *Curr, bool in_cmd);
-static action process_pseudo_arg(scrbuf5 *Curr, bool in_cmd);
+static action process_pseudo(scrbuf5 *Curr);
+static action process_pseudo_arg(scrbuf5 *Curr);
 static action ctl_n_u_ctl_n_i_common(void);
 static action ctl_n_d_ctl_n_i_common(void);
 static action ctl_uparrow_ctl_g_common(scrbuf5 *Curr);
@@ -121,7 +122,7 @@ static bool nseen;                 /* ^N last char so expect macro name */
 /* ********************************* scrdit ********************************* */
 
 void
-scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
+scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs)
 {
 /* ARGUMENTS:-
  * ===========
@@ -130,8 +131,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
  * Prev  - Previous line modified   / as defined above
  * prmpt - Prompt characters (if any) (string)
  * pchrs - # of prompt chars (zero implies none and PRMPT not a valid
- *                                  addr)
- * in_cmd - => in command mode */
+ *                                  addr) */
 
   uint8_t *q;                      /* Scratch */
   int k;                           /* Scratch */
@@ -276,7 +276,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
       }                            /* if (cntrlw) */
       if (nseen)
       {
-        if (macro_or_del_or_esc(Curr, in_cmd) == RETURN)
+        if (macro_or_del_or_esc(Curr) == RETURN)
           LEAVE_SCRDIT;
         GETNEXTCHR;
       }                            /* if (nseen) */
@@ -297,14 +297,14 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs, bool in_cmd)
         GETNEXTCHR;
       }                            /* if (thisch == '\27') */
 
-      macro_or_del_or_esc(Curr, in_cmd);
+      macro_or_del_or_esc(Curr);
       GETNEXTCHR;
     }                              /* if (nseen) */
     if (glast)                     /* In middle of ^G */
     {
       glast = false;
       if (gpseu)
-        process_pseudo_arg(Curr, in_cmd); /* Char is for pseudomac */
+        process_pseudo_arg(Curr); /* Char is for pseudomac */
       else
         ctl_uparrow_ctl_g_common(Curr);
       GETNEXTCHR;                  /* Finish ^G  / ^^ */
@@ -895,7 +895,7 @@ ctl_n_u_ctl_n_i_common(void)
 /* *************************** process_pseudo_arg *************************** */
 
 static action
-process_pseudo_arg(scrbuf5 *Curr, bool in_cmd)
+process_pseudo_arg(scrbuf5 *Curr)
 {
   long i4;                         /* Scratch */
 
@@ -1092,7 +1092,7 @@ process_pseudo_arg(scrbuf5 *Curr, bool in_cmd)
       switch (thisch)
       {
         case 04000:                /* Mode */
-          qreg = snprintf(NULL, 0, "%" PRIofmode, FMODE);
+          qreg = snprintf(NULL, 0, "%" PRIofmode, fmode);
           break;
 
         case 04002:                /* Curent edit file */
@@ -1168,7 +1168,7 @@ process_pseudo_arg(scrbuf5 *Curr, bool in_cmd)
 /* ***************************** process_pseudo ***************************** */
 
 static action
-process_pseudo(scrbuf5 *Curr, bool in_cmd)
+process_pseudo(scrbuf5 *Curr)
 {
   char *c;                         /* Scratch */
 
@@ -1335,7 +1335,7 @@ process_other(void)
     switch (thisch)
     {
       case 04000:                  /* Return mode */
-        i = snprintf(tbuf, sizeof tbuf, "%" PRIofmode, FMODE);
+        i = snprintf(tbuf, sizeof tbuf, "%" PRIofmode, fmode);
         macdef(FIRST_PSEUDO, (uint8_t *)tbuf, i, true);
         break;
 
@@ -1612,7 +1612,7 @@ process_other(void)
 /* *************************** macro_or_del_or_esc ************************** */
 
 static action
-macro_or_del_or_esc(scrbuf5 *Curr, bool in_cmd)
+macro_or_del_or_esc(scrbuf5 *Curr)
 {
 /* We have a macro char unless it's DEL or ESC from keybd */
   contp = false;
@@ -1630,7 +1630,7 @@ macro_or_del_or_esc(scrbuf5 *Curr, bool in_cmd)
   }                                /* if (thisch == ESC && curmac < 0) */
 
   if (thisch <= LAST_PSEUDO && thisch >= FIRST_PSEUDO)
-    process_pseudo(Curr, in_cmd);
+    process_pseudo(Curr);
   else
     process_other();
   GETNEXTCHR;

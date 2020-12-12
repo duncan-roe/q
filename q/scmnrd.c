@@ -126,9 +126,6 @@ scmnrd()
   while (true)
   {
     cmsplt = false;                /* No split command yet */
-    zmode = fmode;                 /* So n4000 can return proper value */
-    zmode_valid = true;
-    fmode &= ~INDENT_BIT;          /* Turn off indent */
     if (USING_FILE)
     {
       putchar('>');
@@ -137,9 +134,9 @@ scmnrd()
       cmover = false;              /* No line overflow yet */
     }
     lstvld = true;                 /* Previous command is alway valid */
-    scrdit(newcom, oldcom, "> ", 2, true); /* Read line */
-    fmode = zmode;                 /* Reinstate indent mode, if on */
-    zmode_valid = false;
+    in_cmd = true;                 /* Prevent indenting */
+    scrdit(newcom, oldcom, "> ", 2); /* Read line */
+    in_cmd = false;
     if (USING_FILE)
     {
       screen[0] = '$';             /* So get prompt after 'Z' */

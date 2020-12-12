@@ -13,20 +13,17 @@
 #define FMODE_C(x) INT32_C(x)
 #define PRIofmode PRIo32
 
-/* This macro is because the ALU can modify the mode at any time */
-#define FMODE (zmode_valid ? zmode : fmode)
+#define NOWRAP (bool)((fmode & FF_ON_BIT) != 0)
+#define CASDEP (bool)((fmode & FC_ON_BIT) == 0)
 
-#define NOWRAP (bool)((FMODE & FF_ON_BIT) != 0)
-#define CASDEP (bool)((FMODE & FC_ON_BIT) == 0)
+/* INDENT is special - it can only be on when editing a line from a file */
+#define INDENT (bool)((fmode & INDENT_BIT) && !in_cmd)
 
-/* INDENT is special - must always test fmode */
-#define INDENT (bool)((fmode & INDENT_BIT) != 0)
-
-#define INTERPRET_ALU_OPCODES (bool)((FMODE & FM_PLUS_I_BIT) != 0)
-#define WARN_NONZERO_MEMORY (bool)((FMODE & FM_PLUS_W_BIT) != 0)
-#define STORE_FILE_POS (bool)((FMODE & FILE_POS_BIT) != 0)
-#define MATCH_ANY_WHSP (bool)((FMODE & FM_PLUS_A_BIT) != 0)
-#define EXCLUSIVE_L_BOOL (bool)((FMODE & FM_PLUS_X_BIT) != 0)
+#define INTERPRET_ALU_OPCODES (bool)((fmode & FM_PLUS_I_BIT) != 0)
+#define WARN_NONZERO_MEMORY (bool)((fmode & FM_PLUS_W_BIT) != 0)
+#define STORE_FILE_POS (bool)((fmode & FILE_POS_BIT) != 0)
+#define MATCH_ANY_WHSP (bool)((fmode & FM_PLUS_A_BIT) != 0)
+#define EXCLUSIVE_L_BOOL (bool)((fmode & FM_PLUS_X_BIT) != 0)
 
 /* Bit settings. Code may safely tilde these for a mask of the correct width */
 #define DOS_READ_BIT FMODE_C(01)
@@ -62,15 +59,14 @@
 #define FN_CMD_BITS FMODE_C(030000000000)
 
 /* BRIEF and NONE are bits in fmode. Both are set for NONE */
-#define BRIEF (bool)((FMODE & FB_CMD_BIT) != 0)
-#define NONE (bool)((FMODE & FN_CMD_BITS) == FN_CMD_BITS)
+#define BRIEF (bool)((fmode & FB_CMD_BIT) != 0)
+#define NONE (bool)((fmode & FN_CMD_BITS) == FN_CMD_BITS)
 
 /* External variables */
 
 extern fmode_t fmode;
-extern fmode_t zmode;             /* Copy of fmode by scmnrd */
 extern uint8_t xlatable[256];
-extern bool zmode_valid;
 extern int tbstat;
 extern bool mods;                  /* Mods done since last SAVE */
+extern bool in_cmd;                /* scrdit is editing a command */
 #endif

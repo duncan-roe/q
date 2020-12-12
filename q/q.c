@@ -105,8 +105,6 @@ alu_dict_ent root_alu_dict_ent = { NULL, NULL, -2, 0 };
 int *alu_table_index;
 bool alu_macros_only = false;      /* N- was N-- */
 fmode_t fmode;
-fmode_t zmode;
-bool zmode_valid = false;
 char FPformat[40];
 char Iformat[40];
 char DTformat[256];
@@ -1770,7 +1768,7 @@ A_I_M_common(void)
       return true;
     }                              /* if (cntrlc) */
     repeat = false;
-    scrdit(curr, prev, (char *)prmpt, pchrs, false); /* Edit the line */
+    scrdit(curr, prev, (char *)prmpt, pchrs); /* Edit the line */
     display_wanted = curmac < 0 || !BRIEF;
     switch (verb)                  /* Check EOL type */
     {
