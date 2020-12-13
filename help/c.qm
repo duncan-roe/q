@@ -57,7 +57,7 @@ N404 ^[m-^J^NC^NU^NO}^O^NA^N^<414>^B^NP}^N^<416>^N^<405>
 
 # n416: If a delimiter is found after tab 2 then check it for being the start
 #       of a split comment.
-N416 ^NP2^NS^N^<407>^NO~^G*^NA^NS^NL^NJ^<7>X^X^NG/^NS^<A1X>^NR~^N^<407>
+N416 ^NP2^NS^N^<407>^NO~^X^X^G*^NA^NS^NL^NJ^<7>X^X^NG/^NS^<A1X>^NR~^N^<407>
 
 # n414: Line has no trailing comment but check for it being just slash-star.
 #       Otherwise usually move on to next line,

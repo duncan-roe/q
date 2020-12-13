@@ -119,7 +119,7 @@ If you would prefer to see it as a call to the actual macro, append
 to the "starting macro %o\n" command. E.g. once gdb is running:
  ^C; commands 2; silent; printf "starting macro %o\n", thisch ? thisch : curmac;
  end; c
-(To make the change permanent, edit macros.gdb).
+To make the change permanent, edit macros.gdb.
 
 --- Target Window
 tty
@@ -133,13 +133,13 @@ qm -a help_dot_qrc | less
 export my_tty=   # Complete this from tty output
 export j=macro_debug_sample
 export k=help_dot_qrc
-./ggdb -t $my_tty -f macros.gdb -a \
-  "$([ -n "$k" ] && echo "-niu,$k^J" || echo "-i")fv^Jfm+v^J $j" $(type -p q) c
+./ggdb -t $my_tty -f macros.gdb -f maxsize.gdb -a \
+"$([ -n "$k" ] && echo "-niu,$k^J" || echo "-i")fv^Jfm+v^J $j" $(type -p q) c
 
 or, if you have a loggging screen in $log_tty:
-./ggdb -t $my_tty -f macros.gdb -a "-l $log_tty\
-  $([ -n "$k" ] && echo "-niu,$k^J" || echo "-i")fv^Jfm+v^Jfm+8,+9^J $j"\
-  $(type -p q) c
+./ggdb -t $my_tty -f macros.gdb -f maxsize.gdb -a "-l $log_tty \
+$([ -n "$k" ] && echo "-niu,$k^J" || echo "-i")fv^Jfm+v^Jfm+8,+9^J $j" \
+$(type -p q) c
 
 In the target window, enter "v" to view the file you are working on. If it's
 empty (so you didn't export j as the file to edit) you can edit the file now by

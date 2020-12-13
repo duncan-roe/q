@@ -1,6 +1,6 @@
-/* R D F I L E
+/* R E A D F L
  * Copyright (C) 1993,1998 Duncan Roe & Associates P/L
- * Copyright (C) 2005,2012-2014,2017-2019 Duncan Roe
+ * Copyright (C) 2005,2012-2014,2017-2020 Duncan Roe
  *
  * This routine reads in a file, inserting it in the Workfile.
  *
