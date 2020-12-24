@@ -1,7 +1,7 @@
 Mode to turn off line & part numbering (entire line selectable on V or P)
 STARTED: Specify file for monitoring input (from any source)
 Opcodes POPL & POPLF: pop to line being edited (command or file)
-Opcode XMODE to set fmode from X-reg after command read (for ^N7)
+DONE: Opcode XMODE to set fmode from X-reg after command read (for ^N7)
 Q -B to break long lines on token delimiter if length so far > 32(?)K
 Give symbolic names to ALU memory locations e.g. k,0,i^J^<POP i>
  Error if try to rename location

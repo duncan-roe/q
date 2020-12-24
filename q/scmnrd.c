@@ -158,7 +158,8 @@ scmnrd()
       cmsplt = true;               /* We have a split */
 
 /* Save in case massage exceeds total capacity */
-      memcpy(&cmthis, oldcom, sizeof(scrbuf5));
+      memcpy(&cmthis, oldcom,
+        sizeof cmthis - sizeof cmthis.bdata + oldcom->bchars);
       newcom->bcurs = 0;           /* Leave cursor at strt new line */
     }                              /* if (verb == 'T') */
 /*

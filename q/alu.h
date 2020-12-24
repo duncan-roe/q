@@ -55,6 +55,7 @@ extern long qreg;                  /* Q Result Register */
 extern int rsidx;                  /* Index of current register */
 extern int fsidx;                  /* Index of current FP register */
 extern bool index_next;            /* Next PSH or POP is indexed */
+extern bool xmode_pending;
 extern int effaddr;                /* Effective address */
 extern alu_opcode opcode_defs[];
 extern bool alu_skip;              /* Macro should skip 2 chars */

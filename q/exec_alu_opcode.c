@@ -8,12 +8,12 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
-#include "alu.h"
-#include "fmode.h"
-#include "typedefs.h"
 #include "pushable_values.h"
-#include "tabsiz.h"
 #include "q_version.h"
+#include "typedefs.h"
+#include "tabsiz.h"
+#include "fmode.h"
+#include "alu.h"
 
 /* **************************** Static Functions **************************** */
 
@@ -268,6 +268,13 @@ skp(char **err)
   alu_skip = true;
   return true;
 }                                  /* skp() */
+
+static bool
+xmode(char **err)
+{
+  xmode_pending = true;
+  return true;
+}                                  /* xmode() */
 
 static bool
 not(char **err)
@@ -1315,6 +1322,7 @@ alu_opcode opcode_defs[] = {
   OPCODE(s2x, "X = X - 2"),
   OPCODE(s1x, "X = X - 1"),
   OPCODE(tstfmod, "set X = 1 if file modified, else set X = 0"),
+  OPCODE(xmode, "Q is to set mode from X after next cmd read (for ^N7)"),
   CAPTION(""),
   CAPTION("Q Result Register Instructions"),
   CAPTION("= ====== ======== ============"),

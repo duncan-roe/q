@@ -98,6 +98,7 @@ long qreg = 0;                     /* Q Result Register */
 int rsidx = -1;                    /* No current register yet */
 int fsidx = -1;                    /* No current FP register yet */
 bool index_next = false;
+bool xmode_pending = false;
 int effaddr;
 bool alu_skip = false;
 int num_ops = 0;
