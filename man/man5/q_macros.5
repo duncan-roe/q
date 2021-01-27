@@ -1,4 +1,4 @@
-.TH q_macros 5 "Oct 29 2020" q-56 "q macros"
+.TH q_macros 5 "Jan 26 2021" q-57 "q macros"
 .SH NAME
 Q macros - the Q macro facility
 .SH DESCRIPTION
@@ -200,7 +200,7 @@ Skip unless file position is before the value of tab \fItab_id\fR
 .TP
 .B ^N\\\\
 Force an error and ring the terminal bell.
-See \fBMACROS\ \&AS\ \&SUBROUTINES\fR below
+See \fBNote\fR to \fBMACROS\ \&AS\ \&SUBROUTINES\fR below
 .TP
 .BI ^N] tab_id
 Skip unless file position is after the value of tab \fItab_id\fR
@@ -424,23 +424,31 @@ In the calling macro, that sequence must have been immediately preceded by the
 When the documentation refers to \fIcalling\fR a macro,
 it means \fB^ND^N\fR\fImacro_id\fR. \fIJumping\fR to a macro means simply
 \fB^N\fR\fImacro_id\fR.
-.br
+
 The \fB^NL\fR pseudomacro is provided to allow conditional calling of macros.
 \fB^NL\fR skips 4 characters, exactly enough for \fB^ND^N\fR\fImacro_id\fR.
 .br
 Like pseudomacros, called macros can skip on return (usually conditionally).
-The \fB^NI\fR pseudomacro achieves this:
+The \fB^NI\fR pseudomacro implements this:
 it increments the newest link on the macro call stack by 2.
-.br
+
 The \fB^NX\fR pseudomacro acts as if the invoking macro had run off its end
 without a \fB^NU\fR.
 The macro stack is unwound back to the last \fBU-USE\fR file or the keyboard.
-.br
+
 The \fB^N\\\fR pseudomacro forces an error. The macro stack and \fBU-USE\fR file
 stack are both rewound back to the keyboard.
 (If \fBQ\fR was invoked with \fB-o\fR or is in a pipe,
 \fBq\fR will save and quit).
 (\fB^N\\\fR is undefined and guaranteed to remain so).
+.br
+\fBNote:\fP
+.RS 4
+Use \fB^N\\\fR to report an actual \fIerror\fR,
+such as macro invoked in wrong context.
+In an uncatered-for situation, 
+the \fBFR\fReprompt command may be more appropriate.
+Discussion and examples in \fBMACRO-WRITING\ \&GUIDELINES\fR below.
 .SH TAB IDS
 \fBq\fR has 80 tabs, starting at tab 1. \fBT-TABSET\fR sets tabs starting at 1.
 Pseudomacros and the ALU can set any tab. A tab can be in one of 3 states:
@@ -484,6 +492,9 @@ These comments are then visible when listing macro contents by \fBq\fR's
 These are the guidelines that have been adhered to in the creation of the
 system macro sets that are distributed with \fBq\fR.
 .TP
+.B File naming
+Use the \fB.qm\fR suffix for files containing free-standing macro programs.
+.TP
 .BI Casing
 The simple rule is: if a case-independent item is a \fBq\fR command then put it
 in lower-case, otherwise put it in upper-case.
@@ -507,9 +518,12 @@ be that command mode or file mode.
 To guard against accidental invocation in the wrong mode,
 keyboard-accessible macros should start with the sequence \fB^NC^NS^N\\\fR
 (error out if not in command mode) or the opposite \fB^NC^N\\\fR.
-.br
-\fB^N\\\fR (signal error) is also appropriate when unexpected things happen,
-e.g. \fB^G\fR\fIchar\fR ends up at end of line (as determined by \fB^NA\fR)
+.TP
+.B Consider using FR in an uncatered-for situation
+When something unexpected happens, instead of erroring out with
+\fB^N\\\fR consider invoking \fBFR\fReprompt to let the user fix the situation.
+An example near the end of this man page demonstrates catering for
+\fB^G\fR\fIchar\fR ending up at end of line (as determined by \fB^NA\fR)
 because \fIchar\fR was not found on the line.
 .TP
 .B Annotate well
@@ -593,7 +607,7 @@ it is only there to make the comment stand out better to the user.
 .RE
 .TP
 .B Have a table of memory location use
-\fBq\fR doesn't have symbolic names for memory locations so it is usually
+\fBq\fR doesn't yet have symbolic names for memory locations so it is usually
 helpful to document them in comments.
 .br
 As an example,
@@ -604,15 +618,16 @@ command, e.g. to modify line 42 with a ruler,
 keying \fBm42^N7\fR in an 80-column xterm would produce something like:
 .RS -14
 .nf
-> *             1         2         3         4         5         6         7
-> *    123456789012345678901234567890123456789012345678901234567890123456789012
-  m 42
+> # m42
+> #             1         2         3         4         5         6         7
+> #    123456789012345678901234567890123456789012345678901234567890123456789012
     42 Don't Panic
 .fi
 .RE
 .RS 7
-\fB^N7\fR has inserted 2 comment lines:
-a series of right-justified 10's markers followed by a series of units.
+\fB^N7\fR has inserted 3 comment lines:
+a copy of the original command,
+a series of right-justified 10's markers and a series of units.
 \fB^N7\fR does some initialisation then calls \fB^N^<777>\fR which is
 annotated thusly:
 .RE
@@ -765,12 +780,14 @@ T}
 .br
 .B Paginate through loaded macros from shell command prompt
 .br
-(i.e. command to run in a separate window from the one running \fBq\fR)
+(This is how the \fBqm\fR command works)
+
 .RS 3
 The \fBq\fR command \fBn\ \&\-\fR lists out all loaded macros.
 The line below captures this output and pipes it into \fBless\fR.
 The command should be issued with the same current working directory as \fBq\fR
 so as to pick up the correct \fIStartup file\fR.
+
 .RE
 .RS -7
 .nf
@@ -778,6 +795,7 @@ cat /dev/null | q -v -i n,-^J 2>&1 | q -n -i fl,:^J^NC^NU^[d,1,-,-2^Ja^J^[d,-1^J
 .fi
 .RE
 .RS 3
+
 The pipeline contains two invocations of \fBq\fR:
 .TP
 .B 1.
@@ -793,11 +811,13 @@ everything before the first line that has a colon surrounded by spaces
 (in fact an internally generated \fBfq\fR command);
 remove Cr (\fB^M\fR) characters.
 .RE
+
 Any need for shell quoting is obviated
 by using \fBq\fR's \fIcomma\fR delimiter in commands.
 The sequence \fB^NC^NU\fR guards against there being no defined macros.
 The above line is expanded for clarity:
 the canonical (minimum length) version is:
+
 .RE
 .RS -7
 .nf
@@ -806,11 +826,13 @@ cat /dev/null|q -vin-^J 2>&1|q -nifl:^J^NC^NU^[d1,-,-2^Ja^J^[d-1^Jy,^P^M^J|less
 .RE
 .PP
 .B Change what the space macro does
+
 .RS 3
 The foundation macro set defines the space macro (\fB^N\fIspace\fR)
 to run \fBmake\fR.
 This \fBq\fR invocation sequence redefines the space macro to run
 \fBtail\fR to output only the last line (i.e. without line numbering):
+
 .RE
 .RS -7
 .nf
@@ -818,17 +840,146 @@ q -i 'n 040,! tail -n1 ^*ND^*N^*<4002>^*J^J'
 .fi
 .RE
 .RS 3
+
 The immediate macro definition has to be quoted,
 since it contains the shell meta-characters space and angle brackets.
 The definition of the space macro contains escaped carets (\fB^*\fR)
 because the defined immediate macro will issue the \fBN-NEWMACRO\fR command
 to redefine the space macro:
 .RE
+.RS -7
 .nf
+
 n 040,! tail -n1 ^ND^N^<4002>^J
+
 .fi
+.RE
 .RS 3
 (The sequence \fB^N^<4002>\fR retrieves the name of the current edit file).
+.fi
 .RE
+.PP
+.B Use the FR command
+
+.RS 3
+The system file \fBfr_demo.qm\fR
+lets the user audit a C program for unterminated \fB/*\fR comments:
+
+.RE
+.RS -7
+.nf
+n204 ^NC^NS^N\\l '/*'^J^NC^NU^G/^NA^N^<1501>^[^N^@
+n1501 ^[g-1^Jfr^J^N^<204>
+
+.fi
+.RE
+.RS 3
+Invite user to take action on any line containing the C comment start sequence
+\fB/*\fR
+but not the end sequence \fB*/\fR.
+.br
+This is a simplistic macro looking only for \fB/\fR:
+a comprehensive macro would check for the preceding character being \fB*\fR
+and, if not, would look along the line for another \fB/\fR.
+.br
+The two macros break down as follows:
+
+.RS 3
+n204
+.RS 3
+Define macro 204.
+(n204 gets massaged to "n 204").
+The system macro suites all leave macro 204 available for ad-hoc macro programs.
+To invoke n204 from the keyboard, key
+.B ^N^W^D
+
+^NC^NS^N\\
+.RS 3
+This keyboard-accessible macro may only be invoked in command mode:
+.RS 3
+^NC ; Obey next 2 chars if in command mode
+.br
+^NS ; Skip next 2 chars
+.br
+^N\\ ; Signal error
+
+.RE
+.RE
+l '/*'^J
+.RS 3
+Locate the next line containing \fB/*\fR, leaving the cursor on the \fB/\fR.
+\fB/*\fR needs to be quoted because \fBq\fR implements \fB/*\fR comments:
+the command
+.RS 3
+l /*
+.RE
+gets the error
+.RS 3
+Null string to locate, correct the command
+.RE
+Note that command massaging will not split off a quoted string so there has to
+be a seperator (\fBspace\fR in this case)
+
+.RE
+^NC^NU
+.RS 3
+Return from macro if still in command mode
+(assumes specified string not found, i.e. no more lines contain \fB/*\fR)
+
+.RE
+^G/
+.RS 3
+Move along line to next occurrence of \fB/\fR
+
+.RE
+^NA
+.RS 3
+Obey next 2 chars if now at end of line (there was no \fB/\fR to move to)
+
+.RE
+^N^<1501>
+.RS 3
+Jump to macro 1501 (straight jump rather than call via ^ND)
+
+.RE
+^] (escape)
+.RS 3
+Stop modifying this line and discard any changes
+
+.RE
+^N^@ (^@ == ^<00>)
+.RS 3
+Jump to start of current macro
+
+.RE
+.RE
+n1501
+.RS 3
+Define macro 1501.
+The system macro suites reserve macros 15oo for macro programs
+
+^] (escape)
+.RS 3
+Stop modifying this line and discard any changes
+
+.RE
+g-1^J (massaged to "g -1")
+.RS 3
+Back up to the line just escaped from.
+This is to ensure that if the user takes no action at all,
+there will be another prompt for the same line
+
+.RE
+fr^J
+.RS 3
+Issue the \fBfr\fReprompt command. If the user is content with the current line,
+he should enter \fBg+1\fR to move onto the next; otherwise modify the current
+line (\fBm-\fR). After either action,
+enter \fBq\fRuit to end the manual edit and resume the macro
+
+.RE
+^N^<204>
+.RS 3
+Jump back to macro 204
 .SH SEE ALSO
 q(1), qm(1), strtol(3), strtoul(3), strtod(3), system(3), q_opcodes(5)
