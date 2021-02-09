@@ -2,7 +2,11 @@
 
 include config.mak
 
-SHELL := /bin/bash
+#SHELL := $(shell for i in /bin/bash /usr/bin/bash /usr/local/bin/bash /bin/sh;\
+#                 do [ -x $$i ] && { echo $$i; break; }; done)
+
+CP_OPTION := $(shell cp --version >/dev/null 2>&1 && \
+                     echo --preserve=timestamps,mode || echo -a)
 
 .PHONY: q clean install install_help install_doc install_etc install_bin \
   uninstall
@@ -17,20 +21,20 @@ install: q install_help install_doc install_etc install_bin
 
 install_bin: q
 	mkdir -p $(DESTDIR)$(BINDIR) && \
-cp --preserve=timestamps,mode bin/qm $(DESTDIR)$(BINDIR); \
-cp --preserve=timestamps,mode q/q $(DESTDIR)$(BINDIR)
+cp $(CP_OPTION) bin/qm $(DESTDIR)$(BINDIR); \
+cp $(CP_OPTION) q/q $(DESTDIR)$(BINDIR)
 
 install_doc:
 	mkdir -p $(DESTDIR)$(DOCDIR)/q && \
-cp --preserve=timestamps q/README* q/TODO q/DONE $(DESTDIR)$(DOCDIR)/q/ && \
-cp --preserve=timestamps q/*.gdb $(DESTDIR)$(DOCDIR)/q/ && \
-cp --preserve=timestamps,mode ggdb $(DESTDIR)$(DOCDIR)/q/ && \
-cp --preserve=timestamps q/.qrc $(DESTDIR)$(DOCDIR)/q/q_dot_qrc && \
-cp --preserve=timestamps help/.qrc $(DESTDIR)$(DOCDIR)/q/help_dot_qrc && \
-cp --preserve=timestamps INSTALL LICENSE README $(DESTDIR)$(DOCDIR)/q/ && \
-cp --preserve=timestamps q/macro_debug_sample   $(DESTDIR)$(DOCDIR)/q/ && \
+cp $(CP_OPTION) q/README* q/TODO q/DONE $(DESTDIR)$(DOCDIR)/q/ && \
+cp $(CP_OPTION) q/*.gdb $(DESTDIR)$(DOCDIR)/q/ && \
+cp $(CP_OPTION) ggdb $(DESTDIR)$(DOCDIR)/q/ && \
+cp $(CP_OPTION) q/.qrc $(DESTDIR)$(DOCDIR)/q/q_dot_qrc && \
+cp $(CP_OPTION) help/.qrc $(DESTDIR)$(DOCDIR)/q/help_dot_qrc && \
+cp $(CP_OPTION) INSTALL LICENSE README $(DESTDIR)$(DOCDIR)/q/ && \
+cp $(CP_OPTION) q/macro_debug_sample   $(DESTDIR)$(DOCDIR)/q/ && \
 for i in man/man*; do mkdir -p $(DESTDIR)$(MANDIR)/$$(basename $$i) &&\
-cp --preserve=timestamps $$i/*.? $(DESTDIR)$(MANDIR)/$$(basename $$i); done
+cp $(CP_OPTION) $$i/*.? $(DESTDIR)$(MANDIR)/$$(basename $$i); done
 
 install_etc:
 	mkdir -p $(DESTDIR)$(ETC_DIR) && cp -a etc/* $(DESTDIR)$(ETC_DIR)
