@@ -1044,7 +1044,7 @@ process_pseudo_arg(scrbuf5 *Curr)
   if (gwthr)
   {
     qreg = -1;                     /* Default response: no such macro */
-    if (thisch < 0)
+    if ((int16_t)thisch < 0)
       ;                            /* Can't be a macro */
     else if (thisch == 0 && curmac >= 0)
       qreg = 0;                    /* ^N^@ legal in a macro */
