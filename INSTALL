@@ -12,8 +12,8 @@ Alternatively for Suse, create the symbolic link /usr/local/share/man -> ../man.
 The defaults in "config.mak" are fine for Red Hat systems (tested under Fedora).
 They are also fine for Debian systems (tested under Ubuntu 18.04).
 Slackware systems install the same as Suse, or use the SlackBuild inside
-https://github.com/duncan-roe/SlackBuilds/archive/v2/SlackBuilds-2.tar.gz, which
-may eventually migrate to https://slackbuilds.org/.
+https://github.com/duncan-roe/SlackBuilds/archive/v2/SlackBuilds-2.tar.gz,
+which may eventually migrate to https://slackbuilds.org/.
 
 Additionally, items listed under the Features heading may be changed at (q) run
 time by environment variables which are the item name prepended by Q_, e.g.
@@ -33,9 +33,9 @@ any POSIX-compliant system.
 
 OpenBSD comes with gcc. "pkg_add gmake" will fetch GNU make. "pkg_add expect" if
 planning to use the macro debugger. "gmake install" will by default create
-/usr/local/share/man and /usr/local/etc. To avoid this, use "gmake
-MANDIR=/usr/share/man SYSCONFDIR=/etc install", or edit config.mak. Also insert
-CFLAGS=-O2 if desired.
+/usr/local/share/man and /usr/local/etc. To avoid creating these dirs, use
+"gmake MANDIR=/usr/share/man SYSCONFDIR=/etc install", or edit config.mak.
+Also insert CFLAGS=-O2 if desired.
 
 The author hasn't had access to other formerly-supported platforms for a while
 to test Q. Other compilers may be OK absent gcc: the code tries not to use gcc

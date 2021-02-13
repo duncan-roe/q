@@ -1,6 +1,9 @@
 This_is_a_long_line_which_^N^A_cannot_split_up,_as_it_has_no_spaces._URLs_often_fall_into_that_category
 This is a long line which will get split into 2 so length doesn't exceed tab 2 (at column 81, so line length is 80 chars max).
 
-(The above line is intentionally blank). Next line starts w/space so no join.
- This line & the next will be joined and re-split
+(The above line is intentionally blank). Next plus 1 line starts w/space so no
+join to this one.
+ This line & the next will be
+joined and re-split because of being too long after the join.
+> This line is email-quoted and will be left alone
 Try to remember to quit Q w/out saving!
