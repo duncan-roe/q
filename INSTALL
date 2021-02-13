@@ -24,12 +24,20 @@ MACRO_DIR is treated specially in this regard: if it's the same as HELP_DIR then
 it will stay the same as HELP_DIR when Q_HELP_DIR is in the environment but
 Q_MACRO_DIR isn't.
 
-Q's macro debugger requires that q is compiled with debug.
+Q's macro debugger requires that q is compiled with debug and not stripped.
 
-Q builds under Linux and Cygwin.
+Q builds under Linux, OpenBSD and Cygwin.
 
-Q should build under any POSIX-compliant system with GNU make, but the author
-hasn't had access to other formerly-supported platforms for a while to test
-this. The Makefile needs GNU make (may be available as gmake especially on
-Solaris). Vendors' compilers should be OK absent gcc: the code tries very hard
-not to use gcc extensions. Non-ANSI compilers are no longer supported.
+Q requires GNU make and gcc to build. Given these criteria, Q should build under
+any POSIX-compliant system.
+
+OpenBSD comes with gcc. "pkg_add gmake" will fetch GNU make. "pkg_add expect" if
+planning to use the macro debugger. "gmake install" will by default create
+/usr/local/share/man and /usr/local/etc. To avoid this, use "gmake
+MANDIR=/usr/share/man SYSCONFDIR=/etc install", or edit config.mak. Also insert
+CFLAGS=-O2 if desired.
+
+The author hasn't had access to other formerly-supported platforms for a while
+to test Q. Other compilers may be OK absent gcc: the code tries not to use gcc
+extensions but it does use a pragma to turn off optimising in places, so best
+not turn it on for other compilers. Non-ANSI compilers are no longer supported.

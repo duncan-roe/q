@@ -17,7 +17,7 @@ In the window that is to act as Q's display (the "target" window), do:
 > $ sleep 1000000  # (except Cygwin). For Linux, 'exec disowntty' is better
 Under Cygwin, sleep is not necessary.
 Under Linux, using sleep has limitations documented below.
-Under anything else (e.g. OpenBSD, not fully supported yet) use sleep
+Under anything else (e.g. OpenBSD) use sleep.
 
 That 3rd line is to stop shell from grabbing input (Cygwin does it by itself).
 'sleep' always works, but under Linux you will get the gdb warning:
