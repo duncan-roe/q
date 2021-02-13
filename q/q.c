@@ -3189,7 +3189,8 @@ do_initial_tsks(bool *do_rc_p)
   if (errflg)
   {
     fprintf(stderr, "%s",
-      "Usage: q [-AVbdemnto] [-i <macro definition>] [+<n> file]"
+      "Usage: q [-AVbdemnoqtv] [-i <macro definition>] "
+      "[-l <log file>] [+<n> file]"
       " [file[:<n>]]...\n");
     exit(1);
   }

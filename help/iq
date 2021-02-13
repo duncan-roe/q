@@ -1,6 +1,7 @@
   ++ I N V O K I N G   Q ++
 
-Usage: q [-AVbdemnoqtv] [-i <macro definition>] [+<n> file] [file[:<n>]]...
+Usage: q [-AVbdemnoqtv] [-i <macro definition>] [-l <log file>] [+<n> file]
+[file[:<n>]]...
 
 <file> arguments are processed sequentially, by use of q's Q-QUIT command with
 no argument; or may be accessed out of sequence by "Q $<number>". The current
@@ -13,7 +14,8 @@ If a line number is appended to the <file> arg (file:<n>), then q positions to
 line <n> and does a V-VIEW command before prompting the user for input.
 
 Initial tasks: Unless -n is given, if ./.qrc exists it is obeyed as a U-USE
-file. If not but ~/.qrc does exist, that is U-USE'd.
+file. If not but ~/.qrc does exist, that is U-USE'd. If neither, then U-USE
+/etc/qrc.
 
 After loading up the editing workfile with <file> if one was given, q gains
 absolute control over the display by diabling all special characters except
