@@ -1,6 +1,18 @@
 When debugging Q, I find it easiest to have gdb running in one terminal session
-with all of Q's input and output going to and coming from another. Also I use
-"ggdb" from the "command_line_tools" repository adjacent to that for Q.
+with all of Q's input and output going to and coming from another.
+
+It can be useful to have the debugged Q run a log file, perhaps to yet another
+terminal session, but logging really comes into its own when debugging Q macros
+as described in README_DEBUG_MACROS.
+
+I run gdb under the control of "ggdb" from the "command_line_tools" repository
+adjacent to that for Q. ggdb can do any or all of the following:
+ - take care of the controlling tty of the debugged process (see below)
+ - run any number of initialisation scripts (of gdb commands)
+ - run arbitrary gdb commands from the end of ggdb's command line.
+   This allows e.g. to exit gdb, recall the invoking ggdb command, insert a
+   new "break" / "b" command in the command line
+   (with a condition and / or commands if wanted)
 
 For the benefit of anyone who doesn't have command_line_tools installed, there
 is a copy of ggdb in Q's documentation directory. You can symlink or copy this
@@ -9,6 +21,9 @@ into your PATH, or substitute e.g. ./ggdb into the template below.
 ggdb relies on expect. Some distributions come without expect by default. If
 yours is one of these then you will need to install expect from the
 distribution's repository if you haven't already.
+
+As with gdb, it can be a plan to run ggdb in a "script" session for subsequent
+analysis (especially to capture the ad-hoc breakpoints). "script -f" is good.
 
 In the window that is to act as Q's display (the "target" window), do:
 

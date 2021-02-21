@@ -9,12 +9,22 @@ RUNNING THE MACRO DEBUGGER
 ======= === ===== ========
 
 The Q macro debugger is based on running Q under the source level debugger gdb.
-If you are familiar with doing that (e.g. from following README_DEBUG) then feel
-free to skip on to the PREPARATION section below.
+
+When debugging macros, I find it useful to have Q log its input to another
+terminal session, to see exactly what the macros are doing.
+
+If you are familiar with debugging Q with gdb, (e.g. from following
+README_DEBUG) then feel free to skip on to the PREPARATION section below.
 
 When debugging Q, I find it easiest to have gdb running in one terminal session
-with all of Q's input and output going to and coming from another. Also I use
-"ggdb" from the "command_line_tools" repository adjacent to that for Q.
+with all of Q's input and output going to and coming from another.
+
+I run gdb under the control of "ggdb" from the "command_line_tools" repository
+adjacent to that for Q. ggdb can do any or all of the following:
+ - take care of the controlling tty of the debugged process (see below)
+ - run any number of initialisation scripts (of gdb commands)
+ - run arbitrary gdb commands from the end of ggdb's command line
+   (not often used when debugging macros)
 
 For the benefit of anyone who doesn't have command_line_tools installed, there
 is a copy of ggdb in Q's documentation directory. You can symlink or copy this
@@ -31,7 +41,7 @@ In the window that is to act as Q's display (the "target" window), do:
 > $ sleep 1000000  # (except Cygwin). For Linux, 'exec disowntty' is better
 Under Cygwin, sleep is not necessary.
 Under Linux, using sleep has limitations documented below.
-Under anything else (e.g. OpenBSD, not fully supported yet) use sleep
+Under anything else (e.g. OpenBSD) use sleep
 
 That 3rd line is to stop shell from grabbing input (Cygwin does it by itself).
 'sleep' always works, but under Linux you will get the gdb warning:
@@ -62,16 +72,19 @@ displays all macro names in octal, the way gdb shows them.
 
 For best results, the target window should be at least 88 characters wide.
 
+Pick any of your other terminal sessions to be the log session. Enter "tty" in
+that window to get its ID. Use this ID in the "export log_tty" command in the
+gdb window.
+
 In general you won't need another terminal session in which to examine source.
 In fact, these instructions work when source is not available.
 But if you plan to do advanced stuff, like set a watchpoint on the ALU R
 register, then you will want source.
 
 You might want an extra terminal window where you can browse macro definition
-files, e.g. for the comments therein. The distributed macro files are in Q's
-data directory, default /usr/local/share/q. Inside a Q session, the command
-  fi ^ND^N^<4003>
-will display this directory.
+files, e.g. for the comments therein. The distributed macro files are in the
+same directory as the help files, so you can use H-Help to view them, e.g.
+ "h word.qm" to see the definition of ^N^A.
 
 TUTORIAL
 ========

@@ -1,3 +1,7 @@
+Retire separate MACRO & HELP directories
+README_DEBUG_ADVANCED to have table of useful variables
+  ptrpos, tabs rs[], fs[], rsidx, fsidx, xreg, qreg
+  curr, prev, oldcom, newcom
 Mode to turn off line & part numbering (entire line selectable on V or P)
 STARTED: Specify file for monitoring input (from any source)
 Opcodes POPL & POPLF: pop to line being edited (command or file)
