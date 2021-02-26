@@ -75,7 +75,7 @@ N347 ^NC^NS^N\!ci -u -m'^ND^N^<1103>' "^ND^N^<4002>"^J^NU
 # n360 & n361 - generate n1100 & n1101 for n362
 N360 ^NC^NS^N\^NM^<1202>^U^ND^N^<1407>n1100 ^ND^N^<1401>l '^ND^N^<1202>'^*J^*NC^*NU^*[^*NI^*NU^J^NU
 N361 ^NC^NS^N\^NM^<1201>^Un1101 ^*ND^*N^*<1106>^ND^N^<1401>y '^ND^N^<1202>' '^ND^N^<1201>'^*J^*NU^J^NU
-N362 ^NC^NS^N\^[n523 ^ND^N^<4000>^*NU^J^ND^N^<524>^[fm ^ND^N^<523>^J^NU
+N362 ^NC^NS^N\^Un523 ^ND^N^<4000>^*NU^J^ND^N^<524>^[fm ^ND^N^<523>^J^NU
 # n367 (^N^Ww) Check in current source with message 1102
 N367 ^NC^NS^N\!ci -u -m'^ND^N^<1102>' "^ND^N^<4002>"^J^NU
 N523 !!! SCRATCH - DEFINED BY OTHER MACROS !!!
@@ -133,8 +133,8 @@ N773 ^<PSHLNNB>^NC^NS^<S1>^NU ;Push current line number
 # N1001 & N1002: environment saves (Use N1002 when env already saved by N1001)
 # TABS USED: _(underscore) and -(tab 80)
 # !! NO OTHER MACROS SHOULD USE THESE TABS !!
-N1001 ^NC^NS^N\^[^NF_^ND^N^<4000>^NM^<1021>^[^NU ; Env save #1
-N1002 ^NC^NS^N\^[^NF-^ND^N^<4000>^NM^<1022>^[^NU ; Env save #2
+N1001 ^NC^NS^N\^U^NF_^ND^N^<4000>^NM^<1021>^U^NU ; Env save #1
+N1002 ^NC^NS^N\^U^NF-^ND^N^<4000>^NM^<1022>^U^NU ; Env save #2
 # N1011 - restore environment (line number and mode setting) as stored by N1001
 #         the ALU program is to guard against the case where the current line
 #         number stored in tab _ is now beyond the end of the file.

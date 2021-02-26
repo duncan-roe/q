@@ -42,7 +42,7 @@ That 3rd line is to stop shell from grabbing input (Cygwin does it by itself).
 in the target window. disowntty is in command_line_tools or get it from
 https://sourceware.org/bugzilla/show_bug.cgi?id=11403
 
-In the window where you will run gdb (the "gdb window), 2 things to do:
+In the window where you will run gdb (the "gdb" window), 2 things to do:
 
 1. Enter e.g. "export my_tty=/dev/pts/6" (following on from the example above)
 

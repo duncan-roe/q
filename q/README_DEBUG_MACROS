@@ -51,14 +51,16 @@ That 3rd line is to stop shell from grabbing input (Cygwin does it by itself).
 in the target window. disowntty is in command_line_tools or get it from
 https://sourceware.org/bugzilla/show_bug.cgi?id=11403
 
-In the window where you will run gdb (the "gdb window), 3 things to do:
+In the window where you will run gdb (the "gdb" window), 4 things to do:
 
 1. (Assuming you plan to run the tutorial example) cd to Q's doc dir,
    i.e. the directory containing this README
 
 2. Enter e.g. "export my_tty=/dev/pts/6" (following on from the example above)
 
-3. Select & paste the export and ggdb templates in this document. ggdb doesn't
+3. Enter e.g. "export log_tty=/dev/pts/7" (following on from the example above)
+
+4. Select & paste the export and ggdb templates in this document. ggdb doesn't
    need to be installed, the template uses the copy in Q's doc dir.
    This step is covered in the tutorial, no need to do it right now.
 
@@ -144,15 +146,16 @@ qm -a help_dot_qrc | less
 
 --- gdb Window
 export my_tty=   # Complete this from tty output
+export log_tty=  # Complete this from tty output (optional)
 export j=macro_debug_sample
 export k=help_dot_qrc
-./ggdb -t $my_tty -f macros.gdb -f maxsize.gdb -a \
-"$([ -n "$k" ] && echo "-niu,$k^J" || echo "-i")fv^Jfm+v^J $j" $(type -p q) c
-
-or, if you have a loggging screen in $log_tty:
 ./ggdb -t $my_tty -f macros.gdb -f maxsize.gdb -a "-l $log_tty \
 $([ -n "$k" ] && echo "-niu,$k^J" || echo "-i")fv^Jfm+v^Jfm+8,+9^J $j" \
 $(type -p q) c
+
+or, if you don't have a loggging screen in $log_tty:
+./ggdb -t $my_tty -f macros.gdb -f maxsize.gdb -a \
+"$([ -n "$k" ] && echo "-niu,$k^J" || echo "-i")fv^Jfm+v^J $j" $(type -p q) c
 
 In the target window, enter "v" to view the file you are working on. If it's
 empty (so you didn't export j as the file to edit) you can edit the file now by
@@ -169,7 +172,7 @@ In the gdb window, since the previous gdb command was "c" (short for "continue")
 you can now touch <Enter> to continue on to the next macro.
 Observe the next message "starting macro 1001". This corresponds to the
 ^N^<1001> in
-  ^A : ^NC^NS^N\^ND^N^<1001>
+001 ^NC^NS^N\^ND^N^<1001>
 in line 1 of the macro table.
 
 For those unfamiliar with Q macro coding: ^N^<1001> is a jump to macro 1001.
@@ -284,3 +287,10 @@ Of course, you can simple enter "q" in the gdb window.
 Instead, if you want to leave the session running but skip the rest of the
 currently debugged macro, enter "disa" to disable breakpoints. Then "c" will
 get you the Q prompt.
+
+When you have finished debugging, you *may* be able to regain use of the target
+window:-
+ - Linux / sleep: enter ^C in the target window to kill sleep
+ - Cygwin: <enter> will get you a command prompt (or just enter a comand)
+ - Linux / disowntty: you can't re-use the window, and the X button won't close
+                      it. 'pkill -9 disowntty' to dispose of the window.

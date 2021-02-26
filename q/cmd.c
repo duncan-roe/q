@@ -3,8 +3,10 @@
  * Obey a shell command returning its exit status
  *
  * Copyright (C) 2002, Duncan Roe
- * Copyright (C) 2012,2015,2019-2020 Duncan Roe
- */
+ * Copyright (C) 2012,2015,2019-2021 Duncan Roe */
+
+/* Headers */
+
 #include <stdio.h>
 #include <errno.h>
 #include <signal.h>
@@ -12,14 +14,18 @@
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/types.h>
 #include "prototypes.h"
+#include "backtick.h"
 #include "edmast.h"
 #include "macros.h"
-#include "backtick.h"
+
+/* Macros */
 
 #define PKT ((struct pkt *)pkt)
+
+/* Typedefs */
 
 struct pkt
 {
@@ -29,6 +35,10 @@ struct pkt
   int childfd;                     /* For error messages & debugging */
   uint8_t *buf;
 };                                 /* struct pkt */
+
+/* Static Variables */
+
+static char *the_command;
 
 /* ********************************* thrfunc ******************************** */
 
@@ -62,8 +72,13 @@ thrfunc(void *pkt)
     PKT->buflen += retcod;
     if (PKT->buflen == PKT->bufcap)
     {
-      fprintf(stderr, "Buffer capacity exceeded on fd %d\r\n", PKT->fds[0]);
+      fprintf(stderr, "Output truncated: \"%s\"\r\n", the_command);
       result = stderrbuf;
+      do
+      {
+        char junkbuf[8192];
+        SYSCALL(retcod, read(PKT->fds[0], junkbuf, sizeof junkbuf));
+      } while (retcod > 0);        /* do */
       break;
     }                              /* if (PKT->buflen == PKT->bufcap) */
   }                                /* for(;;) */
@@ -90,6 +105,7 @@ cmd(char *mybuf, bool backtick)
 /* Set up pipes if doing command output macro definition */
   if (backtick)
   {
+    the_command = mybuf;
     if (pipe(outfds))
     {
       fprintf(stderr, "%s. outfds (pipe)\r\n", strerror(errno));
