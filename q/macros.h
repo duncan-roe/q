@@ -3,7 +3,7 @@
 /* M A C R O S
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012-2014,2019-2020 Duncan Roe
+ * Copyright (C) 2012-2014,2019-2021 Duncan Roe
  *
  * Universal statements for segments accessing SCREENEDIT macros
  * */
@@ -23,7 +23,6 @@
 #define LAST_PSEUDO 127            /* Last macro shadowed by pseudos */
 #define FIRST_IMMEDIATE_MACRO (FIRST_PSEUDO + 1)
 #define LAST_IMMEDIATE_MACRO (FIRST_PSEUDO + 15)
-#define RECURSING (mcdtum != MCDTUM_BASE || immdtum != FIRST_IMMEDIATE_MACRO)
 
 /* Typedefs */
 
@@ -48,6 +47,7 @@ extern struct macinfo
 extern macro5 *scmacs[TOPMAC + 1]; /* Pointers to macros */
 extern bool mctrst;                /* Entrust user (various) */
 extern bool nodup;                 /* DUPLX$ done if false */
+extern bool recursing_copy;        /* Value of recursing in top main frame */
 extern int curmac;                 /* Macro being expanded */
 extern int mcposn;                 /* Pos'n in macro */
 extern int mcnxfr;                 /* Index of next free entry in stack */

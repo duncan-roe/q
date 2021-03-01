@@ -2,7 +2,7 @@
  *
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2002,2007,2012-2020 Duncan Roe
+ * Copyright (C) 2002,2007,2012-2021 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -90,6 +90,7 @@ scrbuf5 b1, b2, b3, b4;            /* 2 line & 2 command buffers */
 int tbstat;
 bool offline = false;
 bool piping = true;                /* Needs to start off true for quthan() */
+bool recursing_copy;
 int stack_size = 16;               /* Register stack initial depth */
 long *rs = NULL;                   /* The register stack */
 double *fs = NULL;                 /* The FP register stack */
@@ -288,6 +289,7 @@ main(int xargc, char **xargv)
 
 /* [Re-]initialise static variables */
 
+  recursing_copy = recursing;
   tokens = false;
   repos = false;
   k = 0;
@@ -700,7 +702,9 @@ main(int xargc, char **xargv)
           break;
 
         case 'r':                  /* "FR"eprompt (calls q recursively) */
-          if (!(retcod = do_freprompt()))
+          retcod = do_freprompt();
+          recursing_copy = recursing; /* do_freprompt() sets recursing */
+          if (!retcod)
             break;
           if (fq_from_fr)
           {

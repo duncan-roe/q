@@ -11,7 +11,7 @@ q_version()
 
   if (argc != 2 || strcmp(argv[1], "-V"))
     return;
-  fputs("Copyright (C) 1995-2020  Duncan Roe\r\n", stdout);
+  fputs("Copyright (C) 1995-2021 Duncan Roe\r\n", stdout);
   fputs("License GPLv3+: GNU GPL version 3 or later "
     "<http://gnu.org/licenses/gpl.html>\r\n", stdout);
   fputs("q comes with NO WARRANTY, to the extent permitted by law.\r\n",
