@@ -1,7 +1,7 @@
 /* W R I T F L
  *
  * Copyright (C) 1993, 1995, 1998, 1999 Duncan Roe & Associates P/L
- * Copyright (C) 2003,2012,2014,2017-2020 Duncan Roe
+ * Copyright (C) 2003,2012,2014,2017-2021 Duncan Roe
  *
  * This routine writes out the spec'd # of lines to the file open on
  * FUNIT. If EOF is reached, it reports how many lines were written...
@@ -16,13 +16,14 @@
  */
 #include <stdio.h>
 #include <errno.h>
+#include <ctype.h>
 #include <string.h>
-#include <sys/types.h>
 #include <unistd.h>
+#include <sys/types.h>
 #include "prototypes.h"
 #include "edmast.h"
-#include "fmode.h"
 #include "tabsiz.h"
+#include "fmode.h"
 /* */
 #define STC(c) do {*q++ = c;\
   if (!--unused) \
@@ -63,12 +64,12 @@ writfl(long wrtnum)
     p = curr->bdata;               /* Next char from here */
     bytes = curr->bchars;          /* Bytes in this line */
 /*
- * Strip trailing spaces (usually)...
+ * Strip trailing whitespace (usually)...
  */
     if (!(fmode & FM_PLUS_S_BIT || binary))
       while (bytes > 0)
       {
-        if (curr->bdata[bytes - 1] != SPACE)
+        if (!isspace(curr->bdata[bytes - 1]))
           break;
         bytes--;
       }

@@ -1500,12 +1500,12 @@ do_ychangeall(void)
       yposn = match_end + 1 + ydiff; /* Resume search after new string */
 
 /* Seek more occurrences if room */
-    }
+    }                              /* do */
     while (curr->bchars - n - yposn >= (regs ? 0 : oldlen));
 
     if (!linmod)
       continue;                    /* J no mods to this line */
-    linmod = false;
+/*  linmod = false;                 * (done at loop start) */
     lines_changed = true;
     if (!NONE)                     /* Some display may be req'd */
     {
