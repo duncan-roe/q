@@ -3102,7 +3102,7 @@ static void
 do_initial_tsks(bool *do_rc_p)
 {
   dfltmode = FM_PLUS_A_BIT | FM_PLUS_I_BIT | FM_PLUS_E_BIT | FM_PLUS_M_BIT |
-    TAB_READ_BIT | DOS_READ_BIT | FM_PLUS_0_BIT;
+    TAB_READ_BIT | DOS_READ_BIT | FM_PLUS_9_BIT | FM_PLUS_0_BIT;
   end_seq = normal_end_sequence;
   init_alu();
   tmask = umask(0);                /* Get current umask */

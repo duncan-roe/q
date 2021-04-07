@@ -11,6 +11,7 @@ N Z '^Z^B^B^S^J^NU ;Last word of comment to u/c
 
 # n207 Run GNU indent then invoke N1 for final polish.
 #      Requires runindent from https://github.com/duncan-roe/command_line_tools
+
 N207 ^NC^NS^N\^ND^N^<1001>fm-dw^Js^J!runindent "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^ND^N1s^J^ND^N^<1011>^NU
 
 # n 1   "beautify" C source. Comments are aligned on cc36 or one space
@@ -19,30 +20,33 @@ N207 ^NC^NS^N\^ND^N^<1001>fm-dw^Js^J!runindent "^ND^N^<4002>"^Jq '^ND^N^<4002>'^
 #       done, comment is split off and put at start of previous line.
 #       Special treatment of split comments (e.g. by ^N6):
 #         ALU X register is zero except when within a split comment (as
-#         determined in sub-macro 416 (sm416) by comment's not ending "*/").
+#         determined in macro 416 (n416) by comment's not ending "*/").
 #         Should a line exceed 80 chars total length AND that line's comment has
 #         previously been split by ^N6 (so is now a comment fragment not ending
 #         */). then moving that fragment to before the current line would
 #         comment-out that line.
-#         To avoid this undesirable outcome, sm410 checks X before splitting
-#         off a comment. If X is nonzero, sm410 jumps to sm415 which issues an
+#         To avoid this undesirable outcome, n410 checks X before splitting
+#         off a comment. If X is nonzero, n410 jumps to n415 which issues an
 #         FR-FREPROMPT command to allow the user to fix things up.
-#         When sm415 regains control (because the user issued the Q-QUIT command
-#         to terminate the intervention) sm415 jumps to sm404 to continue
+#         When n415 regains control (because the user issued the Q-QUIT command
+#         to terminate the intervention) n415 jumps to n404 to continue
 #         processing the input, starting at the file position left by the user.
+
 N061 ^NC^NS^N\t3 36 81^J^<PS0>^<POPX>^ND^N^<1002>fb^Jo y^Ji1^Jx^NO|^[^ND^N^<404>o n^Jy ' * /*' ' *',,,,1^J^ND^N^<1012>^NU
 
 # n 6   Continue the current /* comment on the next line,
 #       starting aligned with this one
+
 N 6 '^H^O^NA^N^<420>^NO{^Z^N^<420> ;Continue comment nxt lin
 
 # n212 - Put a box around the current block of comments. Can invoke from last
 #        line in modify mode (which will be overwritten)
-#        or just after in command mode.
+#        or just after in command mode. Invoke by ^N^W^J.
 #
 # MACROS DEFINED
 #
 # n212, n677 down to n671
+
 N212 ^[^NF{m-1^J^ND^N^<677>^N\^NO}^[^ND^N^<676>^[^NF|^ND^N^<675>^ND^N^<673>i t{^J^ND^N^<672>^J^[i t|^J^L^ND^N^<672>^J^[g t{^Jg+2^J^NU
 
 # -------------------- end of user-callable macros --------------------
@@ -50,8 +54,8 @@ N212 ^[^NF{m-1^J^ND^N^<677>^N\^NO}^[^ND^N^<676>^[^NF|^ND^N^<675>^ND^N^<673>i t{^
 # Macros to implement N1:
 
 # n404: Main loop on lines. Remember cursor pos'n (so we can detect if
-#       we get back to line start, move to comment start, next line if
-#       now at end, backup to delimiter, jump off to submacro if now at
+#       we get back to line start), move to comment start, next line if
+#       now at end, backup to delimiter, jump off to another macro if now at
 #       line start.
 N404 ^[m-^J^NC^NU^NO}^O^NA^N^<414>^B^NP}^N^<416>^N^<405>
 
