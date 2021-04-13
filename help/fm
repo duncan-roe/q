@@ -38,7 +38,7 @@ than one mode: for instance "d" affects dr & dw.
  00002000000 x        eXclusive L & FL: find next line not matching           -
  00004000000 y        single space -> TAB (see TAB compression below)         -
  00010000000 g        L & Y do reGexp matching                                -
- 00020000000 8        Log macro & usefile as well as keybd i/p                -
+ 00020000000 8        Log macro & usefile as well as keybd i/p                #
  00040000000 9        Log '^' as '^*'                                         +
  00100000000 0        Log newline for back jump, macro call & macro return    +
  10000000000 FB cmnd  FBRIEF command asserted                           verbose
@@ -49,7 +49,8 @@ than one mode: for instance "d" affects dr & dw.
  01000000000 FF cmnd  FFNOWRAP command set to ON                         FF OFF
  00400000000 ALU      ^<SFPT> asserted (store file position tabs)       ^<SCPT>
 
-* Default is + for Q -B(inary), - otherwise.
+ * Default is + for Q -B(inary), - otherwise.
+ # Default is + for Q -VV(ery Verbose), - otherwise.
 
 DOS mode: Text files in DOS have lines ending Cr Lf but in Unix they only end
 Lf. "c", "make", "less" &c seem to tolerate files with the DOS Cr at the end

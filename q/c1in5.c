@@ -1,7 +1,7 @@
 /* C 1 I N 5 . C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
- * Copyright (C) 2012-2014,2019-2020 Duncan Roe
+ * Copyright (C) 2012-2014,2019-2021 Duncan Roe
  *
  * This routine gets the next character from standard input. If we
  * hit EOF on a file, revert to the TTY
@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include "prototypes.h"
+#include "fmode.h"
 #include "c1in.h"
 
 /* Instantiate externals */
@@ -79,6 +80,8 @@ c1in5(bool *eof_encountered)
           if (eof_encountered != NULL)
           {
             *eof_encountered = true;
+            if (log_fd && (fmode & FM_PLUS_8_BIT) && (fmode & FM_PLUS_0_BIT))
+              fputs("^!", log_fd);
             return '\n';
           }                        /* if (eof_encountered != NULL) */
           fprintf(stderr, "Internal Q error at %s:%d\r\n", __FILE__, __LINE__);

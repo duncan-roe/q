@@ -1,0 +1,11 @@
+                             \/ K - K E Y L O G \/
+
+K by itself closes the current log file, subject to confirmation.
+
+"K -" displays what the current log file is.
+
+"K {filename}" closes the current log file (if any) and starts logging to {file}
+
+Logging is always to the end of a file.
+
+Logging behaviour is affected bu modes 8, 9 & 0: see "H FM".

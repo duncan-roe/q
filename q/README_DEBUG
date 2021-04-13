@@ -96,7 +96,8 @@ window:-
  - Linux / disowntty: you can't re-use the window, and the X button won't close
                       it. 'pkill -9 disowntty' to dispose of the window.
 
-Handy template (export log_tty if you have one) (export my_tty first):
+Handy templates (export log_tty if you have one) (export my_tty first):
 
 ggdb -f maxsize.gdb -t $my_tty q c
-ggdb -a "-l $log_tty -ifm+8,+9^J" -f maxsize.gdb -t $my_tty q c
+ggdb -a "-l $log_tty -ifm+8^J" -f maxsize.gdb -t $my_tty q c
+ggdb -a "-l $log_tty -vv" -f maxsize.gdb -t $my_tty q c

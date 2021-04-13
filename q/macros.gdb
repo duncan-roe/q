@@ -1,4 +1,4 @@
-b scrdit.c:1576
+b scrdit.c:1577
 commands
 silent
 printf "starting macro %o\n", thisch

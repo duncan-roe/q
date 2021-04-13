@@ -59,7 +59,7 @@ static char *cmtabl[52] = {        /* Table of commands in full */
   "HELP",
   "INSERT",
   "JOIN",
-  "",
+  "KEYLOG",
   "LOCATE",
   "MODIFY",
   "NEWMACRO",
@@ -401,7 +401,7 @@ massage_q_arg(void)
 {
   int alen = strlen(*(argv + optind + wanted_arg));
 
-  oldcom->bdata[oldcom->bchars++] = SPACE; /* Append a SPACE */
+  oldcom->bdata[oldcom->bchars++] = SPACE; /* Append space */
   memcpy(&oldcom->bdata[oldcom->bchars], /* Don't want trlg NUL */
     *(argv + optind + wanted_arg), alen);
   oldcom->bchars += alen;          /* Append next arg */

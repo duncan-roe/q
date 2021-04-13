@@ -127,7 +127,7 @@ int pchrs, fscode, argc, argno = 0;
 int previous_argno = -1;
 long lstlin;
 char ermess[Q_BUFSIZ], ubuf[Q_BUFSIZ], **argv, *sh;
-fmode_t dfltmode;
+fmode_t dfltmode = 0;
 
 /* Static Variables */
 
@@ -201,9 +201,14 @@ static regmatch_t *pmatch;
 static size_t pmatch_len = 0;
 static bool unmatched_substring;
 static int saved_tokbeg;
+static char *log_name = NULL;
+static int log_name_len = 0;
 
 /* Static prototypes */
 
+static bool close_log_file(void);
+static bool open_log_file(char *fn);
+static bool do_keylog(void);
 static bool get_nmatch(size_t *nmatch);
 static bool match_regexp(uint8_t *string, int stringlen, int offset,
   int *matchpos, int *matchlen, size_t nmatch);
@@ -578,6 +583,10 @@ main(int xargc, char **xargv)
 
         case 'J':
           retcod = do_join();
+          break;
+
+        case 'K':
+          retcod = do_keylog();
           break;
 
         case 'L':
@@ -2364,6 +2373,108 @@ do_join(void)
   return true;
 }                                  /* bool do_join(void) */
 
+/* ***************************** close_log_file ***************************** */
+
+static bool
+close_log_file(void)
+{
+  SYSCALL(retcod, fclose(log_fd));
+  if (retcod)
+  {
+    fprintf(stderr, "%s. (fclose)", strerror(errno));
+    return false;
+  }                                /* if (retcod) */
+  log_fd = NULL;
+  return true;
+}                                  /* static bool close_log_file(void) */
+
+/* ****************************** open_log_file ***************************** */
+
+static bool
+open_log_file(char *fn)
+{
+  int new_len = strlen(fn) + 1;
+
+  do
+    log_fd = fopen(fn, "a");
+  while (!log_fd && errno == EINTR);
+  if (!log_fd)
+  {
+    fprintf(stderr, "%s. %s (fopen)", strerror(errno), optarg);
+    return false;
+  }                                /* if (!log_fd) */
+  if (setvbuf(log_fd, NULL, _IONBF, 0))
+  {
+    fprintf(stderr, "%s. %s (setvbuf)", strerror(errno), optarg);
+    return false;
+  }                                /* if (setvbuf(log_fd, NULL, _IONBF, 0)) */
+  if (new_len > log_name_len)
+  {
+    if (log_name)
+      free(log_name);
+    log_name = malloc(new_len);
+    if (!log_name)
+    {
+      fprintf(stderr, "%s. (malloc)", strerror(errno));
+      return false;
+    }                              /* if (!log_name) */
+    log_name_len = new_len;
+  }                                /* if (new_len < log_name_len) */
+  strcpy(log_name, fn);
+  return true;
+}                                  /* static bool open_log_file(char *fn) */
+
+/* ******************************** do_keylog ******************************* */
+
+static bool
+do_keylog(void)
+{
+  if (scrdtk(2, (uint8_t *)ubuf, BUFMAX, oldcom))
+  {
+    fprintf(stderr, "%s. (scrdtk)", strerror(errno));
+    return false;
+  }                        /* if (scrdtk(2, (uint8_t *)ubuf, BUFMAX, oldcom)) */
+  switch (oldcom->toktyp)
+  {
+    case nultok:
+      fputs("Null arg meaningless", stderr);
+      return false;
+
+    case eoltok:
+    if (!log_fd)
+    {
+      fputs("No log file to close", stderr);
+      return false;
+    }                              /* if (!log_fd) */
+      if ((curmac >= 0 || ysno5a("Stop keylogging [no]", A5DNO))
+        && !close_log_file())
+        return false;
+      break;
+
+    case nortok:
+      if (oldcom->minusf && oldcom->toklen == 1) /* "k -" */
+      {
+        if (log_fd)
+        {
+          printf("Logging to %s\r\n", log_name && *log_name ? log_name :
+            "(unknown)");
+        }                          /* if (log_fd) */
+        else
+          fputs("Not logging\r\n", stdout);
+      }                            /* if (oldcom->minusf ...) */
+      else
+      {
+
+/* Have name: close any existing log file */
+        if (log_fd && !close_log_file())
+          return false;
+
+        return open_log_file(ubuf);
+      }                            /* if (oldcom->minusf ...) else */
+  }                                /* switch (oldcom->toktyp) */
+  return true;
+}                                  /* static bool do_keylog(void) */
+
 /* ******************************** do_locate ******************************* */
 
 static bool
@@ -3101,7 +3212,7 @@ do_xistics(void)
 static void
 do_initial_tsks(bool *do_rc_p)
 {
-  dfltmode = FM_PLUS_A_BIT | FM_PLUS_I_BIT | FM_PLUS_E_BIT | FM_PLUS_M_BIT |
+  dfltmode |= FM_PLUS_A_BIT | FM_PLUS_I_BIT | FM_PLUS_E_BIT | FM_PLUS_M_BIT |
     TAB_READ_BIT | DOS_READ_BIT | FM_PLUS_9_BIT | FM_PLUS_0_BIT;
   end_seq = normal_end_sequence;
   init_alu();
@@ -3144,19 +3255,11 @@ do_initial_tsks(bool *do_rc_p)
         break;
 
       case 'l':
-        do
-          log_fd = fopen(optarg, "a");
-        while (!log_fd && errno == EINTR);
-        if (!log_fd)
+        if (!open_log_file(optarg))
         {
-          fprintf(stderr, "%s. %s (fopen)\r\n", strerror(errno), optarg);
+          fputs("/r/n", stderr);
           exit(1);
-        }                          /* if (!log_fd) */
-        if (setvbuf(log_fd, NULL, _IONBF, 0))
-        {
-          fprintf(stderr, "%s. %s (setvbuf)\r\n", strerror(errno), optarg);
-          exit(1);
-        }                          /* if (setvbuf(log_fd, NULL, _IONBF, 0)) */
+        }                          /* if (!open_log_file(optarg)) */
         break;
 
       case 'm':
@@ -3181,7 +3284,10 @@ do_initial_tsks(bool *do_rc_p)
 
       case 'v':
         if (verbose_flag)
+        {
           very_verbose_flag = true;
+          dfltmode |= FM_PLUS_8_BIT;
+        }                          /* if (verbose_flag) */
         else
           verbose_flag = true;
         break;
@@ -3194,8 +3300,7 @@ do_initial_tsks(bool *do_rc_p)
   {
     fprintf(stderr, "%s",
       "Usage: q [-AVbdemnoqtv] [-i <macro definition>] "
-      "[-l <log file>] [+<n> file]"
-      " [file[:<n>]]...\n");
+      "[-l <log file>] [+<n> file] [file[:<n>]]...\n");
     exit(1);
   }
   if (aluflg)

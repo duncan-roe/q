@@ -150,7 +150,7 @@ export log_tty=  # Complete this from tty output (optional)
 export j=macro_debug_sample
 export k=help_dot_qrc
 ./ggdb -t $my_tty -f macros.gdb -f maxsize.gdb -a "-l $log_tty \
-$([ -n "$k" ] && echo "-niu,$k^J" || echo "-i")fv^Jfm+v^Jfm+8,+9^J $j" \
+$([ -n "$k" ] && echo "-niu,$k^J" || echo "-i")fv^Jfm+v^Jfm+8^J $j" \
 $(type -p q) c
 
 or, if you don't have a loggging screen in $log_tty:

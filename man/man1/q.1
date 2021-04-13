@@ -1,6 +1,6 @@
 .\"
 .\" q manual page.
-.\" Copyright (c) 2018,2020 Duncan Roe
+.\" Copyright (c) 2018,2020-2021 Duncan Roe
 .\"
 .\" Original author: Duncan Roe
 .\"
@@ -19,7 +19,7 @@
 .\" the Free Software Foundation, 59 Temple Place - Suite 330,
 .\" Boston, MA 02111-1307, USA.
 .\"
-.TH q 1 "Dec 10 2020" "q-57" "Linux Programmer's Manual"
+.TH q 1 "Apr 13 2021" "q-57" "Linux Programmer's Manual"
 .SH NAME
 q \- line-oriented mostly WYSIWYG editor with a powerful macro facility
 .SH SYNOPSIS
@@ -422,6 +422,9 @@ Enter edit mode, inserting lines at the given line number
 .BI J-JOIN
 Join together lines from the given line number,
 and enter edit mode on the joined line
+.TP
+.BI K-KEYLOG
+Opens, reports on or closes a log file
 .TP
 .BI L-LOCATE
 Locate first occurrence of given string

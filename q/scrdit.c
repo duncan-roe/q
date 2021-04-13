@@ -1272,6 +1272,7 @@ process_pseudo(scrbuf5 *Curr)
       GETNEXTCHR;
 
     case 21:                       /* ^NU - Up from a macro s/r */
+      LOG_BREAK;
       if (mcnxfr == mcdtum)
         notmac(NORMAL);            /* Treat as exit if stack empty */
       else
