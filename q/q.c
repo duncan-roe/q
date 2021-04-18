@@ -128,6 +128,8 @@ int previous_argno = -1;
 long lstlin;
 char ermess[Q_BUFSIZ], ubuf[Q_BUFSIZ], **argv, *sh;
 fmode_t dfltmode = 0;
+char *log_name = NULL;
+int log_name_len = 0;
 
 /* Static Variables */
 
@@ -201,11 +203,10 @@ static regmatch_t *pmatch;
 static size_t pmatch_len = 0;
 static bool unmatched_substring;
 static int saved_tokbeg;
-static char *log_name = NULL;
-static int log_name_len = 0;
 
 /* Static prototypes */
 
+static int xmain(int xargc, char **xargv);
 static bool close_log_file(void);
 static bool open_log_file(char *fn);
 static bool do_keylog(void);
@@ -285,8 +286,17 @@ static bool bad_rdtk(void);
 static void display_opcodes(void);
 
 /* ********************************** main ********************************** */
+
 int
-main(int xargc, char **xargv)
+main(int real_argc, char **real_argv)
+{
+  return xmain(real_argc, real_argv);
+}                                  /* main() */
+
+/* ********************************** xmain ********************************* */
+
+static int
+xmain(int xargc, char **xargv)
 {
   bool recursing = !xargv;         /* In FR-FReprompt */
   bool do_rc = !recursing;
@@ -741,7 +751,7 @@ main(int xargc, char **xargv)
       cmd_reread = true;
     }                              /* if (!retcod) */
   }                                /* for(;;) */
-}                                  /* main() */
+}                                  /* xmain() */
 
 /* ********************************* pushmac ******************************** */
 
@@ -2441,11 +2451,11 @@ do_keylog(void)
       return false;
 
     case eoltok:
-    if (!log_fd)
-    {
-      fputs("No log file to close", stderr);
-      return false;
-    }                              /* if (!log_fd) */
+      if (!log_fd)
+      {
+        fputs("No log file to close", stderr);
+        return false;
+      }                            /* if (!log_fd) */
       if ((curmac >= 0 || ysno5a("Stop keylogging [no]", A5DNO))
         && !close_log_file())
         return false;
@@ -2976,9 +2986,9 @@ do_freprompt(void)
   if (r->saved_offline)
     change_attr(ttyfd, &tio5);
 
-  main(r->saved_curmac, NULL);     /* *!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*! */
+  xmain(r->saved_curmac, NULL);    /* *!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*! */
 
-/* Back from main, restore previous state */
+/* Back from xmain, restore previous state */
 
   if (r->saved_offline)
     change_attr(ttyfd, &tio5save);

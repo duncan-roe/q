@@ -1,4 +1,4 @@
-.TH q_macros 5 "Jan 26 2021" q-57 "q macros"
+.TH q_macros 5 "Apr 15 2021" q-57 "q macros"
 .SH NAME
 Q macros - the Q macro facility
 .SH DESCRIPTION
@@ -290,6 +290,17 @@ The calling macro then continues.
 It is the user's responsibility to code the calling
 macro to check the Q register for being nonzero
 (e.g. with \fB^<SQEQ>\fR ("skip if no error")).
+.TP
+.BI ^N^<4016>
+Returns the name of the most recent log file
+and sets the Q register to the name length.
+.br
+If there has never been a log file,
+the Q register is set to 0 and no characters are returned.
+.br
+When \fB^N^<4016>\fR returns a name,
+it is always safe to (re-)issue a \fBK-KEYLOG\fR command,
+since the file or tty is closed if open and then opened for appending.
 .RE
 .TP
 .B 3.\ \&ALU macros

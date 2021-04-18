@@ -1,7 +1,7 @@
 /* S C R D I T */
 /*
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2012-2014,2017-2020 Duncan Roe
+ * Copyright (C) 2012-2014,2017-2021 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -304,7 +304,7 @@ scrdit(scrbuf5 *Curr, scrbuf5 *Prev, char *prmpt, int pchrs)
     {
       glast = false;
       if (gpseu)
-        process_pseudo_arg(Curr); /* Char is for pseudomac */
+        process_pseudo_arg(Curr);  /* Char is for pseudomac */
       else
         ctl_uparrow_ctl_g_common(Curr);
       GETNEXTCHR;                  /* Finish ^G  / ^^ */
@@ -1086,7 +1086,7 @@ process_pseudo_arg(scrbuf5 *Curr)
 
 /* Test for an active pseudo: range from "h pm". */
 /* Return lengths for some of them */
-    else if (thisch >= 04000 && thisch <= 04015)
+    else if (thisch >= 04000 && thisch <= 04016)
     {
       qreg = 0;
       switch (thisch)
@@ -1135,6 +1135,10 @@ process_pseudo_arg(scrbuf5 *Curr)
 
         case 04015:                /* Backtick stderr */
           qreg = scmacs[STDERR_MACRO_IDX]->maclen - 2; /* Strip ^NU */
+          break;
+
+        case 04016:                /* Log file name */
+          qreg = log_name_len;
           break;
       }                            /* switch (thisch) */
     }                         /* else if (thisch >= 04000 && thisch <= 04015) */
@@ -1466,6 +1470,12 @@ process_other(void)
         curmac = thisch == 04014 ? STDOUT_MACRO_IDX : STDERR_MACRO_IDX;
         mcposn = 0;
         GETNEXTCHR;
+
+      case 04016:                  /* Log file name */
+        macdef(FIRST_PSEUDO, (uint8_t *)(log_name ? log_name : ""),
+          log_name_len, true);
+        qreg = log_name_len;
+        break;
 
       default:
         found = false;

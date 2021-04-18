@@ -1,9 +1,9 @@
-b scrdit.c:1577
+b scrdit.c:1587
 commands
 silent
 printf "starting macro %o\n", thisch
 end
-b scrdit.c:1232
+b scrdit.c:1236
 commands
 silent
 echo ^NI invoked\n

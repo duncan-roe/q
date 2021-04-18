@@ -81,5 +81,6 @@ N4014  returns stdout from last time n4014 or n4015 was defined. The user
 N4015  returns stderr from last time n4014 or n4015 was defined. The user
        defines this macro to be some external command e.g. "n 4015 pwd".
        If the external command fails, ALU register Q is set nonzero.
+N4016  returns name of most recent log file and name length in Q.
 N7xxx  returns contents of ALU memory location xxx.
 N13xxx returns contents of FPU memory location xxx.

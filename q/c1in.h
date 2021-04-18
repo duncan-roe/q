@@ -3,7 +3,7 @@
 /* c 1 i n . h */
 /*
  * Copyright (C) 1995, Duncan Roe & Associates P/L
- * Copyright (C) 2012,2014,2019-2020 Duncan Roe
+ * Copyright (C) 2012,2014,2019-2021 Duncan Roe
  *
  * This header file contains items of interest to the character input
  * subsystem
@@ -48,6 +48,8 @@ extern const char *const normal_end_sequence;
 extern double timlst;
 extern uint8_t fxtabl[128];        /* FX command implementation */
 extern FILE *log_fd;
+extern char *log_name;
+extern int log_name_len;
 
 /* Prototypes */
 
