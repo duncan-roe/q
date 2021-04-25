@@ -51,13 +51,14 @@ output redirected to files). -v then causes everything that would otherwise have
 gone to stdout to be sent to stderr.
 
 -vv (very verbose) (-v option given twice) tells Q to ignore FD-FDEVNULL
-commands. This works whether in a pipe or not.
+commands. This works whether in a pipe or not. -vv also makes mode 8 be on by
+default, so 'q -vvl <log file>' logs all the output from .qrc.
 
--A (ALU) causes Q to output the currently supported ALU (and FPU) opcodes. If -A
-is the only command-line argument, Q then exits.
+-A (ALU) outputs the currently supported ALU (and FPU) opcodes. If -A is the
+only command-line argument, Q then exits.
 
--V (version) causes Q to output its version number. If -V is the only command-
-line argument, Q then exits.
+-V (version) outputs Q's version number. If -V is the only command-line
+argument, Q then exits.
 
 +<n> must come after any options and applies only to the first <file>. It has
 the same effect as ":<n>". The command format is expected by and only intended

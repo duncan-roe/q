@@ -1,6 +1,6 @@
 /* E X E C _ A L U _ O P C O D E . C
  *
- * Copyright (C) 2014-2017,2019-2020 Duncan Roe
+ * Copyright (C) 2014-2017,2019-2021 Duncan Roe
  */
 
 /* Headers */
@@ -1287,7 +1287,8 @@ alu_opcode opcode_defs[] = {
   CAPTION("============ ==== = ========"),
   CAPTION("(These have the same effect as:-"),
   CAPTION("    pop A; pop B; push A {instr} B (or FP equivalents)"),
-  CAPTION("except attempted divide by zero leaves the registers unchanged)"),
+  CAPTION
+    ("    except attempted divide by zero leaves the registers unchanged)"),
   OPCODE(add, "Add"),
   OPCODE(sub, "Subtract"),
   OPCODE(mpy, "Multiply"),
