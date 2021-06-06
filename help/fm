@@ -77,8 +77,9 @@ Mode l expands and compresses *leading* tabs only
 (conversion stops as soon as any non-tab is found).
 +t forces -l and vice versa.
 
-Trailing SPACE retention: by default, trailing spaces are removed when a file
-is written or saved. This option allows them to be retained.
+Trailing space retention: by default, trailing spaces are removed when a file
+is written or saved. This option retains them. Nowadays fm-s drops all trailing
+whitespace characters.
 
 ^* representation of ^ is always enforced when displaying macros, since it is
 always required when inputting them. For commands and lines being edited

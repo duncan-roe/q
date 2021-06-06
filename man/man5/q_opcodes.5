@@ -1,4 +1,4 @@
-.TH q_opcodes 5 "Apr 25 2021" q-57 "q"
+.TH q_opcodes 5 "Jun  6 2021" q-57 "q"
 .SH NAME
 Q opcodes - the Q ALU opcodes
 .SH DESCRIPTION
@@ -123,6 +123,7 @@ to \fB/dev/null\fR
 .\}
 need \fB^J\fR (newline) at the end to actually have the command obeyed
 .SH LIST OF OPCODES
+.ta T 8
 .nf
 
 	 Instructions to Access Tabs
@@ -155,6 +156,8 @@ SFGE	 Skip if F is greater than or equal to zero
 SFLE	 Skip if F is less than or equal to zero
 SFGT	 Skip if F is greater than zero
 SFLT	 Skip if F is less than zero
+SFMOD	 Skip if file modified
+SFNMOD	 Skip if file not modified
 
 	 Instructions that Modify R
 	 ============ ==== ====== =
@@ -185,17 +188,17 @@ PSHHGHT	 Push screen height to R
 	 Instructions that Modify F
 	 ============ ==== ====== =
 TCF	 Negate (2's complement)
-POPNF Pop F to nowhere (value is discarded)
+POPNF	 Pop F to nowhere (value is discarded)
 DUPF	 Push a copy of F
 FRND	 F = rint(F)
 FFLOOR	 F = floor(F)
-FCEIL F = ceil(F)
+FCEIL	 F = ceil(F)
 FSIN	 F = sin(F)
 FCOS	 F = cos(F)
 FTAN	 F = tan(F)
 FLOG	 F = log(F)
 FEXP	 F = exp(F)
-FSQRT F = sqrt(F)
+FSQRT	 F = sqrt(F)
 INPF	 Read next number in line, push value to F & length to R
 	 (leaves cursor on 1st char of number)
 FQVERSN	 Push Q version to F
@@ -215,9 +218,9 @@ PS8	 Push constant 8 to R
 PS16	 Push constant 16 to R
 PS32	 Push constant 32 to R
 PS64	 Push constant 64 to R
-PS128 Push constant 128 to R
-PS256 Push constant 256 to R
-PS512 Push constant 512 to R
+PS128	 Push constant 128 to R
+PS256	 Push constant 256 to R
+PS512	 Push constant 512 to R
 PS1024	 Push constant 1024 to R
 PS2048	 Push constant 2048 to R
 PS4096	 Push constant 4096 to R
@@ -245,7 +248,7 @@ PS2P31	 Push constant 2147483648 (2**31) to R
 	 ============ ==== = ========
 	 (These have the same effect as:-
 	     pop A; pop B; push A {instr} B (or FP equivalents)
-	     except attempted divide by zero leaves the registers unchanged)
+	 except attempted divide by zero leaves the registers unchanged)
 ADD	 Add
 SUB	 Subtract
 MPY	 Multiply
@@ -261,8 +264,8 @@ DIVF	 Divide F
 
 	 FP (double) <==> Integer (long)
 	 == ======== ==== ======= ======
-POPFR Pop F; push (long) to R
-POPRF Pop R; push (double) to F
+POPFR	 Pop F; push (long) to R
+POPRF	 Pop R; push (double) to F
 
 	 Index Register Instructions
 	 ===== ======== ============
@@ -279,8 +282,7 @@ A1X	 X = X + 1
 A2X	 X = X + 2
 S2X	 X = X - 2
 S1X	 X = X - 1
-TSTFMOD	 set X = 1 if file modified, else set X = 0
-XMODE Q is to set mode from X after next cmd read (for ^N7)
+XMODE	 Mainline is to set mode from X after next cmd read (for ^N7)
 
 	 Q Result Register Instructions
 	 = ====== ======== ============

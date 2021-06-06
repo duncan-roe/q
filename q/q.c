@@ -2456,7 +2456,7 @@ do_keylog(void)
         fputs("No log file to close", stderr);
         return false;
       }                            /* if (!log_fd) */
-      if ((curmac >= 0 || ysno5a("Stop keylogging [no]", A5DNO))
+      if ((curmac >= 0 || ysno5a("Stop keylogging [yes]", A5DYES))
         && !close_log_file())
         return false;
       break;

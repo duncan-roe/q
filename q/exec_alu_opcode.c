@@ -608,11 +608,18 @@ s1x(char **err)
 }                                  /* s1x() */
 
 static bool
-tstfmod(char **err)
+sfmod(char **err)
 {
-  xreg = mods;
+  alu_skip = mods;
   return true;
-}                                  /* tstfmod() */
+}                                  /* sfmod() */
+
+static bool
+sfnmod(char **err)
+{
+  alu_skip = !mods;
+  return true;
+}                                  /* sfnmod() */
 
 static bool
 clrfmod(char **err)
@@ -1197,6 +1204,8 @@ alu_opcode opcode_defs[] = {
   OPCODE(sfle, "Skip if F is less than or equal to zero"),
   OPCODE(sfgt, "Skip if F is greater than zero"),
   OPCODE(sflt, "Skip if F is less than zero"),
+  OPCODE(sfmod, "Skip if file modified"),
+  OPCODE(sfnmod, "Skip if file not modified"),
   CAPTION(""),
   CAPTION("Instructions that Modify R"),
   CAPTION("============ ==== ====== ="),
@@ -1322,8 +1331,7 @@ alu_opcode opcode_defs[] = {
   OPCODE(a2x, "X = X + 2"),
   OPCODE(s2x, "X = X - 2"),
   OPCODE(s1x, "X = X - 1"),
-  OPCODE(tstfmod, "set X = 1 if file modified, else set X = 0"),
-  OPCODE(xmode, "Q is to set mode from X after next cmd read (for ^N7)"),
+  OPCODE(xmode, "Mainline is to set mode from X after next cmd read (for ^N7)"),
   CAPTION(""),
   CAPTION("Q Result Register Instructions"),
   CAPTION("= ====== ======== ============"),
