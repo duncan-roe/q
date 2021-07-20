@@ -1,4 +1,4 @@
-                        \/ F M - M O D E \/
+			\/ F M - M O D E \/
 
 FM by itself resets all "modes" (see below) to their compile-time defaults,
 subject to confirmation.
@@ -36,7 +36,7 @@ than one mode: for instance "d" affects dr & dw.
  00000400000 w        Warn if overwriting nonzero memory                      -
  00001000000 a        ^G/^NG <space> matches Any whitespace char              +
  00002000000 x        eXclusive L & FL: find next line not matching           -
- 00004000000 y        single space -> TAB (see TAB compression below)         -
+ 00004000000 y        single space -> tab (see Tab compression below)         -
  00010000000 g        L & Y do reGexp matching                                -
  00020000000 8        Log macro & usefile as well as keybd i/p                #
  00040000000 9        Log '^' as '^*'                                         +
@@ -62,7 +62,7 @@ it is IMMEDIATELY followed by Lf: other Cr characters are read in.
 saved in DOS mode on a Unix system, since Nl does not follow \ (as is usually
 the case), rather, Cr follows.
 
-TAB compression: DOS and Unix both use tabs to reduce the size of text files
+Tab compression: DOS and Unix both use tabs to reduce the size of text files
 containing many spaces. The tabs are assumed to be every 8th character, i.e.
 (if first character position is 1) they are set at 9, 17, 25 &c. (If first
 position is 0, they are at 8, 16, 24 &c.: i.e. multiples of 8). The tab mode on
