@@ -1,11 +1,16 @@
                              \/ K - K E Y L O G \/
 
-K by itself closes the current log file, subject to confirmation.
+K by itself closes the current keylog file, subject to confirmation.
 
-"K -" displays what the current log file is.
+"K -" displays what the current keylog file is.
 
-"K {filename}" closes the current log file (if any) and starts logging to {file}
+"K {filename}" closes the current keylog file (if any) and starts logging to
+{file}
 
 Logging is always to the end of a file.
 
-Logging behaviour is affected bu modes 8, 9 & 0: see "H FM".
+A keylog file is a file or tty to which Q logs received keysterokes. With the
+default FM -8, only actual keystrokes are logged. With FM +8, Q logs
+"keystrokes" from macros and U-USEFILE files as well.
+
+Logging behaviour is also affected by modes 9 & 0: see "H FM".

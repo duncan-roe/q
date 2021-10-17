@@ -5,6 +5,10 @@ For other features of each release, see the release notes at
 https://github.com/duncan-roe/q/releases
 (some release notes have been updated to reflect current behaviour)
 
+-- v57
+Opcode XMODE to set fmode from X-reg after command read (for ^N7)
+Specify file for monitoring input (from any source)
+
 -- v56
 Regexp search mode for L & Y (but not FL & FY)
 Opcodes PSHWDTH & PSHHGHT push screen width & height to R

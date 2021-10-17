@@ -1,6 +1,6 @@
   ++ I N V O K I N G   Q ++
 
-Usage: q [-AVbdemnoqtv] [-i <macro definition>] [-l <log file>] [+<n> file]
+Usage: q [-AVbdemnoqtv] [-i <macro definition>] [-k <keylog file>] [+<n> file]
 [file[:<n>]]...
 
 <file> arguments are processed sequentially, by use of q's Q-QUIT command with
@@ -52,7 +52,7 @@ gone to stdout to be sent to stderr.
 
 -vv (very verbose) (-v option given twice) tells Q to ignore FD-FDEVNULL
 commands. This works whether in a pipe or not. -vv also makes mode 8 be on by
-default, so 'q -vvl <log file>' logs all the output from .qrc.
+default, so 'q -vvk <keylog file>' logs all the output from .qrc.
 
 -A (ALU) outputs the currently supported ALU (and FPU) opcodes. If -A is the
 only command-line argument, Q then exits.

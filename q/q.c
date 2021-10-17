@@ -3236,7 +3236,7 @@ do_initial_tsks(bool *do_rc_p)
 
 /* Pick up any option arguments and set cmd_state if more args follow */
   cmd_state = TRY_INITIAL_COMMAND;
-  while ((i = getopt(argc, argv, "AVbdei:l:mnoqtv")) != -1)
+  while ((i = getopt(argc, argv, "AVbdei:k:mnoqtv")) != -1)
     switch (i)
     {
       case 'A':
@@ -3253,7 +3253,7 @@ do_initial_tsks(bool *do_rc_p)
         break;
 
       case 'd':
-        dfltmode ^= 1;             /* dr */
+        dfltmode ^= DOS_READ_BIT;
         break;
 
       case 'e':
@@ -3264,7 +3264,7 @@ do_initial_tsks(bool *do_rc_p)
         initial_command = optarg;
         break;
 
-      case 'l':
+      case 'k':
         if (!open_log_file(optarg))
         {
           fputs("/r/n", stderr);
