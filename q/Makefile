@@ -8,7 +8,7 @@ CPPFLAGS = $(shell getconf LFS_CFLAGS 2>/dev/null)\
 -DHELP_DIR=\"$(HELP_DIR)\"\
 -DMACRO_DIR=\"$(MACRO_DIR)\"\
 -DETC_DIR=\"$(ETC_DIR)\"
-CFLAGS := $(CFLAGS) -g3 -ggdb\
+CFLAGS := $(CFLAGS) -g3 -gdwarf-4\
 -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wstrict-prototypes \
 -Wmissing-prototypes -Wstrict-aliasing
 q : $(OBJ)
