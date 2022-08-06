@@ -12,6 +12,8 @@
  * This routine sets up an image of what the screen should look like,
  * and where the cursor should be.
  */
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
+
 #include <stdio.h>
 #include <memory.h>
 #include "prototypes.h"
@@ -22,7 +24,7 @@
 
 #define END_LINE {end_line_wanted = true; break;}
 #define FINISH_LINE {if (line->bcurs == line->bchars) cursr = icurs + 1;\
-  if (cursr < 0) puts("!missed cursor (scrset)!\r"); /* Report (bug) */ return;}
+  if (cursr < 0) puts("!missed cursor (scrset)!\r") /* Report (bug) */; return;}
 
 void
 scrset(scrbuf5 *line)
