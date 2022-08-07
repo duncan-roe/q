@@ -2475,6 +2475,8 @@ do_keylog(void)
       else
       {
 
+        if (!eolok())
+          return false;
 /* Have name: close any existing log file */
         if (log_fd && !close_log_file())
           return false;
