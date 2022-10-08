@@ -1,9 +1,9 @@
 When debugging Q, I find it easiest to have gdb running in one terminal session
 with all of Q's input and output going to and coming from another.
 
-It can be useful to have the debugged Q run a log file, perhaps to yet another
-terminal session, but logging really comes into its own when debugging Q macros
-as described in README_DEBUG_MACROS.
+It can be useful to have the debugged Q run a keylog file, perhaps to yet
+another terminal session, but key logging really comes into its own when
+debugging Q macros as described in README_DEBUG_MACROS.
 
 I run gdb under the control of "ggdb" from the "command_line_tools" repository
 adjacent to that for Q. ggdb can do any or all of the following:
@@ -99,5 +99,6 @@ window:-
 Handy templates (export log_tty if you have one) (export my_tty first):
 
 ggdb -f maxsize.gdb -t $my_tty q c
+ggdb -f maxsize.gdb -f darkbg.gdb -t $my_tty q c
 ggdb -a "-l $log_tty -ifm+8^J" -f maxsize.gdb -t $my_tty q c
 ggdb -a "-l $log_tty -vv" -f maxsize.gdb -t $my_tty q c

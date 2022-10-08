@@ -1,7 +1,6 @@
 FD Y /* Tcl & expect macros
 o y
 ft_
-fm-t -s -l
 # Set up for indent amount / file tab spacing of 2 (my preference)
 # See c_brkts.qm for how to change this
 fi ^<PS2>^<POPTBSZ>

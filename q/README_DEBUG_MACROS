@@ -125,8 +125,8 @@ RUN A SESSION
 === = =======
 
 Using the templates below, export variables and issue the ggdb command.
-Q will start in your debug window. Optionally, set up your macro table window as
-per TUTORIAL above.
+Q will start in your target window. Optionally, set up your macro table window
+as per TUTORIAL above.
 
 The ggdb template below shows ^N^@ (restart current macro) as a call to macro 0.
 If you would prefer to see it as a call to the actual macro, append

@@ -2453,7 +2453,7 @@ do_keylog(void)
     case eoltok:
       if (!log_fd)
       {
-        fputs("No log file to close", stderr);
+        fputs("No keylog file to close", stderr);
         return false;
       }                            /* if (!log_fd) */
       if ((curmac >= 0 || ysno5a("Stop keylogging [yes]", A5DYES))
@@ -2477,7 +2477,7 @@ do_keylog(void)
 
         if (!eolok())
           return false;
-/* Have name: close any existing log file */
+/* Have name: close any existing keylog file */
         if (log_fd && !close_log_file())
           return false;
 
@@ -3312,7 +3312,7 @@ do_initial_tsks(bool *do_rc_p)
   {
     fprintf(stderr, "%s",
       "Usage: q [-AVbdemnoqtv] [-i <macro definition>] "
-      "[-l <log file>] [+<n> file] [file[:<n>]]...\n");
+      "[-k <keylog file>] [+<n> file] [file[:<n>]]...\n");
     exit(1);
   }
   if (aluflg)

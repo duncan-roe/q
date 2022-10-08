@@ -1,3 +1,7 @@
+Enable Q to work in open pipe (e.g. tail -f|q)
+ - Nested main called in a loop
+ - Nonblock read gets no bytes *and* last ch is ^J (may lift that restriction)
+ - Only happens if -Timeout option on command line
 Retire separate MACRO & HELP directories
 README_DEBUG_ADVANCED to have table of useful variables
   ptrpos, tabs rs[], fs[], rsidx, fsidx, xreg, qreg
@@ -27,6 +31,7 @@ INTERNALS
 	STARTED: Be more careful what goes to stderr / stdout
 	STARTED: use stdint types
 	STARTED: Reduce number of goto stmts
+	scrdtk to be 64-bit
 Show what arguments Q started with (?)
 STARTED: Catalogue of useful macros
 New pseudomacro to replace "/*" with arbitrary seq: #, // &c (i.e. for ^O)

@@ -292,10 +292,10 @@ macro to check the Q register for being nonzero
 (e.g. with \fB^<SQEQ>\fR ("skip if no error")).
 .TP
 .BI ^N^<4016>
-Returns the name of the most recent log file
+Returns the name of the most recent keylog file
 and sets the Q register to the name length.
 .br
-If there has never been a log file,
+If there has never been a keylog file,
 the Q register is set to 0 and no characters are returned.
 .br
 When \fB^N^<4016>\fR returns a name,
