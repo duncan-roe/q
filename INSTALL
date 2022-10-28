@@ -35,7 +35,9 @@ OpenBSD comes with gcc. "pkg_add gmake" will fetch GNU make. "pkg_add expect" if
 planning to use the macro debugger. "gmake install" will by default create
 /usr/local/share/man and /usr/local/etc. To avoid creating these dirs, use
 "gmake MANDIR=/usr/share/man SYSCONFDIR=/etc install", or edit config.mak.
-Also insert CFLAGS=-O2 if desired.
+One can also insert a CFLAGS value before "make", e.g. CFLAGS=-Og if expecting
+to use the macro debugger (or simply debug the code).
+The macro debugger still works with CFLAGS=-O2.
 
 The author hasn't had access to other formerly-supported platforms for a while
 to test Q. Other compilers may be OK absent gcc: the code tries not to use gcc
