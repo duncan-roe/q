@@ -99,6 +99,6 @@ window:-
 Handy templates (export log_tty if you have one) (export my_tty first):
 
 ggdb -f maxsize.gdb -t $my_tty q c
-ggdb -f maxsize.gdb -f darkbg.gdb -t $my_tty q c
-ggdb -a "-l $log_tty -ifm+8^J" -f maxsize.gdb -t $my_tty q c
-ggdb -a "-l $log_tty -vv" -f maxsize.gdb -t $my_tty q c
+ggdb -f maxsize.gdb -g darkbg.gdb -t $my_tty q c
+ggdb -a "-k $log_tty -ifm+8^J" -f maxsize.gdb -t $my_tty q c
+ggdb -a "-k $log_tty -vv" -f maxsize.gdb -t $my_tty q c
