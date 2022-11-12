@@ -1,5 +1,4 @@
 include ../config.mak
-CC = gcc
 SRCS = $(wildcard *.c)
 LIBS = -lm -pthread
 OBJ = $(SRCS:.c=.o)
