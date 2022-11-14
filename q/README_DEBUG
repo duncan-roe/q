@@ -30,12 +30,14 @@ In the window that is to act as Q's display (the "target" window), do:
 > $ tty
 > /dev/pts/6
 > $ sleep 1000000  # (except Cygwin). For Linux, 'exec disowntty' is better
-Under Cygwin, sleep is not necessary.
+Under Cygwin, gdb is able to seize the terminal, so sleep is not necessary.
 Under Linux, using sleep has limitations documented below.
-Under anything else (e.g. OpenBSD) use sleep.
+Under OpenBSD, use sleep. gdb can't set the controlling terminal but disowntty
+can't disown it either.
+Under anything else, use sleep.
 
-That 3rd line is to stop shell from grabbing input (Cygwin does it by itself).
-'sleep' always works, but under Linux you will get the gdb warning:
+The sleep is to stop shell from grabbing input (Cygwin gdb does it by itself).
+'sleep' always works, but under Linux or OpenBSD you will get the gdb warning:
 
 > warning: GDB: Failed to set controlling terminal: Operation not permitted
 
@@ -91,14 +93,31 @@ window, but YMMV).
 
 When you have finished debugging, you *may* be able to regain use of the target
 window:-
- - Linux / sleep: enter ^C in the target window to kill sleep
+ - Linux / sleep: enter ^C in the target window to kill sleep. OpenBSD also
  - Cygwin: <enter> will get you a command prompt (or just enter a comand)
  - Linux / disowntty: you can't re-use the window, and the X button won't close
                       it. 'pkill -9 disowntty' to dispose of the window.
 
-Handy templates (export log_tty if you have one) (export my_tty first):
+ggdb command templates (export log_tty if you have one) (export my_tty first):
+Create your ggdb command by pasting line fragments from below.
+Don't paste in comment lines
 
-ggdb -f maxsize.gdb -t $my_tty q c
-ggdb -f maxsize.gdb -g darkbg.gdb -t $my_tty q c
-ggdb -a "-k $log_tty -ifm+8^J" -f maxsize.gdb -t $my_tty q c
-ggdb -a "-k $log_tty -vv" -f maxsize.gdb -t $my_tty q c
+# You always want this
+ggdb -t $my_tty \
+# Lets you print the mmap'd buffers but may result in copious output
+# (Some generated test files put a NUL before each Nl to stop that)
+-f maxsize.gdb \
+# You'll want this if debuggibg with a dark background
+-g darkbg.gdb \
+# Start args to q
+-a "\
+# Insert file to be edited here. Also some or all of
+-k $log_tty \
+-ifm+8^J \
+-vv \
+# plus anything else you might think of (but you can only have one -i argument)
+# End args to q
+" q \
+# Insert beakpoints here
+# Touch <Enter> to stop at main(), else:
+c
