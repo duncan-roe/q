@@ -151,6 +151,8 @@ exp_send "set print pretty\r"
 expect {(gdb) }
 exp_send "set unwindonsignal on\r"
 expect {(gdb) }
+exp_send "set debuginfod enabled off\r"
+expect {(gdb) }
 if {[info exists tty]} \
 {
   exp_send "set inferior-tty $tty\r"
