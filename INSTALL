@@ -9,6 +9,7 @@ either edit that file or supply values to *make*, e.g. for Suse Linux:
  make MANDIR=/usr/local/man install
 
 Alternatively for Suse, create the symbolic link /usr/local/share/man -> ../man.
+OpenBSD installs the same as Suse, but see INSTALL_OPENBSD first.
 The defaults in "config.mak" are fine for Red Hat systems (tested under Fedora).
 They are also fine for Debian systems (tested under Ubuntu 18.04).
 Slackware systems install the same as Suse, or use the SlackBuild inside

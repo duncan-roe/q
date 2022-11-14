@@ -21,6 +21,7 @@ This patch puts the man pages where the man command can find them:
  SYSCONFDIR:=$(PREFIX)/etc
  DESTDIR:=
  
+
 You should also patch ggdb before installing, in case you ever want to run the
 macro debugger:
 
@@ -64,3 +65,7 @@ command_line_tools, you may like to:
 $ ln -s /usr/local/share/doc/q/ggdb ~/bin/
 
 or patch the copy in command_line_tools.
+
+ggdb uses expect:
+
+# pkg_add expect
