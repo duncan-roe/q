@@ -1,0 +1,66 @@
+These notes are for OpenBSD 7.2
+
+The supplied 'make' will not work: you need to use gmake (GNU make):
+
+# pkg_add gmake
+
+BEFORE RUNNING GMAKE
+====== ======= =====
+
+I found it easier to edit config.mak rather than supply extra args to gmake.
+This patch puts the man pages where the man command can find them:
+
+--- a/config.mak
++++ b/config.mak
+@@ -13,7 +13,7 @@ BINDIR:=$(EPREFIX)/bin
+ DATAROOTDIR:=$(PREFIX)/share
+ DATADIR:=$(DATAROOTDIR)/q
+ DOCDIR:=$(DATAROOTDIR)/doc
+-MANDIR:=$(DATAROOTDIR)/man
++MANDIR:=/usr/local/man
+ SYSCONFDIR:=$(PREFIX)/etc
+ DESTDIR:=
+ 
+You should also patch ggdb before installing, in case you ever want to run the
+macro debugger:
+
+--- a/ggdb
++++ b/ggdb
+@@ -135,7 +135,7 @@ proc docmds {which} \
+ }
+ 
+ # start gdb, and put in some nice settings
+-if {[info exists tty]} {spawn gdb -n -q --tty=$tty} {spawn gdb -n -q}
++if {[info exists tty]} {spawn egdb -n -q --tty=$tty} {spawn egdb -n -q}
+ expect {(gdb) }
+ exp_send "file $progname\r"
+ expect {(gdb) }
+
+You can use the 'patch' command to apply both of the above:
+
+$ patch <INSTALL_OPENBSD
+
+Now you can run:
+
+# CFLAGS=-Og gmake install
+
+Be wary of substituting e.g. -O2 for -Og. The installed compiler (Clang)
+ignores the GCC pragma that turns off optimising in workfile.c.
+The pragma is there because I've had trouble with optimising that code at some
+GCC versions.
+
+BEFORE RUNNING THE MACRO DEBUGGER
+====== ======= === ===== ========
+
+The gdb that comes with OpenBSD 7.2 fails to load Q's symbol table.
+Get a newer one by:
+
+# pkg_add gdb
+
+The new gdb is called egdb. The above patch took care of the name change.
+ggdb is copied from command_line_tools. Even if you have installed
+command_line_tools, you may like to:
+
+$ ln -s /usr/local/share/doc/q/ggdb ~/bin/
+
+or patch the copy in command_line_tools.
