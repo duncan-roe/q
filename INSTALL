@@ -29,13 +29,9 @@ Q's macro debugger requires that q is compiled with debug and not stripped.
 
 Q builds under Linux, OpenBSD and Cygwin.
 
-Q requires GNU make and gcc to build. Given these criteria, Q should build under
+Q requires GNU make to build. Given that criterium, Q should build under
 any POSIX-compliant system.
 
-OpenBSD comes with gcc. "pkg_add gmake" will fetch GNU make. "pkg_add expect" if
-planning to use the macro debugger. "gmake install" will by default create
-/usr/local/share/man and /usr/local/etc. To avoid creating these dirs, use
-"gmake MANDIR=/usr/share/man SYSCONFDIR=/etc install", or edit config.mak.
 One can also insert a CFLAGS value before "make", e.g. CFLAGS=-Og if expecting
 to use the macro debugger (or simply debug the code).
 The macro debugger still works with CFLAGS=-O2.
