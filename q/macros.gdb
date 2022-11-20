@@ -1,4 +1,5 @@
-b scrdit.c:864 if verb != 'I' && (curmac < FIRST_PSEUDO || curmac > LAST_PSEUDO)
+#b scrdit.c:864 if verb != 'I' && (curmac < FIRST_PSEUDO || curmac > LAST_PSEUDO)
+b scrdit.c:864 if verb != 'I' && (curmac < 64 || curmac > 127)
 commands
 silent
 printf "resuming macro %o\n", i
