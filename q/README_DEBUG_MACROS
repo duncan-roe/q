@@ -5,6 +5,8 @@ This README describes how to debug Q macros using gdb.
 I originally planned to incorporate a macro debugger inside Q, but have shelved
 that in favour of using gdb.
 
+You don't need the Q source code to debug macros.
+
 RUNNING THE MACRO DEBUGGER
 ======= === ===== ========
 
@@ -16,8 +18,11 @@ the line:
 
 In the window where you will run gdb (the "gdb" window), 4 things to do:
 
-1. (Assuming you plan to run the tutorial example) cd to Q's doc dir,
-   i.e. the directory containing this README
+1. If you don't have source, cd to Q's doc dir,
+   i.e. the directory containing this README.
+   If you do have source, cd to the q directory under the top-level, e.g.:
+     cd /usr/src/q/q
+   Either directory contains the .gdb files that you'll need to debug macros.
 
 2. Enter e.g. "export my_tty=/dev/pts/6"
    (following on from the example in README_DEBUG)
@@ -25,16 +30,15 @@ In the window where you will run gdb (the "gdb" window), 4 things to do:
 3. Enter e.g. "export log_tty=/dev/pts/7"
    (following on from the example in README_DEBUG)
 
-4. (Later) Select & paste the export and ggdb templates listed under
-   "RUN A SESSION" below. ggdb doesn't need to be installed,
-   the template uses the copy in Q's doc dir.
+4. (Later) Select & paste your choice from the "TEMPLATES" section below.
    This step is covered in the tutorial, no need to do it right now.
 
 PREPARATION
 ===========
 
 As well as the gdb and target windows mentioned above (or in README_DEBUG),
-you will want a window where you can browse the currently loaded macro table.
+you will want a Macro Browsing Window where you can browse the currently loaded
+macro table.
 Recommended is "qm -a" piped into "less". qm's "-a" (alternate format) option
 displays all macro names in octal, the way gdb shows them.
 
@@ -49,7 +53,7 @@ In fact, these instructions work when source is not available.
 But if you plan to do advanced stuff, like set a watchpoint on the ALU R
 register, then you will want source.
 
-You might want an extra terminal window where you can browse macro definition
+You might want an extra terminal window where you can view macro definition
 files, e.g. for the comments therein. The distributed macro files are in the
 same directory as the help files, so you can use H-Help to view them, e.g.
  "h word.qm" to see the definition of ^N^A.
@@ -81,11 +85,8 @@ ggdb comes with command_line_tools but if you don't have that then there is a
 copy in Q's doc dir. The tutorial template uses this copy.
 
 The file macro_debug_sample exercises the ^N^A macro suite.
-If you have write access to macro_debug_sample, it would be preferable to
-make a copy and work on that.
-Either "export j=macro_debug_sample" before running ggdb or enter
-"q macro_debug_sample" in the target window.
-(If you are interested in some other file, use that file instead).
+If you have write access to macro_debug_sample, you might like to make a copy
+and work on that.
 
 RUN A SESSION
 === = =======
@@ -94,36 +95,90 @@ Using the templates below, export variables and issue the ggdb command.
 Q will start in your target window. Optionally, set up your macro table window
 as per TUTORIAL above.
 
-The ggdb template below shows ^N^@ (restart current macro) as a call to macro 0.
-If you would prefer to see it as a call to the actual macro, append
- ? thisch : curmac
-to the "starting macro %o\n" command. E.g. once gdb is running:
- ^C; commands 2; silent; printf "starting macro %o\n", thisch ? thisch : curmac;
- end; c
-To make the change permanent, edit macros.gdb.
+In the target window, enter "v" to view the file you are working on. If it's
+empty (so you didn't specify a file to edit) you can edit the file now by
+entering "q macro_debug_sample".
+
+TEMPLATES
+=========
+
+These templates assume ggdb is available from the PATH.
+There is a copy in Q's doc dir which you can symlink, e.g.:
+  mkdir -p ~/bin; ln -s /usr/local/share/doc/q/ggdb ~/bin
+(using default file system locations from "make install").
+
+Don't paste blank lines or comments: only paste the lines you want
 
 --- Target Window
+
+# All architectures
 tty
+# OpenBSD or Linux w/out disowntty
 sleep 1000000
+# Linux
 exec disowntty
 
 --- Macro Browsing Window
-qm -a help_dot_qrc | less
+
+# You always want this
+qm -a \
+# if debugging in the doc dir
+help_dot_qrc |
+# if debugging in the source dir
+../help/.qrc |
+# You always want to end with this
+less
 
 --- gdb Window
+
 export my_tty=   # Complete this from tty output
 export log_tty=  # Complete this from tty output (optional)
-export j=macro_debug_sample
-export k=help_dot_qrc
-./ggdb -t $my_tty -f macros.gdb -f maxsize.gdb -a "-k $log_tty -niu,$k^Jfv^Jfm+v^Jfm+8^J $j" $(type -p q) c
 
-Miss out "-k $log_tty" if you didn't define a loggging screen in $log_tty.
-If you have a dark background and can't easily see addresses (coloured dark blue
-by default) you can insert "-g darkbg.gdb" to make addresses green.
+# START GDB COMMAND
+# You always want this
+# Key in "./" before pasting this line if you want to use the ggdb in the CWD
+ggdb -t $my_tty -f macros.gdb \
+# If the dark blue addresses are hard to read
+-g darkbg.gdb \
 
-In the target window, enter "v" to view the file you are working on. If it's
-empty (so you didn't export j as the file to edit) you can edit the file now by
-entering "q macro_debug_sample".
+# START ARGS TO Q
+# You always want this
+-a "\
+# If you defined log_tty (a keylogging window)
+-k $log_tty \
+# For the tutorial, you always want this (don't load default .qrc)
+# You may not want it if debugging your own macros
+-n \
+# For the tutorial, you always want this (start .qrc replacement)
+-iu,\
+# If running tutorial in doc dir
+help_dot_qrc^J\
+# If running tutorial in source dir
+../help/.qrc^J\
+# For the tutorial, you always want this (misc Q cmds)
+fv^Jfm+v^Jfm+8^J \
+# Name of file to edit (optional but recommended if running tutorial)
+macro_debug_sample\
+
+# END ARGS TO Q
+# You always want this
+" \
+
+# PROGRAM TO DEBUG (Q)
+# If running tutorial in source dir
+q \
+# If running tutorial in doc dir
+$(type -p q) \
+
+# EXTRA GDB COMMANDS
+# macros.gdb shows ^N^@ (restart current macro) as a call to macro 0.
+# To see it as a call to the actual macro, append " ? thisch : curmac"
+# to the "starting macro %o\n" command in macros.gdb. Or paste these 2 lines
+commands\ 5 silent \
+'printf "starting macro %o\n", thisch ? thisch : curmac' end \
+# Insert your own commands here if you have some
+# If you want Q to stop at main(), touch Enter. Otherwise this
+c
 
 START DEBUGGING
 ===== =========
@@ -148,7 +203,7 @@ were macros but perform some function implemented in Q's code instead.
 The pseudomacro name "D" stands for "Down" and "U" stands for "Up" (c/w Call /
 Return).
 For more information about pseudomacros, enter the Q command "h pm", but NOT NOW
-- you're in he middle of debugging a macro ;)
+- you're in the middle of debugging a macro ;)
 
 In the gdb window, touch <Enter> to continue on to the next macro. You see
 macro 01 (^A) being resumed.
