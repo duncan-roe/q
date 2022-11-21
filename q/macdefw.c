@@ -82,19 +82,19 @@ macdefw(uint32_t mcnum, uint16_t *buf, int buflen, bool appnu)
 static bool
 get_scmac(uint32_t mcnum)
 {
-  static uint8_t *hunk;            /* Large malloc'd hunk of memory */
+  static macro5 *hunk;             /* Large malloc'd hunk of memory */
   static int hunk_left = 0;
 
-  if (hunk_left < sizeof(macro5))
+  if (hunk_left < 1)
   {
     hunk = malloc(Q_PAGE_SIZE);
     if (!hunk)
       return false;
-    hunk_left = Q_PAGE_SIZE;
-  }                                /* if (hunk_left < sizeof(macro5)) */
-  scmacs[mcnum] = (macro5 *)hunk;
-  hunk += sizeof(macro5);
-  hunk_left -= sizeof(macro5);
+    hunk_left = Q_PAGE_SIZE / sizeof (macro5);
+  }                                /* if (hunk_left < 1 */
+  scmacs[mcnum] = hunk;
+  ++hunk;
+  --hunk_left;
   memset(scmacs[mcnum], 0, sizeof(macro5));
   return true;
 }                                  /* bool get_scmac(uint32_t mcnum) */
