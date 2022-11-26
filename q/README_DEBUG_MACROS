@@ -58,6 +58,9 @@ files, e.g. for the comments therein. The distributed macro files are in the
 same directory as the help files, so you can use H-Help to view them, e.g.
  "h word.qm" to see the definition of ^N^A.
 
+Even if you don't plan to run the tutorial, the templates in the TEMPLATES
+section below should prove useful.
+
 TUTORIAL
 ========
 
@@ -122,12 +125,12 @@ exec disowntty
 
 # You always want this
 qm -a \
-# if debugging in the doc dir
-help_dot_qrc |
-# if debugging in the source dir
-../help/.qrc |
+# if running tutorial in the doc dir
+help_dot_qrc \
+# if running tutorial in the source dir
+../help/.qrc \
 # You always want to end with this
-less
+| less
 
 --- gdb Window
 
@@ -147,15 +150,17 @@ ggdb -t $my_tty -f macros.gdb \
 # If you defined log_tty (a keylogging window)
 -k $log_tty \
 # For the tutorial, you always want this (don't load default .qrc)
-# You may not want it if debugging your own macros
+# You don't need it if debugging your own macros and the default .qrc is OK
 -n \
-# For the tutorial, you always want this (start .qrc replacement)
--iu,\
-# If running tutorial in doc dir
-help_dot_qrc^J\
-# If running tutorial in source dir
-../help/.qrc^J\
+# For the tutorial, you always want this (start initial Q commands)
+# You probably want it anyway
+-i\
+# .qrc replacement if running tutorial in doc dir
+u,help_dot_qrc^J\
+# .qrc replacement if running tutorial in source dir
+u,../help/.qrc^J\
 # For the tutorial, you always want this (misc Q cmds)
+# You probably want it anyway
 fv^Jfm+v^Jfm+8^J \
 # Name of file to edit (optional but recommended if running tutorial)
 macro_debug_sample\

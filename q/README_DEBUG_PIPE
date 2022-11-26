@@ -1,4 +1,4 @@
-When you need to debug Q running as a pipe, you don't need the second screen,
+When you need to debug Q running in a pipe, you don't need the second screen,
 *unless* the macros you will be running may use FR-FREPROMPT.
 The template below is enough to debug the pipe mechanism.
 You will always want to set breakpoints, because there is no user interaction
@@ -14,4 +14,4 @@ The file "xxx" is provided as input.
 The command below uses that and creates the file /tmp/yyy.
 
 ggdb -a "-iy,x,y^J <xxx >/tmp/yyy" q
-ggdb -a "-l $log_tty -ifm+8,+9^Jy,x,y^J <xxx >/tmp/yyy" q
+ggdb -a "-k $log_tty -ifm+8^Jy,x,y^J <xxx >/tmp/yyy" q

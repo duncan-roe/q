@@ -15,7 +15,7 @@ q:
 	cd q && $(MAKE)
 
 clean:
-	cd  q && $(MAKE) clean
+	cd q && $(MAKE) clean
 
 install: q install_help install_doc install_etc install_bin
 
@@ -31,8 +31,8 @@ cp $(CP_OPTION) q/*.gdb $(DESTDIR)$(DOCDIR)/q/ && \
 cp $(CP_OPTION) ggdb $(DESTDIR)$(DOCDIR)/q/ && \
 cp $(CP_OPTION) q/.qrc $(DESTDIR)$(DOCDIR)/q/q_dot_qrc && \
 cp $(CP_OPTION) help/.qrc $(DESTDIR)$(DOCDIR)/q/help_dot_qrc && \
-cp $(CP_OPTION) INSTALL LICENSE README $(DESTDIR)$(DOCDIR)/q/ && \
-cp $(CP_OPTION) q/macro_debug_sample   $(DESTDIR)$(DOCDIR)/q/ && \
+cp $(CP_OPTION) INSTALL INSTALL_OPENBSD LICENSE README $(DESTDIR)$(DOCDIR)/q/ && \
+cp $(CP_OPTION) q/macro_debug_sample $(DESTDIR)$(DOCDIR)/q/ && \
 for i in man/man*; do mkdir -p $(DESTDIR)$(MANDIR)/$$(basename $$i) &&\
 cp $(CP_OPTION) $$i/*.? $(DESTDIR)$(MANDIR)/$$(basename $$i); done
 
