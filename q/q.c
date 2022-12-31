@@ -1113,7 +1113,7 @@ write_workfile_to_stdout(void)
   sigset_t omask = act.sa_mask;    /* Will have wanted bits 1st time thru */
 
 /* Before changing signal handlers, delete the temp file */
-/* (it's mmpap'd) */
+/* (it's mmap'd) */
   rm_pipe_temp();
 
 /* Reset TERM & INT to default actions */
@@ -3380,7 +3380,7 @@ not_pipe(void)
 {
   if (!offline && !(P && Q))       /* P and Q not set if !offline */
   {
-    fputs("stdin & stderr must both be a tty unless q -o\n", stderr);
+    fputs("stdin & stdout must both be a tty unless q -o\n", stderr);
     exit(1);
   }                                /* if (!offline && !(P && Q)) */
 

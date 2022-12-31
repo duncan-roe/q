@@ -1,6 +1,6 @@
 .\"
 .\" q manual page.
-.\" Copyright (c) 2018,2020-2021 Duncan Roe
+.\" Copyright (c) 2018,2020-2022 Duncan Roe
 .\"
 .\" Original author: Duncan Roe
 .\"
@@ -19,7 +19,7 @@
 .\" the Free Software Foundation, 59 Temple Place - Suite 330,
 .\" Boston, MA 02111-1307, USA.
 .\"
-.TH q 1 "Oct 12 2021" "q-57" "Linux Programmer's Manual"
+.TH q 1 "Dec 28 2022" "q-58" "Linux Programmer's Manual"
 .SH NAME
 q \- line-oriented mostly WYSIWYG editor with a powerful macro facility
 .SH SYNOPSIS
@@ -154,6 +154,11 @@ The division into "lines" is somewhat arbitrary,
 but a new line is always started following \fB^J\fR.
 By default, binary edits are done in Fixed Length mode:
 see \fBMODES\fR\ below.
+.TP
+.BI \-c
+In a pipe, makes \fBq\fR run in Continuous mode, i.e. flush output to stdout
+whenever another line from the pipe is not yet available.
+It is an error to specify \fB-c\fR when not running in a pipe.
 .TP
 .BI \-d
 Do not perform DOS end-of-line translations (\fBCrLf=>Nl)\fR when reading files.
