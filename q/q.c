@@ -2,8 +2,8 @@
  *
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2002,2007,2012-2021 Duncan Roe
  *
+ * Copyright (C) 2002,2007,2012-2023 Duncan Roe
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
  * Support from Des Fitzgerald & Associates gratefully acknowledged.
@@ -50,6 +50,8 @@
   return false;}while (0)
 #define STDERROUT (curmac < 0 ? stderr : stdout)
 #define NUM_RFRAMES 8
+#define CURR 0
+#define PREV 1
 
 /* Typedefs */
 
@@ -203,9 +205,13 @@ static regmatch_t *pmatch;
 static size_t pmatch_len = 0;
 static bool unmatched_substring;
 static int saved_tokbeg;
+static bool cpipe = false;
+static bool at_registered = false;
+static bool want_more = false;
 
 /* Static prototypes */
 
+static void flush_pipe_buf(char *write_from, ssize_t todo);
 static int xmain(int xargc, char **xargv);
 static bool close_log_file(void);
 static bool open_log_file(char *fn);
@@ -215,7 +221,7 @@ static bool match_regexp(uint8_t *string, int stringlen, int offset,
   int *matchpos, int *matchlen, size_t nmatch);
 static bool compile_regexp(char *regex);
 static bool do_freprompt(void);
-static bool check_pipe(void);
+static bool check_pipe(bool iterating);
 static void not_pipe(void);
 static void do_initial_tsks(bool *do_rc_p);
 static bool do_fdevnull(void);
@@ -298,9 +304,19 @@ main(int real_argc, char **real_argv)
 static int
 xmain(int xargc, char **xargv)
 {
-  bool recursing = !xargv;         /* In FR-FReprompt */
-  bool do_rc = !recursing;
+  bool iterating = false;          /* In a pipe with -c */
+  bool recursing = false;          /* In FR-FReprompt */
+  bool do_rc;
   bool cmd_reread = false;
+
+  if (!xargv)
+  {
+    if (xargc > 0)
+      recursing = true;
+    else
+      iterating = true;
+  }                                /* if (!xargv) */
+  do_rc = !(iterating || recursing);
 
 /* [Re-]initialise static variables */
 
@@ -322,7 +338,7 @@ xmain(int xargc, char **xargv)
     argc = xargc;                  /* Xfer invocation arg to common */
     argv = xargv;                  /* Xfer invocation arg to common */
     do_initial_tsks(&do_rc);
-    if (!check_pipe())
+    if (!check_pipe(iterating))
       not_pipe();
 
 /* Common initialisation */
@@ -338,7 +354,7 @@ xmain(int xargc, char **xargv)
     oldcom->bcurs = 0;
     oldcom->bchars = 0;            /* Initialise OLDCOM only this once */
     prev->bchars = 0;
-    prev->bcurs = 0;               /* Initialise PREV only this once */
+    prev->bcurs = 0;               /* Initialise prev only this once */
     oldcom->bmxch = BUFMAX;
     newcom->bmxch = BUFMAX;
     curr->bmxch = BUFMAX;
@@ -500,8 +516,11 @@ xmain(int xargc, char **xargv)
               piping ? pipe_temp_name : *(argv + optind));
             verb = 'Q';
             oldcom->bcurs = 2;
-            if (piping)
+            if (piping && !at_registered)
+            {
               atexit(write_workfile_to_stdout);
+              at_registered = true;
+            }                      /* if (piping) */
             break;
 
 /* The line number states are used on "q file:line",
@@ -3238,7 +3257,7 @@ do_initial_tsks(bool *do_rc_p)
 
 /* Pick up any option arguments and set cmd_state if more args follow */
   cmd_state = TRY_INITIAL_COMMAND;
-  while ((i = getopt(argc, argv, "AVbdei:k:mnoqtv")) != -1)
+  while ((i = getopt(argc, argv, "AVbcdei:k:mnoqtv")) != -1)
     switch (i)
     {
       case 'A':
@@ -3252,6 +3271,10 @@ do_initial_tsks(bool *do_rc_p)
       case 'b':
         binary = true;
         dfltmode |= FM_PLUS_F_BIT;
+        break;
+
+      case 'c':
+        cpipe = true;
         break;
 
       case 'd':
@@ -3311,7 +3334,7 @@ do_initial_tsks(bool *do_rc_p)
   if (errflg)
   {
     fprintf(stderr, "%s",
-      "Usage: q [-AVbdemnoqtv] [-i <macro definition>] "
+      "Usage: q [-AVbcdemnoqtv] [-i <macro definition>] "
       "[-k <keylog file>] [+<n> file] [file[:<n>]]...\n");
     exit(1);
   }
@@ -3384,6 +3407,12 @@ not_pipe(void)
     exit(1);
   }                                /* if (!offline && !(P && Q)) */
 
+  if (cpipe)
+  {
+    fputs("-c[ontinuous pipe] requires Q to be running in a pipe\n", stderr);
+    exit(1);
+  }                                /* if (cpipe) */
+
 /* Implement quiet operation if requested */
   if (quiet_flag)
   {
@@ -3402,105 +3431,230 @@ not_pipe(void)
 /* ******************************* check_pipe ******************************* */
 
 static bool
-check_pipe(void)
+check_pipe(bool iterating)
 {
+  ssize_t todo;
+  static char *p;
+
+  if (iterating)
+  {
+    int rc;
+
+/* Truncate the temporary file */
+    rc = lseek(pipe_temp_fd, 0, SEEK_SET);
+    if (rc == -1)
+    {
+      fprintf(stderr, "%s. fd %d (lseek)\r\n", strerror(errno), pipe_temp_fd);
+      exit(1);
+    }                              /* if (rc == -1) */
+    SYSCALL(rc, ftruncate(pipe_temp_fd, 0));
+    if (rc == -1)
+    {
+      fprintf(stderr, "%s. fd %d (ftruncate)\r\n", strerror(errno),
+        pipe_temp_fd);
+      exit(1);
+    }                              /* if (rc == -1) */
+  }                                /* if(iterating) */
+  else
+  {
+
 /* Check for running in a pipe (or with redirection), but not if -o */
-  if (offline)
-    return false;
+    if (offline)
+      return false;
 
 /* If stdin is not a terminal, assume we are to act as in a pipe. */
 /* We don't then care about stdout (c.f. -o) */
 
-  P = isatty(STDIN5FD);
-  Q = isatty(STDOUT5FD);
-  if (P)
-    return false;
-  if (initial_command == NULL)
-  {
-    fputs("You must supply an initial command to run Q in a pipe\n", stderr);
-    exit(1);
-  }                                /* if (initial_command == NULL) */
+    P = isatty(STDIN5FD);
+    Q = isatty(STDOUT5FD);
+    if (P)
+      return false;
+    if (initial_command == NULL)
+    {
+      fputs("You must supply an initial command to run Q in a pipe\n", stderr);
+      exit(1);
+    }                              /* if (initial_command == NULL) */
 
-  if (argno != -1)
-  {
-    fputs("You may not give Q a file name when running in a pipe\n", stderr);
-    exit(1);
-  }                                /* if (argno != -1) */
+    if (argno != -1)
+    {
+      fputs("You may not give Q a file name when running in a pipe\n", stderr);
+      exit(1);
+    }                              /* if (argno != -1) */
 
 /* Deal with stdout */
-  SYSCALL(saved_pipe_stdout, dup(STDOUT5FD));
-  if (saved_pipe_stdout == -1)
-  {
-    fprintf(stderr, "%s. fd %d (dup)\n", strerror(errno), STDOUT5FD);
-    exit(1);
-  }                                /* if (saved_pipe_stdout == -1) */
+    SYSCALL(saved_pipe_stdout, dup(STDOUT5FD));
+    if (saved_pipe_stdout == -1)
+    {
+      fprintf(stderr, "%s. fd %d (dup)\n", strerror(errno), STDOUT5FD);
+      exit(1);
+    }                              /* if (saved_pipe_stdout == -1) */
 
 /* If verbose, dup stderr to stdout. Otherwise, stdout is /dev/null */
-  if (verbose_flag)
-  {
-    SYSCALL(i, dup2(STDERR5FD, STDOUT5FD));
-    if (i == -1)
+    if (verbose_flag)
     {
-      fprintf(stderr, "%s. fd %d to fd %d (dup2)\n", strerror(errno),
-        STDERR5FD, STDOUT5FD);
-      exit(1);
-    }                              /* if (i == -1) */
-  }                                /* if (verbose_flag) */
-  else
-    dev_null_stdout();
+      SYSCALL(i, dup2(STDERR5FD, STDOUT5FD));
+      if (i == -1)
+      {
+        fprintf(stderr, "%s. fd %d to fd %d (dup2)\n", strerror(errno),
+          STDERR5FD, STDOUT5FD);
+        exit(1);
+      }                            /* if (i == -1) */
+    }                              /* if (verbose_flag) */
+    else
+      dev_null_stdout();
 
 /* Deal with stdin */
 
 /* Create & open a temporary file to buffer the entire pipe */
-  strcpy(pipe_temp_name, PIPE_NAME);
-  atexit(rm_pipe_temp);
-  pipe_temp_fd = mkstemp(pipe_temp_name);
-  if (pipe_temp_fd == -1)
+    strcpy(pipe_temp_name, PIPE_NAME);
+    atexit(rm_pipe_temp);
+    pipe_temp_fd = mkstemp(pipe_temp_name);
+    if (pipe_temp_fd == -1)
+    {
+      fprintf(stderr, "%s. %s (open)\n", strerror(errno), pipe_temp_name);
+      exit(1);
+    }                              /* if (pipe_temp_fd == -1) */
+  }                                /* if(iterating) else */
+
+/* Populate the temporary file - continuous pipe */
+  if (cpipe)
   {
-    fprintf(stderr, "%s. %s (open)\n", strerror(errno), pipe_temp_name);
-    exit(1);
-  }                                /* if (pipe_temp_fd == -1) */
+/* Use 2 buffers to avoid needing to move down line fragments */
+    static struct tbuf_s
+    {
+      size_t bufstart;
+      size_t buflen;               /* Only for previous buf */
+      char tbuf[Q_BUFSIZ];
+    } tbuf_s[PREV + 1] = { };      /* struct tbuf_s */
+    static int currbuf = CURR;
+
+    static bool havelines = false;
+
+    while (true)
+    {
+      struct tbuf_s *t, *v;
+
+      t = &tbuf_s[currbuf];
+      v = &tbuf_s[!currbuf];
+      if (havelines)
+      {
+      }                            /* if (havelines) */
+      do
+        todo = read(STDIN5FD, t->tbuf + t->bufstart, Q_BUFSIZ - t->bufstart);
+      while (todo == -1 && errno == EINTR && !cntrlc);
+      if (todo == -1)
+      {
+        if (!cntrlc)
+          fprintf(stderr, "%s. stdin (read)", strerror(errno));
+        exit(1);
+      }                            /* if (todo == -1) */
+/* End of pipe - write out any data we are holding */
+      if (!todo)
+      {
+
+/* Flush previous buffer */
+        if (v->buflen)
+          flush_pipe_buf(v->tbuf + v->bufstart, v->buflen);
+
+/* Flush current buffer */
+        if (t->bufstart)
+          flush_pipe_buf(t->tbuf, t->bufstart);
+
+        want_more = false;
+        break;
+      }                            /* if (!todo) */
+/* See if we read a newline */
+      for (i = todo, p = t->tbuf + t->bufstart + todo - 1; i; i--)
+      {
+        if (*p == '\n')
+          break;
+        p--;
+      }                            /* for (i = todo, ...) */
+      if (*p == '\n')
+      {
+        havelines = true;
+        if (v->buflen)
+        {
+          flush_pipe_buf(v->tbuf + v->bufstart, v->buflen);
+          v->buflen = v->bufstart = 0;
+        }                          /* if (v->buflen) */
+        flush_pipe_buf(t->tbuf, t->bufstart + i);
+        t->bufstart += i;
+        t->buflen = todo - i;
+        if (!t->buflen)
+          t->bufstart = 0;
+
+/* Swap buffers. LATER might only do this when buflen != 0 */
+        currbuf = !currbuf;
+      }                            /* if (*p == '\n') */
+      else
+      {
+        t->bufstart += todo;
+        if (t->bufstart == Q_BUFSIZ)
+        {
+/* Buffer full: must flush */
+          if (v->buflen)
+          {
+            flush_pipe_buf(v->tbuf + v->bufstart, v->buflen);
+            v->buflen = v->bufstart = 0;
+          }                        /* if (v->buflen) */
+          flush_pipe_buf(t->tbuf, Q_BUFSIZ);
+          t->buflen = t->bufstart = 0;
+          havelines = true;        /* Have an overlength line */
+        }                          /* if (t->bufstart == Q_BUFSIZ) */
+      }                            /* if (*p == '\n') else */
+    }                              /* while (true) */
+  }                                /* if (cpipe) */
 
 /* Populate the temporary file */
-  while (true)
+  else
   {
-    ssize_t nc, todo;
-    char *write_from;
+    while (true)
+    {
 
-    SYSCALL(todo, read(STDIN5FD, ubuf, sizeof ubuf));
-    if (todo == -1)
-    {
-      fprintf(stderr, "%s. stdin (read)", strerror(errno));
-      exit(1);
-    }                              /* if (todo == -1) */
-    if (!todo)
-      break;                       /* Reached EOF */
-    write_from = ubuf;
-    while (todo)
-    {
-      SYSCALL(nc, write(pipe_temp_fd, write_from, todo));
-      if (nc == -1)
+      SYSCALL(todo, read(STDIN5FD, ubuf, Q_BUFSIZ));
+      if (todo == -1)
       {
-        fprintf(stderr, "%s. %s (write)\n", strerror(errno), pipe_temp_name);
+        fprintf(stderr, "%s. stdin (read)", strerror(errno));
         exit(1);
-      }                            /* if (nc == -1) */
-      if (nc == 0)                 /* Is this possible? */
-      {
-        fprintf(stderr, "Zero characters written. %s (write)\n",
-          pipe_temp_name);
-        exit(1);
-      }                            /* if (nc == 0) */
-      write_from += nc;
-      todo -= nc;
-    }                              /* while(todo) */
-  }                                /* while (true) */
-  my_close(pipe_temp_fd);
+      }                            /* if (todo == -1) */
+      if (!todo)
+        break;                     /* Reached EOF */
+      flush_pipe_buf(ubuf, todo);
+    }                              /* while (true) */
+    my_close(pipe_temp_fd);
+  }                                /* if (cpipe) else */
   cmd_state = Q_ARG1;
 
 /* Never ask for input from stdin */
   offline = true;
   return true;
 }                                  /* static bool check_pipe(void) */
+
+/* ***************************** flush_pipe_buf ***************************** */
+
+static void
+flush_pipe_buf(char *write_from, ssize_t todo)
+{
+  size_t nc;
+
+  while (todo)
+  {
+    SYSCALL(nc, write(pipe_temp_fd, write_from, todo));
+    if (nc == -1)
+    {
+      fprintf(stderr, "%s. %s (write)\n", strerror(errno), pipe_temp_name);
+      exit(1);
+    }                              /* if (nc == -1) */
+    if (nc == 0)                   /* Is this possible? */
+    {
+      fprintf(stderr, "Zero characters written. %s (write)\n", pipe_temp_name);
+      exit(1);
+    }                              /* if (nc == 0) */
+    write_from += nc;
+    todo -= nc;
+  }                                /* while(todo) */
+}                                  /* flush_pipe_buf() */
 
 /* ***************************** compile_regexp ***************************** */
 
