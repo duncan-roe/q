@@ -1,18 +1,10 @@
 /* W R I T F L
  *
  * Copyright (C) 1993, 1995, 1998, 1999 Duncan Roe & Associates P/L
- * Copyright (C) 2003,2012,2014,2017-2021 Duncan Roe
+ * Copyright (C) 2003,2012,2014,2017-2021,2023 Duncan Roe
  *
  * This routine writes out the spec'd # of lines to the file open on
- * FUNIT. If EOF is reached, it reports how many lines were written...
- *
- * PARAMETER
- * =========
- *
- * WRTNUM - # of lines to write (INTEGER*4)
- *
- * On success, return with the external variable CODE set zero, else set
- * it to ERRNO
+ * funit. If EOF is reached, it reports how many lines were written.
  */
 #include <stdio.h>
 #include <errno.h>
@@ -34,7 +26,7 @@ static int unused;                 /* Bytes in f/s buffer */
 static int do_write(void);         /* File writing routine */
 
 void
-writfl(long wrtnum)
+writfl(long wrtnum, bool leave_open)
 {
   int bytes;
   long todo, count;
@@ -147,9 +139,12 @@ writfl(long wrtnum)
       fscode = errno;
   if (fscode)
     fprintf(stderr, "%s. fd %d (write)\r\n", strerror(fscode), funit);
-  SYSCALL(bytes, close(funit));
-  if (bytes == -1)
-    fprintf(stderr, "%s. fd %d (close)\r\n", strerror(errno), funit);
+  if (!leave_open)
+  {
+    SYSCALL(bytes, close(funit));
+    if (bytes == -1)
+      fprintf(stderr, "%s. fd %d (close)\r\n", strerror(errno), funit);
+  }                                /* if (!leave_open) */
   return;
 }
 

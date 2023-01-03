@@ -13,6 +13,7 @@
 
 /* Headers */
 
+#include <poll.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -24,6 +25,7 @@
 #include <limits.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <setjmp.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <sys/types.h>
@@ -208,6 +210,7 @@ static int saved_tokbeg;
 static bool cpipe = false;
 static bool at_registered = false;
 static bool want_more = false;
+static jmp_buf env;
 
 /* Static prototypes */
 
@@ -296,7 +299,16 @@ static void display_opcodes(void);
 int
 main(int real_argc, char **real_argv)
 {
-  return xmain(real_argc, real_argv);
+  int rc;
+
+  rc = xmain(real_argc, real_argv);
+  while (want_more)
+  {
+    write_workfile_to_stdout();
+    want_more = false;
+    rc = xmain(0, NULL);
+  }                                /* while (want_more) */
+  return rc;
 }                                  /* main() */
 
 /* ********************************** xmain ********************************* */
@@ -308,6 +320,10 @@ xmain(int xargc, char **xargv)
   bool recursing = false;          /* In FR-FReprompt */
   bool do_rc;
   bool cmd_reread = false;
+
+/* do_quit() needs to return nowadays */
+  if (setjmp(env))
+    return 0;
 
   if (!xargv)
   {
@@ -330,14 +346,24 @@ xmain(int xargc, char **xargv)
   j4 = k4 = 0;
   count2 = 0;
 
+/* [Re-]initialise external variables */
+
+  cntrlc = false;                  /* Not yet seen ^C */
+  splt = false;                    /* Not splitting a line initially */
+  noRereadIfMacro = false;
+  forych = false;                  /* Not in middle of brief Y */
+
 /* Initial Tasks */
   if (recursing)
     printf("\r\nType Q to continue macro %03o; FQ to abandon\r\n", xargc);
   else
   {
-    argc = xargc;                  /* Xfer invocation arg to common */
-    argv = xargv;                  /* Xfer invocation arg to common */
-    do_initial_tsks(&do_rc);
+    if (!iterating)
+    {
+      argc = xargc;                /* Xfer invocation arg to common */
+      argv = xargv;                /* Xfer invocation arg to common */
+      do_initial_tsks(&do_rc);
+    }                              /* if (!iterating) */
     if (!check_pipe(iterating))
       not_pipe();
 
@@ -380,11 +406,6 @@ xmain(int xargc, char **xargv)
     if (!offline)
       puts("Type H for help\r");
   }                                /* if (recursing) else */
-
-  cntrlc = false;                  /* Not yet seen ^C */
-  splt = false;                    /* Not splitting a line initially */
-  noRereadIfMacro = false;
-  forych = false;                  /* Not in middle of brief Y */
 
   if (size5)
     printf("Noted screen dimensions %u x %u\r\n", col5, row5);
@@ -971,7 +992,7 @@ s_b_w_common_write(void)
       fprintf(stderr, "%s. funit %d (ftruncate)", strerror(errno), funit);
   }                                /* else */
   if (fscode == 0)
-    writfl(wrtnum);                /* Write lines to o/p file */
+    writfl(wrtnum, false);         /* Write lines to o/p file */
   else                             /* Some kind of failure above */
     my_close(funit);
   return fscode == 0;
@@ -1127,23 +1148,27 @@ static void
 write_workfile_to_stdout(void)
 {
 /*
- * Because this is potentially lengthy, re -enable signals
+ * Because this is potentially lengthy, re -enable signals,
+ * except in a contunous pipe when it probably isn't
  */
-  sigset_t omask = act.sa_mask;    /* Will have wanted bits 1st time thru */
+  if (!want_more)
+  {
+    sigset_t omask = act.sa_mask;  /* Will have wanted bits 1st time thru */
 
 /* Before changing signal handlers, delete the temp file */
 /* (it's mmap'd) */
-  rm_pipe_temp();
+    rm_pipe_temp();
 
 /* Reset TERM & INT to default actions */
-  act.sa_flags = 0;
-  act.sa_handler = SIG_DFL;
-  sigemptyset(&act.sa_mask);
-  sigaction(SIGINT, &act, NULL);
-  sigaction(SIGTERM, &act, NULL);
+    act.sa_flags = 0;
+    act.sa_handler = SIG_DFL;
+    sigemptyset(&act.sa_mask);
+    sigaction(SIGINT, &act, NULL);
+    sigaction(SIGTERM, &act, NULL);
 
 /* Enable signals that will be blocked if we came here via a handler */
-  sigprocmask(SIG_UNBLOCK, &omask, NULL);
+    sigprocmask(SIG_UNBLOCK, &omask, NULL);
+  }                                /* if (!want_more) */
 /*
  * Do a subset of a regular save, to the original stdout
  */
@@ -1151,7 +1176,7 @@ write_workfile_to_stdout(void)
   if (deferd)
     dfread(LONG_MAX, NULL);        /* Ensure all file in */
   funit = saved_pipe_stdout;
-  writfl(lintot);
+  writfl(lintot, true);
 }                                  /* write_workfile_to_stdout() */
 
 /* ***************************** dev_null_stdout **************************** */
@@ -2830,7 +2855,7 @@ do_quit(bool recursing)
       mcposn = 0;
       return true;
     }
-    exit(0);                       /* ACTUALLY EXIT Q */
+    longjmp(env, 1);               /* Force xmain() to return 0 */
   }
   rdwr = O_RDONLY;
   q_new_file = false;              /* Q-QUIT into existing file */
@@ -3435,11 +3460,10 @@ check_pipe(bool iterating)
 {
   ssize_t todo;
   static char *p;
+  int rc;
 
   if (iterating)
   {
-    int rc;
-
 /* Truncate the temporary file */
     rc = lseek(pipe_temp_fd, 0, SEEK_SET);
     if (rc == -1)
@@ -3528,7 +3552,7 @@ check_pipe(bool iterating)
     } tbuf_s[PREV + 1] = { };      /* struct tbuf_s */
     static int currbuf = CURR;
 
-    static bool havelines = false;
+    bool havelines = false;
 
     while (true)
     {
@@ -3538,7 +3562,35 @@ check_pipe(bool iterating)
       v = &tbuf_s[!currbuf];
       if (havelines)
       {
+        static struct pollfd fds = {.events = POLLIN };
+
+        SYSCALL(rc, poll(&fds, 1, 0));
+        if (!rc)
+        {
+          want_more = true;
+          break;
+        }                          /* if (!rc) */
+        if (rc == -1)
+        {
+          fprintf(stderr, "%s. stdin (poll)", strerror(errno));
+          exit(1);
+        }                          /* if (rc == -1) */
       }                            /* if (havelines) */
+      else
+      {
+/* If we have a fragment left over from previous iteration, */
+/* write it to the output file directly.                    */
+/* Jigger fds and use flush_pipe_buf()                      */
+        if (v->buflen)
+        {
+          int saved_pipe_temp_fd = pipe_temp_fd;
+
+          pipe_temp_fd = saved_pipe_stdout;
+          flush_pipe_buf(v->tbuf + v->bufstart, v->buflen);
+          pipe_temp_fd = saved_pipe_temp_fd;
+          v->buflen = v->bufstart = 0;
+        }                          /* if (v->buflen) */
+      }                            /* if (havelines) else */
       do
         todo = read(STDIN5FD, t->tbuf + t->bufstart, Q_BUFSIZ - t->bufstart);
       while (todo == -1 && errno == EINTR && !cntrlc);
@@ -3565,12 +3617,9 @@ check_pipe(bool iterating)
       }                            /* if (!todo) */
 /* See if we read a newline */
       for (i = todo, p = t->tbuf + t->bufstart + todo - 1; i; i--)
-      {
-        if (*p == '\n')
+        if (*p-- == '\n')
           break;
-        p--;
-      }                            /* for (i = todo, ...) */
-      if (*p == '\n')
+      if (i)
       {
         havelines = true;
         if (v->buflen)
@@ -3586,7 +3635,7 @@ check_pipe(bool iterating)
 
 /* Swap buffers. LATER might only do this when buflen != 0 */
         currbuf = !currbuf;
-      }                            /* if (*p == '\n') */
+      }                            /* if (i) */
       else
       {
         t->bufstart += todo;
@@ -3602,7 +3651,7 @@ check_pipe(bool iterating)
           t->buflen = t->bufstart = 0;
           havelines = true;        /* Have an overlength line */
         }                          /* if (t->bufstart == Q_BUFSIZ) */
-      }                            /* if (*p == '\n') else */
+      }                            /* if (i) else */
     }                              /* while (true) */
   }                                /* if (cpipe) */
 

@@ -59,7 +59,7 @@ void quthan(int signum, siginfo_t *siginfo, void *ucontext);
 void sdsply(void);
 bool cl5get(char *buf, int bufcap, bool action_eof, bool read_macros);
 void readfl(void);
-void writfl(long wrtnum);
+void writfl(long wrtnum, bool leave_open);
 void xlateset(void);
 void showchar(uint8_t c);
 void tildexpn(char *path, int pthsiz);
