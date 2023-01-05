@@ -1,3 +1,6 @@
+Opcode to discover if q -b or not
+Optimise writfl if no o/p conversion (binary or no fm+tw,+dw,+l,-s &c.)
+Optimise S-Save if deferd and binary or none of dos or tab or fm-s,+l &c
 Enable Q to work in open pipe (e.g. tail -f|q)
  - Nested main called in a loop
  - Nonblock read gets no bytes *and* last ch is ^J (may lift that restriction)

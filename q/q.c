@@ -211,6 +211,7 @@ static bool cpipe = false;
 static bool at_registered = false;
 static bool want_more = false;
 static jmp_buf env;
+static char *saved_initial_command;
 
 /* Static prototypes */
 
@@ -306,6 +307,7 @@ main(int real_argc, char **real_argv)
   {
     write_workfile_to_stdout();
     want_more = false;
+    initial_command = saved_initial_command;
     rc = xmain(0, NULL);
   }                                /* while (want_more) */
   return rc;
@@ -364,6 +366,8 @@ xmain(int xargc, char **xargv)
       argv = xargv;                /* Xfer invocation arg to common */
       do_initial_tsks(&do_rc);
     }                              /* if (!iterating) */
+
+    finitl();                      /* Must do B4 check_pipe (does atexit) */
     if (!check_pipe(iterating))
       not_pipe();
 
@@ -386,7 +390,6 @@ xmain(int xargc, char **xargv)
     curr->bmxch = BUFMAX;
     prev->bmxch = BUFMAX;
 
-    finitl();                      /* Initialise workfile system */
     sinitl();                      /* Initialise screen system */
 
 /* Initially INDENT switched OFF */
@@ -3311,7 +3314,7 @@ do_initial_tsks(bool *do_rc_p)
         break;
 
       case 'i':
-        initial_command = optarg;
+        saved_initial_command = initial_command = optarg;
         break;
 
       case 'k':
@@ -3576,21 +3579,6 @@ check_pipe(bool iterating)
           exit(1);
         }                          /* if (rc == -1) */
       }                            /* if (havelines) */
-      else
-      {
-/* If we have a fragment left over from previous iteration, */
-/* write it to the output file directly.                    */
-/* Jigger fds and use flush_pipe_buf()                      */
-        if (v->buflen)
-        {
-          int saved_pipe_temp_fd = pipe_temp_fd;
-
-          pipe_temp_fd = saved_pipe_stdout;
-          flush_pipe_buf(v->tbuf + v->bufstart, v->buflen);
-          pipe_temp_fd = saved_pipe_temp_fd;
-          v->buflen = v->bufstart = 0;
-        }                          /* if (v->buflen) */
-      }                            /* if (havelines) else */
       do
         todo = read(STDIN5FD, t->tbuf + t->bufstart, Q_BUFSIZ - t->bufstart);
       while (todo == -1 && errno == EINTR && !cntrlc);
