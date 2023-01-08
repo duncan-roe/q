@@ -3,7 +3,7 @@ n204 ^NC^NS^N\^<PSHQ>^<POP 0>!echo ^ND^N^<7000> >&2^J^<PS0>^<POP 0>^NU
 * These all test the result in the Q register from ^N^W<macro id>.
 * Item tested should be obvious and is not listed separately
 *                                ; Expected result
-fi ^NW^<4000>^N^<204>            ; Depends on mode: 7 if from runmost (default mode)
+fi ^NW^<4000>^N^<204>            ; Depends on mode: 9 if from runmost (default mode 141212005)
 fi ^NW^<4001>^N^<204>            ; 0
 fi ^NW^<4002>^N^<204>            ; Edit file name length
 fi ^NW^<4003>^N^<204>            ; HELP dir name length
@@ -16,6 +16,6 @@ fi ^NW^<4010>^N^<204>            ; Date format length, default 8
 fi ^NW^<4011>^N^<204>            ; Date length, default 25
 fi ^NW^<4012>^N^<204>            ; UTC Date length, default 25
 fi ^NW^<4013>^N^<204>            ; Integer format length, default 3
-fi ^NW^<4016>^N^<204>            ; First undefined active pseudo, -1
+fi ^NW^<4017>^N^<204>            ; First undefined active pseudo, -1
 fi ^NWo^N^<204>                  ; 0 (test case-insensitivity)
 wofi ^N^<204>                  ; 0 !!Real ^N, test from kbd

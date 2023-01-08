@@ -1,6 +1,6 @@
 /* E X E C _ A L U _ O P C O D E . C
  *
- * Copyright (C) 2014-2017,2019-2021 Duncan Roe
+ * Copyright (C) 2014-2017,2019-2021,2023 Duncan Roe
  */
 
 /* Headers */
@@ -622,6 +622,20 @@ sfnmod(char **err)
 }                                  /* sfnmod() */
 
 static bool
+sbin(char **err)
+{
+  alu_skip = binary;
+  return true;
+}                                  /* sbin() */
+
+static bool
+snbin(char **err)
+{
+  alu_skip = !binary;
+  return true;
+}                                  /* snbin() */
+
+static bool
 clrfmod(char **err)
 {
   mods = false;
@@ -1206,6 +1220,8 @@ alu_opcode opcode_defs[] = {
   OPCODE(sflt, "Skip if F is less than zero"),
   OPCODE(sfmod, "Skip if file modified"),
   OPCODE(sfnmod, "Skip if file not modified"),
+  OPCODE(sbin, "Skip if q -b "),
+  OPCODE(snbin, "Skip if not q -b "),
   CAPTION(""),
   CAPTION("Instructions that Modify R"),
   CAPTION("============ ==== ====== ="),
