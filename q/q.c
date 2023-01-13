@@ -308,6 +308,7 @@ main(int real_argc, char **real_argv)
     write_workfile_to_stdout();
     want_more = false;
     initial_command = saved_initial_command;
+    simulate_q = false;
     rc = xmain(0, NULL);
   }                                /* while (want_more) */
   return rc;
