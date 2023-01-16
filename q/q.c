@@ -324,10 +324,6 @@ xmain(int xargc, char **xargv)
   bool do_rc;
   bool cmd_reread = false;
 
-/* do_quit() needs to return nowadays */
-  if (setjmp(env))
-    return 0;
-
   if (!xargv)
   {
     if (xargc > 0)
@@ -336,6 +332,14 @@ xmain(int xargc, char **xargv)
       iterating = true;
   }                                /* if (!xargv) */
   do_rc = !(iterating || recursing);
+
+/* do_quit() needs to longjmp here instead of calling exit for iteration. */
+/* When recursing, must not alter longjmp target */
+  if (!recursing)
+  {
+    if (setjmp(env))
+      return 0;
+  }                                /* if (!recursing) */
 
 /* [Re-]initialise static variables */
 
