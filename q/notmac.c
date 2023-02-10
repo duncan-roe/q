@@ -79,7 +79,7 @@ notmac(notmac_action err)
     immnxfr = curmac;
 
   curmac = -1;                     /* Not in a macro */
-  if (err || BRIEF || NONE)
+  if (err || BRIEF)                /* No need to test for NONE: is BRIEF | .. */
     for (i = WCHRS - 1; i >= 0; i--)
       screen[i] = '\0';            /* Force refresh */
   if (err)

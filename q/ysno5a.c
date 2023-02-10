@@ -53,7 +53,7 @@ ysno5a(char *mess, int key)
     }                              /* for (p = comlin - 1;;) */
     if (!(i = strlen(comlin)))
     {
-/* DEFAULT: A5NDEF=NONE, A5DNO='NO', A5DYES='YES' */
+/* DEFAULT: A5NDEF=none, A5DNO='no', A5DYES='yes' */
       if (key == A5DYES)
         return true;
       if (key == A5DNO)

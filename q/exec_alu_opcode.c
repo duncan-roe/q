@@ -135,6 +135,9 @@ popmode(char **err)
 {
   if (!r_valid(err))
     return false;
+/* Must not set FB OR FN if fm+v */
+    if (rs[rsidx] & FM_PLUS_V_BIT)
+      rs[rsidx] &= ~FN_CMD_BITS;
   fmode = rs[rsidx--];
   return true;
 }                                  /* popmode() */

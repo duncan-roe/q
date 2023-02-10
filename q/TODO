@@ -1,3 +1,5 @@
+FIX BUG: $0 loses meaning when Q-QUIT degrades to ^NU
+FIX BUG: Can set FBRIEF / FNONE using ALU even when fm+v is asserted
 Opcode to discover if q -b or not
 Optimise writfl if no o/p conversion (binary or no fm+tw,+dw,+l,-s &c.)
 Optimise S-Save if deferd and binary or none of dos or tab or fm-s,+l &c
