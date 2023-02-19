@@ -2861,6 +2861,11 @@ do_quit(bool recursing)
       macdef(64, (uint8_t *)"", 0, true); /* Macro is ^NU only */
       curmac = 64;
       mcposn = 0;
+
+/* If there were file args, wind back to the last one so q$0 still works */
+      if (argno > 0)
+        --argno;
+
       return true;
     }
     longjmp(env, 1);               /* Force xmain() to return 0 */
