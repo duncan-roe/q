@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./writfl.c */
 /* W R I T F L
  *
  * Copyright (C) 1993, 1995, 1998, 1999 Duncan Roe & Associates P/L
@@ -6,6 +7,7 @@
  * This routine writes out the spec'd # of lines to the file open on
  * funit. If EOF is reached, it reports how many lines were written */
 
+/* >%---- KEEP2HERE ./writfl.c */
 #include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
@@ -16,6 +18,7 @@
 #include "edmast.h"
 #include "tabsiz.h"
 #include "fmode.h"
+/* >%---- CUT_HERE ./writfl.c */
 /* */
 #define STC(c) do {*q++ = c;\
   if (!--unused) \

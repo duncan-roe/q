@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./ysno5a.c */
 /* Y S N O 5 A
  *
  * Copyright (C) 1981, D. C. Roe
@@ -8,6 +9,7 @@
  * Support from Des Fitzgerald & Associates gratefully acknowledged.
  * Project started 1980.
  */
+/* >%---- KEEP2HERE ./ysno5a.c */
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -15,6 +17,7 @@
 #include "prototypes.h"
 #include "macros.h"
 #include "c1in.h"
+/* >%---- CUT_HERE ./ysno5a.c */
 
 bool
 ysno5a(char *mess, int key)

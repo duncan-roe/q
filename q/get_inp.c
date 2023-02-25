@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./get_inp.c */
 /* G E T _ I N P . C
  *
  * Copyright (C) 2019 Duncan Roe */
@@ -6,11 +7,13 @@
 
 /* Headers */
 
+/* >%---- KEEP2HERE ./get_inp.c */
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include "alu.h"
+/* >%---- CUT_HERE ./get_inp.c */
 
 bool
 get_inp(double *fval, long *val, long *len, char **err)

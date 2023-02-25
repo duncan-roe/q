@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./do_cmd.c */
 /* D O _ C M D
  *
  * Obey SHELL command or change working directory
@@ -6,6 +7,7 @@
  * Copyright (C) 2002, Duncan Roe
  * Copyright (C) 2012,2014,2017-2020 Duncan Roe
  */
+/* >%---- KEEP2HERE ./do_cmd.c */
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
@@ -14,6 +16,7 @@
 #include "prototypes.h"
 #include "edmast.h"
 #include "c1in.h"
+/* >%---- CUT_HERE ./do_cmd.c */
 int
 do_cmd()
 {

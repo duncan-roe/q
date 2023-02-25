@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./q.c */
 /* Q
  *
  *
@@ -13,6 +14,7 @@
 
 /* Headers */
 
+/* >%---- KEEP2HERE ./q.c */
 #include <poll.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -41,6 +43,7 @@
 #include "fmode.h"
 #include "c1in.h"
 #include "alu.h"
+/* >%---- CUT_HERE ./q.c */
 
 /* Macros */
 

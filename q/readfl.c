@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./readfl.c */
 /* R E A D F L
  * Copyright (C) 1993,1998 Duncan Roe & Associates P/L
  * Copyright (C) 2005,2012-2014,2017-2020 Duncan Roe
@@ -9,6 +10,7 @@
  * The feature is intended for use when editing man pages, so this should not be
  * a problem.
  */
+/* >%---- KEEP2HERE ./readfl.c */
 #include <stdio.h>
 #include <errno.h>
 #include <limits.h>
@@ -20,6 +22,7 @@
 #include "fmode.h"
 #include "c1in.h"
 #include "tabsiz.h"
+/* >%---- CUT_HERE ./readfl.c */
 
 /* Initialise External Variables */
 

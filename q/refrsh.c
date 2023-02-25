@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./refrsh.c */
 /* R E F R S H
  *
  * Copyright (C) 1981, D. C. Roe
@@ -18,12 +19,14 @@
  * encountered. A variable is set to show whether the screen was
  * completely updated or not.
  */
+/* >%---- KEEP2HERE ./refrsh.c */
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
 #include "prototypes.h"
 #include "scrnedit.h"
+/* >%---- CUT_HERE ./refrsh.c */
 /* */
 void
 refrsh(scrbuf5 *xline)

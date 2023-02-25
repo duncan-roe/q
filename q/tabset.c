@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./tabset.c */
 /* T A B S E T
  *
  * Copyright (C) 1981 D. C. Roe
@@ -14,12 +15,14 @@
  *
  * Tabs and columns are zero-based, but appear 1-based to the user
  */
+/* >%---- KEEP2HERE ./tabset.c */
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include "prototypes.h"
 #include "scrnedit.h"
 #include "tabs.h"
+/* >%---- CUT_HERE ./tabset.c */
 
 /* Macros */
 

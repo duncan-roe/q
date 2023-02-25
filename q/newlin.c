@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./newlin.c */
 /* N E W L I N */
 /*
  * Copyright (C) 1981, D. C. Roe
@@ -13,9 +14,11 @@
  * to reflect this.
  * May be called by user program
  */
+/* >%---- KEEP2HERE ./newlin.c */
 #include <stdio.h>
 #include "prototypes.h"
 #include "scrnedit.h"
+/* >%---- CUT_HERE ./newlin.c */
 void
 newlin()
 {

@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./getnum.c */
 /* G E T N U M */
 /*
  * Copyright (C) 1981, D. C. Roe
@@ -13,11 +14,13 @@
  * is ok, otherwise must be 1 or more. Result in DECVAL is ok
  * returns true unless actual bad decno.
  */
+/* >%---- KEEP2HERE ./getnum.c */
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include "prototypes.h"
 #include "edmast.h"
+/* >%---- CUT_HERE ./getnum.c */
 
 #define GIVE_UP(x) \
   do { fprintf(stderr, "%s%s", x, " # of lines"); return false; } while (0)

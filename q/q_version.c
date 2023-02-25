@@ -1,7 +1,10 @@
+/* >%---- CODE_STARTS ./q_version.c */
 #include <stdio.h>
+/* >%---- KEEP2HERE ./q_version.c */
 #include <string.h>
 #include "edmast.h"
 #include "q_version.h"
+/* >%---- CUT_HERE ./q_version.c */
 void
 q_version()
 {

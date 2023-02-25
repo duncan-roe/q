@@ -1,10 +1,13 @@
+/* >%---- CODE_STARTS ./dump_registers.c */
 /* D U M P _ R E G I S T E R S . C
  *
  * Copyright (C) 2014,2017,2019 Duncan Roe
  */
+/* >%---- KEEP2HERE ./dump_registers.c */
 #include <stdio.h>
 #include "alu.h"
 #include "fmode.h"
+/* >%---- CUT_HERE ./dump_registers.c */
 
 void
 dump_registers(bool append_newline)

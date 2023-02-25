@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./scmnrd.c */
 /* S C M N R D
  *
  * Copyright (C) 1981 D. C. Roe
@@ -19,6 +20,7 @@
 
 /* Headers */
 
+/* >%---- KEEP2HERE ./scmnrd.c */
 #include <stdio.h>
 #include <memory.h>
 #include <string.h>
@@ -31,6 +33,7 @@
 #include "scrnedit.h"
 #include "fmode.h"
 #include "c1in.h"
+/* >%---- CUT_HERE ./scmnrd.c */
 
 /* Static prototypes */
 

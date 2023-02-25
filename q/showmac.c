@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./showmac.c */
 /* S H O W M A C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
@@ -5,6 +6,7 @@
  *
  * This routine expands the body of a macro to standard output.
  */
+/* >%---- KEEP2HERE ./showmac.c */
 #include <stdio.h>
 #include <ctype.h>
 #include "prototypes.h"
@@ -13,6 +15,7 @@
 #include "tabs.h"
 #include "c1in.h"
 #include "alu.h"
+/* >%---- CUT_HERE ./showmac.c */
 void
 showmac(int i, FILE *stream)
 {

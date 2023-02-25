@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./sdsply.c */
 /* S D S P L Y
  *
  * Copyright (C) 1981, D. C. Roe
@@ -12,9 +13,11 @@
  * The line # is in the COMMON array PROMPT
  */
 /* */
+/* >%---- KEEP2HERE ./sdsply.c */
 #include <stdio.h>
 #include "prototypes.h"
 #include "scrnedit.h"
+/* >%---- CUT_HERE ./sdsply.c */
 void
 sdsply()
 {

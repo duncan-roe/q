@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./disply.c */
 /* D I S P L Y */
 /*
  * Copyright (C) 1981 D. C. Roe
@@ -10,10 +11,12 @@
  *
  * Displays the SCREENEDIT line supplied
  */
+/* >%---- KEEP2HERE ./disply.c */
 #include <stdio.h>
 #include "prototypes.h"
 #include "scrnedit.h"
 #include "fmode.h"
+/* >%---- CUT_HERE ./disply.c */
 
 void
 disply(scrbuf5 *line, bool savecurs)

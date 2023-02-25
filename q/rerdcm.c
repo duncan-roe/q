@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./rerdcm.c */
 /* R E R D C M
  *
  * Copyright (C) 1981, D. C. Roe
@@ -16,6 +17,7 @@
  * Includes coding to deal with BRIEF mode being on, also after a bad
  * error we force tty o/p back on, and abandon any macro.
  */
+/* >%---- KEEP2HERE ./rerdcm.c */
 #include <stdio.h>
 #include <memory.h>
 #include "prototypes.h"
@@ -24,6 +26,7 @@
 #include "macros.h"
 #include "fmode.h"
 #include "c1in.h"
+/* >%---- CUT_HERE ./rerdcm.c */
 
 void
 rerdcm()

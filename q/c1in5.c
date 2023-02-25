@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./c1in5.c */
 /* C 1 I N 5 . C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
@@ -9,6 +10,7 @@
 
 /* Headers */
 
+/* >%---- KEEP2HERE ./c1in5.c */
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -18,6 +20,7 @@
 #include "prototypes.h"
 #include "fmode.h"
 #include "c1in.h"
+/* >%---- CUT_HERE ./c1in5.c */
 
 /* Instantiate externals */
 

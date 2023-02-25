@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./tildexpn.c */
 /* T I L D E X P N
  *
  * Copyright (C) 1994, Duncan Roe & Associates P/L
@@ -9,6 +10,7 @@
  * If we can't do the expansion (due to size limitations &c), we leave
  * the input string unchanged - failure will occur when it is used.
  */
+/* >%---- KEEP2HERE ./tildexpn.c */
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -16,6 +18,7 @@
 #include <pwd.h>
 #include <stdlib.h>
 #include "prototypes.h"
+/* >%---- CUT_HERE ./tildexpn.c */
 void
 tildexpn(char *path, int pthsiz)
 {

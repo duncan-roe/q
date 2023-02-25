@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./time_now.c */
 /* T I M E _ N O W . C
  *
  * Copyright (C) 2019 Duncan Roe */
@@ -6,12 +7,14 @@
 
 /* Headers */
 
+/* >%---- KEEP2HERE ./time_now.c */
 #include <time.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
 #include "prototypes.h"
 #include "typedefs.h"
+/* >%---- CUT_HERE ./time_now.c */
 
 /* Macros */
 

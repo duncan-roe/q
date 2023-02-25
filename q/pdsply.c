@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./pdsply.c */
 /* P D S P L Y
  *
  * Copyright (C) 1981, D. C. Roe
@@ -11,11 +12,13 @@
  *
  * Sets the prompt as supplied then does a DISPLY
  */
+/* >%---- KEEP2HERE ./pdsply.c */
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
 #include "prototypes.h"
 #include "scrnedit.h"
+/* >%---- CUT_HERE ./pdsply.c */
 void
 pdsply(scrbuf5 *buf, uint8_t *prm, int pch)
 {

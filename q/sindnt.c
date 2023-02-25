@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./sindnt.c */
 /* S I N D N T
  *
  * Copyright (C) 1981 D. C. Roe
@@ -12,11 +13,13 @@
  * In any case, sets up the previous buffer (as recalled by ^A) to the
  * previous line, unless we are inserting line 1.
  */
+/* >%---- KEEP2HERE ./sindnt.c */
 #include <stdio.h>
 #include <ctype.h>
 #include "prototypes.h"
 #include "edmast.h"
 #include "fmode.h"
+/* >%---- CUT_HERE ./sindnt.c */
 
 /* Externals that are not in any header */
 

@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./xistcs.c */
 /* X I S T C S
  *
  * Copyright (C) 1981, D. C. Roe
@@ -18,6 +19,7 @@
  * T - Set number of spaces between tabstops in file
  * W - Turn vt100 mode back off again
  */
+/* >%---- KEEP2HERE ./xistcs.c */
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -26,6 +28,7 @@
 #include "scrnedit.h"
 #include "c1in.h"
 #include "tabsiz.h"
+/* >%---- CUT_HERE ./xistcs.c */
 
 /* Static prototypes */
 

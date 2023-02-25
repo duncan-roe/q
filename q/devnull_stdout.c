@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./devnull_stdout.c */
 /* D E V N U L L _ S T D O U T . C */
 /*
  * Copyright (C) 2012-2014,2019 Duncan Roe
@@ -5,6 +6,7 @@
  * This function switches stdout to /dev/null
  */
 
+/* >%---- KEEP2HERE ./devnull_stdout.c */
 #include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -13,6 +15,7 @@
 #include "prototypes.h"
 #include "fmode.h"
 #include "c1in.h"
+/* >%---- CUT_HERE ./devnull_stdout.c */
 
 void
 devnull_stdout()

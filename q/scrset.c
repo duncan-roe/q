@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./scrset.c */
 /* S C R S E T
  *
  * Copyright (C) 1981 D. C. Roe
@@ -14,11 +15,13 @@
  */
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
 
+/* >%---- KEEP2HERE ./scrset.c */
 #include <stdio.h>
 #include <memory.h>
 #include "prototypes.h"
 #include "scrnedit.h"
 #include "fmode.h"
+/* >%---- CUT_HERE ./scrset.c */
 
 /* Macros */
 

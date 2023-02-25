@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./pop_stdin.c */
 /* P O P _ S T D I N . C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
@@ -5,12 +6,14 @@
  *
  * This function pops stdin 1 level
  */
+/* >%---- KEEP2HERE ./pop_stdin.c */
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
 #include "prototypes.h"
 #include "c1in.h"
+/* >%---- CUT_HERE ./pop_stdin.c */
 
 bool
 pop_stdin()

@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./final5.c */
 /* F I N A L 5 . C
  *
  * Copyright (C) 1995, Duncan Roe & Associates P/L
@@ -5,7 +6,9 @@
  *
  * This routine restores initial settings, prior to exiting
  */
+/* >%---- KEEP2HERE ./final5.c */
 #include "c1in.h"
+/* >%---- CUT_HERE ./final5.c */
 
 void
 final5()

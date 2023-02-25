@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./setwinsz.c */
 /* S E T W I N S Z . C
  *
  * Copyright (C) 1994, Duncan Roe & Associates P/L
@@ -9,6 +10,7 @@
 
 /* Headers */
 
+/* >%---- KEEP2HERE ./setwinsz.c */
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -16,6 +18,7 @@
 #include "prototypes.h"
 #include "scrnedit.h"
 #include "c1in.h"
+/* >%---- CUT_HERE ./setwinsz.c */
 
 /* Static prototypes */
 

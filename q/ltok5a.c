@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./ltok5a.c */
 /* L T O K 5 A
  *
  * Copyright (C) 1993 Duncan Roe & Associates P/L
@@ -20,10 +21,12 @@
  *
  *  The function result is true iff a match is found.
  */
+/* >%---- KEEP2HERE ./ltok5a.c */
 #include <stdio.h>
 #include <ctype.h>
 #include "prototypes.h"
 #include "fmode.h"
+/* >%---- CUT_HERE ./ltok5a.c */
 
 /* Static prototypes */
 static bool is_delim(uint8_t d, uint8_t *ndel);

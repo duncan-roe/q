@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS exec_alu_opcode.c */
 /* E X E C _ A L U _ O P C O D E . C
  *
  * Copyright (C) 2014-2017,2019-2021,2023 Duncan Roe
@@ -5,6 +6,7 @@
 
 /* Headers */
 
+/* >%---- KEEP2HERE exec_alu_opcode.c */
 #include <math.h>
 #include <time.h>
 #include <string.h>
@@ -14,6 +16,7 @@
 #include "tabsiz.h"
 #include "fmode.h"
 #include "alu.h"
+/* >%---- CUT_HERE exec_alu_opcode.c */
 
 /* **************************** Static Functions **************************** */
 

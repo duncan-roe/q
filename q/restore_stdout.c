@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./restore_stdout.c */
 /* R E S T O R E _ S T D O U T . C
  *
  * Copyright (C) 1993, Duncan Roe & Associates P/L
@@ -5,12 +6,14 @@
  *
  * This routine switches output back to the original stdout
  */
+/* >%---- KEEP2HERE ./restore_stdout.c */
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
 #include "prototypes.h"
 #include "c1in.h"
+/* >%---- CUT_HERE ./restore_stdout.c */
 void
 restore_stdout()
 {

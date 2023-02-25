@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./lsub5a.c */
 /* L S U B 5 A
  *
  * Copyright (C) 1993 Duncan Roe & Associates P/L
@@ -19,9 +20,11 @@
  *
  *  The function result is true iff a match is found.
  */
+/* >%---- KEEP2HERE ./lsub5a.c */
 #include <stdio.h>
 #include "prototypes.h"
 #include "fmode.h"
+/* >%---- CUT_HERE ./lsub5a.c */
 
 bool
 lsub5a(uint8_t *srchstr, int srchlen, uint8_t *string,

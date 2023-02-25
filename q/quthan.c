@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./quthan.c */
 /* Q U T H A N . C
  *
  * Copyright (C) 1994, Duncan Roe & Associates P/L
@@ -5,6 +6,7 @@
  *
  * This function handles the SIGINT, SIGTERM & SIGWINCH conditions.
  */
+/* >%---- KEEP2HERE ./quthan.c */
 #include <stdio.h>
 #include <errno.h>
 #include <signal.h>
@@ -14,6 +16,7 @@
 #include <sys/types.h>
 #include "prototypes.h"
 #include "q_pipe.h"
+/* >%---- CUT_HERE ./quthan.c */
 void
 quthan(int signum, siginfo_t *siginfo, void *ucontext)
 {

@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./change_attr.c */
 /* C H A N G E _ A T T R . C
  *
  * Copyright (C) 2014,2019 Duncan Roe
@@ -15,12 +16,14 @@
 
 /* Headers */
 
+/* >%---- KEEP2HERE ./change_attr.c */
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
 #include <termios.h>
 #include "c1in.h"
+/* >%---- CUT_HERE ./change_attr.c */
 
 /* Static prototypes */
 

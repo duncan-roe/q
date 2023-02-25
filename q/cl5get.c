@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./cl5get.c */
 /* C L 5 G E T
  *
  * Copyright (C) 2012,2013,2019-2020 Duncan Roe
@@ -10,6 +11,7 @@
  * O/p BEL chars if the user's typing gets past buffer end.
  * Assume ECHOK is required as well...
  */
+/* >%---- KEEP2HERE ./cl5get.c */
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -17,6 +19,7 @@
 #include "macros.h"
 #include "fmode.h"
 #include "c1in.h"
+/* >%---- CUT_HERE ./cl5get.c */
 
 bool
 cl5get(char *buf, int bufcap, bool action_eof, bool read_macros)

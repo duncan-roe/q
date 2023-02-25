@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./macdef.c */
 /* M A C D E F . C
  *
  * Copyright (C) 1994 Duncan Roe & Associates P/L
@@ -6,6 +7,7 @@
  * This routine carries out the definition of a macro. Most of the work
  * is done by MACDEFW - all we do here is expand to 1 character / short
  */
+/* >%---- KEEP2HERE ./macdef.c */
 #include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
@@ -15,6 +17,7 @@
 #include "macros.h"
 #include "tabs.h"
 #include "alu.h"
+/* >%---- CUT_HERE ./macdef.c */
 
 /* Macros */
 

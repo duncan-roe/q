@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./cmd.c */
 /* C M D
  *
  * Obey a shell command returning its exit status
@@ -7,6 +8,7 @@
 
 /* Headers */
 
+/* >%---- KEEP2HERE ./cmd.c */
 #include <stdio.h>
 #include <errno.h>
 #include <signal.h>
@@ -20,6 +22,7 @@
 #include "backtick.h"
 #include "edmast.h"
 #include "macros.h"
+/* >%---- CUT_HERE ./cmd.c */
 
 /* Macros */
 

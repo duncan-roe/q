@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./visbel.c */
 /* V I S B E L . C
  *
  * Copyright (C) 2019 Duncan Roe
@@ -9,8 +10,10 @@
 
 /* Headers */
 
+/* >%---- KEEP2HERE ./visbel.c */
 #include <stdlib.h>
 #include "prototypes.h"
+/* >%---- CUT_HERE ./visbel.c */
 
 /* Instantiate externals */
 

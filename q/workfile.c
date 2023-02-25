@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./workfile.c */
 /* W O R K F I L E
  *
  * Copyright (C) 2012,2014,2018-2020 Duncan Roe
@@ -63,6 +64,7 @@
 
 /* Headers */
 
+/* >%---- KEEP2HERE ./workfile.c */
 #include <stdio.h>
 #include <memory.h>
 #include <stdlib.h>
@@ -72,6 +74,7 @@
 #include "prototypes.h"
 #include "macros.h"
 #include "fmode.h"
+/* >%---- CUT_HERE ./workfile.c */
 
 /* Macros */
 

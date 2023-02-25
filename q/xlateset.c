@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./xlateset.c */
 /* X L A T E S E T
  *
  * Copyright (C) 1994 Duncan Roe & Associates P/L
@@ -7,8 +8,10 @@
  * Y, FL, & FY commands.
  * When called, the table is not in the right state...
  */
+/* >%---- KEEP2HERE ./xlateset.c */
 #include "prototypes.h"
 #include "fmode.h"
+/* >%---- CUT_HERE ./xlateset.c */
 /* */
 uint8_t xlatable[256];
 void

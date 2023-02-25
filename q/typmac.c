@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./typmac.c */
 /* T Y P M A C
  *
  * Copyright (C) 1981, D. C. Roe
@@ -10,10 +11,12 @@
  *
  * This function types a list of current non-null macros
  */
+/* >%---- KEEP2HERE ./typmac.c */
 #include <stdio.h>
 #include "prototypes.h"
 #include "macros.h"
 #include "alu.h"
+/* >%---- CUT_HERE ./typmac.c */
 
 void
 typmac(void)

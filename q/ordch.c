@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./ordch.c */
 /* O R D C H
  *
  * Copyright (C) 1993, Duncan Roe & Associates P/L
@@ -6,6 +7,7 @@
  * This routine processes a normal chr (or a special that was preceded
  * by ^C), overwriting/inserting as appropriate.
  */
+/* >%---- KEEP2HERE ./ordch.c */
 #include <stdio.h>
 #include <ctype.h>
 #include <signal.h>
@@ -15,6 +17,7 @@
 #include "fmode.h"
 #include "cmndcmmn.h"
 #include "scrnedit.h"
+/* >%---- CUT_HERE ./ordch.c */
 
 void
 ordch(uint8_t chr, scrbuf5 *scbuf)

@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./getlin.c */
 /* G E T L I N */
 /*
  * Copyright (C) 1981, D. C. Roe
@@ -16,6 +17,7 @@
  * Implementation note: uses the boolean eofok as an integer value:
  * so false must be zero and true must be 1
  */
+/* >%---- KEEP2HERE ./getlin.c */
 #include <stdio.h>
 #include <ctype.h>
 #include <limits.h>
@@ -24,6 +26,7 @@
 #include <string.h>
 #include "prototypes.h"
 #include "edmast.h"
+/* >%---- CUT_HERE ./getlin.c */
 
 #define GIVE_UP goto error_exit
 

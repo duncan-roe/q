@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./tests/comment.c */
 /* This file tests ^N1 in c.qm.
     * This line should get pulled back
  * The next line should not get modified */

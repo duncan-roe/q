@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./display_opcode.c */
 /* D I S P L A Y _ O P C O D E . C
  *
  * Copyright (C) 2020 Duncan Roe
@@ -5,10 +6,12 @@
 
 /* Headers */
 
+/* >%---- KEEP2HERE ./display_opcode.c */
 #include <ctype.h>
 #include "c1in.h"
 #include "tabs.h"
 #include "alu.h"
+/* >%---- CUT_HERE ./display_opcode.c */
 
 bool
 display_opcode(uint16_t ch, FILE *stream)

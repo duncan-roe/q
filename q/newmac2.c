@@ -1,9 +1,11 @@
+/* >%---- CODE_STARTS ./newmac2.c */
 /* N E W M A C 2
  *
  * Copyright (C) 2012,2014,2019 Duncan Roe
  *
  * Generates a 16-bit-char macro from the string in ubuf
  */
+/* >%---- KEEP2HERE ./newmac2.c */
 #include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
@@ -15,6 +17,7 @@
 #include "macros.h"
 #include "tabs.h"
 #include "alu.h"
+/* >%---- CUT_HERE ./newmac2.c */
 
 /* Macros */
 

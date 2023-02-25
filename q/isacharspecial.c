@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./isacharspecial.c */
 /* I S A C H A R S P E C I A L . C
  *
  * Copyright (C) 2015, Duncan Roe
@@ -6,6 +7,7 @@
 
 /* System headers */
 
+/* >%---- KEEP2HERE ./isacharspecial.c */
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -17,6 +19,7 @@
 
 #include "isacharspecial.h"
 #include "prototypes.h"
+/* >%---- CUT_HERE ./isacharspecial.c */
 
 /* Code */
 

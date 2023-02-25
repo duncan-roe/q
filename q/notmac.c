@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./notmac.c */
 /* N O T M A C
  *
  * Copyright (C) 1981, D. C. Roe
@@ -10,6 +11,7 @@
  *
  * Gets out of obeying a macro.
  */
+/* >%---- KEEP2HERE ./notmac.c */
 #include <stdio.h>
 #include "prototypes.h"
 #include "macros.h"
@@ -17,6 +19,7 @@
 #include "fmode.h"
 #include "c1in.h"
 #include "alu.h"
+/* >%---- CUT_HERE ./notmac.c */
 
 /* Instantiate externals */
 

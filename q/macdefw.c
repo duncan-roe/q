@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./macdefw.c */
 /* M A C D E F W . C
  *
  * Copyright (C) 1994, Duncan Roe & Associates P/L
@@ -12,11 +13,13 @@
 
 /* Headers */
 
+/* >%---- KEEP2HERE ./macdefw.c */
 #include <stdio.h>
 #include <memory.h>
 #include <stdlib.h>
 #include "prototypes.h"
 #include "macros.h"
+/* >%---- CUT_HERE ./macdefw.c */
 
 /* Macros */
 

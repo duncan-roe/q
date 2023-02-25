@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./log_char.c */
 /* L O G _ C H A R . C
  *
  * Copyright (C) 2020 Duncan Roe
@@ -5,10 +6,12 @@
 
 /* Headers */
 
+/* >%---- KEEP2HERE ./log_char.c */
 #include "macros.h"
 #include "fmode.h"
 #include "c1in.h"
 #include "alu.h"
+/* >%---- CUT_HERE ./log_char.c */
 
 /* Static Variables */
 

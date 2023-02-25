@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./setcrs.c */
 /* S E T C R S */
 /*
  * Copyright (C) 1981, D. C. Roe
@@ -20,11 +21,13 @@
  *    D) Ansii cursor movement
  * One of A), B) or D) must be available (not checked)
  */
+/* >%---- KEEP2HERE ./setcrs.c */
 #include <stdio.h>
 #include <memory.h>
 #include <limits.h>
 #include "prototypes.h"
 #include "scrnedit.h"
+/* >%---- CUT_HERE ./setcrs.c */
 
 /* Instantiate externals */
 

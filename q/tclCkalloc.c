@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./tclCkalloc.c */
 /* 
  * tclCkalloc.c --
  *
@@ -15,6 +16,7 @@
  * SCCS: @(#) tclCkalloc.c 1.28 97/04/30 12:09:04
  */
 
+/* >%---- KEEP2HERE ./tclCkalloc.c */
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -24,6 +26,7 @@
 #include <unistd.h>
 
 #include "ckalloc.h"
+/* >%---- CUT_HERE ./tclCkalloc.c */
 
 #undef malloc
 #undef free

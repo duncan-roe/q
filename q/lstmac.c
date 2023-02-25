@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./lstmac.c */
 /* L S T M A C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
@@ -7,10 +8,12 @@
  * a form suitable for reinput by U. Generally, the caller will have
  * assigned standard output to a file before calling this routine...
  */
+/* >%---- KEEP2HERE ./lstmac.c */
 #include <stdio.h>
 #include "prototypes.h"
 #include "macros.h"
 #include "alu.h"
+/* >%---- CUT_HERE ./lstmac.c */
 void
 lstmac()
 {

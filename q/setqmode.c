@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./setqmode.c */
 /* S E T M O D E
  *
  * Copyright (C) 1994,1995 Duncan Roe & Associates P/L
@@ -7,6 +8,7 @@
 
 /* Headers */
 
+/* >%---- KEEP2HERE ./setqmode.c */
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -16,6 +18,7 @@
 #include "macros.h"
 #include "edmast.h"
 #include "fmode.h"
+/* >%---- CUT_HERE ./setqmode.c */
 
 /* Macros */
 

@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./trytab.c */
 /* T R Y T A B
  *
  * Copyright (C) 1981, D. C. Roe
@@ -12,6 +13,7 @@
  (usually after decimal conversion has failed).
  The # of the tab must be outside those that ^I can jump to
  */
+/* >%---- KEEP2HERE ./trytab.c */
 #include <stdio.h>
 #include <ctype.h>
 #include <unistd.h>
@@ -20,6 +22,7 @@
 #include "prototypes.h"
 #include "edmast.h"
 #include "tabs.h"
+/* >%---- CUT_HERE ./trytab.c */
 
 /* Macros */
 #define GIVE_UP goto errlbl

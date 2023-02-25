@@ -1,12 +1,15 @@
+/* >%---- CODE_STARTS ./scrdtk.c */
 /*  S C R D T K
  * Retrieve tokens from screenedit buffers
  * Copyright (C) 1998, Duncan Roe & Associates P/L
  * Copyright (C) 2012,2014,2019-2020 Duncan Roe
  */
+/* >%---- KEEP2HERE ./scrdtk.c */
 #include <stdio.h>
 #include <errno.h>
 #include <limits.h>
 #include "prototypes.h"
+/* >%---- CUT_HERE ./scrdtk.c */
 int scrdtk                         /* errno is int, so we are */
   (int key,                        /* What to do */
   uint8_t *buf,                    /* Receives token */

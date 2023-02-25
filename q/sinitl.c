@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./sinitl.c */
 /* S I N I T L */
 /*
  * Copyright (C) 1981,2011 D. C. Roe
@@ -10,6 +11,7 @@
  *
  * Initial tasks for screenedit subsystem
  */
+/* >%---- KEEP2HERE ./sinitl.c */
 #include <stdio.h>
 #include "prototypes.h"
 #include "macros.h"
@@ -17,6 +19,7 @@
 #include "scrnedit.h"
 #include "tabs.h"
 #include "c1in.h"
+/* >%---- CUT_HERE ./sinitl.c */
 
 /* Instantiate externals */
 

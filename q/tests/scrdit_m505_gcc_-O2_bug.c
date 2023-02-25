@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./tests/scrdit_m505_gcc_-O2_bug.c */
 /* S C R D I T */
 /*
  * Copyright (C) 1981 D. C. Roe
@@ -15,6 +16,7 @@
  * (newlin() can be used to initialise screen)
  *
  */
+/* >%---- KEEP2HERE ./tests/scrdit_m505_gcc_-O2_bug.c */
 #include <time.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -34,6 +36,7 @@
 #include "tabs.h"
 #include "c1in.h"
 #include "alu.h"
+/* >%---- CUT_HERE ./tests/scrdit_m505_gcc_-O2_bug.c */
 
 /* Macros */
 

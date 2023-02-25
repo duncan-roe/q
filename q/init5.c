@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./init5.c */
 /* I N I T 5 . C */
 /*
  * Copyright (C) 1993, Duncan Roe & Associates P/L
@@ -5,6 +6,7 @@
  *
  * This routine initialises the terminal i/o system.
  */
+/* >%---- KEEP2HERE ./init5.c */
 #include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -15,6 +17,7 @@
 #include <termios.h>
 #include "prototypes.h"
 #include "c1in.h"
+/* >%---- CUT_HERE ./init5.c */
 /* */
 struct termios tio5save = { 0 }, tio5 =
 {

@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./newmac.c */
 /* N E W M A C
  *
  * Copyright (C) 1981,1999,2011, D. C. Roe
@@ -11,6 +12,7 @@
  * This routine stores a new SCREENEDIT macro definition as read by
  * the mainline
  */
+/* >%---- KEEP2HERE ./newmac.c */
 #include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
@@ -24,6 +26,7 @@
 #include "tabs.h"
 #include "c1in.h"
 #include "alu.h"
+/* >%---- CUT_HERE ./newmac.c */
 
 /* Macros */
 #define GIVE_UP return 0

@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./gettab.c */
 /* G E T T A B
  *
  * Copyright (C) 1981, D. C. Roe
@@ -12,10 +13,12 @@
  * the relevant tab setting. If FILPOS is true, the tab must be a file
  * position, otherwise it can be anything.
  */
+/* >%---- KEEP2HERE ./gettab.c */
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include "tabs.h"
+/* >%---- CUT_HERE ./gettab.c */
 /* Macros */
 #define GIVE_UP goto errlbl
 

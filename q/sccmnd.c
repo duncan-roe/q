@@ -1,3 +1,4 @@
+/* >%---- CODE_STARTS ./sccmnd.c */
 /* S C C M N D */
 /*
  * Copyright (C) 1981, D. C. Roe
@@ -13,12 +14,14 @@
  * SCRDIT is done by SCMNRD. All we have to do here is empty the
  * command buffer and  SCMNRD...
  */
+/* >%---- KEEP2HERE ./sccmnd.c */
 #include <stdio.h>
 #include "prototypes.h"
 #include "cmndcmmn.h"
 #include "edmast.h"
 #include "fmode.h"
 #include "alu.h"
+/* >%---- CUT_HERE ./sccmnd.c */
 void
 sccmnd()
 {
