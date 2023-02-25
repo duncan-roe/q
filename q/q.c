@@ -3010,6 +3010,13 @@ do_freprompt(void)
 
 /* All checks pass, actually do it */
 
+/* Get advisory message, if any */
+  if (scrdtk(4, (uint8_t *)ubuf, BUFMAX, oldcom))
+  {
+    fprintf(stderr, "%s. (scrdtk)", strerror(errno));
+    return false;
+  }                        /* if (scrdtk(4, (uint8_t *)ubuf, BUFMAX, oldcom)) */
+
   r = rframe + ++ridx;
   r->saved_offline = offline;
   offline = false;
@@ -3047,6 +3054,10 @@ do_freprompt(void)
   stdbase = stdidx + 1;
   if (r->saved_offline)
     change_attr(ttyfd, &tio5);
+
+/* Output advisory message, if any */
+  if (ubuf[0])
+    printf("\r\n\r\n%s\r\n\r\n", ubuf);
 
   xmain(r->saved_curmac, NULL);    /* *!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*! */
 

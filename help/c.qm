@@ -1,4 +1,5 @@
 fd y /* C macros
+fi u ^ND^N^<4003>/c_brkts.qm^J
 N202 ^NC^NS^N\q ^ND^N^<4003>/c.qm^J^NU
 N220 ^NC^NS^N\u ^ND^N^<4003>/c.qm^J^NU
 t3 36 81
@@ -93,7 +94,7 @@ N413 ^Y^NG ^NS^N^<410>^Y^NG ^NS^N^<410>^F^?^N^<407>
 N410 ^<SXGT>^NS^NL^NJ^<7>X^H^O^B^NO~^Z^NP3^NL^J^N^<404>X^<SXEQ>^N^<415>^H^O^B^T^L^Jr-1 -2^J^N^<404>
 
 # n415: Long line in split comment. User has to fix.
-n415 ^[fr^J^<PS0>^<POPX>^N^<404> ;Fix up split comment then q to continue
+n415 ^[fr Fix up split comment then enter q to continue^J^<PS0>^<POPX>^N^<404>
 
 # n406: If before tab 2, insert spaces until at tab 2, if there is room
 N406 ^NB2^NS^N^<412>^Z^NP3^N^<412>^NB3^NL^J^N^<404>X^H^O^B^NE^E ^N^<406>
