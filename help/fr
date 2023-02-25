@@ -2,7 +2,7 @@
 
 Prompts user for action in the middle of a macro
 
-Parameters: none
+Parameter: Explanatory message about what to do (optionsl)
 
  FR is designed to be used by a macro when it encounters a situation which it
 doesn't know how to deal with.
