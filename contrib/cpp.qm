@@ -1,0 +1,167 @@
+fd y /* ************************ cpp.qm ************************
+
+# This suite allows one to compare C code as written with the code as expanded
+# by the C preprocessor, cpp.
+# The general idea is to make a set of preprocessor files, then delete the
+# lines from header files that were #included.
+
+# Preparation
+# ===========
+
+# First, edit all source files to insert marker comments at start of file
+# and around #include statements.
+# N.B. under the current scheme, if there are code lines between #include
+# statements then they will be lost.
+# Consider editing original source files if this bothers you
+# $ find . -name '*.c'|xargs q -oniu,cpp.qm^J^N2 # should work for .cc also
+# If you wish, you can discard these changes later.
+
+#Generation
+#==========
+
+# Next, do a special run of make to generate the preprocessed files.
+# You don't want to keep the output from this run, other than the
+# preprocessed source (.i files). If your project uses gnu autotools, put the
+# CFLAGS= at start of ./configure line. This example assumes you only have a
+# Makefile. Also this example assumes you want the .i files in a directory
+# called *temps*
+# $ make -j$(($(nproc)+1)) clean
+# $ rm -rf temps; mkdir temps
+# $ CFLAGS='-P -C -dumpdir temps/ -save-temps' make -j$(($(nproc)+1))
+# (You only need -P (suppress line numbers) with -g, but it does no harm).
+# (Use -CC instead of -C if you want to see comments in macro definitions).
+# $ make -j$(($(nproc)+1)) clean
+# $ rm temps/*.s
+
+# At this point you can revert the changes to the source files if you like, e.g.
+# $ git stash; git stash drop
+# but you might want to delay that because comparison of e.g. the LINE macro
+# will look odd
+
+# Next, edit the .i files to remove headers
+# $ q -oiu,cpp.qm^J^N3 temps/*.i
+
+# You are now ready to diff any source file with the corresponding .i file.
+# For best results, ignore white space changes and blank lines (e.g. diff -wB).
+
+# Macros for when developing 'cpp.qm'
+n202 ^NC^NS^N\q cpp.qm^J^NU
+n220 ^NC^NS^N\u cpp.qm^J^NU
+
+fd n
+#n2: Insert marker comments in sources
+#n3: Delete header lines from .i files
+#n4: Locate and display next marker (fm+r OK)
+#n5: Insert cut_here before current line
+#    (for q session when last #include and cut_here were #ifdef'd out)
+#    (q will pop a prompt in this case)
+fd y
+
+n062 ^NC^NS^N\fm +g -d -t -l +s^J^ND^N^<1501>^NU
+
+#n1501: Main loop on .c files.
+#       Skip to next file if already processed
+#       Otherwise call n1502 to do stuff
+n1501 l ^ND^N^<1536>^J^NC^NL^[^NJ^<6>^ND^N^<1502>s^Jq^J^N^@
+
+#n1502: Insert markers.
+#       Previously nonexistent file will get created hence check m1 worked
+n1502 m1^J^NC^N\^E^ND^N^<1511>^T^Jl ^*#[[:space:]]*include^J^NC^NU^H^E^ND^N^<1512>^T^Ja^J^[fm+r^Jl ^*#[[:space:]]*include^J^NC^N\^Z^T^ND^N^<1513>^Jfm-r^J^NU
+
+n063 ^NC^NS^N\fm -d -t -l +s^J^<SFPT>^ND^N^<1505>^NU
+
+#n1505: Main loop on .i files. Don't save if unmodified (already processed)
+n1505 ^ND^N^<1506>^<SFNMOD>s^jq^J^N^@
+
+#n1506: New file
+#       Allowed next markers: code_starts
+n1506 ^ND^N^<1515>n1531 ^*N^*<1516>^J^<POPMODE>^N^<1510>
+
+#n1516: code_starts encountered in $0. If on line 1,
+#       file has already been processed: return.
+#       Otherwise save $0 pathname, delete lines preceding
+#       Allowed next markers: none, keep2here
+n1516 ^<PS2>^<PSHLNNB>^<SUB>^<SEQ>^NL^<POPN>^NU^<POPN>d1 - -2^J^<PSHMODE>^<DUP>^<PS2P30>^<OR>^<POPMODE>m1^J^F^F^F^L^G*^Y^K^NM^<1535>^[^<POPMODE>^ND^N^<1515>n1530 ^*NU^Jn1532 ^*N^*<1520>^J^<POPMODE>^N^<1510>
+#                              file done   keep2here
+
+#n1520: keep2here encountered in $0. File pos to tab a then find next marker
+#       Allowed next markers: none (user intervention required), code_starts, cut_here
+n1520 ^NFa^ND^N^<1515>n1530 ^*N^*<1507>^Jn1531 ^*N^*<1517>^Jn1533 ^*N^*<1524>^J^<POPMODE>^N^<1510>
+
+#n1517: code_starts encountered after k2h in $0. Delete intervening lines
+#       Allowed next markers: keep2here, code_starts, cut_here (i.e. as n1527)
+n1517 d ta - -2^Jg+1^J^N^<1527>
+
+#n1524: cut_here encountered in $0. Delete intervening lines, preserving markers
+#       Allowed next markers: none
+n1524 d ta - -2^Jg+1^J^ND^N^<1515>n1530 ^*NU^J^<POPMODE>^N^<1510>
+
+#n1525: keep2here encountered in included .c
+#       Allowed next marker: cut_here (conditionals in included files not supported ATM)
+n1525 ^NFa^ND^N^<1515>n1533 ^*N^*<1526>^J^<POPMODE>^N^<1510>
+
+#n1526 cut_here encountered in included .c. Delete intervening lines
+#       Allowed next markers: code_starts, cut_here (from $0) (cond not supp.)
+n1526 d ta - -2^Jg+1^J^ND^N^<1515>n1531 ^*N^*<1527>^Jn1533 ^*N^*<1534>^J^<POPMODE>^N^<1510>
+
+#n1527: code_starts encountered for 3rd or more time. No action, just find next marker
+#       Allowed next markers: keep2here, code_starts, cut_here
+#       cut_here is only allowed if from $0 (last marker in file)
+#       n1517 jumps here after deleting lines
+n1527 ^ND^N^<1515>n1531 ^*N^*<1527>^Jn1532 ^*N^*<1525>^Jn1533 ^*N^*<1534>^J^<POPMODE>^N^<1510>
+
+#n1534: cut_here encountered after cut_here from included .c.
+#       This marker should be from $0: ensure there are no more
+#       Allowed next marker: none
+n1534 ^ND^N^<1515>n1530 ^*NU^J^<POPMODE>^N^<1510>
+
+#n1507: User has to decide which lines to delete owing to conditional #include.
+#       Can only get here when no more markers found, so are done with file afterwards
+n1507 fr Determine what is last included line; enter "d ta - <that line>; key ^*N5 (you should see a keep2here line followed by a cut_here line); enter q to continue^J^NU
+
+#n4: locate marker & display. To display when fm+r, don't g-1
+n064 ^NC^NS^N\fb^j^ND^N^<1503>^<SXEQ>^N^<1504>^NFZ^<PS2048>^<PSHMODE>^<AND>^<SEQ>^NLg-1^J^<POPN>fv^Jv0^J^NNZ^NU
+n1504 !echo "no marker found"^Jfv^J^NU
+
+#n1503: marker locate engine. Sets X-reg 0 if marker found, else 1
+#       Issue the l-locate command in BRIEF mode to avoid clutter
+#       but arrange that the found line is displayed by issuing an ^<XMODE>
+n1503 ^<PSHMODE>^<DUP>^<POPX>^<PS2P30>^<OR>^<POPMODE>^<XMODE>fl ^ND^N^<1536>^J^<PS0>^<POPX>^NC^<A1X>^[^NU
+#                              fb
+
+#n065: Insert cut_here before current line
+n065 ^NC^NS^N\m-1^J^Z^T/* ^ND^N^<1536> ^ND^N^<1523> ^ND^N^<1535> */^J^NU
+
+# Marker strings
+n1511 /* ^ND^N^<1536> ^ND^N^<1521> ^ND^N^<4002> */^NU
+n1512 /* ^ND^N^<1536> ^ND^N^<1522> ^ND^N^<4002> */^NU
+n1513 /* ^ND^N^<1536> ^ND^N^<1523> ^ND^N^<4002> */^NU
+
+# Marker type identifiers
+n1521 CODE_STARTS^NU
+n1522 KEEP2HERE^NU
+n1523 CUT_HERE^NU
+
+# Jump table: overwritten by each macro in the state machine
+n1530 No marker found^N\
+n1531 CODE STARTS^N\
+n1532 KEEP TO HERE^N\
+n1533 CUT HERE^N\
+
+#n1510: Find next marker and dispatch on marker type
+#       Detect no match by X being 1, so it's an error if all 3 searches fail
+n1510 ^ND^N^<1503>^<SXEQ>^N^<1530>^<PSHMODE>^<DUP>^<PS2P30>^<OR>^<POPMODE>g-1^Jl '^ND^N^<1521>',1^J^NC^NS^NL^NJ^<6>X^[^<POPMODE>^N^<1531>l '^ND^N^<1522>',1^J^NC^NS^NL^NJ^<6>X^[^<POPMODE>^N^<1532>l '^ND^N^<1523>',1^J^NC^N\^[^<POPMODE>^N^<1533>
+
+#n1515: Reset jump table to default
+#       Assert FBRIEF before re-defining macros.
+#       Return with FBRIEF asserted and original mode in R
+n1515 ^<PSHMODE>^<DUP>^<PS2P30>^<OR>^<POPMODE>n1530 No marker found^*N\^Jn1531 CODE STARTS^*N\^Jn1532 KEEP TO HERE^*N\^Jn1533 CUT HERE^*N\^J^NU
+
+#n1535: Name of current top-level source file: overwritten as each file is encountered
+#       Enables ^n5 to put back the cut_here line as it was originally
+n1535 top-level source file name^N\
+
+#n1536: Token that identifies a marker.
+#       One should verify that this token doesn't occur anywhere in the
+#       original source before starting.
+n1536 >%----^NU

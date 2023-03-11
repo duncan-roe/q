@@ -40,5 +40,5 @@ INTERNALS
 Show what arguments Q started with (?)
 STARTED: Catalogue of useful macros
 New pseudomacro to replace "/*" with arbitrary seq: #, // &c (i.e. for ^O)
-New "contrib" directory for non-core macros
+STARTED: New "contrib" directory for non-core macros
 FReprompt to take optional message arg
