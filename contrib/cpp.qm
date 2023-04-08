@@ -1,6 +1,6 @@
 fd y /* ************************ cpp.qm ************************
 
-# This suite allows one to compare C code as written with the code as expanded
+# This suite enables one to compare C code as written with the code as expanded
 # by the C preprocessor, cpp.
 # The general idea is to make a set of preprocessor files, then delete the
 # lines from header files that were #included.
@@ -24,7 +24,7 @@ fd y /* ************************ cpp.qm ************************
 # preprocessed source (.i files). If your project uses gnu autotools, put the
 # CFLAGS= at start of ./configure line. This example assumes you only have a
 # Makefile. Also this example assumes you want the .i files in a directory
-# called *temps*
+# called "temps"
 # $ make -j$(($(nproc)+1)) clean
 # $ rm -rf temps; mkdir temps
 # $ CFLAGS='-P -C -dumpdir temps/ -save-temps' make -j$(($(nproc)+1))
@@ -44,6 +44,11 @@ fd y /* ************************ cpp.qm ************************
 # You are now ready to diff any source file with the corresponding .i file.
 # For best results, ignore white space changes and blank lines (e.g. diff -wB).
 
+# You can now generate a "shadow" directory which will have the preprocessed
+# files renamed back to .c (or .cc if they were that).
+# Macro 1577 in cpp.qm sets the name of this directory.
+# $ q -oiu,cpp.qm^J^N+ temps/*.i
+
 # Macros for when developing 'cpp.qm'
 n202 ^NC^NS^N\q cpp.qm^J^NU
 n220 ^NC^NS^N\u cpp.qm^J^NU
@@ -53,8 +58,11 @@ fd n
 #n3: Delete header lines from .i files
 #n4: Locate and display next marker (fm+r OK)
 #n5: Insert cut_here before current line
-#    (for q session when last #include and cut_here were #ifdef'd out)
+#    (for sources with last #include and cut_here #ifdef'd out)
 #    (q will pop a prompt in this case)
+#    You *must* use ^N5 if you intend to use ^N+ below
+#n+: Make a shadow .c directory tree from .i files after running n3
+#    Configure the name of this directory by defining n1577 (currently "shadow^NU")
 fd y
 
 n062 ^NC^NS^N\fm +g -d -t -l +s^J^ND^N^<1501>^NU
@@ -158,10 +166,113 @@ n1510 ^ND^N^<1503>^<SXEQ>^N^<1530>^<PSHMODE>^<DUP>^<PS2P30>^<OR>^<POPMODE>g-1^Jl
 n1515 ^<PSHMODE>^<DUP>^<PS2P30>^<OR>^<POPMODE>n1530 No marker found^*N\^Jn1531 CODE STARTS^*N\^Jn1532 KEEP TO HERE^*N\^Jn1533 CUT HERE^*N\^J^NU
 
 #n1535: Name of current top-level source file: overwritten as each file is encountered
-#       Enables ^n5 to put back the cut_here line as it was originally
+#       Enables ^N5 to put back the cut_here line as it was originally
 n1535 top-level source file name^N\
+
+# -------------------------- Shadow Creation Macro Suite --------------------------
+
+# To use this suite, you *must* have used ^N5 to reinstate all cut_here lines
+# that were removed by conditional compilation.
+# n053 (^N+) kicks this off.
+
+#n053: (^N+) Post-process .i files into a shadow .c tree
+n053 ^NC^NS^N\^<SFPT>^ND^N^<1537>^NU
+
+#n1537: Main loop on .i files to produce shadow tree
+n1537 ^ND^N^<1540>q^J^N^@
+
+#n1540: New file.
+#       Allowed next markers: code_starts
+n1540 ^ND^N^<1515>n1531 ^*N^*<1541>^J^<POPMODE>^N^<1510>
+
+#n1541: code_starts encountered in $0. Verify on line 1.
+#       Record original source path. Create corresponding shadow directory,
+#       hiding actual mkdir command (often a no-op).
+#       Allowed next markers: none, keep2here
+n1541 ^<PS2>^<PSHLNNB>^<SUB>^<SEQ>^N\^<POPN>^ND^N^<1547>^<PSHMODE>^<DUP>^<POPX>^<PS2P30>^<OR>^<POPMODE>^<XMODE>!mkdir -pv $(dirname ^ND^N^<1542>)^J^ND^N^<1515>n1530 s ^ND^N^<1542>^*J^*NU^Jn1532 ^*N^*<1544>^J^<POPMODE>^N^<1510>
+
+#n1544: k2h encountered in $0
+#       Allowed next markers: code_starts, cut_here
+n1544 ^ND^N^<1515>n1531 ^*N^*<1543>^Jn1533 ^*N^*<1545>^J^<POPMODE>^N^<1510>
+
+#n1543: code_starts encountered after line 1
+#       Store destination path. Store code_starts line# in tab a
+#       Allowed next markers: code_starts, k2h, cut_here (from $0)
+n1543 ^ND^N^<1547>^<PSHLNNB>^<S1>^<POPTAB a>^ND^N^<1515>n1531 ^*N^*<1551>^Jn1532 ^*N^*<1552>^Jn1533 ^*N^*<1553>^J^<POPMODE>^N^<1510>
+
+#n1551: code_starts encountered after code_starts from included .c
+#       Write out included file and delete it from $0
+#       If file aready exists, take a backup and if files compare unequal
+#       then consult the user
+#       If files compare equal, delete the backup
+#       Do the work in a called macro since cut_here from $0 has to do the same
+#       After that, jump back to n1543 (code_starts encountered after line 1)
+n1551 ^ND^N^<1555>^N^<1543>
+
+#n1555: Do included file stuff for n1551 and n1553. See n1551 annotation
+#       1. Calc # lines to write / delete, store in location 0 (n7000)
+#       2. Check existence of shadow file, if it does exist then rename it with
+#          backup suffix
+#       3. Write shadow file
+#       4. If we made a backup, compare and delete if same else ask user to take action
+n1555 ^<PSHMODE>^<DUP>^<PS2P30>^<OR>^<POPMODE>^<PSHTAB a>^<PSHLNNB>^<SUB>^<S1>^<POP 0>n4015 [ -e ^ND^N^<1546> ]^J^<SQEQ>^NL^ND^N^<1556>^<DUP>^<POPMODE>w ^ND^N^<1546> ta ^ND^N^<7000>^J^<DUP>^<PS2P30>^<OR>^<POPMODE>d ta ^ND^N^<7000>^Jg+1^J^<SQNE>^NL^<POPMODE>^NU^<DUP>^<PS2P30>^<OR>^<POPMODE>n4015 diff ^ND^N^<1546> ^ND^N^<1546>^ND^N^<1576>^J^<SQEQ>^N^<1557>!rm ^ND^N^<1546>^ND^N^<1576>^J^<POPMODE>^NU
+
+#n1557: Shadow .c file differs from original: seek user advice
+n1557 fr ^ND^N^<1546> and ^ND^N^<1546>^ND^N^<1576> differ: you may wish to take some action^J^<POPMODE>^NU
+
+#n1556: Shadow included.c exists - rename it
+n1556 !mv ^ND^N^<1546> ^ND^N^<1546>^ND^N^<1576>^J^NU
+
+#n1552: k2h encountered after code_starts from included .c
+#       Allowed next markers: cut_here
+n1552 ^ND^N^<1515>n1533 ^*N^*<1554>^J^<POPMODE>^N^<1510>
+
+#n1554: cut_here encountered after k2h from included .c
+#       Allowed next markers: code_starts, cut_here (from $0)
+n1554 ^ND^N^<1515>n1531 ^*N^*<1551>^Jn1533 ^*N^*<1553>^J^<POPMODE>^N^<1510>
+
+#n1553: cut_here (from $0) encountered during included .c
+#       Do file stuff as per n1551
+#       After that, jump back to n1545 (cut_here encountered after k2h in $0)
+n1553 ^ND^N^<1555>^N^<1545>
+
+#n1545: cut_here encountered after k2h in $0
+#       Allowed next markers: none
+n1545 ^ND^N^<1515>n1530 s ^ND^N^<1542>^*J^*NU^J^<POPMODE>^N^<1510>
+
+#n1547: Store source path from previous line as destination (shadow) path.
+#       Remove leading "./" from source path
+#       Only store n1542 if at file start
+#       Append cut-down n1542 to n1546 if not at file start
+#       Suppress output while doing the above
+n1547 ^<PSHMODE>^<DUP>^<PS2P30>^<OR>^<POPMODE>^<PS2>^<PSHLNNB>^<SUB>m-1^J^NC^N\^F^F^F^L^G ^K^H^ND^N^<1550>^D^D^E^ND^N^<1577>/^ND^N^<1560>^NM^<1546>^<SEQ>^NL^NM^<1542>X^[^<POPN>^<POPMODE>^NU
+
+#n1560: Append file name of $0 (minus .c) to current line if R nonzero
+#       (so this is an included .c file)
+#       Actually we need to save the curent line and esacpe it,
+#       then insert a line which will be escaped
+n1560 ^<SNE>^NU^NM^<1546>^[n4014 echo ^ND^N^<1542>|rev|cut -d. -f2-|cut -d/ -f1|rev^Ji-^J^ND^N^<1546>.^ND^N^<4014>^NU
+
+#n1550: ALTRTN unless line starts "./"
+n1550 ^NG.^NL^NJ^<15>X^X^NG/^NS^NL^H^NUX^H^NI^NU
+
+# -------------------------- Shadow data variables --------------------------
+
+#n1542: C shadow path of $0
+n1542 C shadow path^N\
+
+#n1546: C shadow path of current file
+n1546 Current C shadow path^N\
+
+# -------------------------- Configuration data --------------------------
 
 #n1536: Token that identifies a marker.
 #       One should verify that this token doesn't occur anywhere in the
 #       original source before starting.
 n1536 >%----^NU
+
+#n1576: Backup suffix
+n1576 .orig^NU
+
+#n1577: Name of shadow directory tree
+n1577 shadow^NU
