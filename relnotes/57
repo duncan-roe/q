@@ -4,7 +4,7 @@ One major innovation:
 This can either log all characters you type or
 all characters Q sees (i.e. also all characters from macros and U-use files).
 
-Completed *TODO* item "Opcode XMODE ...": see the [*DONE*](https://github.com/duncan-roe/q/blob/master/q/DONE) file for a complete list. Perhaps of some note:
+Completed *TODO* item "Opcode XMODE ...": see the [*DONE*](https://raw.githubusercontent.com/duncan-roe/q/master/q/DONE) file for a complete list. Perhaps of some note:
 
 - **fm -s** deletes all trailing whitespace (tab, Cr &c.)
 - overhauled macro and other debugger templates to be more useful

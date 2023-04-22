@@ -1,6 +1,6 @@
   ++ I N V O K I N G   Q ++
 
-Usage: q [-AVbdemnoqtv] [-i <macro definition>] [-k <keylog file>] [+<n> file]
+Usage: q [-AVbcdemnoqtv] [-i <macro definition>] [-k <keylog file>] [+<n> file]
 [file[:<n>]]...
 
 <file> arguments are processed sequentially, by use of q's Q-QUIT command with
@@ -39,8 +39,13 @@ reduce splitting of text strings within the file, but the J-JOIN command may be
 used freely to supplement this. By default, binary edits are done in Fixed
 Length mode - "H FM" for more information.
 
+-c (Continuous) is only valid when Q is running in a pipe, and tells Q not to
+wait for end of file before processing but instead process as soon as there are
+no more lines to read and at least 1 line has been read. This allows output from
+e.g. tail -f to be piped into Q.
+
 -d, -e, -m & -t reverse the default sense of the corresponding mode in respect
-of reading files ("H FM for more). Thus -d & -t reverse the dr & tr defaults,
+of reading files ("H FM" for more). Thus -d & -t reverse the dr & tr defaults,
 but not dw or tw.
 
 -q (quiet) tells Q not to output anything to standard output. There must be a -i
