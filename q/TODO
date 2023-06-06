@@ -1,12 +1,4 @@
-FIX BUG: $0 loses meaning when Q-QUIT degrades to ^NU
-FIX BUG: Can set FBRIEF / FNONE using ALU even when fm+v is asserted
-Opcode to discover if q -b or not
-Optimise writfl if no o/p conversion (binary or no fm+tw,+dw,+l,-s &c.)
 Optimise S-Save if deferd and binary or none of dos or tab or fm-s,+l &c
-Enable Q to work in open pipe (e.g. tail -f|q)
- - Nested main called in a loop
- - Nonblock read gets no bytes *and* last ch is ^J (may lift that restriction)
- - Only happens if -Timeout option on command line
 Retire separate MACRO & HELP directories
 README_DEBUG_ADVANCED to have table of useful variables
   ptrpos, tabs rs[], fs[], rsidx, fsidx, xreg, qreg
@@ -41,4 +33,3 @@ Show what arguments Q started with (?)
 STARTED: Catalogue of useful macros
 New pseudomacro to replace "/*" with arbitrary seq: #, // &c (i.e. for ^O)
 STARTED: New "contrib" directory for non-core macros
-FReprompt to take optional message arg

@@ -5,6 +5,19 @@ For other features of each release, see the release notes at
 https://github.com/duncan-roe/q/releases
 (some release notes have been updated to reflect current behaviour)
 
+-- v58
+Fixed bug whereby Q$0 stopped working after Q in macro degraded to ^NU
+Fixed bug whereby the ALU could set FBRIEF / FNONE when fm+v was asserted
+Opcodes SBIN & SNBIN discover if q -b or not
+Optimised writfl if no o/p conversion (binary or no fm+tw,+dw,+l,-s &c.)
+Enabled Q to work in an open pipe (e.g. tail -f|q)
+ - Nested main called in a loop
+ - if poll(2) sees no data and have read at least 1 line, process lines read
+ - Only happens if -Continuous option on command line
+FReprompt command takes an optional message arg
+There are catalogues of the foundation and word macro suites e.g. H FNDTN.CAT
+There  is a "contrib" directory for non-core macros
+
 -- v57
 Opcode XMODE to set fmode from X-reg after command read (for ^N7)
 Specify file for monitoring input (from any source)

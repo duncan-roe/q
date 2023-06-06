@@ -1,26 +1,30 @@
-When you need to debug Q running in a pipe, you don't *need* the second screen:
-it won't show much unless you give Q the -v flag or a macro uses FR-FREPROMPT.
-The template below is enough to debug the pipe mechanism.
+When debugging Q running in a pipe, Q will not read from the second screen
+except if a macro uses FR-FREPROMPT. If you redirect Q's output, you can
+therefore dispense with the second screen as in the 1st ggdb line below.
 You will always want to set breakpoints, because there is no user interaction
 with Q running in a pipe (FR excepted).
 Q will always need a "-i" (initial command) argument.
-The one below is trivial: if you have a specific use case then you would want to
-replace it and likely also provide your own input file.
+To see Q's normal informational messages, give Q the -v flag as in the 2nd ggdb
+line below. This line also demonstrates logging macro execution.
 
-Q does not insist that its input file is a pipe:
-a regular file is fine.
+Q does not insist that its input file is a pipe: a regular file is fine.
 
-The file "xxx" is provided as input.
-The commands below (except the last) use xxx and create the file /tmp/yyy.
-I used the last command when developing -c(ontinuous pipe):
+The file "xxx" is provided as input. All examples run "y,x,y" as their initial
+command so do not need any other macros loaded and use the -n flag.
+
+ggdb -a "-niy,x,y^J <xxx >/tmp/yyy" q
+ggdb -f maxsize.gdb -g darkbg.gdb -t $my_tty -a "-k $log_tty -nvifm+8^Jy,x,y^J <xxx" q
+
+The commands below demonstrate debugging with the -c(ontinuous pipe) flag:
 - ~/fifo is a real fifo and should have a writer before running ggdb.
 - The cat command below enables single-character input from the keyboard.
   To get Q to see multiple chars, enter them when Q is stopped on a breakpoint.
 - -b is optional: without it Q will always end the file with a newline even if
      the pipe writer closed without writing one.
+Before running ggdb, run the 1st command below in another terminal. You need to
+use ^C to finish (and finish the debug session): run the 2nd command after that.
 
 stty -icanon; stdbuf -i 0 cat >~/fifo
+stty sane
 
-ggdb -a "-iy,x,y^J <xxx >/tmp/yyy" q
-ggdb -a "-k $log_tty -ifm+8^Jy,x,y^J <xxx >/tmp/yyy" q
-ggdb -f maxsize.gdb -g darkbg.gdb -t $my_tty -a "-bvcniy,x,y^J <~/fifo >/tmp/yyy" q b\ check_pipe c
+ggdb -f maxsize.gdb -g darkbg.gdb -t $my_tty -a "-bvcniy,x,y^J <~/fifo" q b\ check_pipe c
