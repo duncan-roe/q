@@ -1912,8 +1912,13 @@ J_L_M_common(void)
       puts("E - O - F\r");
       return;
     }                              /* if(!rdlin(curr, false)) */
-    if (is_locate && !EXCLUSIVE_L_BOOL)
+
+/* Locate only moves the cursor if:
+ * a) This is not exclusive locate (string *not* found, locpos is invalid) and
+ * b) This is the first line in the loop (actual line L found) */
+    if (is_locate && !EXCLUSIVE_L_BOOL && i == count)
       curr->bcurs = locpos;        /* Set cursor to start of found string */
+
     sprmpt(ptrpos - 1);            /* Set up prompt lin # just read */
     if (A_I_M_common())
       return;
