@@ -1683,7 +1683,7 @@ printf_eof_reached(long ct, char *action_str)
   i4 = ct - i4 + 1;                /* Lines not actioned */
   printf("%s of file reached:- ", REVRSE ? "start" : "end");
   printf("%ld line%s ", i4 - 1, i4 == 2 ? "" : "s");
-  printf("%s\r", action_str);
+  printf("%s\r\n", action_str);
 }                       /* void printf_eof_reached(long ct, char *action_str) */
 
 /* **************************** move_cursor_back **************************** */
