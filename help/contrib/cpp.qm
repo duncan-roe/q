@@ -79,7 +79,9 @@ n062 ^NC^NS^N\fm +g -d -t -l +s^J^ND^N^<1501>^NU
 #n1501: Main loop on .c files.
 #       Skip to next file if already processed
 #       Otherwise call n1502 to do stuff
-n1501 l ^ND^N^<1536>^J^NC^NL^[^NJ^<6>^ND^N^<1502>s^Jq^J^N^@
+#       Extended for libnetfilter_queue:
+#         SYNOPSIS doxygen entries contain #include lines; don't wrap them
+n1501 l ^ND^N^<1536>^J^NC^NL^[^NJ^<6>^ND^N^<1502>s^Jg1^Jl '.SH SYNOPSIS',,,,1^J^NC^NS^NLq^J^N^@^[^NFzfl KEEP2HERE^ND^N^<241>g tz^Jfl CUT_HERE^ND^N^<241>^<SFNMOD>s^Jq^J^N^@
 
 #n1502: Insert code_starts then call n1562 to do #includes
 #       Previously nonexistent file will get created hence check m1 worked
@@ -287,3 +289,9 @@ n1576 .orig^NU
 
 #n1577: Name of shadow directory tree
 n1577 shadow^NU
+
+# ------------------------ libnetfilter_queue extension ------------------------
+
+# Foundation macros:
+n241 ^NC^NS^N\^NM^<1201>^U^ND^N^<506>^NU ; NW! delete lines found by L
+n506 ^ND^N^<1201>^J^NC^NU^[D-1^J^N^<506>
