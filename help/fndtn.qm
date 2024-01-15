@@ -31,7 +31,7 @@ N Z '^Z^B^S^J^NU
 N ^ '^NC^NL^J^[^NS^NL^ND^N^^^[m-2,32000^J^NU ;Back up 1 line when modifying
 N _ ^P^M^NU
 N $ '^NE^E^X^NA^NU ^N^@ ;Space between each char from cursor onwards
-N & '^NC^NS^N\!rcsdiff ^ND^N^<522> "^ND^N^<4002>"|less -EX^J^NU
+N & '^NC^NS^N\!rcsdiff ^ND^N^<522> "^ND^N^<4002>"|less -EX^ND^N^<1410>^J^NU
 N246 ^NC^NS^N\!git diff ^ND^N^<522> -- "^ND^N^<4002>"^J^NU ; ^N^W&
 N * '!/bin/ls -l "^ND^N^<4002>"^J^NU
 N ( '^NC^NS^N\^NF{!co^ND^N^<1301> -l "^ND^N^<4002>"^Jq '^ND^N^<4002>'^J^NN{^NU
@@ -64,7 +64,7 @@ n771 ^D^N^<770>
 n770 ^NA^NU^NG ^NU^D^N^@
 N222 ^NC^NS^N\^NM^<1201>^UM ^NU ;Define string to be appended/inserted
 N225 ^NC^NS^N\!ci -d -t- "^ND^N^<4002>"^J!rcs -U "^ND^N^<4002>"^J!co -M "^ND^N^<4002>"^J^NU ;Make known to RCS - non-strict locking
-N230 ^NC^NS^N\^ND^N^<4002>^[!echo "^P^[]0;"^ND^N^<4002>"^P^G"^J^NU ; Set xterm title to file (stuff at front guards against sending bad Ec seq when no file)
+N230 ^NC^NS^N\^ND^N^<4002>^[!echo -n "^P^[]0;"^ND^N^<4002>"^P^G"^J^NU ; Set xterm title to file (stuff at front guards against sending bad Ec seq when no file)
 N232 ^NC^N\^NE^Z^ND^N^<1201>^J^NC^NU^N^@ ;Append ^N^<1201> to lines
 N241 ^NC^NS^N\^NM^<1201>^U^ND^N^<506>^NU ; NW! delete lines found by L
 # n347 (^N^Wg) Check in current source with message 1103
@@ -177,5 +177,6 @@ N1404 -wn^NU ; grep options for ^N^W^F
 N1405 ^NU ; Command to run after N206 (^N^W^F) (e.g. |less -ESX^NU, |cat^NU)
 N1406 ^NI^NU ; Change to ^NU for no comments from ^NE / ^NL macros (all languages)
 N1407 q$0^J^NU ; Change to ^NU to stop automatic q$0 by ^N^Wp
+N1410 ^NU ; Change to append `less` command options e.g. r^NU for colour seqs
 n426 /* N427 & N430 are short-form ^NE / ^NL (all languages)
 N1500 /* 15XX - RESERVED FOR MACRO PROGRAMS (*.qm)
