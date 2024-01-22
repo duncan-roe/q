@@ -33,7 +33,7 @@ N207 ^NC^NS^N\^ND^N^<1001>fm-dw^Js^J!runindent "^ND^N^<4002>"^Jq '^ND^N^<4002>'^
 #         to terminate the intervention) n415 jumps to n404 to continue
 #         processing the input, starting at the file position left by the user.
 
-N061 ^NC^NS^N\t3 36 81^J^<PS0>^<POPX>^ND^N^<1002>fb^Jo y^Ji1^Jx^NO|^[^ND^N^<404>o n^Jy ' * /*' ' *',,,,1^J^ND^N^<1012>^NU
+N061 ^NC^NS^N\t3 36 81^J^<PS0>^<POPX>^ND^N^<1002>fb^Jo y^Jfm-g^Ji1^Jx^NO|^[^ND^N^<404>o n^Jy ' * /*' ' *',,,,1^J^ND^N^<1012>^NU
 
 # n 6   Continue the current /* comment on the next line,
 #       starting aligned with this one
