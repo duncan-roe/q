@@ -81,7 +81,7 @@ n062 ^NC^NS^N\fm +g -d -t -l +s^J^ND^N^<1501>^NU
 #       Otherwise call n1502 to do stuff
 #       Extended for libnetfilter_queue:
 #         SYNOPSIS doxygen entries contain #include lines; don't wrap them
-n1501 l ^ND^N^<1536>^J^NC^NL^[^NJ^<6>^ND^N^<1502>s^Jg1^Jl '.SH SYNOPSIS',,,,1^J^NC^NS^NLq^J^N^@^[^NFzfl KEEP2HERE^ND^N^<241>g tz^Jfl CUT_HERE^ND^N^<241>^<SFNMOD>s^Jq^J^N^@
+n1501 l ^ND^N^<1536>^J^NC^NL^[^NJ^<6>^ND^N^<1502>s^Jg1^Jl /\*[*!],,,,1^J^NC^NS^NLq^J^N^@^[^NFzfl KEEP2HERE^ND^N^<241>g tz^Jfl CUT_HERE^ND^N^<241>^<SFNMOD>s^Jq^J^N^@
 
 #n1502: Insert code_starts then call n1562 to do #includes
 #       Previously nonexistent file will get created hence check m1 worked
