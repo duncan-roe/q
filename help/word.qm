@@ -8,9 +8,9 @@ N I '^NC^NS^N\G1^J^NO|^N^<714> ;Justify r/h margin T2 unless line < T1
 # n367 (^N^Ww) Insert a space at front of each line
 n367 ^NC^NS^N\ ^ND^N^<222>1 999999^J^ND^N^<210>^ND^N^A^NU
 # n700ff: macros to implement ^N^A & ^N^I
-N700 ^X^NA^N^<701>^NG ^N^<701>^N^<702> ;Leave lines starting "> " alone
-N701 ^J^NC^NU^NA^N^<706>^NG>^N^<700>^N^<702> ;Leave lines starting "> " alone
-N707 ^NP2^Y^@^NO{^<PSHTAB {>^<PSHTAB 2>^<SUB>^<SEQ>^<S1>^<POPTAB }>^J^NC^NU^NA^N^<706>^NG ^N^<702>^NG>^N^<700>^F^NA^NS^Y^@^NP}^N^<702>^N^<703>
+N700 ^X^NA^N^<701>^NG ^N^<701>^N^<702> ;Leave lines starting "[>|] " alone
+N701 ^J^NC^NU^NA^N^<706>^NG>^N^<700>^NG|^N^<700>^N^<702> ;Leave lines starting "[>|] " alone
+N707 ^NP2^Y^@^NO{^<PSHTAB {>^<PSHTAB 2>^<SUB>^<SEQ>^<S1>^<POPTAB }>^J^NC^NU^NA^N^<706>^NG ^N^<702>^NG>^N^<700>^NG|^N^<700>^F^NA^NS^Y^@^NP}^N^<702>^N^<703>
 N702 ^Z^Y^NP2^H^F^F^N^<704> ;New line:- first see if not too long
 N703 ^[J-2,1,32000^J^NR{^E ^E^F^N^<704> ;We know 1st wd will fit
 N704 ^NA^NS^Y^@^NP2^N^<705>^NA^N^<707>^F^F^N^@ ;Work along line
@@ -18,7 +18,7 @@ N704 ^NA^NS^Y^@^NP2^N^<705>^NA^N^<707>^F^F^N^@ ;Work along line
 #       Otherwise, split line at preceding word boundary.
 N705 ^B^NP1^NS^N^<701>^?^T^N^<702>
 N706 ^NA^NS^N^<710>^J^NC^NU^N^@ ;Accept extra blank lines until non blank
-N710 ^NG>^N^<700>^N^<702> ;Leave lines starting "> " alone also
+N710 ^NG>^N^<700>^NG|^N^<700>^N^<702> ;Leave lines starting "[>|] " alone also
 N711 ^NO~^Z^NB2^NL^J^NUX^NR~^NI^NU
 N712 ^B^NP|^NS^N^<713> ^ND^N^<711>^N^<714>^N^<712>
 N713 ^G.^NA^N^<712>^X^NG ^NS^N^<713>^ND^N^<711>^N^<714>^N^<713>
