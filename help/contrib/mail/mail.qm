@@ -1,0 +1,34 @@
+# n2: Strip unwanted headers from mbox
+# n3: remove lines starting with regexp in command buffer followed by ':'
+fd y /* ********************* n2 leaves fm+s in effect *********************
+
+N202 ^NC^NS^N\q /home/dunc/macros/mail.qm^J^NU
+N220 ^NC^NS^N\u /home/dunc/macros/mail.qm^J^NU
+
+# n2 - Toplevel
+n062 ^NC^NS^N\fm+s^J^ND^N^<1001>^ND^N^<1303>fm+g,-l,-t^Jq ^ND^N^<4002>^Jo,n^J^ND^N^<1510>^ND^N^<1011>^NU
+
+# n3 remove lines starting with regexp in command buffer
+n063 ^NM^<1577>^Ug1^J^ND^N^<1501>^NU
+
+# n1303 - Run in brief
+n1303 fb^J^NU
+
+# n1501 - get next line to do
+n1501 l ^*^ND^N^<1577>:^J^NC^NU^[m-^J^NG ^N^<1502>^[d-2^J^N^@
+
+# n1502 - on the first of possibly many indented lines 2B deleted
+# Memory locations:
+# 0 - first line to delete
+# 1 - last line to delete
+n1502 ^[g-1^J^<PSHLNNB>^<S1>^<POP 0>l ^*[^*[:space:]]^J^[^<PSHLNNB>^<S2>^<POP 1>d ^ND^N^<7000> - ^ND^N^<7001>^J^N^<1501>
+
+# n1510ff: Remove lines with specified patterns
+
+n1510 (X|ARC)-[^*:]+^ND^N3Received^ND^N3^N^<1511>
+n1511 (DKIM-Signature|Authentication-Results)^ND^N3^N^<1512>
+n1512 Precedence^ND^N3List-[^*:]+^ND^N3^N^<1513>
+n1513 (Return-Path|Delivered-To|Sender)^ND^N3^N^<1514>
+n1514 User-Agent^ND^N3^N^<1515>
+n1515 Errors-To^ND^N3^N^<1516>
+n1516 ^NU
