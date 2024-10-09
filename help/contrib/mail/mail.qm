@@ -31,4 +31,5 @@ n1512 Precedence^ND^N3List-[^*:]+^ND^N3^N^<1513>
 n1513 (Return-Path|Delivered-To|Sender)^ND^N3^N^<1514>
 n1514 User-Agent^ND^N3^N^<1515>
 n1515 Errors-To^ND^N3^N^<1516>
-n1516 ^NU
+n1516 (DomainKey-Signature|Organization|Importance|Reply-To|Mailing-list)^ND^N3^N^<1517>
+n1517 ^NU
