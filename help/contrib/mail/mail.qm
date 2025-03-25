@@ -9,7 +9,7 @@ N220 ^NC^NS^N\u /home/dunc/macros/mail.qm^J^NU
 n062 ^NC^NS^N\fm+s^J^ND^N^<1001>^ND^N^<1303>fm+g,-l,-t^Jq ^ND^N^<4002>^Jo,n^J^ND^N^<1510>^ND^N^<1011>^NU
 
 # n3 remove lines starting with regexp in command buffer
-n063 ^NM^<1577>^Ug1^J^ND^N^<1501>^NU
+n063 ^NC^NS^N\^NM^<1577>^Ug1^J^ND^N^<1501>^NU
 
 # n1303 - Run in brief
 n1303 fb^J^NU
