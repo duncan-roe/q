@@ -1,3 +1,4 @@
+fd n
 # n2: Strip unwanted headers from mbox
 # n3: remove lines starting with regexp in command buffer followed by ':'
 fd y /* ********************* n2 leaves fm+s in effect *********************
