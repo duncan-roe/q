@@ -1,0 +1,64 @@
+fd y /* TESLA BATTERY DOWNLOADED CSV PROCESSOR */
+n202 ^NC^NS^N\q /home/dunc/macros/envoy.qm^J^NU
+n220 ^NC^NS^N\u /home/dunc/macros/envoy.qm^J^NU
+
+fd n
+
+# ^N3: Do it
+# ^N4: For development only: restore csv from backup (.bu) copy
+
+fd y
+
+#n064: temp test macro to initialise on .bu
+n064 ^NC^NS^N\d1 1111^Je ^ND^N^<4002>.bu^J^NU
+
+#n063: Mainline and entry point
+n063 ^NC^NS^N\l 'Date time',1^J^NC^N\^[a^J^[g-1^Jl '0,0,0,0,0'^J^NC^NS^NL^NJ^<6>X^[d-1^Jn13000,20^Jn13001,4^Jn13004 3^J^<PSHNBLN>^<POP 1>m2^J^G,^K^H^GT^K^NM^<1505>^[m1^J^G,^L^E^ND^N^<1505>^J^ND^N^<1510>^ND^N^<1501>^NC^NS^N\m2 - ^ND^N^<7001>^J^ND^N^<1504>y :00',' ','^Jy,'Energy Remaining (%)','Bat chg (%/20)',1,1^Jm1 ^ND^N^<7001>^J^ND^N^<1503>^NU
+# Check if ---| already processed      |    |                                      |    |                              |                 |                           |                        |           |                    |                  |           |             |                                              |                |           |
+# Ensure no deferred lines ------------|    |                                      |    |                              |                 |                           |                        |           |                    |                  |           |             |                                              |                |           |
+# Test for dummy last line -----------------|                                      |    |                              |                 |                           |                        |           |                    |                  |           |             |                                              |                |           |
+# Delete dummy last line (i.e., we found one) -------------------------------------|    |                              |                 |                           |                        |           |                    |                  |           |             |                                              |                |           |
+# Set up FP constants: 20 (bat chg divisor), 3 & 4 (for interpolation logic) -----------|                              |                 |                           |                        |           |                    |                  |           |             |                                              |                |           |
+# Get #lines in file (= line# of last line) to mem loc 1 --------------------------------------------------------------|                 |                           |                        |           |                    |                  |           |             |                                              |                |           |
+# Extract spreadsheet date --------------------------------------------------------------------------------------------------------------|                           |                        |           |                    |                  |           |             |                                              |                |           |
+# Put spreadsheet date as 1st heading entry (row 1 entry 1 / cell A1) -----------------------------------------------------------------------------------------------|                        |           |                    |                  |           |             |                                              |                |           |
+# Count how many columns there are, and set up skip to last one (n1507) ----------------------------------------------------------------------------------------------------------------------|           |                    |                  |           |             |                                              |                |           |
+# Interpolate battery charge (only records on the quarter-hour, others every 5 mins) ---------------------------------------------------------------------------------------------------------------------|                    |                  |           |             |                                              |                |           |
+# Modify all data lines. Apply n1504, then strip seconds off time (replace ":00," with ",": can't affect line 1)---------------------------------------------------------------------------------------------------------------|------------------|-----------|             |                                              |                |           |
+# Update Battery-charge-level column heading -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|                                              |                |           |
+# Modify all lines. Call n1503 to put double-quotes around column1 so it looks like text to libreoffice and displays as-is. Must do this else libreoffice will format cc1 as a date. --------------------------------------------------------------------------------------------------------------------------------------|----------------|           |
+# Return, in case one day another macro wants to call this one. ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+#n1504: Massage date on every data line, also batt. chg. if present
+n1504 ^NC^NU^G,^Y ^B^G+ ^Y^ND^N^K^H^GT^X^L^ND^N^<1507>^NA^NL^ND^N^<1506>^ND^N^<13001>^J^N^@
+
+#n1505 Stores spreadsheet date (for cell A1)
+n1505 UNDEFINED^N\
+
+#n1506 Read battery charge %,divide by 20
+n1506 ^<PSHF 0>^<INPF>^<POPN>^<DIVF>^<POPF 1>^K^NU
+
+#n1507 Skip to battery charge entry (constructed after counting columns)
+n1507 UNDEFINED^N\
+
+#n1510: Count # of commas in line 1 and generate n1507
+n1510 ^<PS0>m1^J^ND^N^<1511>^[a^J^P^G,^ND^N^<1512>^P^X^NM^<1507>^[g2^J^<POPN>^NU
+
+#n1511: Actually count commas
+n1511 ^G,^NA^NU^<A1>^N^@
+
+#n1512: Append control-uparrows to macro line
+n1512 ^<S1>^<SGT>^NU^P^^^N^@
+
+# Linearly interpolate battery charge values
+
+#n1501: Look for first battery entry
+#       (usually line 2 which is where macro is invoked).
+#       When found, do first-time stuff then enter main interpolate loop
+n1501 m-^J^NC^NU^ND^N^<1507>^NA^NS^NL^[^N^@X^<INPF>^<POPN>^<POPF 1>^[m+2^J^NC^NU^ND^N^<1502>^NU^[^N^@
+
+#n1502: Main interpolation loop
+n1502 ^ND^N^<1507>^NA^NS^NL^NI^NU^<PSHF 4>^<PSHF 1>^<INPF>^<POPN>^<DUPF>^<POPF 3>^<SUBF>^<DIVF>^<POPF 5>^[m-3,2^J^<PSHF 1>^<PSHF 5>^<ADDF>^<DUPF>^<POPF 6>^Z^ND^N^<13006>^J^<PSHF 5>^<ADDF>^<POPF 6>^Z^ND^N^<13006>^J^<PSHF 3>^<POPF 1>m+3^J^N^@
+
+# n1503: Convert column 1 to 'text'
+n1503 ^NC^NU^E"^G,"^J^N^@

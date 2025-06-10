@@ -1,0 +1,11 @@
+#!/bin/sh
+#set -x
+[ $# -gt 0 ] || { echo 'Nothing to do!'; exit 1; }
+while [ $# -gt 0 ]
+do [ -f $(dirname $1)/$(basename $1 .csv).pdf -o $(echo $1|rev|cut -f1 -d.) = fdp ] ||
+{
+  q -oiu,'^ND^N^<4003>/contrib/powerwall/powerwall.qm^Jfb^J^ND^N3s^J' $1
+  libreoffice $1
+}
+shift
+done

@@ -1,0 +1,32 @@
+powerwall.qm - massage Tesla powerwall csv files for smooth-line PDF graph
+
+powerwall.qm is designed to operate on a 1-day battery data download from the
+Tesla app. The macros shorten entries in the date/time colum and coerce the
+Energy Remaining column to be suitable for a smoooth-line graph.
+
+The POW shell script runs q to edit the csv then invokes LibreOffice for the
+graphics. Actually getting the graph is a manual process detailed below.
+
+In detail: the Date time column has entries like 2022-10-20T00:00:00+11:0.
+Shorten this to "00:00" and replace the heading with the date e.g."2022-10-20"
+from the above. Double quotes are there so we don't have to change cell format
+from default.
+
+Change the Energy Remaining heading to Bat chg (%/20). Energy Remaining is only
+logged every 15 min so interpolate at 5 minute intervals to match the other
+measurements and divide all entries by 20 (so 100% charge has same y cordinate
+as 5KW).
+
+POW invokes LibreOffice on the edited csv. Hit <Enter> in the Import dialog. To
+get the PDF to be an exact number of pages you will want the printing page grid.
+Turn this on by Print Preview (Ctrl-Shift-O) followed by ESC. Cell A1 should
+still be selected, so a graph now will plot all available data. Click on the
+Insert Chart tool icon then in the Chart Type dialog click Line, Lines Only and
+Finish. Reposition and resize the chart to taste, the click File, Export as PDF.
+Hit <Enter> in the following 2 dialogs. To end the LibreOffice session, click on
+a cell then enter Ctl-W. Answer Don't Save to the Confirm dialog (the csv is not
+changed).
+
+To delete a graph, first de-delect it (by selecting a cell) then click on the
+graph *once* and hit DEL. To re-select a graph for moving &c., double-click on
+it.
