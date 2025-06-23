@@ -1,6 +1,7 @@
 fd n
 # n2: Strip unwanted headers from mbox
 # n3: remove lines starting with regexp in command buffer followed by ':'
+# n4: like n3 but and can be any amount of non-space before ':'
 fd y /* ********************* n2 leaves fm+s in effect *********************
 
 N202 ^NC^NS^N\q /home/dunc/macros/mail.qm^J^NU
@@ -12,6 +13,9 @@ n062 ^NC^NS^N\fm+s^J^ND^N^<1001>^ND^N^<1303>fm+g,-l,-t^Jq ^ND^N^<4002>^Jo,n^J^ND
 
 # n3 remove lines starting with regexp in command buffer
 n063 ^NC^NS^N\^NM^<1577>^Ug1^J^ND^N^<1501>^NU
+
+# n4 remove other different lines starting with regexp in command buffer
+n064 ^NC^NS^N\^Z[^*[:space:]]*^NM^<1577>^Ug1^J^ND^N^<1501>^NU
 
 # n1303 - Run in brief
 n1303 fb^J^NU
@@ -34,4 +38,9 @@ n1513 (Return-Path|Delivered-To|Sender)^ND^N3^N^<1514>
 n1514 User-Agent^ND^N3^N^<1515>
 n1515 Errors-To^ND^N3^N^<1516>
 n1516 (DomainKey-Signature|Organization|Importance|Reply-To|Mailing-list)^ND^N3^N^<1517>
-n1517 ^NU
+n1517 msip_label^ND^N4^N^<1520>
+n1520 authentication-results^ND^N3^N^<1521>
+n1521 x-microsoft^ND^N4^N^<1522>
+n1522 x-ms-^ND^N4^N^<1523>
+n1523 x-forefront-antispam-report^ND^N3^N^<1524>
+n1524 ^NU
