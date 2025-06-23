@@ -7,6 +7,7 @@ N202 ^NC^NS^N\q /home/dunc/macros/mail.qm^J^NU
 N220 ^NC^NS^N\u /home/dunc/macros/mail.qm^J^NU
 
 # n2 - Toplevel
+# Leave fm+s in effect for when the user does an s or b
 n062 ^NC^NS^N\fm+s^J^ND^N^<1001>^ND^N^<1303>fm+g,-l,-t^Jq ^ND^N^<4002>^Jo,n^J^ND^N^<1510>^ND^N^<1011>^NU
 
 # n3 remove lines starting with regexp in command buffer
