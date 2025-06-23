@@ -1,0 +1,10 @@
+mail.qm - prune MTA-inserted headers from an mbox
+
+mail.qm is designed to make it easy to browse an mbox using a regular text
+viewer such as less.
+
+Its main function is to make it easy to look back up from a matched string to
+the date and subject email headers so you can find that email in your MUA.
+
+This assumes the text part of an email always comes before HTML and mime64
+attachments, but so far that's been the case.
