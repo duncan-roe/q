@@ -1,0 +1,28 @@
+INTRODUCTION
+
+This directory contains contributed Q macro suites.
+
+Anyone can contribute new suites. Open a github issue to contribute.
+
+CONTRIBUTION FORMAT
+
+The preferred format is a directory containing at least the macro suite in a .qm
+file and a README. It may contain other files, such as a shell script that uses
+the macro suite.
+
+The other accepted format is a bare .qm file starting with comments that
+document what it does and how to use it.
+
+CATALOGUE OF CONTRIBUTIONS
+
+cpp.qm: Enable viewing of pre-processed C code, but only from the .c files (i.e.
+w/out the copious output from the .h files). The suite caters for 1 level of
+including other .c files: at least one project does this to implement something
+approaching C++-style template functions.
+
+mail/mail.qm: Prune MTA-inserted headers from an mbox, for subsequent viewing
+with `less`.
+
+powerwall/powerwall.qm: Prepare a battery energy csv file downloaded from the
+Tesla app for LibreOffice to make a smooth-line graph. The powerwall/POW script
+runs Q and LibreOffice. powerwall/README details what to do in LibreOffice.
