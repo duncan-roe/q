@@ -67,6 +67,9 @@ N225 ^NC^NS^N\!ci -d -t- "^ND^N^<4002>"^J!rcs -U "^ND^N^<4002>"^J!co -M "^ND^N^<
 N230 ^NC^NS^N\^ND^N^<4002>^[!echo -n "^P^[]0;"^ND^N^<4002>"^P^G"^J^NU ; Set xterm title to file (stuff at front guards against sending bad Ec seq when no file)
 N232 ^NC^N\^NE^Z^ND^N^<1201>^J^NC^NU^N^@ ;Append ^N^<1201> to lines
 N241 ^NC^NS^N\^NM^<1201>^U^ND^N^<506>^NU ; NW! delete lines found by L
+# n343 (^N^Wc) Translate compose seq and append to previous line
+# Up to PS0 ensures we are in M so ^J will enter command mode
+n343 ^NC^N\^Z^T^[d-1^Jm-1^J^<PS0>^<POPX>^NG ^F^@^ND^N^<1111>^NU
 # n347 (^N^Wg) Check in current source with message 1103
 N347 ^NC^NS^N\!ci -u -m'^ND^N^<1103>' "^ND^N^<4002>"^J^NU
 # n362 - (^N^Wr) Multi-file replacer. If N1100 returns at once, got to next file.
@@ -89,6 +92,12 @@ N1104 !co -l "^ND^N^<4002>"^Jq $0^J^NU
 N1105 !ci -u -m"^ND^N^<1202>+>^ND^N^<1201>" "^ND^N^<4002>"^J^NU
 N1106 ^NU ; Can change to enable RCS / CVS
 N1107 ^NU ; Can change to enable RCS / CVS
+N1110 # USED BY n343 ^N\
+N1111 ^NG ^F^@^NA^N^<1112>^<INP>^ND^N^<1113>^<POPN>^N^<1114>
+N1112 ^U^ND^N^<4013>^NM^<1110>^[n 4013 %lo^J^<PSHX>^<PS0>^<POPX>m-1^J^K^ND^N^<1115>^*NU^Jn 4013 ^ND^N^<1110>^Jm-1^J^NM^<1110>^[d-1^Jfi fi m-1^**J^**NC^**N\^**Z^*ND^*N^*<1110>^*J^J^NU
+N1113 ^<SGT>^NU^X^<S1>^N^@
+N1114 ^<INDX>^<POP 0>^<A1X>^NA^N^<1112>^NG ^NS^N\^N^<1111>
+N1115 ^<SGT>^NU^<INDX>^<PSH 0>^<POP 777>^*<^ND^N^<7777>>^<S1>^<A1X>^N^@
 # n322 (^N^WR) Enable "R"CS in ^N^Wr
 N322 n1106 ^*ND^*N^*<1104>^*NU^Jn1107 ^*ND^*N^*<1105>^*NU^J^NU ; ^N^WR global replace does co/ci
 # n325 (^N^WU) "U"ndo RCS / CVS enable in ^N^Wr
