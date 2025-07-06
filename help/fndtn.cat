@@ -85,6 +85,14 @@ t2 10 15 24 26
                         contents. Target line is repeated at foot of screen.
                         (compare this with ^N9, which views around a located
                          string)
+ ^N^Wc   343  Edit     Translate compose seq and append to previous line.
+                         Invoke on a line containing a string of numbers
+                         (hex, octal or decimal(default)) and convert to bytes.
+                         Append to previous line and stay editing that line.
+                         u2b from command line tools can make a suitable line
+                         from unicode codepoints. URL (all 1 line):
+                         https://raw.githubusercontent.com/duncan-roe/
+                         command_line_tools/master/bin/u2b
  ^N^Wp   360  Command  Define string to be replaced over multiple files
                          (See note 2)
  ^N^Wq   361  Command  Define replacement string over multiple files
