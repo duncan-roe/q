@@ -35,3 +35,4 @@ New pseudomacro to replace "/*" with arbitrary seq: #, // &c (i.e. for ^O)
 STARTED: New "contrib" directory for non-core macros
 New pseudomacro to be obeyed on q <filename>
   default ^NU, may be re-defined (e.g. to ^N^W^X)
+^T in a macro to action pending ^C (like ^J does)
