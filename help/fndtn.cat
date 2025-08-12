@@ -86,13 +86,13 @@ t2 10 15 24 26
                         (compare this with ^N9, which views around a located
                          string)
  ^N^Wc   343  Edit     Translate compose seq and append to previous line.
-                         Invoke on a line containing a string of numbers
-                         (hex, octal or decimal(default)) and convert to bytes.
+                         Invoke on a line containing a string of Unicode
+                         codepoints and numbers (hex, octal or decimal(default))
+                         and convert to bytes.
                          Append to previous line and stay editing that line.
-                         u2b from command line tools can make a suitable line
-                         from unicode codepoints. URL (all 1 line):
-                         https://raw.githubusercontent.com/duncan-roe/
-                         command_line_tools/master/bin/u2b
+                         https://en.wiktionary.org/wiki/Appendix:Unicode
+                         lists all codepoints.
+                         Example: "42 U+BD" adds "asterisk1/2" to previous line.
  ^N^Wp   360  Command  Define string to be replaced over multiple files
                          (See note 2)
  ^N^Wq   361  Command  Define replacement string over multiple files

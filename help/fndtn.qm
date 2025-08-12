@@ -68,8 +68,18 @@ N230 ^NC^NS^N\^ND^N^<4002>^[!echo -n "^P^[]0;"^ND^N^<4002>"^P^G"^J^NU ; Set xter
 N232 ^NC^N\^NE^Z^ND^N^<1201>^J^NC^NU^N^@ ;Append ^N^<1201> to lines
 N241 ^NC^NS^N\^NM^<1201>^U^ND^N^<506>^NU ; NW! delete lines found by L
 # n343 (^N^Wc) Translate compose seq and append to previous line
+#   Memory locations:-
+#   0[] - bytes to be added to fi command (X has # to do)
+#   777 - next byte to go in fi cmd
+#   776 - Value to compare against
+#   775 - # bytes in char
+#   774 - Leading bits of 1st byte in char
+#   773 - Leading bits of 4-byte seq
+#   772 - Leading bits of 3-byte seq
+#   771 - Leading bits of 2-byte seq
+#   770 - Continuations to do
 # Up to PS0 ensures we are in M so ^J will enter command mode
-n343 ^NC^N\^Z^T^[d-1^Jm-1^J^<PS0>^<POPX>^NG ^F^@^ND^N^<1111>^NU
+n343 ^NC^N\^Z^T^[d-1^Jm-1^J^<PS0>^<POPX>^<PS128>^<PS64>^<OR>^<DUP>^<POP 771>^<PS32>^<OR>^<DUP>^<POP 772>^<PS16>^<OR>^<POP 773>^ND^N^<1111>^NU
 # n347 (^N^Wg) Check in current source with message 1103
 N347 ^NC^NS^N\!ci -u -m'^ND^N^<1103>' "^ND^N^<4002>"^J^NU
 # n362 - (^N^Wr) Multi-file replacer. If N1100 returns at once, got to next file.
@@ -93,11 +103,30 @@ N1105 !ci -u -m"^ND^N^<1202>+>^ND^N^<1201>" "^ND^N^<4002>"^J^NU
 N1106 ^NU ; Can change to enable RCS / CVS
 N1107 ^NU ; Can change to enable RCS / CVS
 N1110 # USED BY n343 ^N\
-N1111 ^NG ^F^@^NA^N^<1112>^<INP>^ND^N^<1113>^<POPN>^N^<1114>
-N1112 ^U^ND^N^<4013>^NM^<1110>^[n 4013 %lo^J^<PSHX>^<PS0>^<POPX>m-1^J^K^ND^N^<1115>^*NU^Jn 4013 ^ND^N^<1110>^Jm-1^J^NM^<1110>^[d-1^Jfi fi m-1^**J^**NC^**N\^**Z^*ND^*N^*<1110>^*J^J^NU
-N1113 ^<SGT>^NU^X^<S1>^N^@
+N1111 ^NG ^F^@^NA^N^<1112>^NGU^N^<1116>^<INP>^ND^N^<1113>^N^<1114>
+N1112 ^U^ND^N^<4013>^NM^<1110>^[n 4013 %lo^J^<PSHX>^<PS0>^<POPX>m-1^J^K^ND^N^<1115>^<POPN>^*NU^Jn 4013 ^ND^N^<1110>^Jm-1^J^NM^<1110>^[d-1^Jfi fi m-1^**J^**NC^**N\^**Z^*ND^*N^*<1110>^*J^J^NU
+N1113 ^<SGT>^NS^NL^<POPN>^NU^X^<S1>^N^@ # Move past number just read
 N1114 ^<INDX>^<POP 0>^<A1X>^NA^N^<1112>^NG ^NS^N\^N^<1111>
 N1115 ^<SGT>^NU^<INDX>^<PSH 0>^<POP 777>^*<^ND^N^<7777>>^<S1>^<A1X>^N^@
+# n1116 start Unicode codepoint
+n1116 ^X^NG+^N^<1117>^Y^N^<1120>
+n1117 ^Y0x^Y^Y^N^<1120>
+n1120 ^<INP>^ND^N^<1113>^<SGE>^N^<1121>^<PS2P21>^<POP 776>^ND^N^<1123>^<SGT>^N^<1121>^<POPN>^<PS128>^<POP 776>^ND^N^<1123>^<SLT>^N^<1122>^<POPN>^<PS2048>^<POP 776>^ND^N^<1123>^<SLT>^N^<1124>^<POPN>^<PS2P16>^<POP 776>^ND^N^<1123>^<SLT>^N^<1130>^<POPN>^<PS4>^<POP 775>^N^<1125>
+n1121 ^B^<RST>^N\
+n1122 ^<POPN>^N^<1114> # Regular ASCII
+# n1123 compares R with locn 776: +ve if R is smaller
+n1123 ^<DUP>^<PSH 776>^<SUB>^NU
+# n1124 is 2-byte char
+n1124 ^<POPN>^<PS2>^<POP 775>^N^<1125>
+# n1125 sets up for byte storing loop: Set lead-in high bits, set todo count of continuations and have X point to last (least significant) byte
+n1125 ^<PSHX>^<PSH 775>^<POPX>^<INDX>^<PSH 767>^<POP 774>^<POPX>^<PSH 775>^<S1>^<DUP>^<POP 770>^<PSHX>^<ADD>^<POPX>^N^<1126>
+# n1126 is data storage loop.
+#       store 6 bits at a time (l/s first) until continuation count is exhausted
+n1126 ^<PSH 770>^<SLE>^N^<1127>^<POPN>^<PSH 774>^<OR>^<INDX>^<POP 0>^<PSHX>^<PSH 775>^<ADD>^<POPX>^NA^N^<1112>^NG ^NS^N\^N^<1111>
+n1127 ^<S1>^<POP 770>^<DUP>^<PS64>^<S1>^<AND>^<PS128>^<OR>^<INDX>^<POP 0>^<S1X>^<RSU>^<RSU>^<RSU>^<RSU>^<RSU>^<RSU>^N^<1126>
+# n1130 is 3-byte char
+n1130 ^<POPN>^<PS2>^<PS1>^<OR>^<POP 775>^N^<1125>
+# End of n343 macros
 # n322 (^N^WR) Enable "R"CS in ^N^Wr
 N322 n1106 ^*ND^*N^*<1104>^*NU^Jn1107 ^*ND^*N^*<1105>^*NU^J^NU ; ^N^WR global replace does co/ci
 # n325 (^N^WU) "U"ndo RCS / CVS enable in ^N^Wr
