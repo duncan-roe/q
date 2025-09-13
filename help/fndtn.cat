@@ -92,7 +92,8 @@ t2 10 15 24 26
                          Append to previous line and stay editing that line.
                          https://en.wiktionary.org/wiki/Appendix:Unicode
                          lists all codepoints.
-                         Example: "42 U+BD" adds "asterisk1/2" to previous line.
+                         Example: "U+00B9 44 32 U+00B2 32 38 32 U+00B3" composes
+                         to "¹, ² & ³".
  ^N^Wp   360  Command  Define string to be replaced over multiple files
                          (See note 2)
  ^N^Wq   361  Command  Define replacement string over multiple files
