@@ -1,7 +1,7 @@
 /* R E R D C M
  *
  * Copyright (C) 1981, D. C. Roe
- * Copyright (C) 2012-2014,2019-2020 Duncan Roe
+ * Copyright (C) 2012-2014,2019-2020, 2025 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -18,6 +18,7 @@
  */
 #include <stdio.h>
 #include <memory.h>
+#include <stdlib.h>
 #include "prototypes.h"
 #include "cmndcmmn.h"
 #include "edmast.h"
@@ -30,7 +31,6 @@ rerdcm()
 {
   bool use_sccmd = false;
 
-
   if (curmac < 0)
     locerr = false;                /* LOCERR irrelevant if ! in scmac */
   if (locerr)                      /* Macro can detect error */
@@ -41,6 +41,14 @@ rerdcm()
     sccmnd();                      /* Get next command */
     return;                        /* Finished */
   }
+
+  if (offline)
+  {
+    fputs("\nCommand editing is rather tricky in offline mode: suggest\n"
+      "touch <ESC> (will echo \"^[\"), touch <Enter> to get command prompt\n"
+      "and enter \"q\" or \"fq\".\n", stderr);
+  }                                /* if (offline) */
+
   restore_stdout();                /* Force on TTY o/p */
   if (USING_FILE)
   {
