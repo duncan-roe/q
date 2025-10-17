@@ -92,7 +92,7 @@ t2 10 15 24 26
                          Append to previous line and stay editing that line.
                          https://en.wiktionary.org/wiki/Appendix:Unicode
                          lists all codepoints.
-                         Example: "U+00B9 44 32 U+00B2 32 38 32 U+00B3" composes
+                         Example: "U+00B9 44 32 0xB2 32 38 040 179" composes
                          to "¹, ² & ³".
  ^N^Wp   360  Command  Define string to be replaced over multiple files
                          (See note 2)

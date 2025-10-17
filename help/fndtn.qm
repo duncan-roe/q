@@ -103,7 +103,7 @@ N1105 !ci -u -m"^ND^N^<1202>+>^ND^N^<1201>" "^ND^N^<4002>"^J^NU
 N1106 ^NU ; Can change to enable RCS / CVS
 N1107 ^NU ; Can change to enable RCS / CVS
 N1110 # USED BY n343 ^N\
-N1111 ^NG ^F^@^NA^N^<1112>^NGU^N^<1116>^<INP>^ND^N^<1113>^N^<1114>
+N1111 ^NG ^F^@^NA^N^<1112>^NGU^N^<1116>^N^<1120>
 N1112 ^U^ND^N^<4013>^NM^<1110>^[n 4013 %lo^J^<PSHX>^<PS0>^<POPX>m-1^J^K^ND^N^<1115>^<POPN>^*NU^Jn 4013 ^ND^N^<1110>^Jm-1^J^NM^<1110>^[d-1^Jfi fi m-1^**J^**NC^**N\^**Z^*ND^*N^*<1110>^*J^J^NU
 N1113 ^<SGT>^NS^NL^<POPN>^NU^X^<S1>^N^@ # Move past number just read
 N1114 ^<INDX>^<POP 0>^<A1X>^NA^N^<1112>^NG ^NS^N\^N^<1111>
