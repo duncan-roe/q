@@ -107,7 +107,7 @@ ggdb -t $my_tty \
 # Lets you print the mmap'd buffers but may result in copious output
 # (Some generated test files put a NUL before each Nl to stop that)
 -f maxsize.gdb \
-# You'll want this if debuggibg with a dark background
+# You'll want this if debugging with a dark background
 -g darkbg.gdb \
 # Start args to q
 -a "\
