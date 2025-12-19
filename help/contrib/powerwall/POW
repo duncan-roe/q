@@ -1,11 +1,53 @@
 #!/bin/sh
 #set -x
+POW_GRAPH=${POW_GRAPH:-yes}
+
+# Decide verbosity with which we will run Q
+silent=false
+quiet=false
+if [ "${1::2}" = '-q' ]; then
+  shift
+  quiet=:
+fi
+if [ "${1::2}" = '-q' ]; then
+  shift
+  $quiet && silent=: || quiet=:
+fi
+
 [ $# -gt 0 ] || { echo 'Nothing to do!'; exit 1; }
-while [ $# -gt 0 ]
-do [ -f $(dirname $1)/$(basename $1 .csv).pdf -o $(echo $1|rev|cut -f1 -d.) = fdp ] ||
-{
-  q -oiu,'^ND^N^<4003>/contrib/powerwall/powerwall.qm^Jfb^J^ND^N3s^J' $1
-  libreoffice $1
-}
+while [ $# -gt 0 ]; do
+  if $silent; then
+    q -oiu,'^ND^N^<4003>/contrib/powerwall/powerwall.qm^Jfb^J^ND^N3' $1 \
+      >/dev/null 2>&1
+  elif $quiet; then
+    q -oiu,'^ND^N^<4003>/contrib/powerwall/powerwall.qm^Jfb^J^ND^N3' $1 \
+      >/dev/null
+  else
+    q -oiu,'^ND^N^<4003>/contrib/powerwall/powerwall.qm^Jfb^J^ND^N3' $1
+  fi
+  
+  # Only do costing if we have a rates table
+  if [ -r ~/.config/utility_rates.qm ]
+  then
+    if $silent; then
+      q -oiu,'^ND^N^<4003>/contrib/powerwall/powerwall.qm^Jfb^J^ND^N5' $1 \
+        >/dev/null 2>&1
+    elif $quiet; then
+      q -oiu,'^ND^N^<4003>/contrib/powerwall/powerwall.qm^Jfb^J^ND^N5' $1 \
+        >/dev/null
+    else
+      q -oiu,'^ND^N^<4003>/contrib/powerwall/powerwall.qm^Jfb^J^ND^N5' $1
+    fi
+    head -n1 $1
+  else
+    echo "Not running ^N5: No rates table available" >&2
+  fi
+  
+  case $POW_GRAPH in
+    yes) libreoffice $1 ;;
+    no) : ;;
+    replace) [ -f $(dirname $1)/$(basename $1 .csv).pdf ] && libreoffice $1 ;;
+    *) echo 'POW_GRAPH must be "yes", "no" or "replace"' >&1; exit 1
+  esac
 shift
 done

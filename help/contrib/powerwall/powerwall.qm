@@ -1,19 +1,27 @@
 fd y /* TESLA BATTERY DOWNLOADED CSV PROCESSOR */
-n202 ^NC^NS^N\q /home/dunc/macros/envoy.qm^J^NU
-n220 ^NC^NS^N\u /home/dunc/macros/envoy.qm^J^NU
+n202 ^NC^NS^N\q ^ND^N^<4003>/contrib/powerwall/powerwall.qm^J^NU
+n220 ^NC^NS^N\u ^ND^N^<4003>/contrib/powerwall/powerwall.qm^J^NU
 
 fd n
 
-# ^N3: Do it
+# ^N3: Re-format for libreoffice; interpolate battery readings
 # ^N4: For development only: restore csv from backup (.bu) copy
+# ^N5: Calculate cost for day and append to Grid heading
+#      Requires rates table ~/.config/utility_rates.qm (see below)
 
 fd y
 
-#n064: temp test macro to initialise on .bu
+# You can get a sample utility_rates.qm from here:
+# https://raw.githubusercontent.com/duncan-roe/q/refs/heads/master/help/contrib/powerwall/sample_utility_rates.qm
+
+# powerwall.qm is designed to be run under the control of this shell script:
+# https://raw.githubusercontent.com/duncan-roe/q/refs/heads/master/help/contrib/powerwall/POW
+
+#n064: test macro to initialise on .bu
 n064 ^NC^NS^N\d1 1111^Je ^ND^N^<4002>.bu^J^NU
 
 #n063: Mainline and entry point
-n063 ^NC^NS^N\l 'Date time',1^J^NC^N\^[a^J^[g-1^Jl '0,0,0,0,0'^J^NC^NS^NL^NJ^<6>X^[d-1^Jn13000,20^Jn13001,4^Jn13004 3^J^<PSHNBLN>^<POP 1>m2^J^G,^K^H^GT^K^NM^<1505>^[m1^J^G,^L^E^ND^N^<1505>^J^ND^N^<1510>^ND^N^<1501>^NC^NS^N\m2 - ^ND^N^<7001>^J^ND^N^<1504>y :00',' ','^Jy,'Energy Remaining (%)','Bat chg (%/20)',1,1^Jm1 ^ND^N^<7001>^J^ND^N^<1503>^NU
+n063 ^NC^NS^N\l 'Date time',1^J^NC^NU^[a^J^[g-1^Jl '0,0,0,0,0'^J^NC^NS^NL^NJ^<6>X^[d-1^Jn13000,20^Jn13001,4^Jn13004 3^J^<PSHNBLN>^<POP 1>m2^J^G,^K^H^GT^K^NM^<1505>^[m1^J^G,^L^E^ND^N^<1505>^J^ND^N^<1510>^ND^N^<1501>^NC^NS^N\m2 - ^ND^N^<7001>^J^ND^N^<1504>y :00',' ','^Jy,'Energy Remaining (%)','Bat chg (%/20)',1,1^Jm1 ^ND^N^<7001>^J^ND^N^<1503>s^J^NU
 # Check if ---| already processed      |    |                                      |    |                              |                 |                           |                        |           |                    |                  |           |             |                                              |                |           |
 # Ensure no deferred lines ------------|    |                                      |    |                              |                 |                           |                        |           |                    |                  |           |             |                                              |                |           |
 # Test for dummy last line -----------------|                                      |    |                              |                 |                           |                        |           |                    |                  |           |             |                                              |                |           |
@@ -27,7 +35,7 @@ n063 ^NC^NS^N\l 'Date time',1^J^NC^N\^[a^J^[g-1^Jl '0,0,0,0,0'^J^NC^NS^NL^NJ^<6>
 # Modify all data lines. Apply n1504, then strip seconds off time (replace ":00," with ",": can't affect line 1)---------------------------------------------------------------------------------------------------------------|------------------|-----------|             |                                              |                |           |
 # Update Battery-charge-level column heading -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|                                              |                |           |
 # Modify all lines. Call n1503 to put double-quotes around column1 so it looks like text to libreoffice and displays as-is. Must do this else libreoffice will format cc1 as a date. --------------------------------------------------------------------------------------------------------------------------------------|----------------|           |
-# Return, in case one day another macro wants to call this one. ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+# Save and return---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 #n1504: Massage date on every data line, also batt. chg. if present
 n1504 ^NC^NU^G,^Y ^B^G+ ^Y^ND^N^K^H^GT^X^L^ND^N^<1507>^NA^NL^ND^N^<1506>^ND^N^<13001>^J^N^@
@@ -62,3 +70,67 @@ n1502 ^ND^N^<1507>^NA^NS^NL^NI^NU^<PSHF 4>^<PSHF 1>^<INPF>^<POPN>^<DUPF>^<POPF 3
 
 # n1503: Convert column 1 to 'text'
 n1503 ^NC^NU^E"^G,"^J^N^@
+
+#n065: Cost calculator mainline
+n065 ^NC^NS^N\g1^Jl 'Grid (kW),',1^J^NC^NU^[^<PS0>^<POP 0>^ND^N^<1513>a^J^[^<PSHNBLN>^<POP 1>n13000,12^J^<PSHF 0>^<PS0>^<POPRF>n7003,60^Jm2 - ^ND^N^<7001>^J^ND^N^<1515>^<DIVF>^<PSHF 1>^<ADDF>g1^Jn4007 %0.2f^Jl 'Grid (kW),',1^J^NC^N\^E^G, ^<SFLT>^NL-^<TCF>^@^ND^N^<1514>^<POPF 2>^ND^N^<13002>^Js^J^NU
+# Get out if--| already processed           |             |           |    |                 |          |        |             |         |                              |      |               |                                        |                        |           |                       |
+# In interval zero--------------------------|             |           |    |                 |          |        |             |         |                              |      |               |                                        |                        |           |                       |
+# Load rates plan-----------------------------------------|           |    |                 |          |        |             |         |                              |      |               |                                        |                        |           |                       |
+# Ensure no deferred lines--------------------------------------------|    |                 |          |        |             |         |                              |      |               |                                        |                        |           |                       |
+# Get line# of last line to mem loc 1--------------------------------------|                 |          |        |             |         |                              |      |               |                                        |                        |           |                       |
+# Set up FPU constant: 12 (cvt 5min to 1hr)--------------------------------------------------|          |        |             |         |                              |      |               |                                        |                        |           |                       |
+# Load constant 12 (will want to divide by it eventually)-----------------------------------------------|        |             |         |                              |      |               |                                        |                        |           |                       |
+# Initialise total-----------------------------------------------------------------------------------------------|             |         |                              |      |               |                                        |                        |           |                       |
+# Set up ALU constant: 60 (cvt hrs to mins)------------------------------------------------------------------------------------|         |                              |      |               |                                        |                        |           |                       |
+# Accumulate cost over all intervals-----------------------------------------------------------------------------------------------------|                              |      |               |                                        |                        |           |                       |
+# Account for applying cost/hr to each 5 minute interval----------------------------------------------------------------------------------------------------------------|      |               |                                        |                        |           |                       |
+# Add cost/day-----------------------------------------------------------------------------------------------------------------------------------------------------------------|               |                                        |                        |           |                       |
+# Modify Grid heading:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|                                        |                        |           |                       |
+# - Append space and {sign if -ve, make +ve}--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|                        |           |                       |
+# - Append currency symbol---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|           |                       |
+# - Append amount, 1 leading zero--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|                       |
+# Save and return------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+# FPU Memory locations
+#   0: Number of 5-minute intervals in 1h (12) (constant)
+# 100: Start of rate table, created as currency_unit/KWh.
+#      1st entry: buy price
+#      2nd entry: sell price (-ve)
+#   1: Daily supply charge
+#   2: Day total (for printing)
+#   3: 60 (constant)
+
+# ALU Memory locations
+#   0: Index of current table
+# 100: Start of interval table, expressed in minutes
+#      1st entry: last minute of interval
+
+#n1513: Fill in pricing schedule from utility plan.
+#       Do this in ~/.config/utility_rates.qm,
+#       so users can input their own rate plans
+#       without having to edit powerwall.qm.
+#       There is a sample utility_rates.qm in this directory.
+n1513 u ~/.config/utility_rates.qm^J^NU
+
+#n1514 Currency unit (from ~/.config/utility_rates.qm)
+n1514 UNDEFINED^N\
+
+#n1515: Accumulate cost
+n1515 ^X^<INP>^<POPN>^X^X^NG:^NS^N\^<PSH 3>^<MPY>^X^<INP>^<POPN>^X^X^NG"^NS^N\^<ADD>^<PSH 0>^<POPX>^<INDX>^<PSH 100>^<SUB>^<SGE>^NL^NJ^<7>X^<PSHX>^<A1>^<POP 0>^<POPN>^G,^^^^^^^X^<INPF>^<POPN>^<PSH 0>^<LS>^<SFGE>^<A1>^<POPX>^<INDX>^<PSHF 100>^<MPYF>^<ADDF>^J^NC^NU^N^@
+# hour--|     |                    |               |                          |     |                               |                      |                   |      |                 |      |            |           |                        |      |      |
+# (length)----|                    |               |                          |     |                               |                      |                   |      |                 |      |            |           |                        |      |      |
+# Multiply by 60 to get minutes----|               |                          |     |                               |                      |                   |      |                 |      |            |           |                        |      |      |
+# Get minute past the hour-------------------------|                          |     |                               |                      |                   |      |                 |      |            |           |                        |      |      |
+# Add to get minute of the day------------------------------------------------|     |                               |                      |                   |      |                 |      |            |           |                        |      |      |
+# Indexed read of interval table----------------------------------------------------|                               |                      |                   |      |                 |      |            |           |                        |      |      |
+# Check if still in current interval: last interval minute - current minute >= 0------------------------------------|                      |                   |      |                 |      |            |           |                        |      |      |
+# Move to next interval (interval minute - current minute < 0) (usually skipped by 7-char longjump)----------------------------------------|                   |      |                 |      |            |           |                        |      |      |
+# Discard subtracted minutes-----------------------------------------------------------------------------------------------------------------------------------|      |                 |      |            |           |                        |      |      |
+# Get this 5-minutes usage--------------------------------------------------------------------------------------------------------------------------------------------|                 |      |            |           |                        |      |      |
+# (discard length)----------------------------------------------------------------------------------------------------------------------------------------------------------------------|      |            |           |                        |      |      |
+# Get rate table index (2 items / entry)-------------------------------------------------------------------------------------------------------------------------------------------------------|            |           |                        |      |      |
+# Want 2nd item (FIT) if usage -ve--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|           |                        |      |      |
+# Get rate table entry--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|                        |      |      |
+# Multiply bu interval usage---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|      |      |
+# Add to day total--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|      |
+# Finished with this line; go on to next-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

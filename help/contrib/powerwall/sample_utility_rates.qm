@@ -1,0 +1,57 @@
+fd y /* ******************* Sample ~/.config/utility_rates.qm ******************
+
+# (fd y stops you seeing these comments and macro definitions when
+#  POW via powerwall.qm U-uses this macro definition file)
+
+# This table only covers daily rate variations.
+# At the end of this file are some suggestions for dealing with
+# seasonal or weekend rates.
+
+# Daily connection charge (my pdf says "109.549 cents per day")
+n13001 1.09549
+
+# This simple plan with peak and off-peak shows as 3 intervals:
+#
+# 1. Off-peak from 00:00 to start of peak
+# 2. Peak period
+# 3. Off-peak from peak end until midnight.
+
+# Tabulate what is the last minute in each interval.
+# The first interval starts at 00:00.
+# The last interval must end at 23:59 or any larger number.
+# Times are in minutes (of the day).
+
+n7100 1019                         /* Peak starts 5PM */
+n7101 1259                         /* Peak ends 9PM */
+n7102 1440                         /* Midnight */
+
+# Buy & Sell rates for the 3 intervals.
+# All rates must be specified as positive numbers
+# Rates are expressed in the currency unit.
+
+n13100 .198
+n13101 .05
+n13102 .24002
+n13103 .22
+n13104 .198
+n13105 .05
+
+# Currency unit. Appears in day total next to Grid heading.
+# Currently set to dollars, change to e.g. £^NU for GBP.
+
+n1514 $^NU
+
+# Dealing with seasonal or weekend rates:-
+# Have a separate rates file for weekday / weekend, summer / winter and so on.
+# Modify POW to ensure ~/.config/utility_rates.qm is a symbolic link to the
+# appropriate file.
+# Implementation suggestions:-
+# When downloading data via Gmail, the csv is an attachment called `data.csv`.
+# I like to save it with the date in its name,
+# e.g. data_251218.csv for 18th December 2025. These names sort in date order.
+# The `date` command understands their format:
+# $ date -d 251218
+# Thu Dec 18 00:00:00 AEDT 2025
+# This gives day of the week (for weekend rates).
+# For season you might simply be able to use the month,
+# otherwise use date's `+%j' output format to get day of the year.

@@ -1,28 +1,54 @@
-powerwall.qm - massage Tesla powerwall csv files for smooth-line PDF graph
+powerwall.qm - Massage Tesla powerwall csv files for smooth-line PDF graph
+             - Determine cost for the day
 
-powerwall.qm is designed to operate on a 1-day battery data download from the
-Tesla app. The macros shorten entries in the date/time colum and coerce the
-Energy Remaining column to be suitable for a smoooth-line graph.
+powerwall.qm operates on a 1-day energy data download from the Tesla app.
+There are 2 top-level macros:
+^N3 shortens entries in the date/time colum and
+coerces the Energy Remaining column to be suitable for a smoooth-line graph.
+^N5 appends the cost for the day to the "Grid (kW)" column heading.
 
-The POW shell script runs q to edit the csv then invokes LibreOffice for the
-graphics. Actually getting the graph is a manual process detailed below.
+The POW shell script runs q macros ^N3 and ^N5 on the csv.
+Both return at once if they detect they have been run already
+(or if you accidentally ran POW on the csv).
+POW outputs the new csv header line and starts LibreOffice for the graphics.
 
-In detail: the Date time column has entries like 2022-10-20T00:00:00+11:0.
-Shorten this to "00:00" and replace the heading with the date e.g."2022-10-20"
-from the above. Double quotes are there so we don't have to change cell format
-from default.
+More about POW:-
+Usage: POW [-q [-q]] data_file [,...]
+-q suppresses stdout; an extra -q suppresses stderr as well.
+The latter is only intended for development.
+Environment variable POW_GRAPH controls whether or not to run LibreOffice:
+ - POW_GRAPH=yes or absent from environment; run LibreOffice
+ - POW_GRAPH=no: don't run LibreOffice
+ - POW_GRAPH=replace: only run LibreOffice if csv file exists
+                      (for when there are old csv files made w/out ^N5).
 
+More about ^N3:-
+The Date time column has entries like 2022-10-20T00:00:00+11:00.
+Shorten this to "00:00" and replace the column heading with the date
+e.g. "2022-10-20" from the above.
+Inserted double quotes are so we don't have to change cell format from default.
 Change the Energy Remaining heading to Bat chg (%/20). Energy Remaining is only
 logged every 15 min so interpolate at 5 minute intervals to match the other
 measurements and divide all entries by 20 (so 100% charge has same y cordinate
 as 5KW).
 
-POW invokes LibreOffice on the edited csv. Hit <Enter> in the Import dialog. To
-get the PDF to be an exact number of pages you will want the printing page grid.
-Turn this on by Print Preview (Ctrl-Shift-O) followed by ESC. Cell A1 should
-still be selected, so a graph now will plot all available data. Click on the
-Insert Chart tool icon then in the Chart Type dialog click Line, Lines Only and
-Finish. Reposition and resize the chart to taste, the click File, Export as PDF.
+More about ^N5:-
+^N5 uses the user-supplied ~/.config/utility_rates.qm to work out the cost for
+each 5-minute interval in the download.
+This file must mirror the Utility Rate Plan you have set up in the Tesla app.
+See sample_utility_rates.qm in this directory for documentation.
+POW only runs ^N5 if ~/.config/utility_rates.qm exists and is readable.
+
+What to do when LibreOffice starts:-
+Hit <Enter> in the Import dialog. To get the PDF to be an exact number of pages,
+you will want the printing page grid.
+Turn this on by Print Preview (Ctrl-Shift-O) followed by ESC.
+Cell A1 should still be selected, so a graph now will plot all available data.
+Click on the Insert Chart tool icon
+In the Chart Type dialog click Line, Lines Only and Finish.
+Reposition and resize the chart to taste,
+then click File, Export as PDF. [Recent libreoffice versions require one to
+hold down the shift key when resizing to enable changing the aspect ratio].
 Hit <Enter> in the following 2 dialogs. To end the LibreOffice session, click on
 a cell then enter Ctl-W. Answer Don't Save to the Confirm dialog (the csv is not
 changed).
