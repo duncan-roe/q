@@ -2318,47 +2318,63 @@ do_goto(void)
 static bool
 do_help(void)
 {
-/* We have some extra work here, because HELP doesn't actually take
- * a filename, and doesn't want one. */
-  if (scrdtk(2, (uint8_t *)tmfile, 17, oldcom))
-    return bad_rdtk();
-  k = oldcom->toklen;              /* Get length of HELP topic */
-  if (!eolok())
-    return false;
-  if (k == 0)                      /* No topic given */
+/* We have some extra work here, because HELP topics are case-insensitive
+ * (filenames are all lower-case) but HELP can also be used to display mixed-
+ * case paths (e.g "h contrib/README" */
+
+  bool trying_mixed_case = false;
+  int bcurs_on_entry = oldcom->bcurs;
+
+  for (;;)
   {
-    k = 1;
-    tmfile[0] = '#';               /* Dummy topic of "#" */
-    tmfile[1] = '\0';
-  }                                /* if (k == 0) */
-  else
-  {
-    for (i = k - 1; i >= 0; i--)
-      if (tmfile[i] >= 'A' && tmfile[i] <= 'Z')
-        tmfile[i] = tolower(tmfile[i]); /* No u/c filenames allowed */
-  }                                /* if (k == 0) else */
+    if (scrdtk(2, (uint8_t *)tmfile, sizeof tmfile, oldcom))
+      return bad_rdtk();
+    k = oldcom->toklen;            /* Get length of HELP topic */
+    if (!eolok())
+      return false;
+    if (k == 0)                    /* No topic given */
+    {
+      k = 1;
+      tmfile[0] = '#';             /* Dummy topic of "#" */
+      tmfile[1] = '\0';
+    }                              /* if (k == 0) */
+    else if (!trying_mixed_case)
+    {
+      for (i = k - 1; i >= 0; i--)
+        tmfile[i] = tolower(tmfile[i]);
+    }                              /* if (k == 0) else... */
 
 /* GCC 8.1 complained when the next line was an sprintf. */
 /* To keep gcc quiet, we tested for overflow. */
-/* But GCC 8.3.0 complained amnyway */
+/* But GCC 8.3.0 complained anyway */
 /* So now we compile with -Wno-format-truncation. */
 /* If truncation happens, there should be a useful message... */
-  snprintf(tmtree, sizeof tmtree, "%s/%s", help_dir, tmfile);
-  if (stat(tmtree, &statbuf))
-  {
-/* Output a potted message if he "typed h for help" */
-    if (tmfile[0] == '#' && tmfile[1] == 0)
+    snprintf(tmtree, sizeof tmtree, "%s/%s", help_dir, tmfile);
+    if (stat(tmtree, &statbuf))
     {
-      puts("\r");
-      puts("Sorry - I can't find my HELP files.\r");
-      puts("If you have them installed somewhere,\r"
-        "please put that path in your shell environment"
-        " with the name Q_HELP_DIR.\r\n\n");
-      return true;
-    }
-    fprintf(stderr, "%s. %s (HELP)", strerror(errno), tmtree);
-    return false;
-  }
+      if (!trying_mixed_case)
+      {
+        trying_mixed_case = true;
+        oldcom->bcurs = bcurs_on_entry;
+        continue;
+      }                            /* if (!trying_mixed_case) */
+
+/* Output a potted message if he "typed h for help" */
+      if (tmfile[0] == '#' && tmfile[1] == 0)
+      {
+        puts("\r");
+        puts("Sorry - I can't find my HELP files.\r");
+        puts("If you have them installed somewhere,\r\n"
+          "please put that path in your shell environment"
+          " with the name Q_HELP_DIR.\r\n\n");
+        return true;
+      }                            /* if (tmfile[0] == '#' && tmfile[1] == 0) */
+
+      fprintf(stderr, "%s. %s (HELP)", strerror(errno), tmtree);
+      return false;
+    }                              /* if (stat(tmtree, &statbuf)) */
+    else break;
+  }                                /* for(;;) */
   sprintf(ubuf, "%s %s", help_cmd, tmtree);
   final5();                        /* For some pagers */
   if (system(ubuf) < 0)

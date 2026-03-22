@@ -1,3 +1,8 @@
   \/ H - H E L P \/
 
-Displays information about various aspects of Q. For more details, type 'H'.
+Displays the Q editor's definitive documentation. Type 'H' for a list of topics.
+Topic names are case-insensitive, but H can also display arbitrary files in the
+help directory tree with case-sensitive names.
+
+The user-supplied contributions are in the help tree for this very reason, so
+one may type "H contrib/README" to get a list of them.
