@@ -3,8 +3,8 @@ powerwall.qm - Massage Tesla powerwall csv files for smooth-line PDF graph
 
 powerwall.qm operates on a 1-day energy data download from the Tesla app.
 There are 2 top-level macros:
-^N3 shortens entries in the date/time colum and
-coerces the Energy Remaining column to be suitable for a smoooth-line graph.
+^N3 shortens entries in the date/time colum and interpolates values in the
+Energy Remaining column to make it suitable for a smoooth-line graph.
 ^N5 appends the cost for the day to the "Grid (kW)" column heading.
 
 The POW shell script runs q macros ^N3 and ^N5 on the csv.
@@ -35,7 +35,7 @@ as 5KW).
 More about ^N5:-
 ^N5 uses the user-supplied ~/.config/utility_rates.qm to work out the cost for
 each 5-minute interval in the download.
-This file must mirror the Utility Rate Plan you have set up in the Tesla app.
+This file must mirror the Utility Rate Plan from your electricity retailer.
 See sample_utility_rates.qm in this directory for documentation.
 POW only runs ^N5 if ~/.config/utility_rates.qm exists and is readable.
 
