@@ -41,11 +41,13 @@
 
 /* Typedefs */
 
+#if __STDC_VERSION__ < 202300
 typedef enum bool
 {
   false,
   true
 } bool;
+#endif
 
 typedef struct scrbuf5             /* Screenedit buffer */
 {

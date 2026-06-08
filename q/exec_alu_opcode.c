@@ -888,13 +888,13 @@ fexp(char **err)
 }                                  /* fexp() */
 
 static bool
-fsqrt(char **err)
+xsqrt(char **err)
 {
   if (!f_valid(err))
     return false;
   fs[fsidx] = sqrt(fs[fsidx]);
   return true;
-}                                  /* fsqrt() */
+}                                  /* xsqrt() */
 
 static bool
 addf(char **err)
@@ -1265,7 +1265,7 @@ alu_opcode opcode_defs[] = {
   OPCODE(ftan, "F = tan(F)"),
   OPCODE(flog, "F = log(F)"),
   OPCODE(fexp, "F = exp(F)"),
-  OPCODE(fsqrt, "F = sqrt(F)"),
+  {"fsqrt", xsqrt, "F = sqrt(F)"}, /* glibc 2.42 declares fsqrt */
   OPCODE(inpf, "Read next number in line, push value to F & length to R"),
   CAPTION("(leaves cursor on 1st char of number)"),
   OPCODE(fqversn, "Push Q version to F"),
