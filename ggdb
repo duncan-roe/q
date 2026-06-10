@@ -8,18 +8,26 @@ proc help exitcode \
 {
   puts -nonewline {Usage: ggdb [-a program args] [-f|-g file of gdb commands]}
   puts "... \\" ;# Must use dbl-quote because of trlg backslash
-  puts {            [-t controlling terminal] <program> [gdb command]...}
+  puts -nonewline {            [-p <PID of process to debug>]}
+  puts " \\"
+  puts {            [-t controlling terminal] [<program>] [gdb command]...}
   puts {       ggdb -h}
-  puts {-g commands run before program is started; -f after main breakpoints.}
+  puts {}
+  puts {Exactly one of <program> or -p <PID> must be given.}
+  puts {-g commands run before program is started; -f after main breakpoints}
+  puts {or attach completes.}
   exit $exitcode
 }
 
 # Set up
 # === ==
 
+#exp_internal 1
+#strace 2
 global pending file_index
 set pending 0
 set file_index(dummy) x
+set PID 0
 
 proc sndrcv {cmd} \
 {
@@ -62,7 +70,7 @@ if {$argc == 0} \
 
 # Get options if any
 set args {}
-while {$argc > 2} \
+while {$argc > 2 || ($argc == 2 && [string tolower [lindex $argv 0]] == {-p})} \
 {
   switch -- [string tolower [lindex $argv 0]] \
   {
@@ -77,6 +85,19 @@ while {$argc > 2} \
     -f {addfile f}
 
     -g {addfile g}
+
+    -p \
+    {
+      # Process to attach
+      set PID [lindex $argv 1]
+      set argv [lreplace $argv 0 1]
+      incr argc -2
+      if {![string is integer $PID]} \
+      {
+        puts stderr "$PID (process ID) is not an integer"
+        exit 1
+      }
+    }
 
     -t \
     {
@@ -97,25 +118,29 @@ while {$argc > 2} \
   }
 }
 
-# next arg must be programe name, -h (help) or -- (edit next arg)
-if {[string equal -nocase -length 2 [lindex $argv 0] -h]} {help 0}
-if {$argc >= 2 && [lindex $argv 0] == "--" } \
+# Unless -p PID was given earlier,
+#   next arg must be program name, -h (help) or -- (edit next arg)
+if {$PID==0} \
 {
+  if {[string equal -nocase -length 2 [lindex $argv 0] -h]} {help 0}
+  if {$argc >= 2 && [lindex $argv 0] == "--" } \
+  {
+    set argv [lreplace $argv 0 0]
+    incr argc -1
+  }
+  set progname [lindex $argv 0]
   set argv [lreplace $argv 0 0]
   incr argc -1
-}
-set progname [lindex $argv 0]
-set argv [lreplace $argv 0 0]
-incr argc -1
-if {![file exists $progname]} \
-{
-  puts stderr "No such file or directory: $progname"
-  exit 1
-}
-if {![file executable $progname] || ![file isfile $progname]} \
-{
-  puts stderr "$progname is not a program"
-  exit 1
+  if {![file exists $progname]} \
+  {
+    puts stderr "No such file or directory: $progname"
+    exit 1
+  }
+  if {![file executable $progname] || ![file isfile $progname]} \
+  {
+    puts stderr "$progname is not a program"
+    exit 1
+  }
 }
 
 proc docmds {which} \
@@ -137,8 +162,19 @@ proc docmds {which} \
 # start gdb, and put in some nice settings
 if {[info exists tty]} {spawn gdb -n -q --tty=$tty} {spawn gdb -n -q}
 expect {(gdb) }
-exp_send "file $progname\r"
-expect {(gdb) }
+if {$PID==0} \
+{
+  exp_send "file $progname\r"
+  expect {(gdb) }
+} \
+{
+  exp_send "attach $PID\n"
+  expect \
+  {
+    ptrace: {exit 1}
+    {(gdb) }
+  }
+}
 exp_send "set print null-stop\r"
 expect {(gdb) }
 exp_send "set print sevenbit-strings\r"
@@ -159,12 +195,15 @@ if {[info exists tty]} \
   expect {(gdb) }
 }
 docmds g
-exp_send "b main\r"
-expect {(gdb) }
-set timeout 50
-exp_send "run $args\r"
-expect {(gdb) }
-set timeout 10
+if {$PID==0} \
+{
+  exp_send "b main\r"
+  expect {(gdb) }
+  set timeout 50
+  exp_send "run $args\r"
+  expect {(gdb) }
+  set timeout 10
+}
 docmds f
 
 # Do gdb commands from the command line
