@@ -65,18 +65,6 @@ typedef enum q_yesno
   Q_UNREC
 } q_yesno;                         /* typedef enum q_yesno */
 
-typedef enum command_state
-{
-  RUNNING,
-  Q_ARG1,
-  TRY_INITIAL_COMMAND,
-/* Below here for line number states only (i.e. q <file>:<line number>) */
-  LINE_NUMBER_BASE,
-  LINE_NUMBER_SAVED,
-  DO_V_NEXT,
-  HAVE_LINE_NUMBER,
-} command_state;
-
 typedef enum qrc_state
 {
   LOCAL,
@@ -134,11 +122,11 @@ char ermess[Q_BUFSIZ], ubuf[Q_BUFSIZ], **argv, *sh;
 fmode_t dfltmode = 0;
 char *log_name = NULL;
 int log_name_len = 0;
+command_state cmd_state;
 
 /* Static Variables */
 
 static int colonline;              /* Line number from <file>:<line> */
-static command_state cmd_state;
 static bool verbose_flag = false;  /* -v seen */
 static bool very_verbose_flag = false; /* -vv seen */
 static long count2;            /* For those commands that take 2 #'s of lines */

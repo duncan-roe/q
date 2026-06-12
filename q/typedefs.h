@@ -85,6 +85,22 @@ typedef enum
 
 typedef uint32_t fmode_t;
 
+typedef enum command_state
+{
+  RUNNING,
+  Q_ARG1,
+  TRY_INITIAL_COMMAND,
+/* Below here for line number states only (i.e. q <file>:<line number>) */
+  LINE_NUMBER_BASE,
+  LINE_NUMBER_SAVED,
+  DO_V_NEXT,
+  HAVE_LINE_NUMBER,
+} command_state;
+
+/* External variable */
+
+extern command_state cmd_state;    /* For debugging ALU programs */
+
 /* Prototype */
 
 int scrdtk(int key, uint8_t * buf, int bufcap, scrbuf5 *scline);
