@@ -1,4 +1,4 @@
-/* 
+/*
  * tclCkalloc.c --
  *
  *    Interface to malloc and free that provides support for debugging problems
@@ -123,7 +123,7 @@ static int  init_malloced_bodies = TRUE;
 static void		ValidateMemory _ANSI_ARGS_((
 				struct mem_header *memHeaderP, char *file,
 				int line, int nukeGuards));
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -133,22 +133,22 @@ static void		ValidateMemory _ANSI_ARGS_((
  *----------------------------------------------------------------------
  */
 static void
-TclDumpMemoryInfo(FILE *outFile) 
+TclDumpMemoryInfo(FILE *outFile)
 {
-		fprintf(outFile,"total mallocs             %10d\n", 
+		fprintf(outFile,"total mallocs             %10d\n",
 				total_mallocs);
-		fprintf(outFile,"total frees               %10d\n", 
+		fprintf(outFile,"total frees               %10d\n",
 				total_frees);
-		fprintf(outFile,"current packets allocated %10d\n", 
+		fprintf(outFile,"current packets allocated %10d\n",
 				current_malloc_packets);
-		fprintf(outFile,"current bytes allocated   %10d\n", 
+		fprintf(outFile,"current bytes allocated   %10d\n",
 				current_bytes_malloced);
-		fprintf(outFile,"maximum packets allocated %10d\n", 
+		fprintf(outFile,"maximum packets allocated %10d\n",
 				maximum_malloc_packets);
-		fprintf(outFile,"maximum bytes allocated   %10d\n", 
+		fprintf(outFile,"maximum bytes allocated   %10d\n",
 				maximum_bytes_malloced);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -168,7 +168,7 @@ ValidateMemory(memHeaderP, file, line, nukeGuards)
 	int   idx;
 	int   guard_failed = FALSE;
 	int byte;
-	
+
 	for (idx = 0; idx < LOW_GUARD_SIZE; idx++) {
 		byte = *(memHeaderP->low_guard + idx);
 		if (byte != GUARD_VALUE) {
@@ -215,12 +215,12 @@ ValidateMemory(memHeaderP, file, line, nukeGuards)
 	}
 
 	if (nukeGuards) {
-		memset ((char *) memHeaderP->low_guard, 0, LOW_GUARD_SIZE); 
-		memset ((char *) hiPtr, 0, HIGH_GUARD_SIZE); 
+		memset ((char *) memHeaderP->low_guard, 0, LOW_GUARD_SIZE);
+		memset ((char *) hiPtr, 0, HIGH_GUARD_SIZE);
 	}
 
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -230,9 +230,7 @@ ValidateMemory(memHeaderP, file, line, nukeGuards)
  *----------------------------------------------------------------------
  */
 void
-Tcl_ValidateAllMemory (file, line)
-	char  *file;
-	int    line;
+Tcl_ValidateAllMemory (char *file, int line)
 {
 	struct mem_header *memScanP;
 
@@ -240,7 +238,7 @@ Tcl_ValidateAllMemory (file, line)
 		ValidateMemory(memScanP, file, line, FALSE);
 
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -248,13 +246,12 @@ Tcl_ValidateAllMemory (file, line)
  *     Displays all allocated memory to stderr.
  *
  * Results:
- *     Return 1 if an error accessing the file occures, `errno' 
+ *     Return 1 if an error accessing the file occures, `errno'
  *     will have the file error number left in it.
  *----------------------------------------------------------------------
  */
 int
-Tcl_DumpActiveMemory (fileName)
-	char *fileName;
+Tcl_DumpActiveMemory (char *fileName)
 {
 	FILE              *fileP;
 	struct mem_header *memScanP;
@@ -276,14 +273,14 @@ Tcl_DumpActiveMemory (fileName)
 	fclose (fileP);
 	return 0;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
  * Tcl_DbCkalloc - debugging ckalloc
  *
  *        Allocate the requested amount of space plus some extra for
- *        guard bands at both ends of the request, plus a size, panicing 
+ *        guard bands at both ends of the request, plus a size, panicing
  *        if there isn't enough space, then write in the guard bands
  *        and return the address of the space in the middle that the
  *        user asked for.
@@ -306,12 +303,12 @@ Tcl_DbCkalloc(size, file, line)
 	if (validate_memory)
 		Tcl_ValidateAllMemory (file, line);
 
-	result = (struct mem_header *) malloc((unsigned)size + 
+	result = (struct mem_header *) malloc((unsigned)size +
 							  sizeof(struct mem_header) + HIGH_GUARD_SIZE);
 	if (result == NULL) {
 		fflush(stdout);
 		TclDumpMemoryInfo(stderr);
-		fprintf(stderr,"unable to alloc %d bytes, %s line %d", size, file, 
+		fprintf(stderr,"unable to alloc %d bytes, %s line %d", size, file,
 			  line);
 		kill(getpid(), SIGSEGV);
 	}
@@ -358,7 +355,7 @@ Tcl_DbCkalloc(size, file, line)
 	if (break_on_malloc && (total_mallocs >= break_on_malloc)) {
 		break_on_malloc = 0;
 		(void) fflush(stdout);
-		fprintf(stderr,"reached malloc break limit (%d)\n", 
+		fprintf(stderr,"reached malloc break limit (%d)\n",
 				total_mallocs);
 		fprintf(stderr, "program will now enter C debugger\n");
 		(void) fflush(stderr);
@@ -374,7 +371,7 @@ Tcl_DbCkalloc(size, file, line)
 
 	return result->body;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -443,7 +440,7 @@ Tcl_DbCkfree(void *ptr, char *file, int line)
 	free((char *) memp);
 	return 0;
 }
-
+
 /*
  *--------------------------------------------------------------------
  *
@@ -480,7 +477,7 @@ Tcl_DbCkrealloc(void *ptr, unsigned int size, char *file, int line)
 	return(new);
 }
 
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -523,7 +520,7 @@ Tcl_Realloc(void *ptr, unsigned int size)
 
 #else
 
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -556,19 +553,19 @@ Tcl_DbCkalloc(unsigned int size, char *file, int line)
 
 	if (result == NULL) {
 		fflush(stdout);
-		fprintf(stderr,"unable to alloc %d bytes, %s line %d", size, file, 
+		fprintf(stderr,"unable to alloc %d bytes, %s line %d", size, file,
 			  line);
 		kill(getpid(), SIGSEGV);
 	}
 	return result;
 }
 
-
+
 /*
  *----------------------------------------------------------------------
  *
  * Tcl_Realloc --
- *     Interface to realloc when TCL_MEM_DEBUG is disabled.  It does 
+ *     Interface to realloc when TCL_MEM_DEBUG is disabled.  It does
  *     check that memory was actually allocated.
  *
  *----------------------------------------------------------------------
@@ -580,7 +577,7 @@ Tcl_Realloc(void *ptr, unsigned int size)
 	void *result;
 
 	result = realloc(ptr, size);
-	if (result == NULL) 
+	if (result == NULL)
 	{
 	fprintf(stderr,"unable to realloc %d bytes", size);
 	kill(getpid(), SIGSEGV);
@@ -597,19 +594,19 @@ Tcl_DbCkrealloc(void *ptr, unsigned int size, char *file, int line)
 
 	if (result == NULL) {
 		fflush(stdout);
-		fprintf(stderr,"unable to realloc %d bytes, %s line %d", size, file, 
+		fprintf(stderr,"unable to realloc %d bytes, %s line %d", size, file,
 			  line);
 		kill(getpid(), SIGSEGV);
 	}
 	return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
  * Tcl_Free --
  *     Interface to free when TCL_MEM_DEBUG is disabled.  Done here
- *     rather in the macro to keep some modules from being compiled with 
+ *     rather in the macro to keep some modules from being compiled with
  *     TCL_MEM_DEBUG enabled and some with it disabled.
  *
  *----------------------------------------------------------------------
@@ -627,7 +624,7 @@ Tcl_DbCkfree(void *ptr, char *file, int line)
 	free(ptr);
 	return 0;
 }
-
+
 #undef Tcl_DumpActiveMemory
 #undef Tcl_ValidateAllMemory
 
@@ -636,16 +633,13 @@ extern void		Tcl_ValidateAllMemory _ANSI_ARGS_((char *file,
 				int line));
 
 int
-Tcl_DumpActiveMemory(fileName)
-	char *fileName;
+Tcl_DumpActiveMemory(char *fileName)
 {
 	return 0;
 }
 
 void
-Tcl_ValidateAllMemory(file, line)
-	char  *file;
-	int    line;
+Tcl_ValidateAllMemory (char *file, int line)
 {
 }
 
