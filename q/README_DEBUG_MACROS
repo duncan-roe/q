@@ -178,12 +178,16 @@ $(type -p q) \
 # EXTRA GDB COMMANDS
 # macros.gdb shows ^N^@ (restart current macro) as a call to macro 0.
 # To see it as a call to the actual macro, append " ? thisch : curmac"
-# to the "starting macro %o\n" command in macros.gdb. Or paste these 2 lines
+# to the "starting macro %o\n" command in macros.gdb. Or paste the next 2 lines
+# at the end of your ggdb line (first remove trlg 'c' else add a space):-
 commands\ 5 silent \
 'printf "starting macro %o\n", thisch ? thisch : curmac' end \
 # Insert your own commands here if you have some
-# If you want Q to stop at main(), touch Enter. Otherwise this
+# If you want Q to stop at main(), touch Enter. Otherwise this:-
 c
+
+If you want to amend the behaviour of breakpoint 5 after gdb has started,
+at the gdb prompt paste the lines in APPENDIX A.
 
 START DEBUGGING
 ===== =========
@@ -318,3 +322,12 @@ window:-
  - Cygwin: <enter> will get you a command prompt (or just enter a comand)
  - Linux / disowntty: you can't re-use the window, and the X button won't close
                       it. 'pkill -9 disowntty' to dispose of the window.
+
+APPENDIX A
+======== =
+Use these lines to update breakpoint 5's commands at the gdb prompt:-
+commands 5
+silent
+printf "starting macro %o\n", thisch ? thisch : curmac
+end
+c

@@ -1,0 +1,78 @@
+PRE-REQUISITES
+==============
+
+Suggested to first read README_DEBUG & README_DEBUG_MACROS.
+
+INTRODUCTION
+============
+
+The ALU is a stack-architured run machine with opcodes that are Q macros.
+The integer and floating-point registers are stacks,
+while the index and other registers are scalar.
+README_DEBUG_ALU (this file) describes how to debug ALU programs.
+
+You don't *need* the Q source code to debug ALU programs,
+but you may find it useful.
+
+TL;DR ALU (Arithmetic and Logic Unit) is from UK 1960s computer science.
+      It was a component of the *mill* (CPU nowadays).
+
+RUNNING THE ALU DEBUGGER
+======= === === ========
+
+Following on from README_DEBUG_MACROS, the critical breakpoint to set is
+
+  b exec_alu_opcode
+
+This will stop on nearly all opcodes.
+The exceptions are those that load/store from to memory or tabs.
+I have always managed fine without seeing the load/store opcodes.
+
+TEMPLATE GGDB LINE
+======== ==== ====
+
+FIXME:  mention {my,log}_tty
+
+../ggdb -a -ifm+8^Jk,$log_tty^J -f macros.gdb -f maxsize.gdb -g darkbg.gdb\
+  -t $my_tty q 'b exec_alu_opcode if cmd_state == RUNNING'\
+  commands silent\
+  'printf "opcode %s\n",\
+    opcode_defs[alu_table_index[opcode - FIRST_ALU_OP]].name'\
+  end c
+
+This template works when cd'd to the Q source directory (where .c files are).
+If debugging from elsewhere, you'll need to supply pathnames for
+macros.gdb, maxsize.gdb, darkbg.gdb & ggdb.
+These are all in /usr/local/share/doc/q
+(or wherever you installed the documentation).
+If you've installed command_line_tools, ggdb should already be in your PATH.
+
+As before, you only want darkbg.gdb for terminals with a dark background.
+And you only want maxsize.gdb if you want to examine FIXME
+macros.gdb is optional - you'll see opcodes but FIN won't work without it.
+fm+8 and k,$log_tty are optional as well but I find them useful.
+You can add a file or several to -a (for Q to edit) - will need quoting.
+
+To FIN a macro:
+If register stack grows (less pops than pushes):
+
+To breakpoint entry to (a) selected macro(s)
+
+fi ^<DMP>
+fi ^<RST>
+fi ^<ZAM>
+
+To print memory location ALU_memory[] / FPU_memory[]
+
+SAMPLE INVOCATION LINES ABSENT Q SOURCE
+====== ========== ===== ====== = ======
+
+Template for Suse / Slackware (not SBo, see note 1)
+
+Q=/usr/local/share/doc/q; $Q/ggdb -a -ifm+8^Jk,$log_tty^J -f $Q/macros.gdb\
+  -f $Q/maxsize.gdb -g $Q/darkbg.gdb\
+  -t $my_tty $(type -p q) 'b exec_alu_opcode if cmd_state == RUNNING'\
+  commands silent\
+  'printf "opcode %s\n",\
+    opcode_defs[alu_table_index[opcode - FIRST_ALU_OP]].name'\
+  end c; unset Q
