@@ -44,7 +44,7 @@ install_help:
 
 uninstall:
 	rm $(DESTDIR)$(BINDIR)/q; rm $(DESTDIR)$(BINDIR)/qm; \
-for i in help/*; do rm $(DESTDIR)$(HELP_DIR)/$$(basename $$i); done; \
+for i in help/*; do rm -r $(DESTDIR)$(HELP_DIR)/$$(basename $$i); done; \
 rmdir $(DESTDIR)$(HELP_DIR); \
 rm -r $(DESTDIR)$(DOCDIR)/q/; \
 for i in etc/*; do rm $(DESTDIR)$(ETC_DIR)/$$(basename $$i); done; \
