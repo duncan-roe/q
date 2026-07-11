@@ -9,4 +9,4 @@ Parameter
 File position
  The file will be positioned after the last line printed, except in the case
 where printing was terminated by keying a character, where the postion will
-be some inderminate amount further down the file.
+be some indeterminate amount further down the file.

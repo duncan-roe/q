@@ -1,0 +1,9 @@
+disowntty (which must be run as "exec disowntty") relinquishes ownership of the
+tty or pty on which it is run. This then allows gdb to run the debugged process
+with this device as its controlling tty, via the 'set inferior-tty' command.
+
+disowntty is only needed under Linux. Under Cygwin, 'set inferior-tty' works
+fine without it. gdb in openbsd does not have that command.
+
+disowntty.c was first published by Jan Kratochvil in
+https://sourceware.org/bugzilla/show_bug.cgi?id=11403

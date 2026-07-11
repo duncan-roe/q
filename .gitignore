@@ -6,3 +6,5 @@ RCS
 a.out
 *.scr
 hugedir
+README_DEBUG
+disowntty

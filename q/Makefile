@@ -1,3 +1,5 @@
+.PHONY: all clean
+all: q README_DEBUG
 include ../config.mak
 SRCS = $(wildcard *.c)
 LIBS = -lm -pthread
@@ -13,7 +15,7 @@ CFLAGS := $(CFLAGS) -g3 -gdwarf-4\
 q : $(OBJ)
 	$(CC) $^ -o $@ $(LIBS)
 clean :
-	rm -f *.o *.d q
+	rm -f *.o *.d q README_DEBUG
 
 # Auto dependency stuff (from info make)
 %.d: %.c
@@ -21,3 +23,6 @@ clean :
 ifneq ($(MAKECMDGOALS),clean)
 -include $(SRCS:.c=.d)
 endif
+
+README_DEBUG: README_DEBUG.in
+	sed 's+%DATADIR+$$DATADIR+' README_DEBUG.in > README_DEBUG

@@ -1,3 +1,30 @@
+INTRODUCTION
+============
+
+The Q macro debugger sits on top of GDB.
+To debug macros, you must therefore debug q using gdb.
+
+This README sets out to show how to to that.
+
+WHICH DIRECTORY SHOULD I BE IN?
+===== ========= ====== = == ===
+
+If you have cloned the source, say to ~/q, then you want to be in ~/q/q.
+Otherwise you want to be in %DATADIR/debug.
+Follow the README_DEBUG* files in your chosen directory - they do differ.
+
+If you really want to be in another directory,
+that's fine but you will need to add a pathname to most files referenced below.
+
+ARRANGE THAT Q RUNS IN ITS OWN COMMAND WINDOW
+======= ==== = ==== == === === ======= ======
+
+You want an alternative to running `ggdb q` directly.
+Q moves the cursor around and continually changes terminal settings
+(including character echo on/off).
+
+xterm -geometry 88x25 -sb -sl 2000 -e "sh -c 'tty; exec ./disowntty'"&
+
 When debugging Q, I find it easiest to have gdb running in one terminal session
 with all of Q's input and output going to and coming from another.
 
@@ -96,7 +123,10 @@ window:-
  - Linux / sleep: enter ^C in the target window to kill sleep. OpenBSD also
  - Cygwin: <enter> will get you a command prompt (or just enter a comand)
  - Linux / disowntty: you can't re-use the window, and the X button won't close
-                      it. 'pkill -9 disowntty' to dispose of the window.
+                      it. To dispose of the window,
+                      enter 'pkill disowntty' in another window or
+                      (for an xterm) use Ctrl-Button1 to get the main menu and
+                      select Quit.
 
 ggdb command templates (export log_tty if you have one) (export my_tty first):
 Create your ggdb command by pasting line fragments from below.
