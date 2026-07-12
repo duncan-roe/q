@@ -17,7 +17,7 @@
 #include "prototypes.h"
 #include "scrnedit.h"
 void
-newlin()
+newlin(void)
 {
   int i;                           /* Scratch */
   uint8_t *p;

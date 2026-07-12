@@ -533,7 +533,7 @@ delete(bool aux, long num2del, bool forgettable)
  * blocks back on the end of the free chain, preserving their order, mostly */
 
 void
-clrfgt()
+clrfgt(void)
 {
   indxbk *ix;                      /* Scratch */
   databk *dt, *nxtdt;              /* Scratch */
@@ -737,7 +737,7 @@ rdlin(scrbuf5 *a1, bool aux)
 /* ******************************* forget ****************************** */
 
 void
-forget()
+forget(void)
 {
   if (!fortot)
   {
@@ -902,7 +902,7 @@ setaux(long a1)
 /* ******************************* finitl ****************************** */
 
 void
-finitl()
+finitl(void)
 {
   pagebk *pg;                      /* Scratch */
   mapbk *mp;                       /* Scratch */

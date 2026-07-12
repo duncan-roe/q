@@ -43,7 +43,7 @@ static int result;                 /* Returned value */
 static const char *const xistics_end_sequence = "\025x\n";
 
 void
-xistcs()
+xistcs(void)
 {
   uint8_t *p = NULL;
   int j, k = 0;                    /* Scratch */

@@ -1,8 +1,33 @@
-These notes are for OpenBSD 7.2
+These notes are for OpenBSD 7.9
 
 The supplied 'make' will not work: you need to use gmake (GNU make):
 
 # pkg_add gmake
+
+There is no nproc command (used by make.qm). Get it from coreutils
+(it'll be called gnproc because OpenBSD renames all GNU commands that way):
+
+# pkg_add coreutils
+
+Patch qmake.qm:
+
+--- a/make.qm
++++ make.qm
+@@ -1,8 +1,8 @@
+ # Macros of use when developing q
+-# N.B. always run make clean before make install
++# N.B. always run gmake clean before gmake install
+
+ # Make cc lines as short as we can
+-n040 !make -j$(($(nproc)+1)) PREFIX= HELP_CMD=^J^NU
++n040 !gmake -j$(($(gnproc)+1)) PREFIX= HELP_CMD=^J^NU
+ # n213 (^N^W^K) Insert static prototype at front
+ n213 ^NC^N\^NM^<1577>^J^[^NF{g1^Jl Static' 'prototypes^J^NC^N\^[m-^J^Z^T^ND^N^<1577>;^Jg t{^J^NU
+ # n214 (^N^W^L) replace all (void)write(1,... with fputs ... stderr
+
+You can use the 'patch' command to apply the above and below patches:
+
+$ patch <INSTALL_OPENBSD
 
 BEFORE RUNNING GMAKE
 ====== ======= =====
@@ -11,7 +36,7 @@ I found it easier to edit config.mak rather than supply extra args to gmake.
 This patch puts the man pages where the man command can find them:
 
 --- a/config.mak
-+++ b/config.mak
++++ config.mak
 @@ -13,7 +13,7 @@ BINDIR:=$(EPREFIX)/bin
  DATAROOTDIR:=$(PREFIX)/share
  DATADIR:=$(DATAROOTDIR)/q
@@ -20,27 +45,21 @@ This patch puts the man pages where the man command can find them:
 +MANDIR:=/usr/local/man
  SYSCONFDIR:=$(PREFIX)/etc
  DESTDIR:=
- 
 
-You should also patch ggdb before installing, in case you ever want to run the
-macro debugger:
+
+Patch ggdb before installing, to give a working macro debugger:
 
 --- a/q/ggdb
-+++ b/q/ggdb
-@@ -135,7 +135,7 @@ proc docmds {which} \
++++ q/ggdb
+@@ -160,7 +160,7 @@ proc docmds {which} \
  }
- 
+
  # start gdb, and put in some nice settings
 -if {[info exists tty]} {spawn gdb -n -q --tty=$tty} {spawn gdb -n -q}
 +if {[info exists tty]} {spawn egdb -n -q --tty=$tty} {spawn egdb -n -q}
  expect {(gdb) }
- exp_send "file $progname\r"
- expect {(gdb) }
-
-You can use the 'patch' command to apply both of the above:
-
-$ patch <INSTALL_OPENBSD
-
+ if {$PID==0} \
+ {
 Now you can run:
 
 # CFLAGS=-Og gmake install
@@ -50,10 +69,14 @@ ignores the GCC pragma that turns off optimising in workfile.c.
 The pragma is there because I've had trouble with optimising that code at some
 GCC versions.
 
+Clang warns it doesn't recognise this pragma and also bleats about sprintf(),
+strcpy() and strcat(). I have found no way to suppress these warnings
+(clang ignores -Wno-unknown-pragmas).
+
 BEFORE RUNNING THE MACRO DEBUGGER
 ====== ======= === ===== ========
 
-The gdb that comes with OpenBSD 7.2 fails to load Q's symbol table.
+The gdb that comes with OpenBSD 7.9 fails to load Q's symbol table.
 Get a newer one by:
 
 # pkg_add gdb
@@ -62,7 +85,7 @@ The new gdb is called egdb. The above patch took care of the name change.
 ggdb is copied from command_line_tools. Even if you have installed
 command_line_tools, you may like to:
 
-$ ln -s /usr/local/share/doc/q/ggdb ~/bin/
+$ ln -s /usr/local/share/q/debug/ggdb ~/bin/
 
 or patch the copy in command_line_tools.
 

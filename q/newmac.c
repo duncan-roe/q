@@ -38,7 +38,7 @@ static uint8_t alubuf[64];
 static scrbuf5 aluscrbuf;
 
 int
-newmac()
+newmac(void)
 {
   int mcchrs;                      /* Chars in macro def'n */
   uint8_t p[14];

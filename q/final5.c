@@ -8,7 +8,7 @@
 #include "c1in.h"
 
 void
-final5()
+final5(void)
 {
   if (ttyfd > 0)
     change_attr(ttyfd, &tio5save);

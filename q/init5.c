@@ -20,7 +20,7 @@ struct termios tio5save = { 0 }, tio5 =
 {
 0};
 void
-init5()
+init5(void)
 {
   static bool first = true;
   int i;

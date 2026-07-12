@@ -3,7 +3,7 @@
 #include "edmast.h"
 #include "q_version.h"
 void
-q_version()
+q_version(void)
 {
   printf("Q version %g\r\n", (double)Q_VERSION);
 

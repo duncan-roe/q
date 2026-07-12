@@ -112,7 +112,7 @@ static bool fanout;                /* For F commands */
 static int wanted_arg;
 
 void
-scmnrd()
+scmnrd(void)
 {
   int k;                           /* Scratch */
   int file_start;

@@ -12,7 +12,7 @@
 #include "macros.h"
 #include "alu.h"
 void
-lstmac()
+lstmac(void)
 {
   int i, j;
 /*

@@ -12,7 +12,7 @@
 /* */
 uint8_t xlatable[256];
 void
-xlateset()
+xlateset(void)
 {
   int i;                           /* Scratch */
 /*

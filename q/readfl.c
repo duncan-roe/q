@@ -259,7 +259,7 @@ ctlcak(void)
 /* ******************************* readfl ****************************** */
 
 void
-readfl()
+readfl(void)
 {
   lngwrn = true;                   /* Not memrec */
   fileio = true;                   /* Read from file */

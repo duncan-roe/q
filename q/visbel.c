@@ -23,7 +23,7 @@ static double time_last = 0;
 /* ********************************* visbel ********************************* */
 
 void
-visbel()
+visbel(void)
 {
   double t;
 

@@ -27,7 +27,7 @@
 #include "c1in.h"
 
 void
-rerdcm()
+rerdcm(void)
 {
   bool use_sccmd = false;
 

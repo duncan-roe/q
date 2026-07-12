@@ -175,7 +175,7 @@ writfl(long wrtnum, bool leave_open)
  * we cater for a write only being partially satisfied.
  */
 static int
-do_write()
+do_write(void)
 {
   int nc;
   int todo = Q_BUFSIZ - unused;    /* Chars in buffer. Usually Q_BUFSIZ */

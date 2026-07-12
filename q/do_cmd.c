@@ -15,7 +15,7 @@
 #include "edmast.h"
 #include "c1in.h"
 int
-do_cmd()
+do_cmd(void)
 {
   int result;
 

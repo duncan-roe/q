@@ -28,7 +28,7 @@ static void show_current(fmode_t mode);
 /* ******************************** setqmode ******************************** */
 
 bool
-setqmode()
+setqmode(void)
 {
   int octok = 1, first = 1;
   fmode_t u, result = fmode;

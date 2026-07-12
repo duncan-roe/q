@@ -42,8 +42,7 @@ adjacent to that for Q. ggdb can do any or all of the following:
    (with a condition and / or commands if wanted)
 
 For the benefit of anyone who doesn't have command_line_tools installed, there
-is a copy of ggdb in Q's documentation directory. You can symlink or copy this
-into your PATH, or substitute e.g. ./ggdb into the template below.
+is a copy of ggdb in Q's debug directory, used by the tamplate below.
 
 ggdb relies on expect. Some distributions come without expect by default. If
 yours is one of these then you will need to install expect from the
@@ -133,7 +132,7 @@ Create your ggdb command by pasting line fragments from below.
 Don't paste in comment lines
 
 # You always want this
-ggdb -t $my_tty \
+./ggdb -t $my_tty \
 # Lets you print the mmap'd buffers but may result in copious output
 # (Some generated test files put a NUL before each Nl to stop that)
 -f maxsize.gdb \
@@ -144,6 +143,7 @@ ggdb -t $my_tty \
 # Insert file to be edited here. Also some or all of
 -k $log_tty \
 -ifm+8^J \
+# Not required unless you want to debug macros from .qrc
 -vv \
 # plus anything else you might think of (but you can only have one -i argument)
 # End args to q

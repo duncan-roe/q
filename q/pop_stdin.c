@@ -13,7 +13,7 @@
 #include "c1in.h"
 
 bool
-pop_stdin()
+pop_stdin(void)
 {
   int retcod;
   bool devnull_currently;

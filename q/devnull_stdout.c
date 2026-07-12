@@ -15,7 +15,7 @@
 #include "c1in.h"
 
 void
-devnull_stdout()
+devnull_stdout(void)
 {
   int i, j;
 

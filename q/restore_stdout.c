@@ -12,7 +12,7 @@
 #include "prototypes.h"
 #include "c1in.h"
 void
-restore_stdout()
+restore_stdout(void)
 {
   int i;
 

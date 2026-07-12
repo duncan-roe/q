@@ -20,7 +20,7 @@
 #include "fmode.h"
 #include "alu.h"
 void
-sccmnd()
+sccmnd(void)
 {
   if (!cmsplt)
   {                                /* NEWCOM valid if split command */

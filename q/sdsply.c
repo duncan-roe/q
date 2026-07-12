@@ -16,7 +16,7 @@
 #include "prototypes.h"
 #include "scrnedit.h"
 void
-sdsply()
+sdsply(void)
 {
 /* */
   scrbuf5 Curr;                    /* Dummy scrnedit buffer */

@@ -23,7 +23,7 @@
 struct tabs tabs[NUM_TABS] = { {0} };
 
 void
-sinitl()
+sinitl(void)
 {
 
   endlin = false;
