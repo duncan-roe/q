@@ -6,7 +6,7 @@ include config.mak
 #                 do [ -x $$i ] && { echo $$i; break; }; done)
 
 CP_OPTION := $(shell cp --version >/dev/null 2>&1 && \
-                     echo --preserve=timestamps,mode || echo -a)
+                     echo '--preserve=timestamps,mode -r' || echo -a)
 
 .PHONY: q clean install install_help install_doc install_etc install_bin \
   uninstall
@@ -45,7 +45,7 @@ install_etc:
 
 install_help:
 	mkdir -p $(DESTDIR)$(HELP_DIR) && \
-cp -r $(CP_OPTION) help/* $(DESTDIR)$(HELP_DIR)
+cp $(CP_OPTION) help/* $(DESTDIR)$(HELP_DIR)
 
 uninstall:
 	rm $(DESTDIR)$(BINDIR)/q $(DESTDIR)$(BINDIR)/qm; \
@@ -54,3 +54,6 @@ rm -r $(DESTDIR)$(DOCDIR)/; \
 for i in etc/*; do rm $(DESTDIR)$(ETC_DIR)/$$(basename $$i); done; \
 for i in man/man*; do j=$(DESTDIR)$(MANDIR)/$$(basename $$i); \
 for k in $$i/*.?;do rm $$j/$$(basename $$k); done; done
+
+q/disowntty:
+	cd disowntty && $(MAKE)

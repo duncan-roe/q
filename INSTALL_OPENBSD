@@ -27,6 +27,9 @@ Patch qmake.qm:
 
 You can use the 'patch' command to apply the above and below patches:
 
+YOU MUST DO THIS BEFORE INSTALLING
+=== ==== == ==== ====== ==========
+
 $ patch <INSTALL_OPENBSD
 
 BEFORE RUNNING GMAKE
@@ -62,7 +65,7 @@ Patch ggdb before installing, to give a working macro debugger:
  {
 Now you can run:
 
-# CFLAGS=-Og gmake install
+# gmake clean; CFLAGS=-O0 gmake install
 
 Be wary of substituting e.g. -O2 for -Og. The installed compiler (Clang)
 ignores the GCC pragma that turns off optimising in workfile.c.
