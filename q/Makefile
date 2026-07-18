@@ -24,5 +24,5 @@ ifneq ($(MAKECMDGOALS),clean)
 -include $(SRCS:.c=.d)
 endif
 
-README_DEBUG: README_DEBUG.in
-	sed 's+%DATADIR+$$DATADIR+' README_DEBUG.in > README_DEBUG
+README_DEBUG: README_DEBUG.in Makefile
+	sed -e 's+%DATADIR+$$DATADIR+' -e s'/\$$\(type -p q\)/q/' README_DEBUG.in > README_DEBUG
