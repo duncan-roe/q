@@ -33,7 +33,7 @@ proc sndrcv {cmd} \
 {
   global pending
   if {$pending} \
-    {expect -re "\[(\]gdb\[)\] |\r\n>| \\(y or \\\[n\\\]\\) "}
+    {expect -re "\[(\]gdb\[)\] |\r\n\[^>\]*>$| \\(y or \\\[n\\\]\\) "}
   exp_send ${cmd}\r
   set pending 1
 }
