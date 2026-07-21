@@ -25,6 +25,8 @@ MACRO_DIR is treated specially in this regard: if it's the same as HELP_DIR then
 it will stay the same as HELP_DIR when Q_HELP_DIR is in the environment but
 Q_MACRO_DIR isn't.
 
+(MACRO_DIR is deprecated and will disappear in the nex release).
+
 Q's macro debugger requires that q is compiled with debug and not stripped.
 
 Q builds under Linux, OpenBSD and Cygwin.
