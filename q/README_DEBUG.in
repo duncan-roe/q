@@ -23,7 +23,7 @@ You want an alternative to running `ggdb q` directly.
 Q moves the cursor around and continually changes terminal settings
 (including character echo on/off).
 
-xterm -geometry 88x25 -sb -sl 2000 -e "sh -c 'tty; exec ./disowntty'"&
+xterm -geometry 88x25 -sb -sl 500 -e "sh -c 'tty; exec ./disowntty'"&
 
 When debugging Q, I find it easiest to have gdb running in one terminal session
 with all of Q's input and output going to and coming from another.
@@ -129,25 +129,48 @@ window:-
 
 ggdb command templates (export log_tty if you have one) (export my_tty first):
 Create your ggdb command by pasting line fragments from below.
-Don't paste in comment lines
 
-# You always want this
+GGDB COMMAND TEMPLATES: DON'T PASTE IN COMMENT LINES
+==== ======= ========== ===== ===== == ======= =====
+
+# You always want one of these:-
 ./ggdb -t $my_tty \
-# Lets you print the mmap'd buffers but may result in copious output
-# (Some generated test files put a NUL before each Nl to stop that)
+# Or (handy if running under script(1))
+NO_COLOR=1 ./ggdb -t $my_tty \
+# I generally use this but see note 1 below
 -f maxsize.gdb \
-# You'll want this if debugging with a dark background
+# If you're debugging macros
+-f macros.gdb \
+# If you're debugging a run machine (ALU) program
+-f alu.gdb \
+# You'll want this if debugging with a dark background (or use -NO_COLOR)
 -g darkbg.gdb \
 # Start args to q
 -a "\
-# Insert file to be edited here. Also some or all of
+# Insert some or all of:-
 -k $log_tty \
--ifm+8^J \
-# Not required unless you want to debug macros from .qrc
+# Use -n to skip .qrc. Handy if you want to debug macro calls in .qrc
+-n \
+# (if you want this: see `man q`)
 -vv \
-# plus anything else you might think of (but you can only have one -i argument)
-# End args to q
-" q \
+# You can only have one -i arg, but it can contain multiple Q commands.
+# There can be no more option args after -i
+-ifm+8^J \
+# File to edit (optional: q's q command can load one)
+file_to_edit \
+# End args to q. If there were no args, you could have omitted '-a "\' above
+# but then you must not paste the double-quote in the next line
+" $(type -p q) \
 # Insert beakpoints here
 # Touch <Enter> to stop at main(), else:
 c
+
+NOTES ON THE TEMPLATES
+===== == === =========
+
+1. maxsize.gdb enables unfettered printing of Q's 64KB screenedit buffers.
+Screenedit buffers have length and data rather than using C strings so in theory
+may not contain any NUL terminators. However Q often inserts a NUL terminator so
+it can use a library function.
+So I generally chance it: `p b1.bdata` to see the last command entered or even
+just `p b1`.

@@ -1,15 +1,11 @@
 # default paths
-
 include config.mak
 
 #SHELL := $(shell for i in /bin/bash /usr/bin/bash /usr/local/bin/bash /bin/sh;\
-#                 do [ -x $$i ] && { echo $$i; break; }; done)
-
-CP_OPTION := $(shell cp --version >/dev/null 2>&1 && \
-                     echo '--preserve=timestamps,mode -r' || echo -a)
+#do [ -x $$i ] && { echo $$i; break; }; done)
 
 .PHONY: q clean install install_help install_doc install_etc install_bin \
-  uninstall
+  uninstall install_debug
 
 q:
 	cd q && $(MAKE)
@@ -21,31 +17,34 @@ install: install_help install_doc install_etc install_bin install_debug
 
 install_bin: q
 	mkdir -p $(DESTDIR)$(BINDIR) && \
-cp $(CP_OPTION) bin/qm q/q $(DESTDIR)$(BINDIR)
+cp bin/qm q/q $(DESTDIR)$(BINDIR)
 
 install_debug: q/disowntty
 	mkdir -p $(DESTDIR)$(DATADIR)/debug && \
-cp $(CP_OPTION) q/*.gdb q/disowntty q/ggdb q/macro_debug_sample \
-$(DESTDIR)$(DATADIR)/debug/ && \
-sed "s+%DATADIR+$(DATADIR)+" q/README_DEBUG.in >\
-$(DESTDIR)$(DATADIR)/debug/README_DEBUG && \
-cp $(CP_OPTION) q/README_DEBUG_* $(DESTDIR)$(DATADIR)/debug/
+(cd q; for i in *.gdb disowntty ggdb macro_debug_sample pipe_demo.txt; do \
+cp $$i $(DESTDIR)$(DATADIR)/debug; done; \
+sed "s+%DATADIR+$(DATADIR)+" README_DEBUG.in >\
+$(DESTDIR)$(DATADIR)/debug/README_DEBUG; \
+cp README_DEBUG_PIPE.in $(DESTDIR)$(DATADIR)/debug/README_DEBUG_PIPE; \
+for i in README*; do [ $$(basename $$i .in) = $$i ] && [ ! -r $$i.in ] && \
+cp $$i $(DESTDIR)$(DATADIR)/debug; done || :); \
+mkfifo -m666 $(DESTDIR)$(DATADIR)/debug/fifo || :
 
 install_doc:
-	mkdir -p $(DESTDIR)$(DOCDIR) && \
-cp $(CP_OPTION) q/TODO q/DONE $(DESTDIR)$(DOCDIR)/ && \
-cp $(CP_OPTION) q/.qrc $(DESTDIR)$(DOCDIR)/q_dot_qrc && \
-cp $(CP_OPTION) help/.qrc $(DESTDIR)$(DOCDIR)/help_dot_qrc && \
-cp $(CP_OPTION) INSTALL INSTALL_OPENBSD LICENSE README $(DESTDIR)$(DOCDIR)/ && \
-for i in man/man*; do mkdir -p $(DESTDIR)$(MANDIR)/$$(basename $$i) &&\
-cp $(CP_OPTION) $$i/*.? $(DESTDIR)$(MANDIR)/$$(basename $$i); done
+	mkdir -p $(DESTDIR)$(DOCDIR); \
+(cd q; cp TODO DONE $(DESTDIR)$(DOCDIR); \
+cp .qrc $(DESTDIR)$(DOCDIR)/q_dot_qrc); \
+cp help/.qrc $(DESTDIR)$(DOCDIR)/help_dot_qrc; \
+cp INSTALL INSTALL_OPENBSD LICENSE README $(DESTDIR)$(DOCDIR); \
+for i in man/man*; do mkdir -p $(DESTDIR)$(MANDIR)/$$(basename $$i); \
+cp $$i/*.? $(DESTDIR)$(MANDIR)/$$(basename $$i); done
 
 install_etc:
-	mkdir -p $(DESTDIR)$(ETC_DIR) && cp $(CP_OPTION) etc/* $(DESTDIR)$(ETC_DIR)
+	mkdir -p $(DESTDIR)$(ETC_DIR); cp etc/* $(DESTDIR)$(ETC_DIR)
 
 install_help:
-	mkdir -p $(DESTDIR)$(HELP_DIR) && \
-cp $(CP_OPTION) help/* $(DESTDIR)$(HELP_DIR)
+	mkdir -p $(DESTDIR)$(HELP_DIR); \
+cp -r help/* $(DESTDIR)$(HELP_DIR)
 
 uninstall:
 	rm $(DESTDIR)$(BINDIR)/q $(DESTDIR)$(BINDIR)/qm; \

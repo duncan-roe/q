@@ -9,14 +9,15 @@ line below. This line also demonstrates logging macro execution.
 
 Q does not insist that its input file is a pipe: a regular file is fine.
 
-The file "xxx" is provided as input. All examples run "y,x,y" as their initial
-command so do not need any other macros loaded and use the -n flag.
+The file "pipe_demo.txt" is provided as input.
+All examples run "y,x,y" as their initial command
+so do not need any other macros loaded and use the -n flag.
 
-ggdb -a "-niy,x,y^J <xxx >/tmp/yyy" q
-ggdb -f maxsize.gdb -g darkbg.gdb -t $my_tty -a "-k $log_tty -nvifm+8^Jy,x,y^J <xxx" q
+ggdb -a "-niy,x,y^J <pipe_demo.txt >/tmp/yyy" $(type -p q)
+ggdb -f maxsize.gdb -g darkbg.gdb -t $my_tty -a "-k $log_tty -nvifm+8^Jy,x,y^J <pipe_demo.txt" $(type -p q)
 
 The commands below demonstrate debugging with the -c(ontinuous pipe) flag:
-- ~/fifo is a real fifo and should have a writer before running ggdb.
+- ./fifo is a real fifo and should have a writer before running ggdb.
 - The cat command below enables single-character input from the keyboard.
   To get Q to see multiple chars, enter them when Q is stopped on a breakpoint.
 - -b is optional: without it Q will always end the file with a newline even if
@@ -24,7 +25,7 @@ The commands below demonstrate debugging with the -c(ontinuous pipe) flag:
 Before running ggdb, run the 1st command below in another terminal. You need to
 use ^C to finish (and finish the debug session): run the 2nd command after that.
 
-stty -icanon; stdbuf -i 0 cat >~/fifo
+stty -icanon; stdbuf -i 0 cat >fifo
 stty sane
 
-ggdb -f maxsize.gdb -g darkbg.gdb -t $my_tty -a "-bvcniy,x,y^J <~/fifo" q b\ check_pipe c
+ggdb -f maxsize.gdb -g darkbg.gdb -t $my_tty -a "-bvcniy,x,y^J <fifo" $(type -p q) b\ check_pipe c
