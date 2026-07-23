@@ -15,6 +15,10 @@
 #include "fmode.h"
 #include "alu.h"
 
+/* Instantiate Externals */
+
+const int FIRST_ALU_OP = 04200;
+
 /* **************************** Static Functions **************************** */
 
 static bool

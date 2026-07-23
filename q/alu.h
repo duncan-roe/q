@@ -17,7 +17,6 @@
 
 #define OPCODE(op, desc) {#op, op, desc}
 #define CAPTION(desc) {"", NULL, desc}
-#define FIRST_ALU_OP 04200
 
 /* Typedefs */
 
@@ -68,5 +67,6 @@ extern char FPformat[40];          /* Floating-point format */
 extern char Iformat[40];           /* Integer format */
 extern char DTformat[256];         /* Date format (can be really huge) */
 extern scrbuf5 *last_Curr;         /* Line that scrdit is working on */
+extern const int FIRST_ALU_OP;
 
 #endif
