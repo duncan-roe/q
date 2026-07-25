@@ -1,7 +1,7 @@
 /* S C R D I T */
 /*
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2012-2014,2017-2021 Duncan Roe
+ * Copyright (C) 2012-2014,2017-2021,2026 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -730,7 +730,7 @@ push_register(long val)
     return false;
   }                                /* if (++rsidx >= stack_size) */
   rs[rsidx] = val;
-  return true;
+  return true;                     /* BRKPT PSH */
 }                                  /* push_register() */
 
 /* **************************** push_fp_register **************************** */
@@ -748,7 +748,7 @@ push_fp_register(double val)
     return false;
   }                                /* if (++fsidx >= stack_size) */
   fs[fsidx] = val;
-  return true;
+  return true;                     /* BRKPT PSHF */
 }                                  /* push_fp_register() */
 
 /* ****************************** pop_register ****************************** */
@@ -765,7 +765,7 @@ pop_register(long *val)
     return false;
   }                                /* if (rsidx < 0) */
   *val = rs[rsidx--];
-  return true;
+  return true;                     /* BRKPT POP */
 }                                  /* pop_register() */
 
 /* ***************************** pop_fp_register **************************** */
@@ -782,7 +782,7 @@ pop_fp_register(double *val)
     return false;
   }                                /* if (fsidx < 0) */
   *val = fs[fsidx--];
-  return true;
+  return true;                     /* BRKPT POPF */
 }                                  /* pop_fp_register() */
 
 /* ************************************************************************** */
@@ -1526,10 +1526,14 @@ process_other(void)
     }                              /* else if (j == 012000) */
     else if (thisch >= FIRST_ALU_OP + num_ops &&
       thisch < FIRST_ALU_OP + num_ops + NUM_TABS * 2)
+
+/* Opcodes PSHTAB & POPTAB */
     {
       bool is_pop = false;
       int tabidx = thisch - FIRST_ALU_OP - num_ops;
       bool success;
+
+      effaddr = -1;                /* Invalidate for benefit of alu.gdb */
 
       if (tabidx >= NUM_TABS)
       {

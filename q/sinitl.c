@@ -1,7 +1,7 @@
 /* S I N I T L */
 /*
  * Copyright (C) 1981,2011 D. C. Roe
- * Copyright (C) 2012-2014,2019 Duncan Roe
+ * Copyright (C) 2012-2014,2019,2026 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -20,7 +20,7 @@
 
 /* Instantiate externals */
 
-struct tabs tabs[NUM_TABS] = { {0} };
+struct tabs tabs[XNUM_TABS] = { {0} };
 
 void
 sinitl(void)

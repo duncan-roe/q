@@ -1,7 +1,7 @@
 /* T A B S E T
  *
  * Copyright (C) 1981 D. C. Roe
- * Copyright (C) 2012,2014,2020 Duncan Roe
+ * Copyright (C) 2012,2014,2020,2026 Duncan Roe
  *
  * Written by Duncan Roe while a staff member & part time student at
  * Caulfield Institute of Technology, Melbourne, Australia.
@@ -14,6 +14,9 @@
  *
  * Tabs and columns are zero-based, but appear 1-based to the user
  */
+
+/* Headers */
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -24,6 +27,15 @@
 /* Macros */
 
 #define GIVE_UP return false
+
+/* Instantiate externals */
+
+const int NUM_TABS = XNUM_TABS;
+/* This table is only used by the alu macro debugger alu.gdb */
+const char tab_name[XNUM_TABS] =
+  "123456789:;<=>?"
+  "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
+  "`abcdefghijklmnopqrstuvwxyz{|}~-";
 
 bool
 tabset(scrbuf5 *scbuf)

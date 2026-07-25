@@ -1,7 +1,7 @@
 #ifndef TABS_H
 #define TABS_H
 /*
- * Copyright (C) 2014,2019 Duncan Roe
+ * Copyright (C) 2014,2019,2026 Duncan Roe
  *
  * This header file contains items relating to the tabs subsystem
  *
@@ -21,7 +21,9 @@
 
 /* Macro definitions */
 
-#define NUM_TABS 80
+#define XNUM_TABS 80               /* Was NUM_TABS */
+                                   /* but that has to be a const int */
+                                   /* for clang alu macro debugger */
 
 /* Typedefs */
 
@@ -38,5 +40,7 @@ bool gettab(uint8_t tabid, bool filpos, long *i4, bool return_index);
 
 /* External variables */
 
-extern struct tabs tabs[NUM_TABS];
+extern struct tabs tabs[XNUM_TABS];
+extern const int NUM_TABS;
+extern const char tab_name[XNUM_TABS];
 #endif
