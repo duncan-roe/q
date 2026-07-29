@@ -11,7 +11,7 @@ q:
 	cd q && $(MAKE)
 
 clean:
-	cd q && $(MAKE) clean
+	cd q && $(MAKE) clean; rm -f q/disowntty
 
 install: install_help install_doc install_etc install_bin install_debug
 

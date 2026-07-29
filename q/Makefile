@@ -26,7 +26,7 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 README_DEBUG: README_DEBUG.in Makefile
-	sed -e 's+%DATADIR+$$DATADIR+' -e s'/\$$\(type -p q\)/q/' README_DEBUG.in > README_DEBUG
+	sed -E -e 's+%DATADIR+$$DATADIR+' -e s'/\$$\(type -p q\)/q/' README_DEBUG.in > README_DEBUG
 
 README_DEBUG_PIPE: README_DEBUG_PIPE.in Makefile
-	sed s'/\$$\(type -p q\)/q/' README_DEBUG_PIPE.in > README_DEBUG_PIPE
+	sed -E s'/\$$\(type -p q\)/q/' README_DEBUG_PIPE.in > README_DEBUG_PIPE
