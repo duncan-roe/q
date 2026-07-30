@@ -63,11 +63,34 @@ Patch ggdb before installing, to give a working macro debugger:
  expect {(gdb) }
  if {$PID==0} \
  {
+
+Patch Makefile not to build disowntty:
+diff --git a/Makefile b/Makefile
+index a00f9d5..83037cc 100644
+--- a/Makefile
++++ b/Makefile
+@@ -19,7 +19,7 @@ install_bin: q
+ 	mkdir -p $(DESTDIR)$(BINDIR) && \
+ cp bin/qm q/q $(DESTDIR)$(BINDIR)
+ 
+-install_debug: q/disowntty
++install_debug:
+ 	mkdir -p $(DESTDIR)$(DATADIR)/debug && \
+ (cd q; for i in *.gdb disowntty ggdb macro_debug_sample pipe_demo.txt; do \
+ cp $$i $(DESTDIR)$(DATADIR)/debug; done; \
+@@ -53,6 +53,3 @@ rm -r $(DESTDIR)$(DOCDIR)/; \
+ for i in etc/*; do rm $(DESTDIR)$(ETC_DIR)/$$(basename $$i); done; \
+ for i in man/man*; do j=$(DESTDIR)$(MANDIR)/$$(basename $$i); \
+ for k in $$i/*.?;do rm $$j/$$(basename $$k); done; done
+-
+-q/disowntty:
+-	cd disowntty && $(MAKE)
+
 Now you can run:
 
 # gmake clean; CFLAGS=-O0 gmake install
 
-Be wary of substituting e.g. -O2 for -Og. The installed compiler (Clang)
+Be wary of substituting e.g. -O2 for -O0. The installed compiler (Clang)
 ignores the GCC pragma that turns off optimising in workfile.c.
 The pragma is there because I've had trouble with optimising that code at some
 GCC versions.
