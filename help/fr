@@ -14,7 +14,7 @@ will terminate the macro much as if the macro had encountered an error.
 by ^J (not ^T).
  The above are the only constraints. FR works when Q is running in a pipe or
 with the -o (offline) option. When FR is invoked, the user is invited to
- "Type Q to continue macro xxx; FQ to abandon", where xxx is the number of the
+ "Type Q to continue macro ooo; FQ to abandon", where ooo is the number of the
 invoking macro (in octal, as macros are defined).
 
 Example use of FR:

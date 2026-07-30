@@ -107,7 +107,7 @@ Macro catalogue for foundation macro set
 (Nothing from TODO)
 
 -- v19 (ALU COMPLETE)
-Allow "/*" comments on n7xxx lines
+Allow "/*" comments on n7ooo lines
 Add reverse Polish calculator
 update scmacs.info  [now fndtn.cat] a lot (for pres'n)
 Some option to display version
