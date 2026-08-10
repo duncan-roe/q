@@ -1,8 +1,9 @@
 Optimise S-Save if deferd and binary or none of dos or tab or fm-s,+l &c
 Retire separate MACRO & HELP directories
-README_DEBUG_ADVANCED to have table of useful variables
-  ptrpos, tabs rs[], fs[], rsidx, fsidx, xreg, qreg
-  curr, prev, oldcom, newcom
+STARTED: README_DEBUG_ALU (was to be README_DEBUG_ADVANCED) to describe
+	how to debug ALU programs and have table of useful variables
+	ptrpos, tabs rs[], fs[], rsidx, fsidx, xreg, qreg
+	curr, prev, oldcom, newcom
 Mode to turn off line & part numbering (entire line selectable on V or P)
 Opcodes POPL & POPLF: pop to line being edited (command or file)
 Q -B to break long lines on token delimiter if length so far > 32(?)K
@@ -24,15 +25,11 @@ Properly reinstate output optimisation (old hack removed as "quick fix")
  get per-char delay from stty baud rate
  reinstate setting per-char delay (useful for testing)
 INTERNALS
-	STARTED: Have a bool enum for logicals
-	STARTED: Be more careful what goes to stderr / stdout
-	STARTED: use stdint types
-	STARTED: Reduce number of goto stmts
-	scrdtk to be 64-bit
+	scrdtk to be 64-bit on 64-bit systems
 Show what arguments Q started with (?)
 STARTED: Catalogue of useful macros
 New pseudomacro to replace "/*" with arbitrary seq: #, // &c (i.e. for ^O)
-STARTED: New "contrib" directory for non-core macros
 New pseudomacro to be obeyed on q <filename>
-  default ^NU, may be re-defined (e.g. to ^N^W^X)
+	default ^NU, may be re-defined (e.g. to ^N^W^X)
 ^T in a macro to action pending ^C (like ^J does)
+Pass on SIGWINCH (to e.g. !less)

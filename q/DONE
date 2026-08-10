@@ -6,6 +6,7 @@ https://github.com/duncan-roe/q/releases
 (some release notes have been updated to reflect current behaviour)
 
 -- v58
+Accomodate C23 bool type. Still define bool enum if C standard is lower
 Fixed bug whereby Q$0 stopped working after Q in macro degraded to ^NU
 Fixed bug whereby the ALU could set FBRIEF / FNONE when fm+v was asserted
 Opcodes SBIN & SNBIN discover if q -b or not
@@ -16,7 +17,9 @@ Enabled Q to work in an open pipe (e.g. tail -f|q)
  - Only happens if -Continuous option on command line
 FReprompt command takes an optional message arg
 There are catalogues of the foundation and word macro suites e.g. H FNDTN.CAT
-There  is a "contrib" directory for non-core macros
+There is a "contrib" directory for non-core macros
+INTERNALS
+	use stdint types where appropriate
 
 -- v57
 Opcode XMODE to set fmode from X-reg after command read (for ^N7)
@@ -109,7 +112,7 @@ Macro catalogue for foundation macro set
 -- v19 (ALU COMPLETE)
 Allow "/*" comments on n7ooo lines
 Add reverse Polish calculator
-update scmacs.info  [now fndtn.cat] a lot (for pres'n)
+update scmacs.info [now fndtn.cat] a lot (for pres'n)
 Some option to display version
 
 -- v6 (RUNS IN PIPE)
