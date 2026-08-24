@@ -1,0 +1,62 @@
+# n204: Strip all carriage returns
+#       Strip trailing spaces
+#       strip colour and other escape sequences
+#       strip command prompts (that set xterm title)
+# n205: Reduce all hex numbers to "0x0"
+# n2: Convert ISO dates & times to all zeroes except century if present
+# n3: Convert literal octal char to escaped one
+# n4: Remove time from bash prompts
+# n5: tack current line or line number on command line onto the previous one
+# n : (n040) present remaining lines with Bs or Ec for manual cleaning
+fd y
+
+n204 ^NC^NS^N\y ^P^M^J^ND^N^<1001>^<PS1>^<POPTAB A>fm+g -s^Js^Jq$0^Jy '^P^[\[[?]?[[:digit:]]{0,2};?[[:digit:]]{0,2};?[[:digit:]]{0,2}[hlm]'^Jy ^P^[.*:.*^P^G,,,,1^Jy ^P^[\[[0-9]+;[0-9]+H^Jfm-g^Jg1^J^ND^N^<1501>g1^J^ND^N^<1502>^ND^N^<1011>y^P^[[K^Jy^P^[[A^J^NU
+
+N202 ^NC^NS^N\q /dimstar/home/dunc/macros/script.qm^J^NU
+N220 ^NC^NS^N\u /dimstar/home/dunc/macros/script.qm^J^NU
+
+# n1501: get rid of multi-BS followed by Ec [ K
+#        and corresponding preceding chars
+n1501 l^P^H^P^[[K^J^NC^NU^ND^N^<1505>^J^N^@
+# n1505: delete the last 3 of the 4 found chars and set BS count to 0
+#        Memory location 0 used as BS count
+n1505 ^X^D^D^D^<PS0>^<POP 0>^N^<1506>
+# n1506: Move back 1 char; if not a BS then jump to char delete loop; else:
+#        count this BS; delete this BS; repeat.
+#        Back move is protected by checking cursosr is past tab A (cc1)
+n1506 ^NPA^NS^N^<1507>^Y^NG^H^NS^N^<1510>^<PSH 0>^<A1>^<POP 0>^D^N^@
+# n1507: Done with Ec seq: ^J back to command mode, accepting changes
+#        backup 1 line to rescan this one; return (to n1501)
+n1507 ^Jg-1^J^NU
+# n1510: Delete as many chars as there were BS chars
+#        (back move is protected as in n1506)
+n1510 ^D^NPA^NS^N^<1507>^Y^<PSH 0>^<S1>^<SNE>^NS^NL^<POPN>^N^<1507>^<POP 0>^N^@
+
+# n1502: get rid of multi-{Ec [ C} (word Bs(?)) followed by same command again
+n1502 l ^P^[[C^J^NC^NU^K^J^N^@
+
+#  Macros for gdb
+
+# n205: Reduce all hex numbers to "0x"
+n205 ^NC^NS^N\^ND^N^<1001>fm+g^Jy 0x[[:xdigit:]]+ 0x0^J^ND^N^<1011>^NU
+
+# Convenience macros
+
+# n5: tack current line or line number on command line onto the previous one
+n065 ^NC^NS^NL^ND^N^<1503>^H^L^J^NC^NS^N\^ND^N^^^ND^N^G^J^NU
+# n1503: modify the nominated line
+n1503 ^H^NE^Em^J^NC^N\^NU
+
+# n4: Remove time from bash prompts
+n064 ^NC^NS^N\^ND^N^<1001>fm+g^Jy ^*([[:digit:]]{2}:){2}[[:digit:]]{2}\$ $^J^ND^N^<1011>^NU
+
+# n3: Convert literal octal char to escaped one
+n063 ^NC^NS^N\^NM^<1504>^U^ND^N^<1001>fm-g^Jfi y ^*<^ND^N^<1504>> \^ND^N^<1504>^*J^J^ND^N^<1011>^NU
+
+# n2: Convert ISO dates & times to all zeroes except century if present
+n062 ^NC^NS^N\^ND^N^<1001>fm+g^Jy ([[:digit:]]{2}:){2}[[:digit:]]{2} 00:00:00^Jy ([[:digit:]]{2}-){2}[[:digit:]]{2} 00-00-00^J^ND^N^<1011>^NU
+
+#n040 manually clean up ad-hoc Ec & Bs
+n040 ^NC^NS^N\g1^J^ND^N^<1511>g1^J^ND^N^<1512>^NU
+n1511 l ^P^H^J^NC^NU^[fr Bs found^J^N^@
+n1512 l ^P^[^J^NC^NU^[fr Ec found^J^N^@

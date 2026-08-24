@@ -26,3 +26,9 @@ with `less`.
 powerwall/powerwall.qm: Prepare a battery energy csv file downloaded from the
 Tesla app for LibreOffice to make a smooth-line graph. The powerwall/POW script
 runs Q and LibreOffice. powerwall/README details what to do in LibreOffice.
+
+script/script.qm: Post-process files created by script(1).
+The aim is to make a file that you can view with less(1) without having to use
+-r.
+less -r can view an unprocessed script but you turn on line numbering at your
+peril, you can't use -S and long lines overflow the page.
