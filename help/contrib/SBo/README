@@ -1,0 +1,6 @@
+SBO.qm - macros for use with files from SBo.org
+
+This README is still under construction
+
+The one-off n205 / ^N^W^E macros are all distributed commented-out.
+run.sh uncomments and runs them in order.

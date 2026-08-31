@@ -1,0 +1,139 @@
+fd y /* *.SlackBuild macros */
+N202 ^NC^NS^N\q ^ND^N^<4003>/contrib/SBo/SBo.qm^J^NU
+N220 ^NC^NS^N\u ^ND^N^<4003>/contrib/SBo/SBo.qm^J^NU
+fd n
+
+# ^N2: Apply "standard" changes to the current SB
+# ^N3: compare w/master
+# ^N4: Cvt sbolint.log into a list of pathnames
+# ^N5: Bump BUILD
+# ^N6: Like ^N4 but omit duplicate lines (overwrites c.qm)
+# ^N7: Run sbolint on current file (overwrites fndtn.qm)
+# ^N^D: Update checksum line (needs tarball to be linked)
+# ^N^W^D: Make a variable assignment overridable by existing one:
+#         invoke inside a *separate* M-modify command
+# ^N^W^E: (Used for 1-offs)
+# ^N Sp: List this file
+
+fd y
+# n004: Update checksum line (needs tarball to be linked)
+n004 ^NC^NS^N\g1^Jl DOWNLOAD^J^NC^N\^G"^NA^N\^L^Ebasename ^NM^<4015>^[^<SQEQ>^N^<1502>n4015 md5sum ^ND^N^<4014>^J^<SQEQ>^N^<1502>m-^J^G"^NA^N\^X^K^ND^N^<4014>^B^B^G ^K"^J^NU
+# n1502: something went wrong
+n1502 !echo ^ND^N^<4015> >&2^J^N\
+
+n040 !cat ^ND^N^<4002>|k^J^NU
+
+# n062: Apply "standard" changes to the current SB
+n062 ^NC^NS^N\n4014 basename $PWD^Jq ^ND^N^<4014>.SlackBuild^Jm2^J^NC^N\^NA^NL^ND^N^<1503>set -x^Jl xvf^J^NC^NL^X^D^J^@fm+g^Jl ^*[[:space:]]*make\>^J^NC^NS^NLs^J^NU^Ge^G ^NA^NS^N^<1504> -j$(($(nproc)+1)) || make^Js^J^NU
+# N1503: Line 2 not empty. User to position file on empty line
+n1503 ^[g-1^Jfr Position on a blank line^Jm-^J^NA^NU^N^@
+# n1504: "make" not on a line by itself. User to do whatever
+n1504 ^[fr Fix "make" command^Js^J^NU
+
+# n204: Make a variable assignment overridable by existing one
+#       invoke inside a *separate* M-modify command
+n204 ^NC^N\^ND^N^<1501>^NU
+n1501 ^G=^K^NM^<1577>^R^H^G=^X^E${^ND^N^<1577>:-^Z}^J^NC^NU^N^@
+
+# n063: compare w/master
+n063 ^NC^NS^N\!git diff master -- ^ND^N^<4002>||:^J^NU
+
+# n064: Cvt sbolint.log into a list of pathnames
+n064 ^ND^N^<1510>^ND^N^<1505>^ND^N^<1011>^NU
+
+# n065: Bump BUILD. Uses memory location 0
+n065 ^NC^NS^N\^ND^N^<1001>fm+g^Jg1^Jl BUILD="?\$\{BUILD:-^J^NC^N\^G-^X^<INP>^D^<S1>^<SGT>^NL^NJ^<177766>X^<POPN>^<A1>^<POP 0>^E^ND^N^<7000>^J^ND^N^<1011>^NU
+
+# n066: Like ^N4 but omit duplicate lines (overwrites ^N6 from c.qm)
+n066 ^ND^N^<1510>n1574 (dummy zerost line)^*NU^J^ND^N^<1511>^ND^N^<1011>^NU
+
+# n067: Run sbolint on current file (overwrites ^N7 (draw ruler) from fndtn.qm)
+n067 ^NC^NS^N\!sbolint $(dirname ^ND^N^<4002>)^J^NU
+
+# n1505: Loop through lines
+n1505 m-^J^NC^NU^ND^N^<1507>^J^N^@
+
+# n1506: Remove leading directories
+n1506 ^G/^NA^NU^X^L^N^@
+
+# n1507: Cvt this line to a pathname. Return before accepting line
+n1507 ^G:^K^NM^<1575>^R^H^F^F^L^G ^K^H^ND^N^<1506>^H^G:^K^NM^<1576>^U^Jn 4014 find $(find . -type d -maxdepth 2 -name ^ND^N^<1575>) -name ^ND^N^<1576>^Jm-1^J^ND^N^<4014>^H^D^D^NU
+# ----| Isolate      | filename, save in n1575    |                  | |             |                                                                  |                |     |
+# Remove leading ----| directories                |                  | |             |                                                                  |                |     |
+# Isolate package name, save in n1576 ------------|                  | |             |                                                                  |                |     |
+# Leave line blank (will re-construct or delete) --------------------| |             |                                                                  |                |     |
+# Get pathname of package. Only search for file w/in that -------------|-------------|                                                                  |                |     |
+# n4014 will return pathname of file ----------------------------------|                                                                                |                |     |
+# Get pathname to line ---------------------------------------------------------------------------------------------------------------------------------|                |     |
+# Remove leading "./" ---------------------------------------------------------------------------------------------------------------------------------------------------|     |
+# Return ----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+# n1510: Common start of n064 & n066. Contains unpaired ^N^<1001> (pair called from top level)
+n1510 ^NC^NS^N\^ND^N^<1001>g1^Jo n^Jfm -d,-l,+s,-t^J^NU
+
+# n1511: Loop through lines
+n1511 m-^J^NC^NU^ND^N^<1507>^NM^<1573>^[n4015 [ "^ND^N^<1573>" = "^ND^N^<1574>" ]^J^<SQEQ>^NS^NL^NJ^<6>Xd-1^J^N^@m-1^J^ND^N^<1573>^NM^<1574>^J^N^@
+# All lines -|  | done,     | return  | |                                                 |  |  |       |    |   |                |           |
+# Cvt line -----| to path   |         | |                                                 |  |  |       |    |   |                |           |
+# Save new path in n1573 ---|         | |                                                 |  |  |       |    |   |                |           |
+# Discard changes to line ------------| |                                                 |  |  |       |    |   |                |           |
+# Compare new with prev pathname. ------| Q-reg will be 0 iff same                        |  |  |       |    |   |                |           |
+# Obeyed if files differ -----------------------------------------------------------------|  |  |       |    |   |                |           |
+# Obeyed if files same ----------------------------------------------------------------------|  |       |    |   |                |           |
+# Obeyed if files differ (jumps over 6 chars following unreachable X) --------------------------|       |    |   |                |           |
+# Delete previous (blank) line -------------------------------------------------------------------------|    |   |                |           |
+# Jump back to start of macro (S.O.M) -----------------------------------------------------------------------|   |                |           |
+# Restore saved contents to previous line -----------------------------------------------------------------------|                |           |
+# Save as prev pathname n1574, accept line ---------------------------------------------------------------------------------------|           |
+# Jump back to S.O.M. ------------------------------------------------------------------------------------------------------------------------|
+
+# =================== n205#1 ===================
+
+#n2501: Loop through files
+n2501 LIBDIRSUFFIX^NM^<2577>^U^ND^N^<2502>SLKCFLAGS^NM^<2577>^U^ND^N^<2502>^<SFMOD>^NL^ND^N^<2503>q^J^N^@
+
+#n2502: If ^N^<2577> is set but not used then get rid of it
+n2502 g1^Jl ^ND^N^<2577>=^J^NC^NU^[l \$[{]?^ND^N^<2577>^J^NC^NL^[^NUX^[g1^Jl ^ND^N^<2577>^ND^N^<241>^NU
+
+#n2503: Tasks when file has been modified:-
+#       1. Bump BUILD
+#       2. Save
+#       3. Remove ARCH if/elif section if now no LIBDIRSUFFIX or SLKCFLAGS
+n2503 ^ND^N5^ND^N^<2504>s^J^NU
+
+#n2504: Remove ARCH if/elif section if now it's empty.
+#       The test is whether elif directly follows if.
+#       If we can't find the section, assume it's not there (OK)
+n2504 g1^Jl 'if \[ "?\$ARCH'^J^NC^NU^[g-1^J^NFAg+1^Jl elif,1^J^NC^NU^[fl fi^J^NC^N\^[d TA - -1^Jm-^J^<PSHLNLN>^[^<SEQ>^NLd-1^J^<POPN>^NU
+
+# =================== n205#4 ===================
+
+#n1512: Loop through files
+n1512 q$1^Jm tA^J^NA^NS^NL^[^NUX^NFA^NM^<1575>^[g+^ND^N^<7001>^Jl https,1^J^L^NM^<1572>^[q ^ND^N^<1575>^J^ND^N^<1513>^N^@
+
+#n1513: Fix .info file and bump BUILD in Slackbuild
+n1513 l DOWNLOAD="^J^NC^N\^G"^X^K^ND^N^<1572>"^Js^Jq ^ND^N^<4002>^?^?^?^?SlackBuild^J^ND^N5s^J^NU
+
+# One-off macros. in the order given, un-comment, run, comment out again.
+# ======= ======= == === ===== ====== =========== ==== ======= === ======
+
+# n205#1: Get rid of unused LIBDIRSUFFIX and SLKCFLAGS lines
+  #       Makes its own decision as to whether each file needs modifying.
+  #       Invoke as:
+  #       q $(find . -name "*.SlackBuild")
+  #       Calls macros starting 25oo rather than 15oo (Don't ask ...)
+#n205 ^NC^NS^N\^ND^N^<1001>o n^Jfm -d,+g,-l,+s,-t^J^ND^N^<2501>^ND^N^<1011>^NU
+
+# n205#2: Fix most instances of "suggest replacing 'python' with 'python2'"
+#n205 ^NC^NS^N\y 'python setup.py' 'python2 setup.py'^Jy 'python ./setup.py' 'python2 ./setup.py'^J^<SFNMOD>s^Jq^J^N^@
+
+# n205#3: Fix remaining instances
+#n205 ^NC^NS^N\y 'python ./' 'python2 ./'^Jy 'python scripts' 'python2 scripts'^Jy 'python install.py' 'python2 install.py'^Jy 'python  setup.py' 'python2  setup.py'^Jy 'python -m' 'python2 -m'^Jy 'python -O' 'python2 -O'^J^<SFMOD>^N\s^Jq^J^N^@
+
+# n205#4: Fix "canonical pypi URL should be ..." warnings
+#       Invoke as "q <file>" where <file> is a list of .info files to edit
+#       followed by a blank line (to terminate n205)
+#       followed by the relevant lines from sbolint.log.
+#       This macro changes the DOWNLOAD line as suggested in .info and
+#       bumps REVISION in the SlackBuild.
+#n205 ^NC^NS^N\^ND^N^<1001>o n^Jfm -d,-g,-l,+s,-t^J^<SFPT>^<PS1>^<POPTAB A>a^J^[^<PSHNBLN>^<RSU>^<POP 1>^ND^N^<1512>^ND^N^<1011>^NU
